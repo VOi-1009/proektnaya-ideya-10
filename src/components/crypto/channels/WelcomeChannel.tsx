@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
 import Message from "../Message";
-import { NEWS } from "../news";
+import { useNews } from "../news";
 
 const HERO = "https://cdn.poehali.dev/projects/17c74dba-f379-4376-80b1-440f2ac081c4/files/478dfa0f-7b67-4e33-82ce-a89ee70b614e.jpg";
 
@@ -23,6 +23,7 @@ const FEATURES = [
 const WelcomeChannel = ({ coins, go }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
+  const latest = useNews().data?.items[0];
 
   const totalCap = coins.reduce((s, c) => s + c.market_cap, 0);
   const btc = coins.find((c) => c.id === "bitcoin");
@@ -101,7 +102,16 @@ const WelcomeChannel = ({ coins, go }: Props) => {
       </Message>
 
       <Message author="Ольга Графики" time="Сегодня в 09:12" avatar="О" avatarClass="bg-amber-400 text-black" role={{ label: "аналитик", className: "text-amber-300" }} delay={160}>
-        Свежий разбор в #новости: {NEWS[1].title.toLowerCase()}. Заходите обсудить
+        {latest ? (
+          <>
+            Свежее в #новости: «{latest.title}».{" "}
+            <button onClick={() => go("news")} className="text-primary hover:underline">
+              Заходите обсудить →
+            </button>
+          </>
+        ) : (
+          "Загляните в #новости — там свежая лента рынка. Заходите обсудить"
+        )}
       </Message>
 
       <Message author="Тимур Скальпер" time="Сегодня в 09:20" avatar="Т" avatarClass="bg-sky-500 text-white" delay={240}>

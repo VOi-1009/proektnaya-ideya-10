@@ -11,6 +11,7 @@ import NewsChannel from "@/components/crypto/channels/NewsChannel";
 import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
 import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
 import { useAuth } from "@/lib/auth";
+import { getSeen, useNews } from "@/components/crypto/news";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CHANNELS = [
@@ -52,6 +53,13 @@ const Index = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const { user, logout, setAuthOpen } = useAuth();
+  const { data: news } = useNews();
+  const [seen, setSeen] = useState(getSeen);
+  useEffect(() => {
+    if (channel === "news") setSeen(getSeen());
+  }, [channel, news]);
+  const unreadFrom = Math.max(seen, Date.now() - 12 * 3600_000);
+  const unread = (news?.items ?? []).filter((n) => n.ts > unreadFrom).length;
 
   useEffect(() => {
     localStorage.setItem("svecha-favs", JSON.stringify(favs));
@@ -219,8 +227,10 @@ const Index = () => {
                     >
                       <Icon name="Hash" size={18} className="opacity-70" />
                       <span className="text-[15px]">{c.name}</span>
-                      {c.id === "news" && channel !== "news" && (
-                        <span className="ml-auto bg-down text-white text-[10px] font-bold rounded-full px-1.5">7</span>
+                      {c.id === "news" && channel !== "news" && unread > 0 && (
+                        <span className="ml-auto bg-down text-white text-[10px] font-bold rounded-full px-1.5">
+                          {unread > 30 ? "30+" : unread}
+                        </span>
                       )}
                     </button>
                   ))}
