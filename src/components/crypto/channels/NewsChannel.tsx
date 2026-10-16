@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import Message from "../Message";
-import { fmtNewsTime, markSeen, NEWS_TAGS, NewsTag, SOURCE_STYLE, TAG_STYLE, useNews } from "../news";
+import { fmtNewsTime, markSeen, NEWS_TAGS, NewsTag, TAG_STYLE, useNews } from "../news";
 
 const PAGE = 15;
 
@@ -128,21 +128,13 @@ const NewsChannel = () => {
       )}
 
       {list.slice(0, limit).map((n, idx) => {
-        const src = SOURCE_STYLE[n.source] ?? { avatar: n.source[0], cls: "bg-primary text-primary-foreground" };
         const isOpen = open === n.id;
         return (
-          <Message
-            key={n.id}
-            author={n.source}
-            time={fmtNewsTime(n.ts)}
-            avatar={src.avatar}
-            avatarClass={src.cls}
-            role={n.author !== n.source ? { label: n.author, className: "text-white" } : undefined}
-            delay={Math.min(idx, 8) * 40}
-          >
+          <Message key={n.id} author="" time="" bot delay={Math.min(idx, 8) * 40}>
             <article className="bg-card border-l-4 border-primary rounded overflow-hidden max-w-2xl flex flex-col sm:flex-row">
               <div className="p-3 sm:p-4 flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground">{fmtNewsTime(n.ts)}</span>
                   <span className={`text-[10px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TAG_STYLE[n.tag]}`}>
                     {n.tag}
                   </span>
@@ -157,7 +149,7 @@ const NewsChannel = () => {
                     </span>
                   ))}
                 </div>
-                <h3 className="text-white font-semibold text-base sm:text-lg leading-snug mb-1.5">{n.title}</h3>
+                <h3 className="text-white font-semibold text-sm sm:text-base leading-snug mb-1.5">{n.title}</h3>
                 {n.text && (
                   <p className={`text-muted-foreground text-sm ${isOpen ? "" : "line-clamp-2"}`}>{n.text}</p>
                 )}
@@ -167,34 +159,15 @@ const NewsChannel = () => {
                       {isOpen ? "Свернуть" : "Читать полностью"}
                     </button>
                   )}
-                  <a
-                    href={n.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-white inline-flex items-center gap-1"
-                  >
-                    Источник: {n.source}
-                    <Icon name="ExternalLink" size={12} />
-                  </a>
                 </div>
               </div>
-              {n.image && (
-                <img
-                  src={n.image}
-                  alt=""
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                  className="w-full sm:w-40 h-40 sm:h-auto object-cover flex-shrink-0 order-first sm:order-last"
-                />
-              )}
             </article>
           </Message>
         );
       })}
 
       {list.length > limit && (
-        <div className="pl-14">
+        <div>
           <Button variant="outline" onClick={() => setLimit((l) => l + PAGE)} className="bg-transparent border-input hover:bg-hover hover:text-white">
             Показать ещё
           </Button>
@@ -203,7 +176,7 @@ const NewsChannel = () => {
 
       {items.length > 0 && (
         <p className="text-xs text-muted-foreground/70 pb-2">
-          Новости из открытых лент ForkLog и Bits.media, обновляются автоматически каждые 2 минуты.
+          Новости обновляются автоматически каждые 2 минуты.
         </p>
       )}
     </div>
