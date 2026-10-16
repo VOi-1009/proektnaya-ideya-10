@@ -62,7 +62,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
     <div className="space-y-5">
       <Message author="Traderka Бот" time="Сегодня" icon="BellRing" bot>
         <p className="text-muted-foreground mb-3">
-          Выберите монету и цену — я сообщу, когда курс её достигнет. Сам определю, ждать роста или падения.
+          Выберите монету и цену — сайт оповестит, когда курс её достигнет. Направление (рост или падение) определяется автоматически.
         </p>
         <form onSubmit={submit} className="bg-card border border-border rounded-lg p-4 max-w-2xl" noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-[190px_1fr_auto] gap-2">

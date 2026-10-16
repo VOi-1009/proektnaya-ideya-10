@@ -25,18 +25,6 @@ const CHANNELS = [
   { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
 ];
 
-const VOICE = [
-  { name: "Трейдинг-рум", people: 12 },
-  { name: "Разбор графиков", people: 4 },
-];
-
-const MEMBERS = [
-  { name: "Ольга Графики", status: "Рисует уровни по SOL", avatar: "О", cls: "bg-amber-400 text-black", role: "Аналитики" },
-  { name: "Денис Нода", status: "Читает whitepaper", avatar: "Д", cls: "bg-sky-500 text-white", role: "Аналитики" },
-  { name: "Тимур Скальпер", status: "Смотрит график BTC", avatar: "Т", cls: "bg-violet-400 text-black", role: "Трейдеры" },
-  { name: "Мария Пулы", status: "В DeFi", avatar: "М", cls: "bg-pink-400 text-black", role: "Трейдеры" },
-];
-
 const loadFavs = (): string[] => {
   try {
     const v = JSON.parse(localStorage.getItem("svecha-favs") ?? "null");
@@ -54,7 +42,6 @@ const Index = () => {
   const [favs, setFavs] = useState<string[]>(loadFavs);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [draft, setDraft] = useState("");
   const { user, logout, setAuthOpen } = useAuth();
   const { data: news } = useNews();
   const alertsApi = usePriceAlerts(coins, !!data?.live);
@@ -84,21 +71,14 @@ const Index = () => {
   const favCoins = coins.filter((c) => favs.includes(c.id));
   const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
 
-  const send = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!draft.trim()) return;
-    setDraft("");
-    toast({ title: "Сообщение отправлено", description: "Общий чат трейдеров открывается совсем скоро — мы сохраним ваше место." });
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
       {/* Навигация */}
       <nav className="bg-card border-b border-border px-4 sm:px-6 py-3 sticky top-0 z-30">
         <div className="flex items-center justify-between">
           <button onClick={() => go("welcome")} className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
-              <Icon name="CandlestickChart" size={20} />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-black text-xl sm:text-2xl leading-none">
+              Т
             </div>
             <div className="text-left">
               <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADERKA<span className="text-primary">.RU</span></h1>
@@ -169,7 +149,7 @@ const Index = () => {
             className="w-12 h-12 bg-primary text-primary-foreground rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center"
             title="TRADERKA.RU"
           >
-            <Icon name="CandlestickChart" size={22} />
+            <span className="font-display font-black text-2xl leading-none text-white">Т</span>
           </button>
           <div className="w-8 h-[2px] bg-hover rounded-full" />
           {isLoading
@@ -206,7 +186,7 @@ const Index = () => {
             className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
           >
             <div className="h-12 px-4 border-b border-border flex items-center justify-between shadow-sm">
-              <h2 className="text-white font-semibold text-sm">TRADERKA.RU · Трейдеры</h2>
+              <h2 className="text-white font-semibold text-sm">TRADERKA.RU</h2>
               <Button
                 variant="ghost"
                 className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
@@ -240,25 +220,6 @@ const Index = () => {
                           {unread > 30 ? "30+" : unread}
                         </span>
                       )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[11px] font-semibold uppercase tracking-wider">
-                  <Icon name="ChevronDown" size={12} />
-                  <span>Голосовые каналы</span>
-                </div>
-                <div className="mt-1 space-y-0.5">
-                  {VOICE.map((v) => (
-                    <button
-                      key={v.name}
-                      onClick={() => toast({ title: v.name, description: "Голосовые эфиры стартуют вместе с открытием сообщества." })}
-                      className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                    >
-                      <Icon name="Volume2" size={16} className="opacity-70" />
-                      <span className="text-[15px]">{v.name}</span>
-                      <span className="ml-auto text-[11px] font-mono">{v.people}</span>
                     </button>
                   ))}
                 </div>
@@ -364,23 +325,9 @@ const Index = () => {
               </div>
             </div>
 
-            <form onSubmit={send} className="p-3 sm:p-4">
-              <div className="bg-hover rounded-lg px-3 sm:px-4 py-2.5 flex items-center gap-3">
-                <Icon name="CirclePlus" size={20} className="text-muted-foreground" />
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder={`Сообщение #${current.name}`}
-                  className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
-                />
-                <button type="submit" className="text-muted-foreground hover:text-primary" aria-label="Отправить">
-                  <Icon name="SendHorizontal" size={18} />
-                </button>
-              </div>
-            </form>
           </main>
 
-          {/* Правая панель: избранное и участники */}
+          {/* Правая панель: избранное */}
           <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
             <div>
               <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
@@ -411,27 +358,6 @@ const Index = () => {
                 )}
               </div>
             </div>
-            {["Аналитики", "Трейдеры"].map((role) => (
-              <div key={role}>
-                <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2">
-                  {role} — {MEMBERS.filter((m) => m.role === role).length}
-                </h3>
-                <div className="space-y-0.5">
-                  {MEMBERS.filter((m) => m.role === role).map((m) => (
-                    <div key={m.name} className="flex items-center gap-2.5 p-2 rounded hover:bg-hover/60 cursor-pointer">
-                      <div className={`relative w-8 h-8 rounded-full flex items-center justify-center font-display text-sm ${m.cls}`}>
-                        {m.avatar}
-                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-up border-2 border-card rounded-full" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm font-medium truncate">{m.name}</div>
-                        <div className="text-muted-foreground text-xs truncate">{m.status}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
           </aside>
         </div>
       </div>

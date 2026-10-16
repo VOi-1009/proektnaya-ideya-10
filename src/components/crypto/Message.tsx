@@ -13,7 +13,12 @@ interface Props {
   delay?: number;
 }
 
-const Message = ({ author, time, avatar, avatarClass, icon, bot, role, children, delay = 0 }: Props) => (
+const Message = ({ author, time, avatar, avatarClass, icon, bot, role, children, delay = 0 }: Props) =>
+  bot ? (
+    <div className="text-foreground text-sm sm:text-[15px] leading-relaxed animate-fade-in" style={{ animationDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  ) : (
   <div
     className="group flex gap-3 sm:gap-4 px-2 sm:px-4 py-1.5 -mx-2 sm:-mx-4 hover:bg-black/10 rounded animate-fade-in"
     style={{ animationDelay: `${delay}ms` }}
@@ -44,6 +49,6 @@ const Message = ({ author, time, avatar, avatarClass, icon, bot, role, children,
       <div className="text-foreground text-sm sm:text-[15px] leading-relaxed">{children}</div>
     </div>
   </div>
-);
+  );
 
 export default Message;
