@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { YandexLoginButton } from "@/components/extensions/yandex-auth/YandexLoginButton";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
 
 const AuthDialog = () => {
-  const { authOpen, setAuthOpen, auth } = useAuth();
+  const { authOpen, setAuthOpen, auth, loginWithYandex } = useAuth();
+  const [yaLoading, setYaLoading] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +55,25 @@ const AuthDialog = () => {
             Портфель будет доступен с любого устройства
           </DialogDescription>
         </DialogHeader>
+        <YandexLoginButton
+          onClick={async () => {
+            setYaLoading(true);
+            setErr("");
+            try {
+              await loginWithYandex();
+            } catch (e) {
+              setErr((e as Error).message);
+              setYaLoading(false);
+            }
+          }}
+          isLoading={yaLoading}
+          className="w-full h-10 font-semibold"
+        />
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex-1 h-px bg-input" />
+          или по почте
+          <div className="flex-1 h-px bg-input" />
+        </div>
         <form onSubmit={submit} className="space-y-3" noValidate>
           <div>
             <label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Почта</label>

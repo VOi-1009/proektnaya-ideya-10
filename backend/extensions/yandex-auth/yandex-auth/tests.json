@@ -1,0 +1,6 @@
+{
+  "tests": [
+    {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Callback без кода", "method": "POST", "path": "/?action=callback", "body": {}, "expectedStatus": 400}
+  ]
+}

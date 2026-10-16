@@ -31,6 +31,8 @@ def hash_password(password: str, salt: str | None = None) -> str:
 
 
 def check_password(password: str, stored: str) -> bool:
+    if not stored or "$" not in stored:
+        return False
     salt = stored.split("$", 1)[0]
     return secrets.compare_digest(hash_password(password, salt), stored)
 
@@ -61,13 +63,16 @@ def handler(event: dict, context) -> dict:
             if not token:
                 return resp(401, {"error": "Не авторизован"})
             cur.execute(
-                f"SELECT u.id, u.email FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+                f"SELECT u.id, u.email, u.name FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
                 f"WHERE s.token = '{token}' AND s.expires_at > NOW()"
             )
             row = cur.fetchone()
             if not row:
                 return resp(401, {"error": "Сессия истекла"})
-            return resp(200, {"user": {"id": row[0], "email": row[1]}})
+            email = row[1] or ""
+            if email.endswith("@users.traderka.ru"):
+                email = row[2] or "Яндекс ID"
+            return resp(200, {"user": {"id": row[0], "email": email}})
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})
@@ -91,6 +96,8 @@ def handler(event: dict, context) -> dict:
         row = cur.fetchone()
 
         if action == "register":
+            if row and not row[1]:
+                return resp(409, {"error": "Эта почта привязана к Яндекс ID — войдите через Яндекс"})
             if row:
                 return resp(409, {"error": "Эта почта уже зарегистрирована — войдите"})
             cur.execute(
