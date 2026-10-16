@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { PORTFOLIO_URL, useAuth } from "@/lib/auth";
 import Message from "../Message";
+import PortfolioChart from "../PortfolioChart";
 import { CoinLogo } from "../QuotesTable";
 
 interface Holding {
@@ -193,6 +194,8 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
           <div className={`font-mono text-xs tabular mt-1 ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
         </div>
       </div>
+
+      <PortfolioChart holdings={holdings} coins={coins} />
 
       {total > 0 && (
         <div className="bg-card border border-border rounded-lg p-4">

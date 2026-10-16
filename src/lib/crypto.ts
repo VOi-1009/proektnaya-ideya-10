@@ -104,26 +104,30 @@ export function useMarkets() {
   });
 }
 
+export type ChartPoint = { t: number; p: number };
+
+export async function fetchChart(id: string, days: number, fallbackPrice?: number): Promise<ChartPoint[]> {
+  try {
+    const r = await fetch(`${API}/coins/${id}/market_chart?vs_currency=usd&days=${days}`);
+    if (!r.ok) throw new Error("bad");
+    const data = (await r.json()) as { prices: [number, number][] };
+    return data.prices.map(([t, p]) => ({ t, p }));
+  } catch {
+    const n = 120;
+    const now = Date.now();
+    const step = (days * 86400000) / n;
+    const base = fallbackPrice ?? 100;
+    return synthSeries(base, n, id.length * 31 + days, 0.04).map((p, i) => ({
+      t: now - (n - i) * step,
+      p,
+    }));
+  }
+}
+
 export function useChart(id: string, days: number, fallbackPrice?: number) {
-  return useQuery<{ t: number; p: number }[]>({
+  return useQuery<ChartPoint[]>({
     queryKey: ["chart", id, days],
-    queryFn: async () => {
-      try {
-        const r = await fetch(`${API}/coins/${id}/market_chart?vs_currency=usd&days=${days}`);
-        if (!r.ok) throw new Error("bad");
-        const data = (await r.json()) as { prices: [number, number][] };
-        return data.prices.map(([t, p]) => ({ t, p }));
-      } catch {
-        const n = 120;
-        const now = Date.now();
-        const step = (days * 86400000) / n;
-        const base = fallbackPrice ?? 100;
-        return synthSeries(base, n, id.length * 31 + days, 0.04).map((p, i) => ({
-          t: now - (n - i) * step,
-          p,
-        }));
-      }
-    },
+    queryFn: () => fetchChart(id, days, fallbackPrice),
     staleTime: 60_000,
   });
 }
