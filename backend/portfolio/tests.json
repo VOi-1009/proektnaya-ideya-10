@@ -1,0 +1,6 @@
+{
+  "tests": [
+    {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Без токена", "method": "GET", "path": "/", "expectedStatus": 401}
+  ]
+}

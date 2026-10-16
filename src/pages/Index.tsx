@@ -10,6 +10,7 @@ import MarketChannel from "@/components/crypto/channels/MarketChannel";
 import NewsChannel from "@/components/crypto/channels/NewsChannel";
 import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
 import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
+import { useAuth } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CHANNELS = [
@@ -50,6 +51,7 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [draft, setDraft] = useState("");
+  const { user, logout, setAuthOpen } = useAuth();
 
   useEffect(() => {
     localStorage.setItem("svecha-favs", JSON.stringify(favs));
@@ -245,17 +247,35 @@ const Index = () => {
               </div>
             </div>
             <div className="p-2 bg-rail/70 flex items-center gap-2">
-              <div className="relative w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-display text-sm">
-                Г
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-up border-2 border-card rounded-full" />
+              <div className="relative w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-display text-sm uppercase">
+                {user ? user.email[0] : "Г"}
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-card rounded-full ${user ? "bg-up" : "bg-muted-foreground"}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-white text-sm font-medium truncate">Гость</div>
-                <div className="text-muted-foreground text-xs truncate">Избранных: {favs.length}</div>
+                <div className="text-white text-sm font-medium truncate">{user ? user.email : "Гость"}</div>
+                <div className="text-muted-foreground text-xs truncate">
+                  {user ? "Портфель в облаке" : `Избранных: ${favs.length}`}
+                </div>
               </div>
-              <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-hover text-muted-foreground" onClick={() => go("market")}>
-                <Icon name="Settings" size={16} />
-              </Button>
+              {user ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-8 h-8 p-0 hover:bg-hover text-muted-foreground hover:text-down"
+                  onClick={() => {
+                    logout();
+                    toast({ title: "Вы вышли из аккаунта" });
+                  }}
+                  aria-label="Выйти"
+                  title="Выйти"
+                >
+                  <Icon name="LogOut" size={16} />
+                </Button>
+              ) : (
+                <Button size="sm" className="h-8 px-3 font-semibold" onClick={() => setAuthOpen(true)}>
+                  Войти
+                </Button>
+              )}
             </div>
           </aside>
 

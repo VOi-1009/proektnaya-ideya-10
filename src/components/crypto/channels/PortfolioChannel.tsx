@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Coin, COIN_META, fmtPct, fmtPrice } from "@/lib/crypto";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { PORTFOLIO_URL, useAuth } from "@/lib/auth";
 import Message from "../Message";
 import { CoinLogo } from "../QuotesTable";
 
@@ -37,15 +38,60 @@ const fmtAmount = (v: number) => v.toLocaleString("ru-RU", { maximumFractionDigi
 const parseNum = (s: string) => parseFloat(s.replace(/\s/g, "").replace(",", "."));
 
 const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinId?: string) => void }) => {
-  const [holdings, setHoldings] = useState<Holding[]>(loadHoldings);
+  const { user, token, ready, setAuthOpen } = useAuth();
+  const [local, setLocal] = useState<Holding[]>(loadHoldings);
+  const [remote, setRemote] = useState<Holding[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [coinId, setCoinId] = useState(coins[0]?.id ?? "bitcoin");
   const [amount, setAmount] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
   const [err, setErr] = useState("");
 
+  const holdings = user ? remote : local;
+
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(holdings));
-  }, [holdings]);
+    localStorage.setItem(KEY, JSON.stringify(local));
+  }, [local]);
+
+  const api = async (method: string, opts: { body?: unknown; id?: string } = {}) => {
+    const r = await fetch(PORTFOLIO_URL + (opts.id ? `?id=${opts.id}` : ""), {
+      method,
+      headers: { "Content-Type": "application/json", "X-Auth-Token": token ?? "" },
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error ?? "Не удалось связаться с сервером");
+    return data.holdings as Holding[];
+  };
+
+  useEffect(() => {
+    if (!user || !token) return;
+    let cancelled = false;
+    setLoading(true);
+    const pending = loadHoldings();
+    if (pending.length) localStorage.setItem(KEY, "[]");
+    const req = pending.length
+      ? api("POST", { body: { items: pending.map(({ coinId, amount, buyPrice }) => ({ coinId, amount, buyPrice })) } })
+      : api("GET");
+    req
+      .then((list) => {
+        if (cancelled) return;
+        setRemote(list);
+        if (pending.length) {
+          setLocal([]);
+          toast({ title: "Портфель перенесён в аккаунт", description: `Позиций добавлено: ${pending.length}` });
+        }
+      })
+      .catch((e) => {
+        if (pending.length) localStorage.setItem(KEY, JSON.stringify(pending));
+        if (!cancelled) toast({ title: "Ошибка", description: (e as Error).message, variant: "destructive" });
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const priceOf = (id: string) => coins.find((c) => c.id === id)?.current_price ?? 0;
 
@@ -72,25 +118,62 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
   const day = rows.reduce((s, r) => s + r.day, 0);
   const dayPct = total - day ? (day / (total - day)) * 100 : 0;
 
-  const add = (e: React.FormEvent) => {
+  const add = async (e: React.FormEvent) => {
     e.preventDefault();
     const a = parseNum(amount);
     const p = buyPrice.trim() ? parseNum(buyPrice) : priceOf(coinId);
     if (Number.isNaN(a) || a <= 0) return setErr("Укажите количество монет больше нуля");
     if (Number.isNaN(p) || p <= 0) return setErr("Цена покупки должна быть больше нуля");
     setErr("");
-    setHoldings((list) => [...list, { id: `${Date.now()}`, coinId, amount: a, buyPrice: p }]);
+    if (user) {
+      setSaving(true);
+      try {
+        setRemote(await api("POST", { body: { coinId, amount: a, buyPrice: p } }));
+      } catch (e) {
+        setSaving(false);
+        return setErr((e as Error).message);
+      }
+      setSaving(false);
+    } else {
+      setLocal((list) => [...list, { id: `${Date.now()}`, coinId, amount: a, buyPrice: p }]);
+    }
     setAmount("");
     setBuyPrice("");
     toast({ title: "Монета добавлена", description: `${fmtAmount(a)} ${COIN_META[coinId]?.short ?? coinId} по ${fmtPrice(p)}` });
   };
 
-  const remove = (id: string) => setHoldings((list) => list.filter((h) => h.id !== id));
+  const remove = async (id: string) => {
+    if (!user) return setLocal((list) => list.filter((h) => h.id !== id));
+    const prev = remote;
+    setRemote((list) => list.filter((h) => h.id !== id));
+    try {
+      setRemote(await api("DELETE", { id }));
+    } catch (e) {
+      setRemote(prev);
+      toast({ title: "Не удалось удалить", description: (e as Error).message, variant: "destructive" });
+    }
+  };
 
   const upCls = (v: number) => (v >= 0 ? "text-up" : "text-down");
 
   return (
     <div className="space-y-5">
+      {ready && !user && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-primary/10 border border-primary/30 rounded-lg p-4 animate-fade-in">
+          <Icon name="Cloud" size={22} className="text-primary flex-shrink-0" />
+          <div className="flex-1 text-sm">
+            <div className="text-white font-semibold">Сохраните портфель в аккаунте</div>
+            <div className="text-muted-foreground">
+              Войдите по почте — монеты будут доступны с телефона и компьютера. Уже добавленные позиции перенесутся автоматически.
+            </div>
+          </div>
+          <Button onClick={() => setAuthOpen(true)} className="font-semibold">
+            <Icon name="LogIn" size={16} className="mr-1.5" />
+            Войти
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 animate-fade-in">
         <div className="bg-card border border-border rounded-lg p-4 border-l-4 border-l-primary">
           <div className="text-muted-foreground text-xs">Стоимость портфеля</div>
@@ -177,8 +260,8 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
               placeholder={`Цена, сейчас ${fmtPrice(priceOf(coinId))}`}
               className="bg-rail rounded px-3 h-10 font-mono text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground placeholder:font-body"
             />
-            <Button type="submit" className="h-10 font-semibold">
-              <Icon name="Plus" size={16} className="mr-1" />
+            <Button type="submit" disabled={saving} className="h-10 font-semibold">
+              <Icon name={saving ? "Loader2" : "Plus"} size={16} className={`mr-1 ${saving ? "animate-spin" : ""}`} />
               Добавить
             </Button>
           </div>
@@ -231,8 +314,17 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
               {!rows.length && (
                 <tr>
                   <td colSpan={6} className="px-3 py-10 text-center text-muted-foreground">
-                    <Icon name="Wallet" size={28} className="mx-auto mb-2 opacity-60" />
-                    Портфель пока пуст — добавьте первую монету выше.
+                    {loading ? (
+                      <>
+                        <Icon name="Loader2" size={28} className="mx-auto mb-2 opacity-60 animate-spin" />
+                        Загружаю ваш портфель…
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="Wallet" size={28} className="mx-auto mb-2 opacity-60" />
+                        Портфель пока пуст — добавьте первую монету выше.
+                      </>
+                    )}
                   </td>
                 </tr>
               )}
@@ -242,7 +334,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
       </div>
 
       <p className="text-xs text-muted-foreground/70 pb-2">
-        Портфель хранится только в этом браузере. Расчёты приблизительные и не являются инвестиционной рекомендацией.
+        {user ? `Портфель сохранён в аккаунте ${user.email}.` : "Без входа портфель хранится только в этом браузере."} Расчёты приблизительные и не являются инвестиционной рекомендацией.
       </p>
     </div>
   );

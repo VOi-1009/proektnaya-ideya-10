@@ -1,0 +1,7 @@
+{
+  "tests": [
+    {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Без токена", "method": "GET", "path": "/", "expectedStatus": 401},
+    {"name": "Плохая почта", "method": "POST", "path": "/", "body": {"action": "login", "email": "bad", "password": "123456"}, "expectedStatus": 400}
+  ]
+}
