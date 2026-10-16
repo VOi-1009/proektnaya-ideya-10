@@ -7,6 +7,8 @@ import uuid
 import boto3
 import psycopg2
 
+from articles import handle_articles
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -79,10 +81,13 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет: профиль, статус по активности, редактирование данных и загрузка аватара"""
+    """Личный кабинет (профиль, статус, аватар) и статьи (?resource=articles: чтение для всех, правка для администратора)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
+
+    if (event.get("queryStringParameters") or {}).get("resource") == "articles":
+        return handle_articles(event)
 
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     token = re.sub(r"[^a-f0-9]", "", headers.get("x-auth-token", ""))

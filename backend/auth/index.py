@@ -63,7 +63,7 @@ def handler(event: dict, context) -> dict:
             if not token:
                 return resp(401, {"error": "Не авторизован"})
             cur.execute(
-                f"SELECT u.id, u.email, u.name, u.avatar_url FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+                f"SELECT u.id, u.email, u.name, u.avatar_url, u.is_admin FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
                 f"WHERE s.token = '{token}' AND s.expires_at > NOW()"
             )
             row = cur.fetchone()
@@ -76,7 +76,7 @@ def handler(event: dict, context) -> dict:
                 cur.execute(
                     f"INSERT INTO {SCHEMA}.user_visits (user_id, day) VALUES ({int(row[0])}, CURRENT_DATE) ON CONFLICT DO NOTHING"
                 )
-            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or ""}})
+            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or "", "isAdmin": bool(row[4])}})
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})
@@ -116,7 +116,9 @@ def handler(event: dict, context) -> dict:
             return resp(400, {"error": "Неизвестное действие"})
 
         new_token = create_session(cur, user_id)
-        return resp(200, {"token": new_token, "user": {"id": user_id, "email": email}})
+        cur.execute(f"SELECT name, avatar_url, is_admin FROM {SCHEMA}.users WHERE id = {int(user_id)}")
+        u = cur.fetchone()
+        return resp(200, {"token": new_token, "user": {"id": user_id, "email": email, "name": u[0] or "", "avatar": u[1] or "", "isAdmin": bool(u[2])}})
     finally:
         cur.close()
         conn.close()

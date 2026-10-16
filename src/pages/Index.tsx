@@ -12,6 +12,7 @@ import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
 import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
 import { useAuth } from "@/lib/auth";
 import { getSeen, useNews } from "@/components/crypto/news";
+import ArticlesChannel from "@/components/crypto/channels/ArticlesChannel";
 import AlertsChannel from "@/components/crypto/channels/AlertsChannel";
 import { usePriceAlerts } from "@/lib/alerts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,7 @@ const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
   { id: "news", name: "новости", topic: "Криптоновости, аналитика и регулирование", icon: "Hash" },
+  { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
@@ -320,6 +322,8 @@ const Index = () => {
                   />
                 ) : channel === "news" ? (
                   <NewsChannel />
+                ) : channel === "articles" ? (
+                  <ArticlesChannel />
                 ) : channel === "alerts" ? (
                   <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
                 ) : channel === "portfolio" ? (

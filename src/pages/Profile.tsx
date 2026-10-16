@@ -258,6 +258,14 @@ const Profile = () => {
                   />
                 </label>
                 <div className="flex flex-wrap gap-2">
+                  {user?.isAdmin && (
+                    <Button type="button" variant="outline" asChild className="bg-transparent border-primary/50 text-primary hover:bg-primary/10 hover:text-primary">
+                      <Link to="/admin">
+                        <Icon name="ShieldCheck" size={16} className="mr-2" />
+                        Админ-панель
+                      </Link>
+                    </Button>
+                  )}
                   <Button type="submit" disabled={saving} className="font-semibold">
                     {saving && <Icon name="Loader2" size={16} className="mr-2 animate-spin" />}
                     Сохранить
