@@ -163,7 +163,7 @@ const Index = () => {
       {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 
       <div className="flex min-h-[calc(100vh-96px)]">
-        {/* Рейл «серверов» — монеты */}
+        {/* Рейл */}
         <div className="hidden lg:flex w-[72px] bg-rail flex-col items-center py-3 gap-2 flex-shrink-0">
           <button
             onClick={() => go("welcome")}
@@ -172,33 +172,6 @@ const Index = () => {
           >
             <span className="font-display font-black text-2xl leading-none text-white">Т</span>
           </button>
-          <div className="w-8 h-[2px] bg-hover rounded-full" />
-          {isLoading
-            ? [1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="w-12 h-12 rounded-3xl bg-hover" />)
-            : coins.map((c) => {
-                const active = channel === "market" && selected === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => go("market", c.id)}
-                    title={`${COIN_META[c.id]?.ru ?? c.name} · ${fmtPrice(c.current_price)}`}
-                    className="relative group"
-                  >
-                    <span
-                      className={`absolute -left-3 top-1/2 -translate-y-1/2 w-1 bg-white rounded-r transition-all ${
-                        active ? "h-10" : "h-0 group-hover:h-5"
-                      }`}
-                    />
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <span
-                        className={`rounded-full bg-primary transition-all duration-200 shadow-[0_0_12px_hsl(var(--primary)/0.45)] ${
-                          active ? "w-7 h-7" : "w-5 h-5 group-hover:w-6 group-hover:h-6"
-                        }`}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row min-w-0">
