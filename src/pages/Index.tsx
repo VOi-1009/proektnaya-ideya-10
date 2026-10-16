@@ -97,7 +97,7 @@ const Index = () => {
               </Button>
             ))}
             <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
-              <a href="https://max.ru/" target="_blank" rel="noreferrer">
+              <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
                 <Icon name="MessageCircle" size={16} className="mr-2" />
                 MAX
               </a>
@@ -130,7 +130,7 @@ const Index = () => {
               </Button>
             ))}
             <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
-              <a href="https://max.ru/" target="_blank" rel="noreferrer">
+              <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
                 <Icon name="MessageCircle" size={16} className="mr-2" />
                 Канал в MAX
               </a>
