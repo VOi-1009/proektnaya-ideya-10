@@ -1,0 +1,168 @@
+import { useState } from "react";
+import Icon from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
+import Message from "../Message";
+import { NEWS } from "../news";
+
+const HERO = "https://cdn.poehali.dev/projects/17c74dba-f379-4376-80b1-440f2ac081c4/files/478dfa0f-7b67-4e33-82ce-a89ee70b614e.jpg";
+
+interface Props {
+  coins: Coin[];
+  go: (channel: string, coinId?: string) => void;
+}
+
+const FEATURES = [
+  { icon: "Activity", title: "Котировки онлайн", desc: "Цены, изменения за час, сутки и неделю — без перезагрузки" },
+  { icon: "CandlestickChart", title: "Графики по периодам", desc: "От одного дня до года, с подсказкой цены в каждой точке" },
+  { icon: "Newspaper", title: "Новости без шума", desc: "Только то, что двигает рынок, с фильтром по темам" },
+  { icon: "Star", title: "Избранные монеты", desc: "Отметьте свои активы — список запомнится в браузере" },
+];
+
+const WelcomeChannel = ({ coins, go }: Props) => {
+  const [email, setEmail] = useState("");
+  const [err, setErr] = useState("");
+
+  const totalCap = coins.reduce((s, c) => s + c.market_cap, 0);
+  const btc = coins.find((c) => c.id === "bitcoin");
+  const dominance = btc ? (btc.market_cap / totalCap) * 100 : 0;
+  const sorted = [...coins].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = email.trim();
+    if (!v) return setErr("Укажите почту или ник в Telegram");
+    if (!/^@[a-zA-Z0-9_]{4,}$/.test(v) && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))
+      return setErr("Похоже на опечатку: нужен e-mail или @ник");
+    setErr("");
+    setEmail("");
+    toast({ title: "Вы в списке!", description: "Утренний дайджест рынка придёт завтра в 9:00 МСК." });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="relative rounded-xl overflow-hidden border border-border animate-scale-in">
+        <img src={HERO} alt="График роста криптовалют" className="w-full h-48 sm:h-64 object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+          <div className="text-primary font-mono text-xs mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
+          </div>
+          <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight max-w-xl">
+            Весь крипторынок — в одном чате
+          </h2>
+          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-lg">
+            Котировки, графики и новости для трейдеров. Без регистрации и лишних вкладок.
+          </p>
+        </div>
+      </div>
+
+      <Message author="Свеча Бот" time="Сегодня в 09:00" icon="CandlestickChart" bot delay={80}>
+        <p className="mb-3">
+          <strong className="text-white">Доброе утро, трейдеры!</strong> Сводка по рынку на сегодня:
+        </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 max-w-3xl">
+          <div className="bg-card rounded-lg p-3 border-l-4 border-primary">
+            <div className="text-muted-foreground text-xs">Капитализация топ-8</div>
+            <div className="font-mono text-white tabular mt-1">{fmtBig(totalCap)}</div>
+          </div>
+          <div className="bg-card rounded-lg p-3 border-l-4 border-accent">
+            <div className="text-muted-foreground text-xs">Доминация BTC</div>
+            <div className="font-mono text-white tabular mt-1">{dominance.toFixed(1).replace(".", ",")}%</div>
+          </div>
+          {best && (
+            <button onClick={() => go("market", best.id)} className="text-left bg-card rounded-lg p-3 border-l-4 border-up hover:bg-hover transition-colors">
+              <div className="text-muted-foreground text-xs">Сильнее рынка</div>
+              <div className="font-mono text-white mt-1">
+                {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
+              </div>
+            </button>
+          )}
+          {worst && (
+            <button onClick={() => go("market", worst.id)} className="text-left bg-card rounded-lg p-3 border-l-4 border-down hover:bg-hover transition-colors">
+              <div className="text-muted-foreground text-xs">Аутсайдер</div>
+              <div className="font-mono text-white mt-1">
+                {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
+              </div>
+            </button>
+          )}
+        </div>
+        {btc && (
+          <p className="mt-3 text-muted-foreground text-sm">
+            Биткоин торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
+            <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
+              Открыть график →
+            </button>
+          </p>
+        )}
+      </Message>
+
+      <Message author="Ольга Графики" time="Сегодня в 09:12" avatar="О" avatarClass="bg-amber-400 text-black" role={{ label: "аналитик", className: "text-amber-300" }} delay={160}>
+        Свежий разбор в #новости: {NEWS[1].title.toLowerCase()}. Заходите обсудить
+      </Message>
+
+      <Message author="Тимур Скальпер" time="Сегодня в 09:20" avatar="Т" avatarClass="bg-sky-500 text-white" delay={240}>
+        Удобно, что всё в одном месте: глянул котировки, открыл график и сразу новость рядом. Больше не держу десять вкладок
+      </Message>
+
+      <div className="bg-card border border-border rounded-lg p-4 sm:p-6 animate-fade-in" style={{ animationDelay: "300ms" }}>
+        <h3 className="font-display text-lg sm:text-xl text-white mb-4">Что умеет Свеча</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="flex items-start gap-3 p-3 rounded hover:bg-hover/60 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-primary/15 text-primary flex items-center justify-center flex-shrink-0">
+                <Icon name={f.icon} size={18} />
+              </div>
+              <div>
+                <div className="text-white font-medium text-sm">{f.title}</div>
+                <div className="text-muted-foreground text-sm">{f.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 mt-5">
+          <Button onClick={() => go("market")} className="font-semibold">
+            <Icon name="CandlestickChart" size={16} className="mr-2" />
+            Смотреть котировки
+          </Button>
+          <Button onClick={() => go("news")} variant="outline" className="bg-transparent border-input text-foreground hover:bg-hover hover:text-white">
+            <Icon name="Newspaper" size={16} className="mr-2" />
+            Читать новости
+          </Button>
+        </div>
+      </div>
+
+      <div id="subscribe" className="bg-gradient-to-br from-primary/15 to-card border border-primary/30 rounded-lg p-4 sm:p-6">
+        <div className="flex items-center gap-2 text-primary text-xs font-mono mb-2">
+          <Icon name="Bell" size={14} /> ДАЙДЖЕСТ
+        </div>
+        <h3 className="font-display text-lg sm:text-xl text-white mb-1">Утренняя сводка рынка</h3>
+        <p className="text-muted-foreground text-sm mb-4">Каждый день в 9:00 — главные движения и новости за ночь. Пять минут чтения.</p>
+        <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2 max-w-lg" noValidate>
+          <input
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (err) setErr("");
+            }}
+            placeholder="почта или @ник в Telegram"
+            className={`flex-1 bg-rail rounded px-3 py-2 text-sm outline-none border placeholder:text-muted-foreground ${
+              err ? "border-down" : "border-transparent focus:border-primary"
+            }`}
+          />
+          <Button type="submit" className="font-semibold">Подписаться</Button>
+        </form>
+        {err && <div className="text-down text-xs mt-2">{err}</div>}
+      </div>
+
+      <p className="text-xs text-muted-foreground/70 pb-2">
+        Информация на сайте не является инвестиционной рекомендацией. Торговля криптовалютой связана с высоким риском.
+      </p>
+    </div>
+  );
+};
+
+export default WelcomeChannel;

@@ -1,468 +1,389 @@
-import { useState } from "react";
-import {
-  Download,
-  Shield,
-  Zap,
-  Eye,
-  Clock,
-  Github,
-  ArrowRight,
-  Hash,
-  Users,
-  Mic,
-  Settings,
-  Bell,
-  Search,
-  Menu,
-  X,
-  Monitor,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { COIN_META, fmtPct, fmtPrice, useMarkets } from "@/lib/crypto";
+import Ticker from "@/components/crypto/Ticker";
+import { CoinLogo } from "@/components/crypto/QuotesTable";
+import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
+import MarketChannel from "@/components/crypto/channels/MarketChannel";
+import NewsChannel from "@/components/crypto/channels/NewsChannel";
+import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const CHANNELS = [
+  { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
+  { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
+  { id: "news", name: "новости", topic: "Криптоновости, аналитика и регулирование", icon: "Hash" },
+  { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
+];
+
+const VOICE = [
+  { name: "Трейдинг-рум", people: 12 },
+  { name: "Разбор графиков", people: 4 },
+];
+
+const MEMBERS = [
+  { name: "Ольга Графики", status: "Рисует уровни по SOL", avatar: "О", cls: "bg-amber-400 text-black", role: "Аналитики" },
+  { name: "Денис Нода", status: "Читает whitepaper", avatar: "Д", cls: "bg-sky-500 text-white", role: "Аналитики" },
+  { name: "Тимур Скальпер", status: "Смотрит график BTC", avatar: "Т", cls: "bg-violet-400 text-black", role: "Трейдеры" },
+  { name: "Мария Пулы", status: "В DeFi", avatar: "М", cls: "bg-pink-400 text-black", role: "Трейдеры" },
+];
+
+const loadFavs = (): string[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem("svecha-favs") ?? "null");
+    return Array.isArray(v) ? v : ["bitcoin", "ethereum", "the-open-network"];
+  } catch {
+    return ["bitcoin", "ethereum", "the-open-network"];
+  }
+};
 
 const Index = () => {
+  const { data, isLoading, dataUpdatedAt } = useMarkets();
+  const coins = data?.coins ?? [];
+  const [channel, setChannel] = useState("welcome");
+  const [selected, setSelected] = useState("bitcoin");
+  const [favs, setFavs] = useState<string[]>(loadFavs);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("svecha-favs", JSON.stringify(favs));
+  }, [favs]);
+
+  const toggleFav = (id: string) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
+
+  const go = (ch: string, coinId?: string) => {
+    setChannel(ch);
+    if (coinId) setSelected(coinId);
+    setMobileSidebarOpen(false);
+    setMobileMenuOpen(false);
+    document.getElementById("chat-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const current = CHANNELS.find((c) => c.id === channel)!;
+  const favCoins = coins.filter((c) => favs.includes(c.id));
+  const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
+
+  const send = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draft.trim()) return;
+    setDraft("");
+    toast({ title: "Сообщение отправлено", description: "Общий чат трейдеров открывается совсем скоро — мы сохраним ваше место." });
+  };
 
   return (
-    <div className="min-h-screen bg-[#36393f] text-white overflow-x-hidden">
-      {/* Навигация в стиле Discord */}
-      <nav className="bg-[#2f3136] border-b border-[#202225] px-4 sm:px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#5865f2] rounded-full flex items-center justify-center">
-              <Monitor className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
+      {/* Навигация */}
+      <nav className="bg-card border-b border-border px-4 sm:px-6 py-3 sticky top-0 z-30">
+        <div className="flex items-center justify-between">
+          <button onClick={() => go("welcome")} className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
+              <Icon name="CandlestickChart" size={20} />
             </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white">Дискордик</h1>
-              <p className="text-xs text-[#b9bbbe] hidden sm:block">Rich Presence для Figma в Discord</p>
+            <div className="text-left">
+              <h1 className="font-display text-lg sm:text-xl text-white leading-none">Свеча</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости крипторынка</p>
             </div>
-          </div>
-          <div className="hidden sm:flex items-center gap-4">
-            <Button variant="ghost" className="text-[#b9bbbe] hover:text-white hover:bg-[#40444b]">
-              <Github className="w-4 h-4 mr-2" />
-              GitHub
+          </button>
+          <div className="hidden md:flex items-center gap-1">
+            {CHANNELS.slice(1).map((c) => (
+              <Button
+                key={c.id}
+                variant="ghost"
+                onClick={() => go(c.id)}
+                className={`hover:bg-hover hover:text-white ${channel === c.id ? "text-white bg-hover" : "text-muted-foreground"}`}
+              >
+                {c.name[0].toUpperCase() + c.name.slice(1)}
+              </Button>
+            ))}
+            <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
+              <a href="https://t.me/" target="_blank" rel="noreferrer">
+                <Icon name="Send" size={16} className="mr-2" />
+                Telegram
+              </a>
             </Button>
-            <Button className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-6 py-2 rounded text-sm font-medium">
-              Скачать
+            <Button
+              className="ml-2 font-semibold"
+              onClick={() => {
+                go("welcome");
+                setTimeout(() => document.getElementById("subscribe")?.scrollIntoView({ behavior: "smooth" }), 100);
+              }}
+            >
+              Дайджест
             </Button>
           </div>
           <Button
             variant="ghost"
-            className="sm:hidden text-[#b9bbbe] hover:text-white hover:bg-[#40444b] p-2"
+            className="md:hidden text-muted-foreground hover:text-white hover:bg-hover p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Меню"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <Icon name={mobileMenuOpen ? "X" : "Menu"} size={20} />
           </Button>
         </div>
-
-        {/* Мобильное меню */}
         {mobileMenuOpen && (
-          <div className="sm:hidden mt-4 pt-4 border-t border-[#202225]">
-            <div className="flex flex-col gap-3">
-              <Button variant="ghost" className="text-[#b9bbbe] hover:text-white hover:bg-[#40444b] justify-start">
-                <Github className="w-4 h-4 mr-2" />
-                GitHub
+          <div className="md:hidden mt-3 pt-3 border-t border-border flex flex-col gap-1 animate-fade-in">
+            {CHANNELS.map((c) => (
+              <Button key={c.id} variant="ghost" onClick={() => go(c.id)} className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
+                <Icon name="Hash" size={16} className="mr-2" />
+                {c.name}
               </Button>
-              <Button className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-6 py-2 rounded text-sm font-medium">
-                Скачать
-              </Button>
-            </div>
+            ))}
+            <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
+              <a href="https://t.me/" target="_blank" rel="noreferrer">
+                <Icon name="Send" size={16} className="mr-2" />
+                Telegram-канал
+              </a>
+            </Button>
           </div>
         )}
       </nav>
 
-      {/* Макет в стиле Discord */}
-      <div className="flex min-h-screen">
-        {/* Боковая панель серверов - скрыта на мобильных */}
-        <div className="hidden lg:flex w-[72px] bg-[#202225] flex-col items-center py-3 gap-2">
-          <div className="w-12 h-12 bg-[#5865f2] rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer">
-            <Monitor className="w-6 h-6 text-white" />
-          </div>
-          <div className="w-8 h-[2px] bg-[#36393f] rounded-full"></div>
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="w-12 h-12 bg-[#36393f] rounded-3xl hover:rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer hover:bg-[#5865f2]"
-            >
-              <span className="text-[#dcddde] text-sm font-medium">{i}</span>
-            </div>
-          ))}
+      {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
+
+      <div className="flex min-h-[calc(100vh-96px)]">
+        {/* Рейл «серверов» — монеты */}
+        <div className="hidden lg:flex w-[72px] bg-rail flex-col items-center py-3 gap-2 flex-shrink-0">
+          <button
+            onClick={() => go("welcome")}
+            className="w-12 h-12 bg-primary text-primary-foreground rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center"
+            title="Свеча"
+          >
+            <Icon name="CandlestickChart" size={22} />
+          </button>
+          <div className="w-8 h-[2px] bg-hover rounded-full" />
+          {isLoading
+            ? [1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="w-12 h-12 rounded-3xl bg-hover" />)
+            : coins.map((c) => {
+                const active = channel === "market" && selected === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => go("market", c.id)}
+                    title={`${COIN_META[c.id]?.ru ?? c.name} · ${fmtPrice(c.current_price)}`}
+                    className="relative group"
+                  >
+                    <span
+                      className={`absolute -left-3 top-1/2 -translate-y-1/2 w-1 bg-white rounded-r transition-all ${
+                        active ? "h-10" : "h-0 group-hover:h-5"
+                      }`}
+                    />
+                    <div
+                      className={`w-12 h-12 flex items-center justify-center bg-hover transition-all duration-200 ${
+                        active ? "rounded-xl" : "rounded-3xl group-hover:rounded-xl"
+                      }`}
+                    >
+                      <CoinLogo coin={c} size={30} />
+                    </div>
+                  </button>
+                );
+              })}
         </div>
 
-        {/* Основной контент */}
-        <div className="flex-1 flex flex-col lg:flex-row">
-          {/* Боковая панель каналов */}
-          <div
-            className={`${mobileSidebarOpen ? "block" : "hidden"} lg:block w-full lg:w-60 bg-[#2f3136] flex flex-col`}
+        <div className="flex-1 flex flex-col lg:flex-row min-w-0">
+          {/* Каналы */}
+          <aside
+            className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
           >
-            <div className="p-4 border-b border-[#202225] flex items-center justify-between">
-              <h2 className="text-white font-semibold text-base">Сервер Дискордик</h2>
+            <div className="h-12 px-4 border-b border-border flex items-center justify-between shadow-sm">
+              <h2 className="text-white font-semibold text-sm">Свеча · Трейдеры</h2>
               <Button
                 variant="ghost"
-                className="lg:hidden text-[#b9bbbe] hover:text-white hover:bg-[#40444b] p-1"
+                className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
                 onClick={() => setMobileSidebarOpen(false)}
               >
-                <X className="w-4 h-4" />
+                <Icon name="X" size={16} />
               </Button>
             </div>
-            <div className="flex-1 p-2">
-              <div className="mb-4">
-                <div className="flex items-center gap-1 px-2 py-1 text-[#8e9297] text-xs font-semibold uppercase tracking-wide">
-                  <ArrowRight className="w-3 h-3" />
+            <div className="flex-1 p-2 space-y-4">
+              <div>
+                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[11px] font-semibold uppercase tracking-wider">
+                  <Icon name="ChevronDown" size={12} />
                   <span>Текстовые каналы</span>
                 </div>
                 <div className="mt-1 space-y-0.5">
-                  {["общий", "новости", "витрина", "помощь"].map((channel) => (
-                    <div
-                      key={channel}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded text-[#8e9297] hover:text-[#dcddde] hover:bg-[#393c43] cursor-pointer"
+                  {CHANNELS.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => go(c.id)}
+                      className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left transition-colors ${
+                        channel === c.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                      }`}
                     >
-                      <Hash className="w-4 h-4" />
-                      <span className="text-sm">{channel}</span>
-                    </div>
+                      <Icon name="Hash" size={18} className="opacity-70" />
+                      <span className="text-[15px]">{c.name}</span>
+                      {c.id === "news" && channel !== "news" && (
+                        <span className="ml-auto bg-down text-white text-[10px] font-bold rounded-full px-1.5">7</span>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
               <div>
-                <div className="flex items-center gap-1 px-2 py-1 text-[#8e9297] text-xs font-semibold uppercase tracking-wide">
-                  <ArrowRight className="w-3 h-3" />
+                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[11px] font-semibold uppercase tracking-wider">
+                  <Icon name="ChevronDown" size={12} />
                   <span>Голосовые каналы</span>
                 </div>
                 <div className="mt-1 space-y-0.5">
-                  {["Общий", "Обзор дизайна"].map((channel) => (
-                    <div
-                      key={channel}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded text-[#8e9297] hover:text-[#dcddde] hover:bg-[#393c43] cursor-pointer"
+                  {VOICE.map((v) => (
+                    <button
+                      key={v.name}
+                      onClick={() => toast({ title: v.name, description: "Голосовые эфиры стартуют вместе с открытием сообщества." })}
+                      className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-hover/60"
                     >
-                      <Mic className="w-4 h-4" />
-                      <span className="text-sm">{channel}</span>
-                    </div>
+                      <Icon name="Volume2" size={16} className="opacity-70" />
+                      <span className="text-[15px]">{v.name}</span>
+                      <span className="ml-auto text-[11px] font-mono">{v.people}</span>
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
-            {/* Область пользователя */}
-            <div className="p-2 bg-[#292b2f] flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#5865f2] rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">А</span>
+            <div className="p-2 bg-rail/70 flex items-center gap-2">
+              <div className="relative w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-display text-sm">
+                Г
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-up border-2 border-card rounded-full" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-white text-sm font-medium truncate">Алексей</div>
-                <div className="text-[#b9bbbe] text-xs truncate">#1234</div>
+                <div className="text-white text-sm font-medium truncate">Гость</div>
+                <div className="text-muted-foreground text-xs truncate">Избранных: {favs.length}</div>
               </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-[#40444b]">
-                  <Mic className="w-4 h-4 text-[#b9bbbe]" />
-                </Button>
-                <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-[#40444b]">
-                  <Settings className="w-4 h-4 text-[#b9bbbe]" />
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-hover text-muted-foreground" onClick={() => go("market")}>
+                <Icon name="Settings" size={16} />
+              </Button>
             </div>
-          </div>
+          </aside>
 
-          {/* Область чата */}
-          <div className="flex-1 flex flex-col">
-            {/* Заголовок чата */}
-            <div className="h-12 bg-[#36393f] border-b border-[#202225] flex items-center px-4 gap-2">
+          {/* Чат */}
+          <main className="flex-1 flex flex-col min-w-0 grain">
+            <div className="h-12 border-b border-border flex items-center px-4 gap-2 shadow-sm bg-background/80 backdrop-blur">
               <Button
                 variant="ghost"
-                className="lg:hidden text-[#8e9297] hover:text-[#dcddde] hover:bg-[#40444b] p-1 mr-2"
+                className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto mr-1"
                 onClick={() => setMobileSidebarOpen(true)}
+                aria-label="Каналы"
               >
-                <Menu className="w-5 h-5" />
+                <Icon name="Menu" size={20} />
               </Button>
-              <Hash className="w-5 h-5 text-[#8e9297]" />
-              <span className="text-white font-semibold">витрина</span>
-              <div className="w-px h-6 bg-[#40444b] mx-2 hidden sm:block"></div>
-              <span className="text-[#8e9297] text-sm hidden sm:block">Показывай свою работу в Figma с Дискордик</span>
-              <div className="ml-auto flex items-center gap-2 sm:gap-4">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9bbbe] cursor-pointer hover:text-[#dcddde]" />
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9bbbe] cursor-pointer hover:text-[#dcddde]" />
-                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9bbbe] cursor-pointer hover:text-[#dcddde]" />
+              <Icon name="Hash" size={20} className="text-muted-foreground" />
+              <span className="text-white font-semibold">{current.name}</span>
+              <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
+              <span className="text-muted-foreground text-sm hidden sm:block truncate">{current.topic}</span>
+              <div className="ml-auto flex items-center gap-3 text-muted-foreground">
+                {updated && (
+                  <span className="hidden md:flex items-center gap-1.5 text-xs font-mono">
+                    <span className={`w-1.5 h-1.5 rounded-full ${data?.live ? "bg-up animate-pulse" : "bg-accent"}`} />
+                    {data?.live ? "онлайн" : "кэш"} · {updated}
+                  </span>
+                )}
+                <button onClick={() => go("news")} className="hover:text-white" aria-label="Новости">
+                  <Icon name="Bell" size={18} />
+                </button>
+                <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет">
+                  <Icon name="Search" size={18} />
+                </button>
               </div>
             </div>
 
-            {/* Сообщения чата */}
-            <div className="flex-1 p-2 sm:p-4 space-y-4 sm:space-y-6 overflow-y-auto">
-              {/* Приветственное сообщение */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#5865f2] rounded-full flex items-center justify-center flex-shrink-0">
-                  <Monitor className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">Дискордик Бот</span>
-                    <span className="bg-[#5865f2] text-white text-xs px-1 rounded">БОТ</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 12:00</span>
+            <div id="chat-scroll" className="flex-1 p-3 sm:p-5 overflow-y-auto scrollbar-thin">
+              <div key={channel} className="max-w-5xl">
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-56 w-full bg-card" />
+                    <Skeleton className="h-24 w-full bg-card" />
+                    <Skeleton className="h-24 w-2/3 bg-card" />
                   </div>
-                  <div className="text-[#dcddde] text-sm sm:text-base">
-                    <p className="mb-3 sm:mb-4">
-                      <strong>Добро пожаловать в Дискордик!</strong> Показывай свой прогресс в Figma прямо в Discord.
-                    </p>
-                    <div className="bg-[#2f3136] border-l-4 border-[#5865f2] p-3 sm:p-4 rounded">
-                      <h3 className="text-white font-semibold mb-2 text-sm sm:text-base">Что умеет Дискордик:</h3>
-                      <ul className="space-y-1 text-xs sm:text-sm text-[#b9bbbe]">
-                        <li>Автоматически определяет Figma в браузере и приложении</li>
-                        <li>Показывает название текущего проекта/файла</li>
-                        <li>Обновляется каждые 5 секунд в реальном времени</li>
-                        <li>Очищает статус при простое</li>
-                        <li>Работает на всех платформах</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                ) : channel === "welcome" ? (
+                  <WelcomeChannel coins={coins} go={go} />
+                ) : channel === "market" ? (
+                  <MarketChannel
+                    coins={coins}
+                    selected={selected}
+                    onSelect={setSelected}
+                    favs={favs}
+                    toggleFav={toggleFav}
+                    live={!!data?.live}
+                  />
+                ) : channel === "news" ? (
+                  <NewsChannel />
+                ) : (
+                  <ConverterChannel coins={coins} />
+                )}
               </div>
+            </div>
 
-              {/* Сообщение пользователя с Rich Presence */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs sm:text-sm font-medium">М</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">Мария Дизайнер</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 12:05</span>
-                  </div>
-                  <div className="text-[#dcddde] mb-3 text-sm sm:text-base">
-                    Только начала работу над новым дизайном лендинга!
-                  </div>
-
-                  {/* Демо Rich Presence */}
-                  <div className="bg-[#2f3136] border border-[#202225] rounded-lg overflow-hidden w-full max-w-sm">
-                    {/* Заголовок профиля */}
-                    <div className="h-16 sm:h-20 bg-gradient-to-r from-[#5865f2] to-[#7c3aed] relative">
-                      <div className="absolute -bottom-3 sm:-bottom-4 left-3 sm:left-4">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-[#2f3136] bg-[#36393f] overflow-hidden">
-                          <div className="w-full h-full bg-gradient-to-br from-[#4f46e5] to-[#7c3aed] flex items-center justify-center">
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#2f3136] rounded-full flex items-center justify-center">
-                              <span className="text-lg sm:text-2xl">M</span>
-                            </div>
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-[#3ba55c] border-4 border-[#2f3136] rounded-full"></div>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-[#4f545c] hover:bg-[#5d6269] text-white text-xs px-2 sm:px-3 py-1 rounded"
-                      >
-                        <Settings className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">Профиль</span>
-                      </Button>
-                    </div>
-
-                    {/* Информация профиля */}
-                    <div className="pt-4 sm:pt-6 px-3 sm:px-4 pb-3 sm:pb-4">
-                      <div className="mb-3 sm:mb-4">
-                        <h3 className="text-white text-lg sm:text-xl font-bold mb-1">Мария</h3>
-                        <div className="flex items-center gap-2 text-[#b9bbbe] text-xs sm:text-sm">
-                          <span>maria_design</span>
-                          <span>-</span>
-                          <span>Она</span>
-                          <div className="flex gap-1 ml-2">
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-[#5865f2] rounded-sm"></div>
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-[#3ba55c] rounded-sm"></div>
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-[#faa61a] rounded-sm"></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Статусное сообщение */}
-                      <div className="mb-3 sm:mb-4">
-                        <div className="bg-[#36393f] rounded-lg p-2 sm:p-3 relative">
-                          <div className="absolute -top-2 left-3 sm:left-4 w-4 h-4 bg-[#36393f] rotate-45"></div>
-                          <div className="flex items-center gap-2 text-[#dcddde] text-xs sm:text-sm">
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-[#5865f2] rounded-full flex items-center justify-center">
-                              <span className="text-xs">*</span>
-                            </div>
-                            <span>Работаю над проектом...</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Вкладки */}
-                      <div className="flex border-b border-[#40444b] mb-3 sm:mb-4">
-                        <button className="px-3 sm:px-4 py-2 text-[#8e9297] text-xs sm:text-sm font-medium hover:text-[#dcddde]">
-                          Обо мне
-                        </button>
-                        <button className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium border-b-2 border-[#5865f2]">
-                          Активность
-                        </button>
-                      </div>
-
-                      {/* Активность Дискордик */}
-                      <div>
-                        <div className="flex items-center gap-2 text-[#8e9297] text-xs font-semibold uppercase tracking-wide mb-2 sm:mb-3">
-                          <span>Играет</span>
-                        </div>
-
-                        <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-[#36393f] rounded-lg">
-                          {/* Логотип Figma */}
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#ff7262] to-[#f24e1e] rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.354-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.015-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441c0 2.503-2.047 4.539-4.563 4.539zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148z" />
-                            </svg>
-                          </div>
-
-                          {/* Детали активности */}
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-semibold text-xs sm:text-sm mb-1">Дискордик</div>
-                            <div className="text-[#dcddde] text-xs sm:text-sm mb-1">Работаю над логотипом</div>
-                            <div className="text-[#b9bbbe] text-xs sm:text-sm mb-2">Figma Desktop</div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-[#3ba55c] rounded-full animate-pulse"></div>
-                              <span className="text-[#3ba55c] text-xs font-medium">0:37 прошло</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <form onSubmit={send} className="p-3 sm:p-4">
+              <div className="bg-hover rounded-lg px-3 sm:px-4 py-2.5 flex items-center gap-3">
+                <Icon name="CirclePlus" size={20} className="text-muted-foreground" />
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder={`Сообщение #${current.name}`}
+                  className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+                />
+                <button type="submit" className="text-muted-foreground hover:text-primary" aria-label="Отправить">
+                  <Icon name="SendHorizontal" size={18} />
+                </button>
               </div>
+            </form>
+          </main>
 
-              {/* Еще одно сообщение пользователя */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs sm:text-sm font-medium">И</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">Иван UX</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 12:08</span>
-                  </div>
-                  <div className="text-[#dcddde] text-sm sm:text-base">
-                    Обожаю видеть прогресс всех! Дискордик делает общение таким удобным
-                  </div>
-                </div>
-              </div>
-
-              {/* Секция "Начало работы" */}
-              <div className="bg-[#2f3136] border border-[#202225] rounded-lg p-4 sm:p-6 mt-6 sm:mt-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                  <Download className="w-5 h-5 sm:w-6 sm:h-6 text-[#5865f2]" />
-                  Начни работу с Дискордик
-                </h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                  <div className="text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#5865f2] rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white font-bold text-sm sm:text-base">1</span>
-                    </div>
-                    <h3 className="text-white font-medium mb-2 text-sm sm:text-base">Скачай приложение</h3>
-                    <p className="text-[#b9bbbe] text-xs sm:text-sm">Получи Дискордик для Windows, macOS или Linux</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#5865f2] rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white font-bold text-sm sm:text-base">2</span>
-                    </div>
-                    <h3 className="text-white font-medium mb-2 text-sm sm:text-base">Авторизуй Discord</h3>
-                    <p className="text-[#b9bbbe] text-xs sm:text-sm">Подключись безопасно через OAuth</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#5865f2] rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white font-bold text-sm sm:text-base">3</span>
-                    </div>
-                    <h3 className="text-white font-medium mb-2 text-sm sm:text-base">Начни дизайнить</h3>
-                    <p className="text-[#b9bbbe] text-xs sm:text-sm">Открой Figma и смотри как работает магия</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-6 sm:px-8 py-2 sm:py-3 rounded text-sm font-medium">
-                    <Download className="w-4 h-4 mr-2" />
-                    Скачать Дискордик
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-[#4f545c] text-[#b9bbbe] hover:bg-[#40444b] hover:border-[#6d6f78] px-6 sm:px-8 py-2 sm:py-3 rounded text-sm font-medium bg-transparent"
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Авторизовать Discord
-                  </Button>
-                </div>
-              </div>
-
-              {/* Преимущества */}
-              <div className="bg-[#2f3136] border border-[#202225] rounded-lg p-4 sm:p-6">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Почему Дискордик?</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {[
-                    {
-                      icon: <Zap className="w-4 h-4 sm:w-5 sm:h-5" />,
-                      title: "Автоопределение",
-                      desc: "Работает с приложением и браузером",
-                    },
-                    {
-                      icon: <Eye className="w-4 h-4 sm:w-5 sm:h-5" />,
-                      title: "Умное отслеживание",
-                      desc: "Показывает имена проектов и статус",
-                    },
-                    {
-                      icon: <Clock className="w-4 h-4 sm:w-5 sm:h-5" />,
-                      title: "Обновление в реальном времени",
-                      desc: "Синхронизация каждые 5 секунд",
-                    },
-                    {
-                      icon: <Shield className="w-4 h-4 sm:w-5 sm:h-5" />,
-                      title: "Приватность прежде всего",
-                      desc: "Никакого сбора данных",
-                    },
-                  ].map((feature, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded hover:bg-[#36393f] transition-colors"
+          {/* Правая панель: избранное и участники */}
+          <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
+            <div>
+              <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
+                <Icon name="Star" size={12} /> Мой список — {favCoins.length}
+              </h3>
+              <div className="space-y-0.5">
+                {favCoins.map((c) => {
+                  const up = c.price_change_percentage_24h >= 0;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => go("market", c.id)}
+                      className="w-full flex items-center gap-2.5 p-2 rounded hover:bg-hover/60 text-left"
                     >
-                      <div className="text-[#5865f2] mt-0.5">{feature.icon}</div>
-                      <div>
-                        <div className="text-white font-medium text-xs sm:text-sm">{feature.title}</div>
-                        <div className="text-[#b9bbbe] text-xs sm:text-sm">{feature.desc}</div>
+                      <CoinLogo coin={c} size={28} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm font-medium truncate">{COIN_META[c.id]?.ru ?? c.name}</div>
+                        <div className="text-muted-foreground text-xs font-mono tabular">{fmtPrice(c.current_price)}</div>
+                      </div>
+                      <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
+                        {fmtPct(c.price_change_percentage_24h)}
+                      </span>
+                    </button>
+                  );
+                })}
+                {!favCoins.length && (
+                  <p className="text-xs text-muted-foreground px-2">Отметьте монеты звёздочкой в #котировки</p>
+                )}
+              </div>
+            </div>
+            {["Аналитики", "Трейдеры"].map((role) => (
+              <div key={role}>
+                <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2">
+                  {role} — {MEMBERS.filter((m) => m.role === role).length}
+                </h3>
+                <div className="space-y-0.5">
+                  {MEMBERS.filter((m) => m.role === role).map((m) => (
+                    <div key={m.name} className="flex items-center gap-2.5 p-2 rounded hover:bg-hover/60 cursor-pointer">
+                      <div className={`relative w-8 h-8 rounded-full flex items-center justify-center font-display text-sm ${m.cls}`}>
+                        {m.avatar}
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-up border-2 border-card rounded-full" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm font-medium truncate">{m.name}</div>
+                        <div className="text-muted-foreground text-xs truncate">{m.status}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Поле ввода сообщения */}
-            <div className="p-2 sm:p-4">
-              <div className="bg-[#40444b] rounded-lg px-3 sm:px-4 py-2 sm:py-3">
-                <div className="text-[#72767d] text-xs sm:text-sm">Сообщение #витрина</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Боковая панель участников - скрыта на мобильных/планшетах */}
-          <div className="hidden xl:block w-60 bg-[#2f3136] p-4">
-            <div className="mb-4">
-              <h3 className="text-[#8e9297] text-xs font-semibold uppercase tracking-wide mb-2">В сети - 3</h3>
-              <div className="space-y-2">
-                {[
-                  {
-                    name: "Мария Дизайнер",
-                    status: "Работает в Figma",
-                    avatar: "М",
-                    color: "from-purple-500 to-pink-500",
-                  },
-                  { name: "Иван UX", status: "В сети", avatar: "И", color: "from-green-500 to-blue-500" },
-                  { name: "Алексей", status: "Разрабатывает Дискордик", avatar: "А", color: "from-blue-500 to-purple-500" },
-                ].map((user, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 rounded hover:bg-[#36393f] cursor-pointer">
-                    <div
-                      className={`w-8 h-8 bg-gradient-to-r ${user.color} rounded-full flex items-center justify-center relative`}
-                    >
-                      <span className="text-white text-sm font-medium">{user.avatar}</span>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#3ba55c] border-2 border-[#2f3136] rounded-full"></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white text-sm font-medium truncate">{user.name}</div>
-                      <div className="text-[#b9bbbe] text-xs truncate">{user.status}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+            ))}
+          </aside>
         </div>
       </div>
     </div>
