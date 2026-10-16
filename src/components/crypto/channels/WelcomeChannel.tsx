@@ -56,7 +56,6 @@ const WelcomeChannel = ({ coins, go }: Props) => {
             Весь крипторынок — в одном чате
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-lg">
-            Котировки, графики и новости для трейдеров. Без регистрации и лишних вкладок.
           </p>
         </div>
       </div>
