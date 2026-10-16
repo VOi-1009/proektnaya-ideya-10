@@ -11,6 +11,15 @@ export interface Article {
   author: string;
   createdAt: string;
   updatedAt: string;
+  categoryId: number | null;
+  category: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  sort: number;
+  count: number;
 }
 
 const URL_BASE = `${PROFILE_URL}?resource=articles`;
@@ -26,10 +35,21 @@ export const articlesRequest = async <T,>(token: string | null, query = "", body
   return data as T;
 };
 
-export const useArticles = () =>
+export const useArticles = (category: number | null = null, limit?: number) =>
   useQuery({
-    queryKey: ["articles"],
-    queryFn: () => articlesRequest<{ articles: Article[] }>(null).then((d) => d.articles),
+    queryKey: ["articles", category, limit ?? null],
+    queryFn: () =>
+      articlesRequest<{ articles: Article[] }>(
+        null,
+        `${category ? `&category=${category}` : ""}${limit ? `&limit=${limit}` : ""}`,
+      ).then((d) => d.articles),
+    staleTime: 60_000,
+  });
+
+export const useCategories = () =>
+  useQuery({
+    queryKey: ["article-categories"],
+    queryFn: () => articlesRequest<{ categories: Category[] }>(null, "&categories=1").then((d) => d.categories),
     staleTime: 60_000,
   });
 

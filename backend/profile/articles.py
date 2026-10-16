@@ -35,13 +35,15 @@ def row_to_article(r, full: bool) -> dict:
         "author": r[6] or "Редакция",
         "createdAt": r[7].isoformat(),
         "updatedAt": r[8].isoformat(),
+        "categoryId": r[9],
+        "category": r[10] or "",
     }
     if full:
         a["content"] = r[3]
     return a
 
 
-SELECT = "SELECT a.id, a.title, a.summary, a.content, a.cover_url, a.published, u.name, a.created_at, a.updated_at FROM {s}.articles a LEFT JOIN {s}.users u ON u.id = a.author_id"
+SELECT = "SELECT a.id, a.title, a.summary, a.content, a.cover_url, a.published, u.name, a.created_at, a.updated_at, a.category_id, c.name FROM {s}.articles a LEFT JOIN {s}.users u ON u.id = a.author_id LEFT JOIN {s}.article_categories c ON c.id = a.category_id"
 
 
 def upload_cover(body: dict) -> str | None:
@@ -97,9 +99,21 @@ def handle_articles(event: dict) -> dict:
                 if not r:
                     return resp(404, {"error": "Статья не найдена"})
                 return resp(200, {"article": row_to_article(r, True)})
+            if qs.get("categories") == "1":
+                cur.execute(
+                    f"SELECT c.id, c.name, c.sort_order, (SELECT COUNT(*) FROM {SCHEMA}.articles a WHERE a.category_id = c.id AND a.published = TRUE) "
+                    f"FROM {SCHEMA}.article_categories c ORDER BY c.sort_order, c.id"
+                )
+                return resp(200, {"categories": [{"id": r[0], "name": r[1], "sort": r[2], "count": int(r[3])} for r in cur.fetchall()]})
             show_all = qs.get("all") == "1" and admin_id
-            where = "" if show_all else " WHERE a.published = TRUE"
-            cur.execute(f"{base}{where} ORDER BY a.created_at DESC LIMIT 200")
+            conds = [] if show_all else ["a.published = TRUE"]
+            cat = str(qs.get("category", ""))
+            if cat.isdigit():
+                conds.append(f"a.category_id = {int(cat)}")
+            limit = str(qs.get("limit", ""))
+            limit_n = min(int(limit), 200) if limit.isdigit() and int(limit) > 0 else 200
+            where = f" WHERE {' AND '.join(conds)}" if conds else ""
+            cur.execute(f"{base}{where} ORDER BY a.created_at DESC LIMIT {limit_n}")
             return resp(200, {"articles": [row_to_article(r, False) for r in cur.fetchall()]})
 
         if method != "POST":
@@ -109,6 +123,27 @@ def handle_articles(event: dict) -> dict:
 
         body = json.loads(event.get("body") or "{}")
         action = body.get("action")
+
+        if action == "category-save":
+            name = str(body.get("name", "")).strip()[:60]
+            if len(name) < 2:
+                return resp(400, {"error": "Название рубрики слишком короткое"})
+            sort = int(body.get("sort", 0) or 0)
+            cid = int(body.get("id", 0) or 0)
+            if cid:
+                cur.execute(f"UPDATE {SCHEMA}.article_categories SET name = '{esc(name)}', sort_order = {sort} WHERE id = {cid}")
+            else:
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.article_categories (name, sort_order) VALUES ('{esc(name)}', "
+                    f"COALESCE((SELECT MAX(sort_order) FROM {SCHEMA}.article_categories), 0) + 1)"
+                )
+            return resp(200, {"ok": True})
+
+        if action == "category-delete":
+            cid = int(body.get("id", 0) or 0)
+            cur.execute(f"UPDATE {SCHEMA}.articles SET category_id = NULL WHERE category_id = {cid}")
+            cur.execute(f"DELETE FROM {SCHEMA}.article_categories WHERE id = {cid}")
+            return resp(200, {"ok": True})
 
         if action == "delete":
             cur.execute(f"DELETE FROM {SCHEMA}.articles WHERE id = {int(body.get('id', 0))}")
@@ -130,12 +165,14 @@ def handle_articles(event: dict) -> dict:
         except ValueError as e:
             return resp(400, {"error": str(e)})
         remove_cover = bool(body.get("removeCover"))
+        cat_raw = body.get("categoryId")
+        cat_sql = str(int(cat_raw)) if str(cat_raw or "").isdigit() and int(cat_raw) > 0 else "NULL"
 
         if action == "create":
             cover_sql = f"'{esc(cover)}'" if cover else "NULL"
             cur.execute(
-                f"INSERT INTO {SCHEMA}.articles (title, summary, content, cover_url, published, author_id) "
-                f"VALUES ('{esc(title)}', '{esc(summary)}', '{esc(content)}', {cover_sql}, {published}, {admin_id}) RETURNING id"
+                f"INSERT INTO {SCHEMA}.articles (title, summary, content, cover_url, published, author_id, category_id) "
+                f"VALUES ('{esc(title)}', '{esc(summary)}', '{esc(content)}', {cover_sql}, {published}, {admin_id}, {cat_sql}) RETURNING id"
             )
             new_id = cur.fetchone()[0]
         else:
@@ -143,7 +180,7 @@ def handle_articles(event: dict) -> dict:
             cover_set = f", cover_url = '{esc(cover)}'" if cover else (", cover_url = NULL" if remove_cover else "")
             cur.execute(
                 f"UPDATE {SCHEMA}.articles SET title = '{esc(title)}', summary = '{esc(summary)}', content = '{esc(content)}', "
-                f"published = {published}, updated_at = NOW(){cover_set} WHERE id = {new_id}"
+                f"published = {published}, category_id = {cat_sql}, updated_at = NOW(){cover_set} WHERE id = {new_id}"
             )
         cur.execute(f"{base} WHERE a.id = {new_id}")
         return resp(200, {"article": row_to_article(cur.fetchone(), True)})

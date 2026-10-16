@@ -1,9 +1,56 @@
 {
   "tests": [
-    {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
-    {"name": "Без токена", "method": "GET", "path": "/", "expectedStatus": 401},
-    {"name": "Неверный токен", "method": "GET", "path": "/", "headers": {"X-Auth-Token": "abcdef"}, "expectedStatus": 401},
-    {"name": "Список статей", "method": "GET", "path": "/?resource=articles", "expectedStatus": 200},
-    {"name": "Создание статьи без прав", "method": "POST", "path": "/?resource=articles", "body": {"action": "create"}, "expectedStatus": 403}
+    {
+      "name": "CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Без токена",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Неверный токен",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-Auth-Token": "abcdef"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Список статей",
+      "method": "GET",
+      "path": "/?resource=articles",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Создание статьи без прав",
+      "method": "POST",
+      "path": "/?resource=articles",
+      "body": {
+        "action": "create"
+      },
+      "expectedStatus": 403
+    },
+    {
+      "name": "Рубрики",
+      "method": "GET",
+      "path": "/?resource=articles&categories=1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Рубрика без прав",
+      "method": "POST",
+      "path": "/?resource=articles",
+      "body": {
+        "action": "category-save",
+        "name": "Тест"
+      },
+      "expectedStatus": 403
+    }
   ]
 }

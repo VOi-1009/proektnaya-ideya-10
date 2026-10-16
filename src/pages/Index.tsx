@@ -43,6 +43,7 @@ const Index = () => {
   const coins = data?.coins ?? [];
   const [channel, setChannel] = useState("welcome");
   const [selected, setSelected] = useState("bitcoin");
+  const [articleId, setArticleId] = useState<number | null>(null);
   const [favs, setFavs] = useState<string[]>(loadFavs);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -66,6 +67,7 @@ const Index = () => {
 
   const go = (ch: string, coinId?: string) => {
     setChannel(ch);
+    setArticleId(null);
     if (coinId) setSelected(coinId);
     setMobileSidebarOpen(false);
     setMobileMenuOpen(false);
@@ -310,7 +312,14 @@ const Index = () => {
                     <Skeleton className="h-24 w-2/3 bg-card" />
                   </div>
                 ) : channel === "welcome" ? (
-                  <WelcomeChannel coins={coins} go={go} />
+                  <WelcomeChannel
+                    coins={coins}
+                    go={go}
+                    openArticle={(id) => {
+                      go("articles");
+                      setArticleId(id);
+                    }}
+                  />
                 ) : channel === "market" ? (
                   <MarketChannel
                     coins={coins}
@@ -323,7 +332,7 @@ const Index = () => {
                 ) : channel === "news" ? (
                   <NewsChannel />
                 ) : channel === "articles" ? (
-                  <ArticlesChannel />
+                  <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
                 ) : channel === "alerts" ? (
                   <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
                 ) : channel === "portfolio" ? (

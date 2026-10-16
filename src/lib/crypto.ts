@@ -28,14 +28,14 @@ export const COIN_IDS = [
 ];
 
 export const COIN_META: Record<string, { ru: string; color: string; short: string }> = {
-  bitcoin: { ru: "Биткоин", color: "#f7931a", short: "BTC" },
-  ethereum: { ru: "Эфириум", color: "#8c8cf7", short: "ETH" },
+  bitcoin: { ru: "Bitcoin", color: "#f7931a", short: "BTC" },
+  ethereum: { ru: "Ethereum", color: "#8c8cf7", short: "ETH" },
   binancecoin: { ru: "BNB", color: "#f3ba2f", short: "BNB" },
   ripple: { ru: "XRP", color: "#3b9cf2", short: "XRP" },
-  solana: { ru: "Солана", color: "#14f195", short: "SOL" },
-  "the-open-network": { ru: "Тон", color: "#0098ea", short: "TON" },
-  dogecoin: { ru: "Догикоин", color: "#c2a633", short: "DOGE" },
-  cardano: { ru: "Кардано", color: "#4f7cff", short: "ADA" },
+  solana: { ru: "Solana", color: "#14f195", short: "SOL" },
+  "the-open-network": { ru: "Toncoin", color: "#0098ea", short: "TON" },
+  dogecoin: { ru: "Dogecoin", color: "#c2a633", short: "DOGE" },
+  cardano: { ru: "Cardano", color: "#4f7cff", short: "ADA" },
 };
 
 // Резервные данные на случай, если биржевой источник временно недоступен

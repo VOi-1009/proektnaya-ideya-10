@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
-import { fmtDate, useArticle, useArticles } from "@/lib/articles";
+import { fmtDate, useArticle, useArticles, useCategories } from "@/lib/articles";
 
 const ArticleView = ({ id, onBack }: { id: number; onBack: () => void }) => {
   const { data, isLoading, isError } = useArticle(id);
@@ -19,8 +19,11 @@ const ArticleView = ({ id, onBack }: { id: number; onBack: () => void }) => {
         <article>
           {data.cover && <img src={data.cover} alt="" className="w-full h-56 sm:h-80 object-cover rounded-xl mb-5" />}
           <h1 className="font-display text-2xl sm:text-3xl text-white leading-tight mb-2">{data.title}</h1>
-          <div className="text-muted-foreground text-xs mb-5">
-            {data.author} · {fmtDate(data.createdAt)}
+          <div className="text-muted-foreground text-xs mb-5 flex items-center gap-2 flex-wrap">
+            {data.category && <span className="text-primary uppercase tracking-wider">{data.category}</span>}
+            <span>
+              {data.author} · {fmtDate(data.createdAt)}
+            </span>
           </div>
           {data.summary && <p className="text-white/90 text-base sm:text-lg mb-5 leading-relaxed">{data.summary}</p>}
           <div className="text-foreground text-[15px] leading-relaxed whitespace-pre-line break-words">{data.content}</div>
@@ -30,13 +33,24 @@ const ArticleView = ({ id, onBack }: { id: number; onBack: () => void }) => {
   );
 };
 
-const ArticlesChannel = () => {
+interface Props {
+  openId: number | null;
+  setOpenId: (id: number | null) => void;
+}
+
+const ArticlesChannel = ({ openId, setOpenId }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, isLoading, isError, refetch } = useArticles();
-  const [openId, setOpenId] = useState<number | null>(null);
+  const [category, setCategory] = useState<number | null>(null);
+  const { data, isLoading, isError, refetch } = useArticles(category);
+  const { data: categories } = useCategories();
 
   if (openId !== null) return <ArticleView id={openId} onBack={() => setOpenId(null)} />;
+
+  const chip = (active: boolean) =>
+    `px-3 py-1.5 rounded-full text-sm transition-colors border ${
+      active ? "bg-primary text-primary-foreground border-primary" : "border-input text-muted-foreground hover:text-white hover:border-white/40"
+    }`;
 
   return (
     <div className="space-y-4">
@@ -49,6 +63,20 @@ const ArticlesChannel = () => {
           </Button>
         )}
       </div>
+
+      {categories && categories.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setCategory(null)} className={chip(category === null)}>
+            Все
+          </button>
+          {categories.map((c) => (
+            <button key={c.id} onClick={() => setCategory(c.id)} className={chip(category === c.id)}>
+              {c.name}
+              {c.count > 0 && <span className="ml-1.5 opacity-60 font-mono text-xs">{c.count}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -70,7 +98,7 @@ const ArticlesChannel = () => {
       {data && !data.length && (
         <div className="bg-card border border-border rounded-lg p-8 text-center">
           <Icon name="BookOpen" size={32} className="mx-auto text-primary mb-3" />
-          <div className="text-white font-semibold">Статей пока нет</div>
+          <div className="text-white font-semibold">{category ? "В этой рубрике пока пусто" : "Статей пока нет"}</div>
           <div className="text-muted-foreground text-sm">Скоро здесь появятся первые материалы.</div>
         </div>
       )}
@@ -92,7 +120,10 @@ const ArticlesChannel = () => {
                 </div>
               )}
               <div className="p-4">
-                <div className="text-muted-foreground text-xs mb-1.5">{fmtDate(a.createdAt)}</div>
+                <div className="text-muted-foreground text-xs mb-1.5 flex items-center gap-2">
+                  {a.category && <span className="text-primary uppercase tracking-wider">{a.category}</span>}
+                  <span>{fmtDate(a.createdAt)}</span>
+                </div>
                 <h3 className="text-white font-semibold text-base leading-snug mb-1.5 group-hover:text-primary transition-colors">{a.title}</h3>
                 {a.summary && <p className="text-muted-foreground text-sm line-clamp-2">{a.summary}</p>}
               </div>

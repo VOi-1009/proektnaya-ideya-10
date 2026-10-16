@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
 import Message from "../Message";
+import LatestArticles from "../LatestArticles";
 
 const HERO = "https://cdn.poehali.dev/projects/17c74dba-f379-4376-80b1-440f2ac081c4/files/478dfa0f-7b67-4e33-82ce-a89ee70b614e.jpg";
 
 interface Props {
   coins: Coin[];
   go: (channel: string, coinId?: string) => void;
+  openArticle: (id: number) => void;
 }
 
 const FEATURES = [
@@ -19,7 +21,7 @@ const FEATURES = [
   { icon: "Star", title: "Избранные монеты", desc: "Отметьте свои активы — список запомнится в браузере" },
 ];
 
-const WelcomeChannel = ({ coins, go }: Props) => {
+const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
 
@@ -90,13 +92,15 @@ const WelcomeChannel = ({ coins, go }: Props) => {
         </div>
         {btc && (
           <p className="mt-3 text-muted-foreground text-sm">
-            Биткоин торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
+            Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
             <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
               Открыть график →
             </button>
           </p>
         )}
       </Message>
+
+      <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
 
 
 

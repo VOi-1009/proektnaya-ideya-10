@@ -17,17 +17,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { Article, articlesRequest, fmtDate } from "@/lib/articles";
+import { Article, articlesRequest, fmtDate, useCategories } from "@/lib/articles";
+import CategoriesManager from "@/components/crypto/CategoriesManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
 
-const EMPTY = { title: "", summary: "", content: "", published: true };
+const EMPTY = { title: "", summary: "", content: "", published: true, categoryId: "" };
 
 const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
+  const [tab, setTab] = useState<"articles" | "categories">("articles");
+  const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
   const [removeCover, setRemoveCover] = useState(false);
@@ -45,7 +48,13 @@ const Admin = () => {
     if (editing === null || editing === "new") return;
     articlesRequest<{ article: Article }>(token, `&id=${editing}`)
       .then(({ article: a }) => {
-        setForm({ title: a.title, summary: a.summary, content: a.content ?? "", published: a.published });
+        setForm({
+          title: a.title,
+          summary: a.summary,
+          content: a.content ?? "",
+          published: a.published,
+          categoryId: a.categoryId ? String(a.categoryId) : "",
+        });
         setCover({ url: a.cover });
       })
       .catch((e) => toast({ title: (e as Error).message, variant: "destructive" }));
@@ -84,6 +93,7 @@ const Admin = () => {
     qc.invalidateQueries({ queryKey: ["articles-admin"] });
     qc.invalidateQueries({ queryKey: ["articles"] });
     qc.invalidateQueries({ queryKey: ["article"] });
+    qc.invalidateQueries({ queryKey: ["article-categories"] });
   };
 
   const save = async (e: React.FormEvent) => {
@@ -96,6 +106,7 @@ const Admin = () => {
         action: editing === "new" ? "create" : "update",
         id: editing === "new" ? undefined : editing,
         ...form,
+        categoryId: form.categoryId ? Number(form.categoryId) : null,
         coverData: cover.data,
         coverType: cover.type,
         removeCover,
@@ -169,7 +180,30 @@ const Admin = () => {
     <div className="min-h-screen bg-background text-foreground font-body">
       {header}
       <main className="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-5">
-        {editing === null ? (
+        {editing === null && (
+          <div className="flex gap-1 bg-card border border-border rounded-lg p-1 w-fit">
+            {(
+              [
+                ["articles", "Статьи", "FileText"],
+                ["categories", "Рубрики", "FolderTree"],
+              ] as const
+            ).map(([id, label, icon]) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`px-4 py-2 rounded-md text-sm inline-flex items-center gap-2 transition-colors ${
+                  tab === id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
+                }`}
+              >
+                <Icon name={icon} size={16} />
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        {editing === null && tab === "categories" ? (
+          <CategoriesManager token={token} onChanged={refresh} />
+        ) : editing === null ? (
           <>
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
@@ -205,7 +239,8 @@ const Admin = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm font-medium truncate">{a.title}</div>
-                    <div className="text-muted-foreground text-xs flex items-center gap-2">
+                    <div className="text-muted-foreground text-xs flex items-center gap-2 flex-wrap">
+                      {a.category && <span className="text-primary">{a.category}</span>}
                       <span>{fmtDate(a.createdAt)}</span>
                       <span className={a.published ? "text-up" : "text-muted-foreground"}>
                         {a.published ? "Опубликована" : "Черновик"}
@@ -269,6 +304,20 @@ const Admin = () => {
             <label className="block">
               <span className="text-xs text-muted-foreground mb-1 block">Заголовок</span>
               <input className={inputCls} maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="О чём статья" />
+            </label>
+            <label className="block">
+              <span className="text-xs text-muted-foreground mb-1 block">Рубрика</span>
+              <select className={inputCls} value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+                <option value="">Без рубрики</option>
+                {categories?.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <button type="button" onClick={() => { setEditing(null); setTab("categories"); }} className="text-xs text-primary hover:underline mt-1">
+                Управлять рубриками
+              </button>
             </label>
             <label className="block">
               <span className="text-xs text-muted-foreground mb-1 flex justify-between">
