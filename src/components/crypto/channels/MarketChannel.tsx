@@ -16,7 +16,7 @@ const MarketChannel = ({ coins, selected, onSelect, favs, toggleFav, live }: Pro
   const coin = coins.find((c) => c.id === selected) ?? coins[0];
   return (
     <div className="space-y-4">
-      <Message author="Свеча Бот" time="Обновляется каждую минуту" icon="CandlestickChart" bot>
+      <Message author="Traderka Бот" time="Обновляется каждую минуту" icon="CandlestickChart" bot>
         <p className="mb-3 text-muted-foreground">
           {live
             ? "Котировки подтягиваются с биржевых агрегаторов в реальном времени. Нажмите на монету в таблице — график переключится."

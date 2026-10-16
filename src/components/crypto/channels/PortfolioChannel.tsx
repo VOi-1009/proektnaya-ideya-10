@@ -225,7 +225,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         </div>
       )}
 
-      <Message author="Свеча Бот" time="Сегодня" icon="Wallet" bot>
+      <Message author="Traderka Бот" time="Сегодня" icon="Wallet" bot>
         <p className="text-muted-foreground mb-3">
           Добавьте купленные монеты — я посчитаю текущую стоимость и результат по живому курсу. Если не указать цену покупки, возьму текущую.
         </p>

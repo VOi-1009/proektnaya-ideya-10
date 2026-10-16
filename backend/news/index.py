@@ -72,7 +72,7 @@ def detect_coins(title: str, text: str) -> list:
 
 
 def fetch_feed(source: str, url: str) -> list:
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (SvechaNewsBot)"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (TraderkaNewsBot)"})
     with urllib.request.urlopen(req, timeout=3.5) as r:
         root = ET.fromstring(r.read())
     items = []

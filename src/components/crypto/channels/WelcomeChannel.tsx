@@ -61,7 +61,7 @@ const WelcomeChannel = ({ coins, go }: Props) => {
         </div>
       </div>
 
-      <Message author="Свеча Бот" time="Сегодня в 09:00" icon="CandlestickChart" bot delay={80}>
+      <Message author="Traderka Бот" time="Сегодня в 09:00" icon="CandlestickChart" bot delay={80}>
         <p className="mb-3">
           <strong className="text-white">Доброе утро, трейдеры!</strong> Сводка по рынку на сегодня:
         </p>
@@ -119,7 +119,7 @@ const WelcomeChannel = ({ coins, go }: Props) => {
       </Message>
 
       <div className="bg-card border border-border rounded-lg p-4 sm:p-6 animate-fade-in" style={{ animationDelay: "300ms" }}>
-        <h3 className="font-display text-lg sm:text-xl text-white mb-4">Что умеет Свеча</h3>
+        <h3 className="font-display text-lg sm:text-xl text-white mb-4">Что умеет TRADERKA.RU</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {FEATURES.map((f) => (
             <div key={f.title} className="flex items-start gap-3 p-3 rounded hover:bg-hover/60 transition-colors">

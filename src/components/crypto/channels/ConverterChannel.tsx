@@ -29,7 +29,7 @@ const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
 
   return (
     <div className="space-y-4">
-      <Message author="Свеча Бот" time="Сегодня" icon="ArrowLeftRight" bot>
+      <Message author="Traderka Бот" time="Сегодня" icon="ArrowLeftRight" bot>
         <p className="text-muted-foreground mb-3">
           Быстрый пересчёт между монетами и долларом по текущему курсу. Удобно, чтобы прикинуть размер позиции.
         </p>

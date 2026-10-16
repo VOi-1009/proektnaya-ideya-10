@@ -12,12 +12,15 @@ import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
 import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
 import { useAuth } from "@/lib/auth";
 import { getSeen, useNews } from "@/components/crypto/news";
+import AlertsChannel from "@/components/crypto/channels/AlertsChannel";
+import { usePriceAlerts } from "@/lib/alerts";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
   { id: "news", name: "новости", topic: "Криптоновости, аналитика и регулирование", icon: "Hash" },
+  { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
 ];
@@ -54,6 +57,8 @@ const Index = () => {
   const [draft, setDraft] = useState("");
   const { user, logout, setAuthOpen } = useAuth();
   const { data: news } = useNews();
+  const alertsApi = usePriceAlerts(coins, !!data?.live);
+  const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
   const [seen, setSeen] = useState(getSeen);
   useEffect(() => {
     if (channel === "news") setSeen(getSeen());
@@ -96,7 +101,7 @@ const Index = () => {
               <Icon name="CandlestickChart" size={20} />
             </div>
             <div className="text-left">
-              <h1 className="font-display text-lg sm:text-xl text-white leading-none">Свеча</h1>
+              <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADERKA<span className="text-primary">.RU</span></h1>
               <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости крипторынка</p>
             </div>
           </button>
@@ -162,7 +167,7 @@ const Index = () => {
           <button
             onClick={() => go("welcome")}
             className="w-12 h-12 bg-primary text-primary-foreground rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center"
-            title="Свеча"
+            title="TRADERKA.RU"
           >
             <Icon name="CandlestickChart" size={22} />
           </button>
@@ -183,12 +188,12 @@ const Index = () => {
                         active ? "h-10" : "h-0 group-hover:h-5"
                       }`}
                     />
-                    <div
-                      className={`w-12 h-12 flex items-center justify-center bg-hover transition-all duration-200 ${
-                        active ? "rounded-xl" : "rounded-3xl group-hover:rounded-xl"
-                      }`}
-                    >
-                      <CoinLogo coin={c} size={30} />
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      <span
+                        className={`rounded-full bg-primary transition-all duration-200 shadow-[0_0_12px_hsl(var(--primary)/0.45)] ${
+                          active ? "w-7 h-7" : "w-5 h-5 group-hover:w-6 group-hover:h-6"
+                        }`}
+                      />
                     </div>
                   </button>
                 );
@@ -201,7 +206,7 @@ const Index = () => {
             className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
           >
             <div className="h-12 px-4 border-b border-border flex items-center justify-between shadow-sm">
-              <h2 className="text-white font-semibold text-sm">Свеча · Трейдеры</h2>
+              <h2 className="text-white font-semibold text-sm">TRADERKA.RU · Трейдеры</h2>
               <Button
                 variant="ghost"
                 className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
@@ -227,6 +232,9 @@ const Index = () => {
                     >
                       <Icon name="Hash" size={18} className="opacity-70" />
                       <span className="text-[15px]">{c.name}</span>
+                      {c.id === "alerts" && activeAlerts > 0 && (
+                        <span className="ml-auto text-[11px] font-mono text-primary">{activeAlerts}</span>
+                      )}
                       {c.id === "news" && channel !== "news" && unread > 0 && (
                         <span className="ml-auto bg-down text-white text-[10px] font-bold rounded-full px-1.5">
                           {unread > 30 ? "30+" : unread}
@@ -311,8 +319,13 @@ const Index = () => {
                     {data?.live ? "онлайн" : "кэш"} · {updated}
                   </span>
                 )}
-                <button onClick={() => go("news")} className="hover:text-white" aria-label="Новости">
+                <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
                   <Icon name="Bell" size={18} />
+                  {activeAlerts > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">
+                      {activeAlerts}
+                    </span>
+                  )}
                 </button>
                 <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет">
                   <Icon name="Search" size={18} />
@@ -341,6 +354,8 @@ const Index = () => {
                   />
                 ) : channel === "news" ? (
                   <NewsChannel />
+                ) : channel === "alerts" ? (
+                  <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
                 ) : channel === "portfolio" ? (
                   <PortfolioChannel coins={coins} go={go} />
                 ) : (
