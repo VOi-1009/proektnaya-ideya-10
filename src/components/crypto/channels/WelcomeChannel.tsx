@@ -33,7 +33,7 @@ const WelcomeChannel = ({ coins, go }: Props) => {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const v = email.trim();
-    if (!v) return setErr("Укажите почту или ник в Telegram");
+    if (!v) return setErr("Укажите почту или ник в MAX");
     if (!/^@[a-zA-Z0-9_]{4,}$/.test(v) && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))
       return setErr("Похоже на опечатку: нужен e-mail или @ник");
     setErr("");
@@ -140,7 +140,7 @@ const WelcomeChannel = ({ coins, go }: Props) => {
               setEmail(e.target.value);
               if (err) setErr("");
             }}
-            placeholder="почта или @ник в Telegram"
+            placeholder="почта или @ник в MAX"
             className={`flex-1 bg-rail rounded px-3 py-2 text-sm outline-none border placeholder:text-muted-foreground ${
               err ? "border-down" : "border-transparent focus:border-primary"
             }`}

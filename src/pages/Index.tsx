@@ -97,9 +97,9 @@ const Index = () => {
               </Button>
             ))}
             <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
-              <a href="https://t.me/" target="_blank" rel="noreferrer">
-                <Icon name="Send" size={16} className="mr-2" />
-                Telegram
+              <a href="https://max.ru/" target="_blank" rel="noreferrer">
+                <Icon name="MessageCircle" size={16} className="mr-2" />
+                MAX
               </a>
             </Button>
             <Button
@@ -130,9 +130,9 @@ const Index = () => {
               </Button>
             ))}
             <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
-              <a href="https://t.me/" target="_blank" rel="noreferrer">
-                <Icon name="Send" size={16} className="mr-2" />
-                Telegram-канал
+              <a href="https://max.ru/" target="_blank" rel="noreferrer">
+                <Icon name="MessageCircle" size={16} className="mr-2" />
+                Канал в MAX
               </a>
             </Button>
           </div>
