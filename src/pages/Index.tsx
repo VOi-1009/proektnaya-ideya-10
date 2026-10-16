@@ -15,6 +15,8 @@ import { getSeen, useNews } from "@/components/crypto/news";
 import AlertsChannel from "@/components/crypto/channels/AlertsChannel";
 import { usePriceAlerts } from "@/lib/alerts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
+import UserAvatar from "@/components/crypto/UserAvatar";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -43,6 +45,7 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { user, logout, setAuthOpen } = useAuth();
+  const navigate = useNavigate();
   const { data: news } = useNews();
   const alertsApi = usePriceAlerts(coins, !!data?.live);
   const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
@@ -102,6 +105,16 @@ const Index = () => {
                 MAX
               </a>
             </Button>
+            {user ? (
+              <Button variant="ghost" onClick={() => navigate("/profile")} className="text-muted-foreground hover:text-white hover:bg-hover px-2" title="Личный кабинет">
+                <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
+              </Button>
+            ) : (
+              <Button variant="ghost" onClick={() => setAuthOpen(true)} className="text-muted-foreground hover:text-white hover:bg-hover">
+                <Icon name="UserRound" size={16} className="mr-2" />
+                Войти
+              </Button>
+            )}
             <Button
               className="ml-2 font-semibold"
               onClick={() => {
@@ -134,6 +147,14 @@ const Index = () => {
                 <Icon name="MessageCircle" size={16} className="mr-2" />
                 Канал в MAX
               </a>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
+              className="justify-start text-muted-foreground hover:text-white hover:bg-hover"
+            >
+              <Icon name="UserRound" size={16} className="mr-2" />
+              {user ? "Личный кабинет" : "Войти"}
             </Button>
           </div>
         )}
@@ -226,16 +247,27 @@ const Index = () => {
               </div>
             </div>
             <div className="p-2 bg-rail/70 flex items-center gap-2">
-              <div className="relative w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-display text-sm uppercase">
-                {user ? user.email[0] : "Г"}
+              <button
+                onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
+                className="relative"
+                title={user ? "Личный кабинет" : "Войти"}
+              >
+                {user ? (
+                  <UserAvatar name={user.name} email={user.email} avatar={user.avatar} />
+                ) : (
+                  <UserAvatar />
+                )}
                 <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-card rounded-full ${user ? "bg-up" : "bg-muted-foreground"}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-white text-sm font-medium truncate">{user ? user.email : "Гость"}</div>
-                <div className="text-muted-foreground text-xs truncate">
-                  {user ? "Портфель в облаке" : `Избранных: ${favs.length}`}
+              </button>
+              <button
+                onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
+                className="flex-1 min-w-0 text-left"
+              >
+                <div className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</div>
+                <div className="text-muted-foreground text-xs truncate hover:text-primary">
+                  {user ? "Личный кабинет →" : `Избранных: ${favs.length}`}
                 </div>
-              </div>
+              </button>
               {user ? (
                 <Button
                   variant="ghost"

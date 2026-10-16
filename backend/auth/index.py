@@ -63,7 +63,7 @@ def handler(event: dict, context) -> dict:
             if not token:
                 return resp(401, {"error": "Не авторизован"})
             cur.execute(
-                f"SELECT u.id, u.email, u.name FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+                f"SELECT u.id, u.email, u.name, u.avatar_url FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
                 f"WHERE s.token = '{token}' AND s.expires_at > NOW()"
             )
             row = cur.fetchone()
@@ -72,7 +72,11 @@ def handler(event: dict, context) -> dict:
             email = row[1] or ""
             if email.endswith("@users.traderka.ru"):
                 email = row[2] or "Яндекс ID"
-            return resp(200, {"user": {"id": row[0], "email": email}})
+            if token:
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.user_visits (user_id, day) VALUES ({int(row[0])}, CURRENT_DATE) ON CONFLICT DO NOTHING"
+                )
+            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or ""}})
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})

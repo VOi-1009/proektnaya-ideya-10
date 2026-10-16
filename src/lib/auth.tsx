@@ -3,6 +3,7 @@ import func2url from "../../backend/func2url.json";
 
 export const AUTH_URL = func2url.auth;
 export const PORTFOLIO_URL = func2url.portfolio;
+export const PROFILE_URL = func2url.profile;
 export const YANDEX_URL = func2url["yandex-auth-yandex-auth"];
 const TOKEN_KEY = "svecha-token";
 const YANDEX_STATE_KEY = "traderka-yandex-state";
@@ -10,6 +11,8 @@ const YANDEX_STATE_KEY = "traderka-yandex-state";
 export interface User {
   id: number;
   email: string;
+  name?: string;
+  avatar?: string;
 }
 
 interface AuthCtx {
@@ -22,6 +25,7 @@ interface AuthCtx {
   loginWithYandex: () => Promise<void>;
   finishYandex: (code: string, state: string | null) => Promise<void>;
   logout: () => Promise<void>;
+  patchUser: (u: Partial<User>) => void;
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -100,8 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [token]);
 
+  const patchUser = useCallback((u: Partial<User>) => setUser((p) => (p ? { ...p, ...u } : p)), []);
+
   return (
-    <Ctx.Provider value={{ user, token, ready, authOpen, setAuthOpen, auth, loginWithYandex, finishYandex, logout }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ user, token, ready, authOpen, setAuthOpen, auth, loginWithYandex, finishYandex, logout, patchUser }}>{children}</Ctx.Provider>
   );
 };
 
