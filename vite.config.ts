@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import {componentTagger} from "pp-tagger";
 
+// https://vitejs.dev/config/
 // HMR-сокет превью рвёт инфраструктура: ingress-nginx на каждом reload
 // конфига (захват/освобождение любого dev-пода) через 30 с закрывает все
 // соединения старых воркеров; DDoS Guard режет «тихие» соединения. Сам vite
@@ -100,11 +101,10 @@ const hmrKeepalive = {
     transformIndexHtml: () => [{tag: 'script', children: hmrClient, injectTo: 'head-prepend' as const}],
 };
 
-// https://vitejs.dev/config/
 export default defineConfig(({mode}) => ({
     plugins: [
-        react(),
         hmrKeepalive,
+        react(),
         mode === 'development' &&
         componentTagger(),
     ].filter(Boolean),
@@ -118,8 +118,8 @@ export default defineConfig(({mode}) => ({
         port: 5173,
         allowedHosts: true,
         hmr: {
-            overlay: false, // Disables the error overlay if you only want console errors
-            timeout: 7000, // pingInterval @vite/client — нужен <30s для DDoS Guard
+            timeout: 7000,
+            overlay: false // Disables the error overlay if you only want console errors
         }
     },
 }));

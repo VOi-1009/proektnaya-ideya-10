@@ -12,10 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Служебные файлы warmup/handoff (задания hero-генераторам, скачанный
-# выбранный hero и спека) — не для репозитория пользователя
-tmp/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,10 +24,5 @@ tmp/
 *.sw?
 builds
 
-# Python (страховка: разовые Bash-скрипты должны класть venv в /tmp, но если
-# venv/кэш всё же оказался в проекте — не коммитить его через end-of-turn git add -A)
-.venv/
-venv/
-__pycache__/
-*.pyc
-*.egg-info/
+# warmup/handoff артефакты
+tmp/
