@@ -9,12 +9,14 @@ import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
 import MarketChannel from "@/components/crypto/channels/MarketChannel";
 import NewsChannel from "@/components/crypto/channels/NewsChannel";
 import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
+import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
   { id: "news", name: "новости", topic: "Криптоновости, аналитика и регулирование", icon: "Hash" },
+  { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
 ];
 
@@ -96,7 +98,7 @@ const Index = () => {
                 onClick={() => go(c.id)}
                 className={`hover:bg-hover hover:text-white ${channel === c.id ? "text-white bg-hover" : "text-muted-foreground"}`}
               >
-                {c.name[0].toUpperCase() + c.name.slice(1)}
+                {(c.name[0].toUpperCase() + c.name.slice(1)).replace("-", " ")}
               </Button>
             ))}
             <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
@@ -309,6 +311,8 @@ const Index = () => {
                   />
                 ) : channel === "news" ? (
                   <NewsChannel />
+                ) : channel === "portfolio" ? (
+                  <PortfolioChannel coins={coins} go={go} />
                 ) : (
                   <ConverterChannel coins={coins} />
                 )}
