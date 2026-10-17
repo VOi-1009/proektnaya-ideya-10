@@ -26,7 +26,7 @@ const ArticleView = ({ id, onBack }: { id: number; onBack: () => void }) => {
             </span>
           </div>
           {data.summary && <p className="text-white/90 text-base sm:text-lg mb-5 leading-relaxed">{data.summary}</p>}
-          <div className="text-foreground text-[15px] leading-relaxed whitespace-pre-line break-words">{data.content}</div>
+          <div className="text-foreground text-[14px] leading-relaxed whitespace-pre-line break-words">{data.content}</div>
         </article>
       )}
     </div>

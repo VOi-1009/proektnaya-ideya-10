@@ -63,7 +63,7 @@ const Achievements = ({ items, streak }: Props) => {
                   <div className="h-1.5 bg-rail rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
-                  <div className="text-muted-foreground text-[11px] font-mono mt-1">
+                  <div className="text-muted-foreground text-[10px] font-mono mt-1">
                     {a.id === "streak7" ? `${streak} из ${a.goal} дней подряд` : `${a.progress} из ${a.goal}`}
                   </div>
                 </div>

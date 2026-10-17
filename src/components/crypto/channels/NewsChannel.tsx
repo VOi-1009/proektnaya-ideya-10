@@ -95,7 +95,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5 items-center">
-          <span className="text-[11px] text-muted-foreground mr-1">Источники:</span>
+          <span className="text-[10px] text-muted-foreground mr-1">Источники:</span>
           {NEWS_SOURCES[kind].map((src) => (
             <button
               key={src}
@@ -103,7 +103,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
                 setSource(source === src ? null : src);
                 setLimit(PAGE);
               }}
-              className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border transition-colors ${
+              className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded border transition-colors ${
                 source === src ? "bg-primary/15 border-primary text-white" : "border-transparent bg-card text-muted-foreground hover:text-white"
               }`}
             >
@@ -123,7 +123,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
                   setCoin(coin === c ? null : c);
                   setLimit(PAGE);
                 }}
-                className={`font-mono text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                className={`font-mono text-[10px] px-2 py-0.5 rounded border transition-colors ${
                   coin === c ? "bg-primary/15 border-primary text-white" : "border-transparent bg-card text-muted-foreground hover:text-white"
                 }`}
               >
@@ -169,16 +169,16 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="text-xs text-white/80 font-medium">{n.source}</span>
                   <span className="text-xs text-muted-foreground">{fmtNewsTime(n.ts)}</span>
-                  <span className={`text-[10px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TAG_STYLE[n.tag]}`}>
+                  <span className={`text-[9px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TAG_STYLE[n.tag]}`}>
                     {n.tag}
                   </span>
                   {Date.now() - n.ts < 60 * 60_000 && (
-                    <span className="text-[10px] uppercase tracking-wider bg-down/15 text-down rounded px-1.5 py-0.5 flex items-center gap-1">
+                    <span className="text-[9px] uppercase tracking-wider bg-down/15 text-down rounded px-1.5 py-0.5 flex items-center gap-1">
                       <Icon name="Flame" size={10} /> Свежее
                     </span>
                   )}
                   {n.coins.map((c) => (
-                    <span key={c} className="font-mono text-[11px] text-muted-foreground">
+                    <span key={c} className="font-mono text-[10px] text-muted-foreground">
                       ${c}
                     </span>
                   ))}

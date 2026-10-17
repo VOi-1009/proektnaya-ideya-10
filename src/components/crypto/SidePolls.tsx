@@ -73,7 +73,7 @@ const PollCard = ({ poll }: { poll: Poll }) => {
           );
         })}
       </div>
-      <div className="text-[10px] text-muted-foreground mt-2 font-mono">
+      <div className="text-[9px] text-muted-foreground mt-2 font-mono">
         {poll.total.toLocaleString("ru-RU")} {plural(poll.total)}
         {!voted && !user && " · войдите, чтобы голосовать"}
       </div>
@@ -87,7 +87,7 @@ const SidePolls = () => {
   if (!data?.length) return null;
   return (
     <div>
-      <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
+      <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
         <Icon name="Vote" size={12} fallback="BarChart3" /> Опрос
       </h3>
       <div className="space-y-2">

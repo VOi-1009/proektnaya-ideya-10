@@ -13,7 +13,7 @@ const OnlineList = () => {
 
   return (
     <div>
-      <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
+      <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
         <span className="w-2 h-2 rounded-full bg-up animate-pulse" /> В сети — {data?.total ?? 0}
       </h3>
       {isLoading ? (
@@ -39,7 +39,7 @@ const OnlineList = () => {
                   {u.name}
                   {me && <span className="text-muted-foreground font-normal"> (вы)</span>}
                 </span>
-                <span className={`text-[10px] flex-shrink-0 ${l.text}`}>{l.title}</span>
+                <span className={`text-[9px] flex-shrink-0 ${l.text}`}>{l.title}</span>
               </li>
             );
           })}

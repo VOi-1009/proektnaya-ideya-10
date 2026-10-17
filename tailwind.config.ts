@@ -18,6 +18,17 @@ export default {
 			}
 		},
 		extend: {
+			fontSize: {
+				xs: ['11px', '16px'],
+				sm: ['13px', '20px'],
+				base: ['15px', '24px'],
+				lg: ['17px', '28px'],
+				xl: ['19px', '28px'],
+				'2xl': ['23px', '32px'],
+				'3xl': ['29px', '36px'],
+				'4xl': ['35px', '40px'],
+				'5xl': ['47px', '1'],
+			},
 			fontFamily: {
 				display: ['Unbounded', 'sans-serif'],
 				body: ['"IBM Plex Sans"', 'sans-serif'],

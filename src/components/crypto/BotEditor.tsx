@@ -86,7 +86,7 @@ const BotEditor = ({ bot, setBot, saving, avatarBusy, onSave, onAvatar, onRemove
         <span className="text-xs text-muted-foreground">Аватарку можно загрузить сразу после создания бота</span>
       )}
     </div>
-    <div className="text-[11px] text-muted-foreground">
+    <div className="text-[10px] text-muted-foreground">
       У «Медведя» и «Быка» вместо аватарки всегда показывается красный или зелёный значок статуса.
     </div>
     <div className="flex items-center gap-3 flex-wrap">

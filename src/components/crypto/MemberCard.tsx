@@ -94,19 +94,19 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-rail/60 rounded-lg px-3 py-2">
-                  <div className="text-muted-foreground text-[11px] flex items-center gap-1">
+                  <div className="text-muted-foreground text-[10px] flex items-center gap-1">
                     <Icon name="Zap" size={11} /> Очки
                   </div>
                   <div className="text-white font-mono tabular">{m.points.toLocaleString("ru-RU")}</div>
                 </div>
                 <div className="bg-rail/60 rounded-lg px-3 py-2">
-                  <div className="text-muted-foreground text-[11px] flex items-center gap-1">
+                  <div className="text-muted-foreground text-[10px] flex items-center gap-1">
                     <Icon name="Trophy" size={11} /> Рейтинг
                   </div>
                   <div className="text-white font-mono tabular">#{m.place}</div>
                 </div>
                 <div className="bg-rail/60 rounded-lg px-3 py-2 min-w-0">
-                  <div className="text-muted-foreground text-[11px] flex items-center gap-1">
+                  <div className="text-muted-foreground text-[10px] flex items-center gap-1">
                     <Icon name="MapPin" size={11} /> Город
                   </div>
                   <div className="text-white truncate">{m.city || "—"}</div>

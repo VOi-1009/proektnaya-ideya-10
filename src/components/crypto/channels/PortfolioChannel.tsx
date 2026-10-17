@@ -275,7 +275,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full text-sm min-w-[640px]">
-            <thead className="text-muted-foreground text-[11px] uppercase tracking-wider">
+            <thead className="text-muted-foreground text-[10px] uppercase tracking-wider">
               <tr>
                 <th className="px-3 py-2 text-left font-medium">Монета</th>
                 <th className="px-3 py-2 text-right font-medium">Количество</th>

@@ -15,7 +15,7 @@ interface Props {
 
 const Message = ({ author, time, avatar, avatarClass, icon, bot, role, children, delay = 0 }: Props) =>
   bot ? (
-    <div className="text-foreground text-sm sm:text-[15px] leading-relaxed animate-fade-in" style={{ animationDelay: `${delay}ms` }}>
+    <div className="text-foreground text-sm sm:text-[14px] leading-relaxed animate-fade-in" style={{ animationDelay: `${delay}ms` }}>
       {children}
     </div>
   ) : (
@@ -34,19 +34,19 @@ const Message = ({ author, time, avatar, avatarClass, icon, bot, role, children,
       <div className="flex items-baseline gap-2 mb-1 flex-wrap">
         <span className={`font-semibold text-sm sm:text-base ${role?.className ?? "text-white"}`}>{author}</span>
         {bot && (
-          <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-[1px] rounded flex items-center gap-0.5">
+          <span className="bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-[1px] rounded flex items-center gap-0.5">
             <Icon name="Check" size={10} />
             БОТ
           </span>
         )}
         {role && !bot && (
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground border border-input rounded px-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground border border-input rounded px-1">
             {role.label}
           </span>
         )}
         <span className="text-muted-foreground text-xs">{time}</span>
       </div>
-      <div className="text-foreground text-sm sm:text-[15px] leading-relaxed">{children}</div>
+      <div className="text-foreground text-sm sm:text-[14px] leading-relaxed">{children}</div>
     </div>
   </div>
   );

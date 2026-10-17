@@ -147,7 +147,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
       )}
 
       <section>
-        <h3 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
+        <h3 className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
           Активные — {active.length}
         </h3>
         <div className="bg-card border border-border rounded-lg divide-y divide-white/5">
@@ -175,7 +175,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
                   <div className="h-1.5 bg-rail rounded-full mt-2 overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-1 font-mono">
+                  <div className="text-[10px] text-muted-foreground mt-1 font-mono">
                     сейчас {fmtPrice(now, a.coinId)} · осталось {fmtPct(left).replace("+", "")} · с {fmtDate(a.createdAt)}
                   </div>
                 </div>
@@ -197,7 +197,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
       {triggered.length > 0 && (
         <section>
           <div className="flex items-center mb-2">
-            <h3 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+            <h3 className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
               Сработали — {triggered.length}
             </h3>
             <button onClick={clearTriggered} className="ml-auto text-xs text-muted-foreground hover:text-white">
@@ -212,7 +212,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
                   <span className="text-white font-coin">{COIN_META[a.coinId]?.ru ?? a.coinId}</span>
                   <span className="text-muted-foreground"> достиг </span>
                   <span className="font-mono text-white">{fmtPrice(a.target, a.coinId)}</span>
-                  <div className="text-[11px] text-muted-foreground font-mono">
+                  <div className="text-[10px] text-muted-foreground font-mono">
                     {fmtDate(a.triggeredAt!)} · курс был {fmtPrice(a.triggeredPrice!, a.coinId)}
                   </div>
                 </div>

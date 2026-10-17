@@ -82,7 +82,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
                 ["Статус по очкам", u.autoTitle],
               ].map(([k, v]) => (
                 <div key={k} className="bg-rail/60 rounded-lg px-3 py-2 min-w-0">
-                  <div className="text-muted-foreground text-[11px]">{k}</div>
+                  <div className="text-muted-foreground text-[10px]">{k}</div>
                   <div className="text-white truncate">{v}</div>
                 </div>
               ))}
@@ -130,7 +130,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
                 </Button>
               </div>
               {u.manual && (
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-[10px] text-muted-foreground">
                   Статус закреплён вручную — очки копятся, но статус сменится, только если вернуть «Авто».
                 </div>
               )}

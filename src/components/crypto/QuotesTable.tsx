@@ -30,7 +30,7 @@ const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
     return <img src={coin.image} alt={coin.name} width={size} height={size} className="rounded-full" loading="lazy" />;
   return (
     <div
-      className="rounded-full flex items-center justify-center font-mono font-bold text-[10px] text-black"
+      className="rounded-full flex items-center justify-center font-mono font-bold text-[9px] text-black"
       style={{ width: size, height: size, background: meta?.color ?? "#888" }}
     >
       {coin.symbol.slice(0, 3).toUpperCase()}
@@ -104,7 +104,7 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
       </div>
       <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full text-sm min-w-[640px]">
-          <thead className="text-muted-foreground text-[11px] uppercase tracking-wider">
+          <thead className="text-muted-foreground text-[10px] uppercase tracking-wider">
             <tr>
               <th className="px-3 py-2 text-left font-medium w-8"></th>
               <th className="px-3 py-2 text-left font-medium">Монета</th>

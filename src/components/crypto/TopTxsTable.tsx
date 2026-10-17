@@ -14,7 +14,7 @@ const Logo = ({ c }: { c: TopTx }) => {
   return c.logo && !err ? (
     <img src={c.logo} alt="" className="w-7 h-7 rounded-full flex-shrink-0 bg-white/5" onError={() => setErr(true)} loading="lazy" />
   ) : (
-    <span className="w-7 h-7 rounded-full flex-shrink-0 bg-rail text-white text-[10px] font-bold flex items-center justify-center">
+    <span className="w-7 h-7 rounded-full flex-shrink-0 bg-rail text-white text-[9px] font-bold flex items-center justify-center">
       {c.symbol.slice(0, 3)}
     </span>
   );
@@ -44,7 +44,7 @@ const TopTxsTable = ({ color }: { color: string }) => {
       <div className="rounded-lg border border-border overflow-x-auto">
         <table className="w-full text-sm min-w-[640px]">
           <thead>
-            <tr className="text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
+            <tr className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
               <th className="text-left font-semibold px-3 py-2 w-8">#</th>
               <th className="text-left font-semibold px-3 py-2">Монета</th>
               <th className="text-right font-semibold px-3 py-2">Кол-во сделок</th>
@@ -91,7 +91,7 @@ const TopTxsTable = ({ color }: { color: string }) => {
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-[10px] text-muted-foreground">
         Количество транзакций в блокчейне монеты за последние 24 часа. Много сделок — признак активной сети и интереса пользователей.
       </p>
     </div>

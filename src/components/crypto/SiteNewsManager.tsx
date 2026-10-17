@@ -134,10 +134,10 @@ const SiteNewsManager = ({ token }: { token: string | null }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sky-400 font-semibold text-sm">{n.title}</span>
-                  {!n.published && <span className="text-[10px] uppercase bg-rail text-muted-foreground rounded px-1.5 py-0.5">скрыта</span>}
+                  {!n.published && <span className="text-[9px] uppercase bg-rail text-muted-foreground rounded px-1.5 py-0.5">скрыта</span>}
                 </div>
                 {n.body && <p className="text-muted-foreground text-xs mt-1 line-clamp-2 whitespace-pre-line">{n.body}</p>}
-                <div className="text-muted-foreground/70 text-[11px] font-mono mt-1">{new Date(n.createdAt).toLocaleString("ru-RU")}</div>
+                <div className="text-muted-foreground/70 text-[10px] font-mono mt-1">{new Date(n.createdAt).toLocaleString("ru-RU")}</div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <Switch

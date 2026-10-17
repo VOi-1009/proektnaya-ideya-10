@@ -157,7 +157,7 @@ const PortfolioChart = ({ holdings, coins }: Props) => {
           </ResponsiveContainer>
         )}
       </div>
-      <div className="px-4 py-2 border-t border-border text-[11px] text-muted-foreground">
+      <div className="px-4 py-2 border-t border-border text-[10px] text-muted-foreground">
         Сколько стоили бы ваши текущие монеты в каждый момент периода
       </div>
     </div>

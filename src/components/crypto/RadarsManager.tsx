@@ -120,7 +120,7 @@ const RadarsManager = ({ token }: { token: string | null }) => {
                   onChange={(e) => setForm({ ...form, symbol: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })}
                   placeholder="BTCUSDT"
                 />
-                <span className="text-[11px] text-muted-foreground">Например BTCUSDT, ETHUSDT, SOLUSDT, TONUSDT</span>
+                <span className="text-[10px] text-muted-foreground">Например BTCUSDT, ETHUSDT, SOLUSDT, TONUSDT</span>
               </label>
             ) : form.kind === "top_txs" ? (
               <div className="text-xs text-muted-foreground self-end pb-2">Данные TradingView, обновляются каждые 5 минут</div>

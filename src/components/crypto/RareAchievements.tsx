@@ -36,7 +36,7 @@ const RareAchievements = ({ founder, taken, compact }: Props) => {
             <div className={`text-sm font-semibold ${done ? "text-amber-300" : "text-muted-foreground"}`}>
               Основатель{done && ` №${founder}`}
             </div>
-            <div className="text-muted-foreground text-[11px]">Один из первых 100 участников</div>
+            <div className="text-muted-foreground text-[10px]">Один из первых 100 участников</div>
           </div>
         </div>
       </div>

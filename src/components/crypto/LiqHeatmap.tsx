@@ -214,7 +214,7 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
             />
             {tip && hover && (
               <div
-                className="absolute pointer-events-none bg-black/85 border border-white/10 rounded px-2 py-1 text-[11px] font-mono text-white whitespace-nowrap"
+                className="absolute pointer-events-none bg-black/85 border border-white/10 rounded px-2 py-1 text-[10px] font-mono text-white whitespace-nowrap"
                 style={{ left: Math.min(hover.x + 12, (ref.current?.clientWidth ?? 0) - 190), top: Math.max(hover.y - 46, 4) }}
               >
                 <div>{fmtPrice(tip.price)}</div>
@@ -228,7 +228,7 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
         )}
       </div>
 
-      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+      <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
         <span>мало</span>
         <div
           className="h-2 flex-1 max-w-[220px] rounded-full"
@@ -272,7 +272,7 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
         </div>
       )}
 
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
+      <p className="text-[10px] text-muted-foreground leading-relaxed">
         Оценочная модель: по росту открытого интереса фьючерсов мы прикидываем, на каких уровнях стоят ликвидации позиций с плечом
         5×–100×. Яркие полосы — зоны, куда цену часто «притягивает». Скопления, которые цена уже прошла, гаснут. Это не
         инвестиционная рекомендация.

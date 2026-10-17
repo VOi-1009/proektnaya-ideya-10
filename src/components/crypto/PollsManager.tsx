@@ -82,7 +82,7 @@ const PollEditor = ({
                   inputMode="numeric"
                   onChange={(e) => setOpt(i, { seed: e.target.value.replace(/\D/g, "").slice(0, 7) })}
                 />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-mono">
                   {pct(seed, seedTotal)}%
                 </span>
               </div>
@@ -105,7 +105,7 @@ const PollEditor = ({
             <Icon name="Plus" size={14} /> Добавить вариант
           </button>
         )}
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[10px] text-muted-foreground">
           «Готовые голоса» видны посетителям сразу. Реальные голоса людей и ботов прибавляются к ним.
           {form.id && " Если удалить вариант, его реальные голоса тоже пропадут."}
         </p>
@@ -122,7 +122,7 @@ const PollEditor = ({
         </label>
       </div>
       {form.botsVote && (
-        <p className="text-[11px] text-muted-foreground -mt-2">
+        <p className="text-[10px] text-muted-foreground -mt-2">
           Боты голосуют постепенно в течение 6 часов, примерно в той же пропорции, что и готовые голоса.
         </p>
       )}
@@ -246,15 +246,15 @@ const PollsManager = ({ token }: { token: string | null }) => {
               <div className="flex items-start gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[10px] uppercase tracking-wider rounded px-1.5 py-0.5 ${p.active ? "bg-up/15 text-up" : "bg-white/10 text-muted-foreground"}`}>
+                    <span className={`text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 ${p.active ? "bg-up/15 text-up" : "bg-white/10 text-muted-foreground"}`}>
                       {p.active ? "на сайте" : "скрыт"}
                     </span>
                     {p.botsVote && (
-                      <span className="text-[10px] uppercase tracking-wider rounded px-1.5 py-0.5 bg-white/10 text-muted-foreground inline-flex items-center gap-1">
+                      <span className="text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 bg-white/10 text-muted-foreground inline-flex items-center gap-1">
                         <Icon name="Bot" size={10} /> боты голосуют
                       </span>
                     )}
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground">
                       {new Date(p.createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
                     </span>
                   </div>
@@ -291,7 +291,7 @@ const PollsManager = ({ token }: { token: string | null }) => {
                       <div className="absolute inset-y-0 left-0 bg-primary/25" style={{ width: `${v}%` }} />
                       <div className="relative flex items-center gap-2 px-3 py-1.5 text-sm">
                         <span className="flex-1 min-w-0 truncate text-foreground">{o.text}</span>
-                        <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">
+                        <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline">
                           {o.seed.toLocaleString("ru-RU")} готовых + {o.real.toLocaleString("ru-RU")} реальных
                         </span>
                         <span className="font-mono text-white tabular w-10 text-right">{v}%</span>

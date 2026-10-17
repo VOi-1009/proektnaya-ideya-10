@@ -218,28 +218,28 @@ const Index = () => {
                 <Icon name="X" size={16} />
               </Button>
             </div>
-            <div className="flex-1 p-2 space-y-4">
+            <div className="flex-1 p-2 space-y-2">
               <div>
-                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[11px] font-semibold uppercase tracking-wider">
+                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
                   <Icon name="ChevronDown" size={12} />
                   <span>Текстовые каналы</span>
                 </div>
-                <div className="mt-1 space-y-0.5">
+                <div className="mt-0.5 space-y-0">
                   {CHANNELS.map((c) => (
                     <button
                       key={c.id}
                       onClick={() => go(c.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${
+                      className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
                         channel === c.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                       }`}
                     >
                       <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
-                      <span className="text-[15px]">{c.name}</span>
+                      <span className="text-[14px]">{c.name}</span>
                       {c.id === "alerts" && activeAlerts > 0 && (
-                        <span className="ml-auto text-[11px] font-mono text-primary">{activeAlerts}</span>
+                        <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
                       )}
                       {unreadOf(c.id) > 0 && (
-                        <span className="ml-auto bg-down text-white text-[10px] font-bold rounded-full px-1.5">
+                        <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
                           {unreadOf(c.id) > 30 ? "30+" : unreadOf(c.id)}
                         </span>
                       )}
@@ -247,28 +247,28 @@ const Index = () => {
                   ))}
                   <button
                     onClick={() => navigate("/rating")}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
                   >
                     <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
-                    <span className="text-[15px]">рейтинг</span>
+                    <span className="text-[14px]">рейтинг</span>
                   </button>
                 </div>
               </div>
               {radars && radars.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[11px] font-semibold uppercase tracking-wider">
+                  <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
                     <Icon name="ChevronDown" size={12} />
                     <span>Радары</span>
                   </div>
-                  <div className="mt-1 space-y-0.5">
+                  <div className="mt-0.5 space-y-0">
                     {radars.map((r) => (
                       <button
                         key={r.id}
                         onClick={() => setRadar(r)}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                        className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
                       >
                         <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
-                        <span className="text-[15px] truncate">{r.title}</span>
+                        <span className="text-[14px] truncate">{r.title}</span>
                       </button>
                     ))}
                   </div>
@@ -350,7 +350,7 @@ const Index = () => {
                 <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
                   <Icon name="Bell" size={18} />
                   {activeAlerts > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">
                       {activeAlerts}
                     </span>
                   )}
@@ -417,7 +417,7 @@ const Index = () => {
               <Icon name="ChevronRight" size={14} className="ml-auto text-muted-foreground" />
             </button>
             <div>
-              <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
+              <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
                 <Icon name="Star" size={12} /> Мой список
               </h3>
               <div className="space-y-0">
@@ -435,7 +435,7 @@ const Index = () => {
                           {COIN_META[c.id]?.ru ?? c.name}
                           {pinned && <Icon name="Pin" size={10} className="text-muted-foreground" />}
                         </div>
-                        <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">
+                        <div className="text-muted-foreground text-[10px] font-mono tabular leading-tight">
                           {fmtPrice(c.current_price, c.id)}
                           {c.id === "brent" && " / барр."}
                           {c.id === "gold" && " / унц."}

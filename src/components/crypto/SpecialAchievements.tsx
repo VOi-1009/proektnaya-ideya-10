@@ -46,7 +46,7 @@ const SpecialAchievements = ({ items, compact }: Props) => {
                 >
                   <Icon name={a.done ? m.icon : "Lock"} size={a.done ? 18 : 14} fallback="Award" />
                 </div>
-                <span className={`text-[10px] leading-tight ${a.done ? "text-white" : "text-muted-foreground"}`}>{m.title}</span>
+                <span className={`text-[9px] leading-tight ${a.done ? "text-white" : "text-muted-foreground"}`}>{m.title}</span>
               </div>
             );
           })}
@@ -102,7 +102,7 @@ const SpecialAchievements = ({ items, compact }: Props) => {
                   <div className="h-1.5 bg-rail rounded-full overflow-hidden">
                     <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
-                  <div className="text-muted-foreground text-[11px] font-mono mt-1">
+                  <div className="text-muted-foreground text-[10px] font-mono mt-1">
                     {a.progress} из {a.goal} {m.unit}
                   </div>
                 </div>

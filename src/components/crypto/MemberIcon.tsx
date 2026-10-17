@@ -10,7 +10,7 @@ interface Props {
   iconSize?: number;
 }
 
-const MemberIcon = ({ name, level, avatar, className = "w-5 h-5 text-[10px]", iconSize = 11 }: Props) => {
+const MemberIcon = ({ name, level, avatar, className = "w-5 h-5 text-[9px]", iconSize = 11 }: Props) => {
   const l = levelInfo(level);
   if (isPrivileged(level))
     return (

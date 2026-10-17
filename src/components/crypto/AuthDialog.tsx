@@ -76,7 +76,7 @@ const AuthDialog = () => {
         </div>
         <form onSubmit={submit} className="space-y-3" noValidate>
           <div>
-            <label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Почта</label>
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Почта</label>
             <input
               type="email"
               autoComplete="email"
@@ -87,7 +87,7 @@ const AuthDialog = () => {
             />
           </div>
           <div>
-            <label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Пароль</label>
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Пароль</label>
             <input
               type="password"
               autoComplete={mode === "login" ? "current-password" : "new-password"}

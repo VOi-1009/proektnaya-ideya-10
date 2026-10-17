@@ -14,7 +14,7 @@ const StatusBadge = ({ level, compact, className = "" }: Props) => {
     <span
       title={l.title}
       className={`inline-flex items-center gap-1 rounded-full font-semibold leading-none flex-shrink-0 ${
-        compact ? "px-1.5 py-1 text-[10px]" : "px-2 py-1 text-[11px]"
+        compact ? "px-1.5 py-1 text-[9px]" : "px-2 py-1 text-[10px]"
       } ${l.cls} ${className}`}
     >
       <Icon name={l.icon} size={compact ? 10 : 12} />

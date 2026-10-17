@@ -34,7 +34,7 @@ const BtcLiveChart = ({ onOpen }: { onOpen: () => void }) => {
     <div className="p-4 sm:p-5 flex flex-col h-full">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div>
-          <div className="text-muted-foreground text-[11px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
+          <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-up animate-pulse" /> Bitcoin · свечи 5 минут
           </div>
           {data && (
@@ -83,7 +83,7 @@ const BtcLiveChart = ({ onOpen }: { onOpen: () => void }) => {
         )}
       </div>
       {data && (
-        <div className="flex justify-between text-[11px] font-mono text-muted-foreground mt-2">
+        <div className="flex justify-between text-[10px] font-mono text-muted-foreground mt-2">
           <span>
             Мин: <span className="text-white">{fmtPrice(lo)}</span>
           </span>

@@ -76,7 +76,7 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
         <div className="text-white font-mono tabular text-sm">
           {r.points.toLocaleString("ru-RU")}
         </div>
-        <div className="text-muted-foreground text-[10px]">очков</div>
+        <div className="text-muted-foreground text-[9px]">очков</div>
       </div>
     </div>
   );
@@ -172,7 +172,7 @@ const Rating = () => {
         )}
 
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="flex items-center gap-3 px-3 sm:px-4 py-2 text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
+          <div className="flex items-center gap-3 px-3 sm:px-4 py-2 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
             <span className="w-8 text-center">#</span>
             <span className="flex-1">Участник</span>
             <span className="hidden sm:inline">Статус</span>

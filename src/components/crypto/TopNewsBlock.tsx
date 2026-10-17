@@ -8,7 +8,7 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
   return (
     <div className="p-4 sm:p-5 flex flex-col h-full">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="text-muted-foreground text-[11px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
+        <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
           <Icon name="Flame" size={12} className="text-primary" /> Обсуждаемые новости
         </div>
         <button onClick={onAll} className="text-xs text-primary hover:underline">
@@ -34,7 +34,7 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
                 <span className="font-display text-primary text-lg leading-none w-5 flex-shrink-0 pt-0.5">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{n.title}</div>
-                  <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                     <span>{n.source}</span>
                     <span className="inline-flex items-center gap-1 text-up font-mono">
                       <Icon name="ThumbsUp" size={11} /> {n.likes}
