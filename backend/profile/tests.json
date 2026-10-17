@@ -195,6 +195,12 @@
         "items": []
       },
       "expectedStatus": 200
+    },
+    {
+      "name": "Карточка несуществующего участника",
+      "method": "GET",
+      "path": "/?resource=users&card=99999999",
+      "expectedStatus": 404
     }
   ]
 }

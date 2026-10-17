@@ -11,6 +11,7 @@ import boto3
 import psycopg2
 
 from status import MAX_LEVEL, TITLES, level_for, points_sql
+from achievements import special_for
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
@@ -111,6 +112,26 @@ def handle_users(event: dict) -> dict:
                 cur.execute(f"{base} ORDER BY u.created_at DESC LIMIT 500")
                 users = [to_user(r, True) for r in cur.fetchall()]
                 return resp(200, {"users": users, "titles": TITLES})
+
+            if qs.get("card"):
+                cid = int(re.sub(r"\D", "", str(qs.get("card")))[:9] or 0)
+                cur.execute(f"{base} WHERE u.id = {cid}")
+                r = cur.fetchone()
+                if not r:
+                    return resp(404, {"error": "Участник не найден"})
+                cur.execute(
+                    f"SELECT COUNT(*) + 1 FROM {SCHEMA}.users u WHERE {pts} > {int(r[3])}"
+                )
+                place = int(cur.fetchone()[0])
+                st = level_for(int(r[3]), r[4])
+                online = bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60)
+                return resp(200, {"member": {
+                    "id": r[0], "name": display_name(r[1], r[2]), "avatar": r[9] or "",
+                    "level": st["level"], "title": st["title"], "points": int(r[3]),
+                    "city": r[8] or "", "bio": r[11] or "", "favoriteCoin": r[12] or "",
+                    "createdAt": r[6].isoformat(), "online": online, "place": place,
+                    "special": special_for(cur, SCHEMA, r[0]),
+                }})
 
             if qs.get("rating") == "1":
                 cur.execute(

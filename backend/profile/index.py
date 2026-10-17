@@ -10,6 +10,7 @@ import psycopg2
 from articles import handle_articles
 from blocks import handle_blocks
 from status import level_for
+from achievements import special_for
 from users import handle_users
 from reactions import handle_reactions
 from polls import handle_polls
@@ -73,6 +74,7 @@ def load_profile(cur, user_id: int) -> dict:
             {"id": "fullProfile", "done": filled >= 5, "progress": filled, "goal": 5},
         ],
         "status": level_for(points, r[10]),
+        "special": special_for(cur, SCHEMA, user_id),
     }
 
 

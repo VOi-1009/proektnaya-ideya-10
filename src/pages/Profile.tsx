@@ -10,6 +10,7 @@ import { COIN_META } from "@/lib/crypto";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import { LEVELS } from "@/lib/status";
 import Achievements, { Achievement } from "@/components/crypto/Achievements";
+import SpecialAchievements from "@/components/crypto/SpecialAchievements";
 
 interface ProfileData {
   id: number;
@@ -22,6 +23,7 @@ interface ProfileData {
   createdAt: string;
   stats: { days: number; coins: number; filled: number; fields: number; streak?: number; bestStreak?: number };
   achievements?: Achievement[];
+  special?: Achievement[];
   status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null; manual?: boolean };
 }
 
@@ -305,6 +307,7 @@ const Profile = () => {
             </div>
 
             {profile.achievements && <Achievements items={profile.achievements} streak={profile.stats.streak ?? 0} />}
+            {profile.special && <SpecialAchievements items={profile.special} />}
 
             <section className="bg-card border border-border rounded-xl p-5 sm:p-6">
               <h2 className="font-display text-lg text-white mb-4">Статусы</h2>

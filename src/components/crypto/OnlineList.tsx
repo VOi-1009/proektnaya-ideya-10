@@ -3,11 +3,13 @@ import { useAuth } from "@/lib/auth";
 import { levelInfo, nameCls } from "@/lib/status";
 import { useOnline } from "@/lib/users";
 import MemberIcon from "./MemberIcon";
+import { useOpenMember } from "@/lib/memberCard";
 
 const OnlineList = () => {
   const { user, token } = useAuth();
   const { data, isLoading } = useOnline(token);
   const list = data?.online ?? [];
+  const openMember = useOpenMember();
 
   return (
     <div>
@@ -26,13 +28,18 @@ const OnlineList = () => {
             const l = levelInfo(u.level);
             const me = user?.id === u.id;
             return (
-              <li key={u.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60">
+              <li
+                key={u.id}
+                onClick={() => openMember(u.id)}
+                className="flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 cursor-pointer"
+                title="Открыть карточку участника"
+              >
                 <MemberIcon name={u.name} level={u.level} avatar={u.avatar} />
                 <span className={`text-sm truncate flex-1 ${nameCls(u.level, "text-foreground")}`}>
                   {u.name}
                   {me && <span className="text-muted-foreground font-normal"> (вы)</span>}
                 </span>
-                <span className="text-[10px] text-muted-foreground flex-shrink-0">{l.title}</span>
+                <span className={`text-[10px] flex-shrink-0 ${l.text}`}>{l.title}</span>
               </li>
             );
           })}
