@@ -45,6 +45,30 @@ const DailyCard = ({ post }: { post: AiPost }) => {
   );
 };
 
+const MoveCard = ({ post }: { post: AiPost }) => {
+  const down = /:\s*[−-]/.test(post.title);
+  const tone = down ? "border-down/50 from-down/15" : "border-up/50 from-up/15";
+  return (
+    <article className={`rounded-xl border bg-gradient-to-br ${tone} via-card to-card p-4 sm:p-5`}>
+      <div className="flex items-center gap-2 text-xs">
+        <Icon name={down ? "TrendingDown" : "TrendingUp"} size={15} className={down ? "text-down" : "text-up"} />
+        <span className="text-indigo-300 font-semibold">{AI_NAME}</span>
+        <BotBadge ai compact />
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">резкое движение</span>
+        <span className="ml-auto text-muted-foreground font-mono">{fmt(post.createdAt)}</span>
+      </div>
+      <h3 className="text-white font-semibold text-lg mt-1.5">{post.title}</h3>
+      <p className="text-foreground/90 text-sm mt-2 whitespace-pre-line leading-relaxed">{post.body}</p>
+      {post.links.map((l, i) => (
+        <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-sky-400 hover:underline inline-flex items-center gap-1">
+          <Icon name="ExternalLink" size={11} /> Читать новость
+        </a>
+      ))}
+      <AiPostSocial post={post} />
+    </article>
+  );
+};
+
 const AiNewsChannel = () => {
   const { data, isLoading } = useAiPosts();
   const openMember = useOpenMember();
@@ -81,7 +105,9 @@ const AiNewsChannel = () => {
         </div>
       ) : (
         posts.map((p) =>
-          p.kind === "daily" ? (
+          p.kind === "move" ? (
+            <MoveCard key={p.id} post={p} />
+          ) : p.kind === "daily" ? (
             <DailyCard key={p.id} post={p} />
           ) : (
           <article key={p.id} className="flex gap-3">

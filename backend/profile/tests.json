@@ -384,6 +384,15 @@
         "action": "mail-send"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Проверка рынка без прав",
+      "method": "POST",
+      "path": "/?resource=aibot",
+      "body": {
+        "action": "moves-now"
+      },
+      "expectedStatus": 403
     }
   ]
 }

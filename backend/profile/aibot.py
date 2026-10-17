@@ -12,6 +12,7 @@ DEFAULTS = {
     "enabled": True, "moderation": True, "blockLinks": True, "blockCaps": True, "stopWords": "",
     "reactShare": 90, "likeShare": 70, "autoNews": True, "newsHours": 6,
     "chatReplies": True, "replyAll": True, "dailyPrices": True,
+    "moves": True, "moveThreshold": 5,
 }
 PFX = r"(?:на|по|за|от|вы|до|у|при|рас|раз|об|о|с|недо|пере|под|про|въ|из|ни)?"
 BAD_RE = re.compile(
@@ -155,6 +156,16 @@ def maybe_daily(cur, s: dict) -> None:
         enqueue_post(cur, row[0], "daily")
 
 
+def maybe_moves(cur, s: dict) -> None:
+    if not (s.get("enabled") and s.get("moves", True)):
+        return
+    try:
+        from aimoves import check_moves
+        check_moves(cur, SCHEMA, float(s.get("moveThreshold") or 5))
+    except Exception as e:
+        print("moves error:", e)
+
+
 def bot_reply(cur, s: dict, room: str, text: str, user_name: str, level: int = 99) -> None:
     if not (s.get("enabled") and s.get("chatReplies", True)):
         return
@@ -258,6 +269,7 @@ def handle_aibot(event: dict) -> dict:
             return resp(200, {"comments": comments_list(cur, pid, me, is_admin)})
 
         if method == "GET":
+            maybe_moves(cur, s)
             maybe_daily(cur, s)
             maybe_autopost(cur, s)
             try:
@@ -342,6 +354,8 @@ def handle_aibot(event: dict) -> dict:
                 "chatReplies": bool(body.get("chatReplies", True)),
                 "replyAll": bool(body.get("replyAll", True)),
                 "dailyPrices": bool(body.get("dailyPrices", True)),
+                "moves": bool(body.get("moves", True)),
+                "moveThreshold": max(1, min(int(body.get("moveThreshold", 5) or 5), 50)),
             }
             val = esc(json.dumps(data, ensure_ascii=False))
             cur.execute(
@@ -368,6 +382,11 @@ def handle_aibot(event: dict) -> dict:
             if not pid:
                 return resp(400, {"error": "За сутки нет новостей с реакциями — дайджест собирать не из чего"})
             return resp(200, {"id": pid})
+
+        if action == "moves-now":
+            from aimoves import check_moves
+            n = check_moves(cur, SCHEMA, float(s.get("moveThreshold") or 5), force=True)
+            return resp(200, {"created": n})
 
         if action == "daily-now":
             from aichat import daily_body, date_title, msk

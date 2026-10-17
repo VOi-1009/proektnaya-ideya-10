@@ -205,6 +205,33 @@ const AiBotManager = ({ token }: { token: string | null }) => {
             checked={f.dailyPrices}
             onChange={(v) => setF({ ...f, dailyPrices: v })}
           />
+          <div className="border-t border-border pt-3 space-y-3">
+            <Toggle
+              label="Заметки о резких движениях"
+              hint="Монеты, нефть и золото: бот пишет заметку, когда цена за сутки меняется больше порога"
+              checked={f.moves}
+              onChange={(v) => setF({ ...f, moves: v })}
+            />
+            <label className="flex items-center gap-2 text-sm text-white">
+              Порог
+              <input
+                className={`${inputCls} w-20 text-center`}
+                value={f.moveThreshold}
+                inputMode="numeric"
+                onChange={(e) => setF({ ...f, moveThreshold: Number(e.target.value.replace(/\D/g, "").slice(0, 2)) || 1 })}
+              />
+              % за сутки
+            </label>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => run({ action: "moves-now" }, "Рынок проверен")}
+              className="bg-transparent border-indigo-400/40 text-indigo-200 hover:bg-indigo-400/10 hover:text-indigo-100"
+            >
+              <Icon name="Activity" size={14} className="mr-1.5" /> Проверить рынок сейчас
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"

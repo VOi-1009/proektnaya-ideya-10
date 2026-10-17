@@ -6,7 +6,7 @@ export interface AiPost {
   title: string;
   body: string;
   links: { title: string; url: string }[];
-  kind: "auto" | "manual" | "daily";
+  kind: "auto" | "manual" | "daily" | "move";
   createdAt: string;
   reactions?: Record<string, number>;
   mine?: string[];
@@ -45,6 +45,8 @@ export interface AiSettings {
   chatReplies: boolean;
   replyAll: boolean;
   dailyPrices: boolean;
+  moves: boolean;
+  moveThreshold: number;
 }
 
 export interface AiMailSettings {
