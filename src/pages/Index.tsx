@@ -19,25 +19,27 @@ import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import OnlineList from "@/components/crypto/OnlineList";
-import { useBrent } from "@/lib/brent";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
-  { id: "news", name: "новости", topic: "Криптоновости, аналитика и регулирование", icon: "Hash" },
+  { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: ForkLog и Bits.media", icon: "Hash" },
+  { id: "world", name: "мировые-новости", short: "Мир", topic: "Политика, экономика и события в мире: ТАСС, РБК, Lenta.ru, Ведомости", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
 ];
 
+const PINNED = ["bitcoin", "brent"];
+
 const loadFavs = (): string[] => {
   try {
     const v = JSON.parse(localStorage.getItem("svecha-favs") ?? "null");
-    return Array.isArray(v) ? v : ["bitcoin", "ethereum", "the-open-network"];
+    return Array.isArray(v) ? v : ["ethereum", "gold"];
   } catch {
-    return ["bitcoin", "ethereum", "the-open-network"];
+    return ["ethereum", "gold"];
   }
 };
 
@@ -52,15 +54,21 @@ const Index = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { user, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
-  const { data: news } = useNews();
+  const { data: news } = useNews("crypto");
+  const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
   const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
-  const [seen, setSeen] = useState(getSeen);
+  const [seen, setSeen] = useState(() => getSeen("crypto"));
+  const [seenWorld, setSeenWorld] = useState(() => getSeen("world"));
   useEffect(() => {
-    if (channel === "news") setSeen(getSeen());
-  }, [channel, news]);
+    if (channel === "news") setSeen(getSeen("crypto"));
+    if (channel === "world") setSeenWorld(getSeen("world"));
+  }, [channel, news, worldNews]);
   const unreadFrom = Math.max(seen, Date.now() - 12 * 3600_000);
   const unread = (news?.items ?? []).filter((n) => n.ts > unreadFrom).length;
+  const unreadWorldFrom = Math.max(seenWorld, Date.now() - 12 * 3600_000);
+  const unreadWorld = (worldNews?.items ?? []).filter((n) => n.ts > unreadWorldFrom).length;
+  const unreadOf = (id: string) => (id === "news" && channel !== "news" ? unread : id === "world" && channel !== "world" ? unreadWorld : 0);
 
   useEffect(() => {
     localStorage.setItem("svecha-favs", JSON.stringify(favs));
@@ -79,7 +87,10 @@ const Index = () => {
 
   const current = CHANNELS.find((c) => c.id === channel)!;
   const favCoins = coins.filter((c) => favs.includes(c.id));
-  const { data: brent } = useBrent();
+  const sideCoins = [
+    ...PINNED.map((id) => coins.find((c) => c.id === id)).filter((c): c is (typeof coins)[number] => !!c),
+    ...favCoins.filter((c) => !PINNED.includes(c.id)),
+  ];
   const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
 
   return (
@@ -104,7 +115,7 @@ const Index = () => {
                 onClick={() => go(c.id)}
                 className={`hover:bg-hover hover:text-white ${channel === c.id ? "text-white bg-hover" : "text-muted-foreground"}`}
               >
-                {(c.name[0].toUpperCase() + c.name.slice(1)).replace("-", " ")}
+                {"short" in c && c.short ? c.short : (c.name[0].toUpperCase() + c.name.slice(1)).replace("-", " ")}
               </Button>
             ))}
             <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
@@ -219,9 +230,9 @@ const Index = () => {
                       {c.id === "alerts" && activeAlerts > 0 && (
                         <span className="ml-auto text-[11px] font-mono text-primary">{activeAlerts}</span>
                       )}
-                      {c.id === "news" && channel !== "news" && unread > 0 && (
+                      {unreadOf(c.id) > 0 && (
                         <span className="ml-auto bg-down text-white text-[10px] font-bold rounded-full px-1.5">
-                          {unread > 30 ? "30+" : unread}
+                          {unreadOf(c.id) > 30 ? "30+" : unreadOf(c.id)}
                         </span>
                       )}
                     </button>
@@ -346,7 +357,9 @@ const Index = () => {
                     live={!!data?.live}
                   />
                 ) : channel === "news" ? (
-                  <NewsChannel />
+                  <NewsChannel key="crypto" kind="crypto" />
+                ) : channel === "world" ? (
+                  <NewsChannel key="world" kind="world" />
                 ) : channel === "articles" ? (
                   <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
                 ) : channel === "alerts" ? (
@@ -377,38 +390,33 @@ const Index = () => {
                 <Icon name="Star" size={12} /> Мой список
               </h3>
               <div className="space-y-0">
-                {favCoins
-                  .filter((c) => c.id !== "the-open-network")
-                  .map((c) => {
-                    const up = c.price_change_percentage_24h >= 0;
-                    return (
-                      <button
-                        key={c.id}
-                        onClick={() => go("market", c.id)}
-                        className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 text-left"
-                      >
-                        <div className="flex-1 min-w-0 leading-tight">
-                          <div className="text-white text-sm font-medium truncate font-coin leading-tight">{COIN_META[c.id]?.ru ?? c.name}</div>
-                          <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">{fmtPrice(c.current_price)}</div>
+                {sideCoins.map((c) => {
+                  const up = c.price_change_percentage_24h >= 0;
+                  const pinned = PINNED.includes(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => go("market", c.id)}
+                      className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 text-left"
+                    >
+                      <div className="flex-1 min-w-0 leading-tight">
+                        <div className="text-white text-sm font-medium truncate font-coin leading-tight flex items-center gap-1">
+                          {COIN_META[c.id]?.ru ?? c.name}
+                          {pinned && <Icon name="Pin" size={10} className="text-muted-foreground" />}
                         </div>
-                        <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
-                          {fmtPct(c.price_change_percentage_24h)}
-                        </span>
-                      </button>
-                    );
-                  })}
-                <div className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60" title="Нефть марки Brent, фьючерс, $ за баррель">
-                  <div className="flex-1 min-w-0 leading-tight">
-                    <div className="text-white text-sm font-medium truncate font-coin leading-tight">BRENT</div>
-                    <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">
-                      {brent ? `${fmtPrice(brent.price)} / барр.` : "загрузка…"}
-                    </div>
-                  </div>
-                  {brent && (
-                    <span className={`text-xs font-mono tabular ${brent.change >= 0 ? "text-up" : "text-down"}`}>{fmtPct(brent.change)}</span>
-                  )}
-                </div>
-                {!favCoins.length && (
+                        <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">
+                          {fmtPrice(c.current_price)}
+                          {c.id === "brent" && " / барр."}
+                          {c.id === "gold" && " / унц."}
+                        </div>
+                      </div>
+                      <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
+                        {fmtPct(c.price_change_percentage_24h)}
+                      </span>
+                    </button>
+                  );
+                })}
+                {!sideCoins.length && (
                   <p className="text-xs text-muted-foreground px-2">Отметьте монеты звёздочкой в #котировки</p>
                 )}
               </div>

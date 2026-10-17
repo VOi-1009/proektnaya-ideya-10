@@ -116,8 +116,8 @@ const PriceChart = ({ coin }: { coin: Coin }) => {
         {[
           ["Макс. 24ч", fmtPrice(coin.high_24h)],
           ["Мин. 24ч", fmtPrice(coin.low_24h)],
-          ["Объём 24ч", fmtBig(coin.total_volume)],
-          ["Капитализация", fmtBig(coin.market_cap)],
+          ["Объём 24ч", coin.kind ? `${coin.total_volume.toLocaleString("ru-RU")} контр.` : fmtBig(coin.total_volume)],
+          ["Капитализация", coin.market_cap ? fmtBig(coin.market_cap) : "—"],
         ].map(([k, v]) => (
           <div key={k} className="p-3 border-r border-white/5 last:border-r-0">
             <div className="text-muted-foreground mb-0.5">{k}</div>

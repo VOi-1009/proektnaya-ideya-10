@@ -17,6 +17,24 @@
       "method": "GET",
       "path": "/?resource=brent",
       "expectedStatus": 200
+    },
+    {
+      "name": "Мировые новости",
+      "method": "GET",
+      "path": "/?kind=world",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Сырьё",
+      "method": "GET",
+      "path": "/?resource=commodities",
+      "expectedStatus": 200
+    },
+    {
+      "name": "График золота",
+      "method": "GET",
+      "path": "/?resource=chart&id=gold&days=7",
+      "expectedStatus": 200
     }
   ]
 }

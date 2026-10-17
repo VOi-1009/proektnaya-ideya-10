@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import func2url from "../../../backend/func2url.json";
 
-export type NewsTag = "Рынок" | "Регулирование" | "Технологии" | "Аналитика" | "DeFi";
+export type NewsKind = "crypto" | "world";
+export type NewsTag = string;
 
 export interface NewsItem {
   id: string;
@@ -16,29 +17,46 @@ export interface NewsItem {
   coins: string[];
 }
 
-export const NEWS_TAGS: NewsTag[] = ["Рынок", "Аналитика", "Регулирование", "Технологии", "DeFi"];
+export const NEWS_TAGS: Record<NewsKind, NewsTag[]> = {
+  crypto: ["Рынок", "Аналитика", "Регулирование", "Технологии", "DeFi"],
+  world: ["Политика", "Экономика", "В мире", "Происшествия", "Общество", "Технологии"],
+};
 
-export const TAG_STYLE: Record<NewsTag, string> = {
+export const NEWS_SOURCES: Record<NewsKind, string[]> = {
+  crypto: ["ForkLog", "Bits.media"],
+  world: ["ТАСС", "РБК", "Lenta.ru", "Ведомости"],
+};
+
+export const TAG_STYLE: Record<string, string> = {
   Рынок: "text-primary border-primary/40",
   Аналитика: "text-accent border-accent/40",
   Регулирование: "text-sky-400 border-sky-400/40",
   Технологии: "text-violet-300 border-violet-300/40",
   DeFi: "text-pink-300 border-pink-300/40",
+  Политика: "text-sky-400 border-sky-400/40",
+  Экономика: "text-primary border-primary/40",
+  "В мире": "text-accent border-accent/40",
+  Происшествия: "text-down border-down/40",
+  Общество: "text-pink-300 border-pink-300/40",
 };
 
 export const SOURCE_STYLE: Record<string, { avatar: string; cls: string }> = {
   ForkLog: { avatar: "F", cls: "bg-orange-500 text-white" },
   "Bits.media": { avatar: "B", cls: "bg-sky-500 text-white" },
+  ТАСС: { avatar: "Т", cls: "bg-blue-700 text-white" },
+  РБК: { avatar: "Р", cls: "bg-emerald-600 text-white" },
+  "Lenta.ru": { avatar: "L", cls: "bg-zinc-200 text-black" },
+  Ведомости: { avatar: "В", cls: "bg-pink-700 text-white" },
 };
 
 export const NEWS_REFRESH_MS = 2 * 60_000;
 const SEEN_KEY = "svecha-news-seen";
 
-export function useNews() {
+export function useNews(kind: NewsKind = "crypto") {
   return useQuery<{ items: NewsItem[]; updatedAt: number }>({
-    queryKey: ["news"],
+    queryKey: ["news", kind],
     queryFn: async () => {
-      const r = await fetch(func2url.news);
+      const r = await fetch(`${func2url.news}?kind=${kind}`);
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !Array.isArray(data.items)) throw new Error(data.error ?? "Не удалось загрузить новости");
       return { items: data.items, updatedAt: data.updatedAt ?? Date.now() };
@@ -50,8 +68,9 @@ export function useNews() {
   });
 }
 
-export const getSeen = () => Number(localStorage.getItem(SEEN_KEY) ?? 0);
-export const markSeen = (ts: number) => localStorage.setItem(SEEN_KEY, String(ts));
+const seenKey = (kind: NewsKind) => (kind === "crypto" ? SEEN_KEY : `${SEEN_KEY}-${kind}`);
+export const getSeen = (kind: NewsKind = "crypto") => Number(localStorage.getItem(seenKey(kind)) ?? 0);
+export const markSeen = (ts: number, kind: NewsKind = "crypto") => localStorage.setItem(seenKey(kind), String(ts));
 
 export const fmtNewsTime = (ts: number) => {
   const d = new Date(ts);

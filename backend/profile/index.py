@@ -11,6 +11,7 @@ from articles import handle_articles
 from blocks import handle_blocks
 from status import level_for
 from users import handle_users
+from reactions import handle_reactions
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
@@ -75,7 +76,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -85,6 +86,8 @@ def handler(event: dict, context) -> dict:
         return handle_articles(event)
     if resource == "users":
         return handle_users(event)
+    if resource == "reactions":
+        return handle_reactions(event)
     if resource == "blocks":
         return handle_blocks(event)
 

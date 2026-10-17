@@ -4,13 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import Message from "../Message";
-import { fmtNewsTime, markSeen, NEWS_TAGS, NewsTag, TAG_STYLE, useNews } from "../news";
+import ReactionButtons from "../ReactionButtons";
+import { useAuth } from "@/lib/auth";
+import { useReactions } from "@/lib/reactions";
+import { fmtNewsTime, markSeen, NEWS_SOURCES, NEWS_TAGS, NewsKind, NewsTag, SOURCE_STYLE, TAG_STYLE, useNews } from "../news";
 
 const PAGE = 15;
 
-const NewsChannel = () => {
-  const { data, isLoading, isError, error, refetch, isFetching, dataUpdatedAt } = useNews();
+const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
+  const { token } = useAuth();
+  const { data, isLoading, isError, error, refetch, isFetching, dataUpdatedAt } = useNews(kind);
   const [tag, setTag] = useState<NewsTag | "Все">("Все");
+  const [source, setSource] = useState<string | null>(null);
   const [coin, setCoin] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [limit, setLimit] = useState(PAGE);
@@ -20,7 +25,7 @@ const NewsChannel = () => {
 
   useEffect(() => {
     if (!items.length) return;
-    markSeen(items[0].ts);
+    markSeen(items[0].ts, kind);
     const top = items[0].id;
     if (lastTop.current && lastTop.current !== top) {
       const idx = items.findIndex((n) => n.id === lastTop.current);
@@ -28,7 +33,7 @@ const NewsChannel = () => {
       toast({ title: "Свежие новости", description: `Новых публикаций: ${fresh}` });
     }
     lastTop.current = top;
-  }, [items]);
+  }, [items, kind]);
 
   const coinsInFeed = useMemo(() => {
     const m: Record<string, number> = {};
@@ -39,7 +44,11 @@ const NewsChannel = () => {
       .map(([c]) => c);
   }, [items]);
 
-  const list = items.filter((n) => (tag === "Все" || n.tag === tag) && (!coin || n.coins.includes(coin)));
+  const list = items.filter(
+    (n) => (tag === "Все" || n.tag === tag) && (!coin || n.coins.includes(coin)) && (!source || n.source === source),
+  );
+  const visibleIds = list.slice(0, limit).map((n) => n.id);
+  const { reactions, react } = useReactions(visibleIds, token);
   const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
 
   const chip = (active: boolean) =>
@@ -51,7 +60,7 @@ const NewsChannel = () => {
     <div className="space-y-4">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur py-2 -mt-2 space-y-2">
         <div className="flex flex-wrap gap-2 items-center">
-          {(["Все", ...NEWS_TAGS] as const).map((t) => (
+          {["Все", ...NEWS_TAGS[kind]].map((t) => (
             <button
               key={t}
               onClick={() => {
@@ -81,7 +90,27 @@ const NewsChannel = () => {
             </button>
           </div>
         </div>
-        {coinsInFeed.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <span className="text-[11px] text-muted-foreground mr-1">Источники:</span>
+          {NEWS_SOURCES[kind].map((src) => (
+            <button
+              key={src}
+              onClick={() => {
+                setSource(source === src ? null : src);
+                setLimit(PAGE);
+              }}
+              className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                source === src ? "bg-primary/15 border-primary text-white" : "border-transparent bg-card text-muted-foreground hover:text-white"
+              }`}
+            >
+              <span className={`w-3.5 h-3.5 rounded-sm text-[8px] font-bold flex items-center justify-center ${SOURCE_STYLE[src]?.cls ?? "bg-hover"}`}>
+                {SOURCE_STYLE[src]?.avatar ?? src[0]}
+              </span>
+              {src}
+            </button>
+          ))}
+        </div>
+        {kind === "crypto" && coinsInFeed.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {coinsInFeed.map((c) => (
               <button
@@ -134,6 +163,7 @@ const NewsChannel = () => {
             <article className="bg-card border-l-4 border-primary rounded overflow-hidden max-w-2xl flex flex-col sm:flex-row">
               <div className="p-3 sm:p-4 flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-xs text-white/80 font-medium">{n.source}</span>
                   <span className="text-xs text-muted-foreground">{fmtNewsTime(n.ts)}</span>
                   <span className={`text-[10px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TAG_STYLE[n.tag]}`}>
                     {n.tag}
@@ -153,12 +183,16 @@ const NewsChannel = () => {
                 {n.text && (
                   <p className={`text-muted-foreground text-sm ${isOpen ? "" : "line-clamp-2"}`}>{n.text}</p>
                 )}
-                <div className="flex items-center gap-4 mt-2 text-xs">
+                <div className="flex items-center gap-4 mt-3 text-xs flex-wrap">
+                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v)} />
                   {n.text.length > 140 && (
                     <button onClick={() => setOpen(isOpen ? null : n.id)} className="text-primary hover:underline">
                       {isOpen ? "Свернуть" : "Читать полностью"}
                     </button>
                   )}
+                  <a href={n.link} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-white inline-flex items-center gap-1 ml-auto">
+                    Источник <Icon name="ExternalLink" size={12} />
+                  </a>
                 </div>
               </div>
             </article>

@@ -96,6 +96,22 @@
       "method": "GET",
       "path": "/?resource=users&rating=1",
       "expectedStatus": 200
+    },
+    {
+      "name": "Реакции",
+      "method": "GET",
+      "path": "/?resource=reactions&ids=abcdef123456",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Лайк без входа",
+      "method": "POST",
+      "path": "/?resource=reactions",
+      "body": {
+        "newsId": "abcdef123456",
+        "value": 1
+      },
+      "expectedStatus": 401
     }
   ]
 }

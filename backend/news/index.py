@@ -15,15 +15,23 @@ CORS = {
     "Access-Control-Max-Age": "86400",
 }
 
-FEEDS = [
-    ("ForkLog", "https://forklog.com/feed"),
-    ("Bits.media", "https://bits.media/rss2/"),
-]
+FEEDS = {
+    "crypto": [
+        ("ForkLog", "https://forklog.com/feed"),
+        ("Bits.media", "https://bits.media/rss2/"),
+    ],
+    "world": [
+        ("ТАСС", "https://tass.ru/rss/v2.xml"),
+        ("Lenta.ru", "https://lenta.ru/rss/news/world"),
+        ("РБК", "https://rssexport.rbc.ru/rbcnews/news/30/full.rss"),
+        ("Ведомости", "https://www.vedomosti.ru/rss/news"),
+    ],
+}
 
 NS = {"dc": "http://purl.org/dc/elements/1.1/", "media": "http://search.yahoo.com/mrss/"}
 
 CACHE_TTL = 120
-_cache: dict = {"at": 0.0, "items": []}
+_cache: dict = {k: {"at": 0.0, "items": []} for k in FEEDS}
 
 TAG_RULES = [
     ("Регулирование", r"регулир|закон|\bsec\b|\bсуд|налог|минфин|\bцб\b|центробанк|банк росси|санкц|запрет|лицензи[яю]|госдум|прокурат|\bfca\b|\bmica\b|арест|штраф"),
@@ -58,6 +66,23 @@ def first_image(raw: str) -> str:
     return m.group(1) if m else ""
 
 
+WORLD_RULES = [
+    ("Экономика", r"экономик|бизнес|финанс|нефт|газ|рынок|бирж|ставк|инфляц|ввп|бюджет|рубл|доллар|санкц|торгов|пошлин"),
+    ("Политика", r"политик|президент|выбор|парламент|министр|правительств|дипломат|переговор|саммит|оон|нато|госдеп|кремл"),
+    ("Происшествия", r"происшеств|авари|катастроф|пожар|взрыв|землетряс|наводнен|погиб|крушен|ураган|теракт"),
+    ("Технологии", r"технолог|наука|космос|\bии\b|искусствен|смартфон|интернет|медиа"),
+    ("Общество", r"обществ|культур|спорт|здоровь|образован|мигра"),
+]
+
+
+def classify_world(title: str, cats: list) -> str:
+    hay = f"{' '.join(cats)} {title}".lower()
+    for tag, rx in WORLD_RULES:
+        if re.search(rx, hay):
+            return tag
+    return "В мире"
+
+
 def classify(title: str, text: str, cats: list) -> str:
     for hay in (f"{title} {' '.join(cats)}".lower(), text[:400].lower()):
         for tag, rx in TAG_RULES:
@@ -71,7 +96,7 @@ def detect_coins(title: str, text: str) -> list:
     return [c for c, rx in COINS if re.search(rx, hay)][:4]
 
 
-def fetch_feed(source: str, url: str) -> list:
+def fetch_feed(source: str, url: str, kind: str = "crypto") -> list:
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (TraderkaNewsBot)"})
     with urllib.request.urlopen(req, timeout=3.5) as r:
         root = ET.fromstring(r.read())
@@ -105,20 +130,22 @@ def fetch_feed(source: str, url: str) -> list:
             "source": source,
             "author": author,
             "ts": ts,
-            "tag": classify(title, text, cats),
-            "coins": detect_coins(title, text),
+            "tag": classify(title, text, cats) if kind == "crypto" else classify_world(title, cats),
+            "coins": detect_coins(title, text) if kind == "crypto" else [],
         })
     return items
 
 
-def load_all() -> tuple:
+def load_all(kind: str) -> tuple:
     errors = []
     items = []
-    with ThreadPoolExecutor(max_workers=len(FEEDS)) as ex:
-        futures = {ex.submit(fetch_feed, s, u): s for s, u in FEEDS}
+    feeds = FEEDS[kind]
+    with ThreadPoolExecutor(max_workers=len(feeds)) as ex:
+        futures = {ex.submit(fetch_feed, s, u, kind): s for s, u in feeds}
         for f, s in futures.items():
             try:
-                items.extend(f.result())
+                got = f.result()
+                items.extend(got if kind == "crypto" else got[:25])
             except Exception as e:  # noqa: BLE001
                 errors.append(f"{s}: {type(e).__name__}")
     seen = set()
@@ -132,64 +159,142 @@ def load_all() -> tuple:
     return uniq[:60], errors
 
 
-_brent: dict = {"at": 0.0, "data": None}
-BRENT_TTL = 300
+COMMODITIES = {
+    "brent": {"ticker": "BZ=F", "symbol": "brent", "name": "BRENT"},
+    "gold": {"ticker": "GC=F", "symbol": "xau", "name": "Gold"},
+}
+QUOTE_TTL = 300
+_quotes: dict = {"at": 0.0, "data": None}
+_charts: dict = {}
+RANGES = {1: ("1d", "5m"), 7: ("7d", "1h"), 30: ("1mo", "1h"), 90: ("3mo", "1d"), 365: ("1y", "1d")}
 
 
-def load_brent() -> dict:
+def yahoo(ticker: str, rng: str, interval: str) -> dict:
     req = urllib.request.Request(
-        "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=1d&interval=1h",
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?range={rng}&interval={interval}",
         headers={"User-Agent": "Mozilla/5.0"},
     )
     with urllib.request.urlopen(req, timeout=4) as r:
-        meta = json.loads(r.read())["chart"]["result"][0]["meta"]
+        return json.loads(r.read())["chart"]["result"][0]
+
+
+def series(res: dict) -> list:
+    ts = res.get("timestamp") or []
+    closes = res["indicators"]["quote"][0].get("close") or []
+    return [(t * 1000, c) for t, c in zip(ts, closes) if c is not None]
+
+
+def load_commodity(cid: str) -> dict:
+    c = COMMODITIES[cid]
+    res = yahoo(c["ticker"], "7d", "1h")
+    meta = res["meta"]
+    pts = series(res)
     price = float(meta["regularMarketPrice"])
-    prev = float(meta.get("chartPreviousClose") or meta.get("previousClose") or price)
     pct = meta.get("regularMarketChangePercent")
     if pct is None:
+        prev = float(meta.get("previousClose") or meta.get("chartPreviousClose") or price)
         pct = (price - prev) / prev * 100 if prev else 0
-    return {"price": price, "change": round(float(pct), 2), "updatedAt": int(time.time() * 1000)}
-
-
-def brent_response() -> dict:
-    now = time.time()
-    if not _brent["data"] or now - _brent["at"] > BRENT_TTL:
-        try:
-            _brent.update(at=now, data=load_brent())
-        except Exception as e:
-            print("brent error:", e)
-    status = 200 if _brent["data"] else 502
-    body = _brent["data"] or {"error": "Котировка Brent временно недоступна"}
+    first = pts[0][1] if pts else price
+    last_day = [p for t, p in pts if t >= (pts[-1][0] - 86400000)] if pts else [price]
     return {
-        "statusCode": status,
-        "headers": {**CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=120"},
-        "body": json.dumps(body),
+        "id": cid,
+        "symbol": c["symbol"],
+        "name": c["name"],
+        "image": "",
+        "kind": "commodity",
+        "current_price": price,
+        "market_cap": 0,
+        "total_volume": float(meta.get("regularMarketVolume") or 0),
+        "high_24h": float(meta.get("regularMarketDayHigh") or max(last_day)),
+        "low_24h": float(meta.get("regularMarketDayLow") or min(last_day)),
+        "price_change_percentage_24h": round(float(pct), 2),
+        "price_change_percentage_1h_in_currency": round((price - pts[-2][1]) / pts[-2][1] * 100, 2) if len(pts) > 1 else 0,
+        "price_change_percentage_7d_in_currency": round((price - first) / first * 100, 2) if first else 0,
+        "sparkline_in_7d": {"price": [p for _, p in pts]},
     }
 
 
+def json_resp(status: int, body, cache: int = 120) -> dict:
+    return {
+        "statusCode": status,
+        "headers": {**CORS, "Content-Type": "application/json", "Cache-Control": f"public, max-age={cache}"},
+        "body": json.dumps(body, ensure_ascii=False),
+    }
+
+
+def commodities_response() -> dict:
+    now = time.time()
+    if not _quotes["data"] or now - _quotes["at"] > QUOTE_TTL:
+        try:
+            with ThreadPoolExecutor(max_workers=2) as ex:
+                data = list(ex.map(load_commodity, COMMODITIES.keys()))
+            _quotes.update(at=now, data=data)
+        except Exception as e:
+            print("commodities error:", e)
+    if not _quotes["data"]:
+        return json_resp(502, {"error": "Котировки сырья временно недоступны"})
+    return json_resp(200, {"items": _quotes["data"], "updatedAt": int(_quotes["at"] * 1000)})
+
+
+def brent_response() -> dict:
+    r = commodities_response()
+    if r["statusCode"] != 200:
+        return r
+    b = next(x for x in _quotes["data"] if x["id"] == "brent")
+    return json_resp(200, {"price": b["current_price"], "change": b["price_change_percentage_24h"], "updatedAt": int(_quotes["at"] * 1000)})
+
+
+def chart_response(qs: dict) -> dict:
+    cid = str(qs.get("id", ""))
+    days = int(qs.get("days", "7")) if str(qs.get("days", "7")).isdigit() else 7
+    if cid not in COMMODITIES:
+        return json_resp(400, {"error": "Неизвестный инструмент"})
+    days = min(RANGES.keys(), key=lambda d: abs(d - days))
+    key = f"{cid}:{days}"
+    now = time.time()
+    cached = _charts.get(key)
+    if not cached or now - cached[0] > QUOTE_TTL:
+        try:
+            rng, interval = RANGES[days]
+            _charts[key] = (now, series(yahoo(COMMODITIES[cid]["ticker"], rng, interval)))
+        except Exception as e:
+            print("chart error:", e)
+            if not cached:
+                return json_resp(502, {"error": "График временно недоступен"})
+    return json_resp(200, {"prices": [[t, p] for t, p in _charts[key][1]]})
+
+
 def handler(event: dict, context) -> dict:
-    """Лента криптоновостей из RSS (ForkLog, Bits.media) и котировка нефти Brent (?resource=brent)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent и золота (?resource=commodities) и их графики (?resource=chart&id=&days=)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
-    if (event.get("queryStringParameters") or {}).get("resource") == "brent":
+    qs = event.get("queryStringParameters") or {}
+    resource = qs.get("resource")
+    if resource == "brent":
         return brent_response()
+    if resource == "commodities":
+        return commodities_response()
+    if resource == "chart":
+        return chart_response(qs)
 
+    kind = qs.get("kind") if qs.get("kind") in FEEDS else "crypto"
+    cache = _cache[kind]
     now = time.time()
     cached = False
     errors: list = []
-    if _cache["items"] and now - _cache["at"] < CACHE_TTL:
-        items = _cache["items"]
+    if cache["items"] and now - cache["at"] < CACHE_TTL:
+        items = cache["items"]
         cached = True
     else:
-        items, errors = load_all()
+        items, errors = load_all(kind)
         if items:
-            _cache.update(at=now, items=items)
-        elif _cache["items"]:
-            items = _cache["items"]
+            cache.update(at=now, items=items)
+        elif cache["items"]:
+            items = cache["items"]
             cached = True
 
     status = 200 if items else 502
-    body = {"items": items, "updatedAt": int(_cache["at"] * 1000) or int(now * 1000), "cached": cached}
+    body = {"items": items, "updatedAt": int(cache["at"] * 1000) or int(now * 1000), "cached": cached}
     if not items:
         body["error"] = "Источники новостей временно недоступны"
     if errors:

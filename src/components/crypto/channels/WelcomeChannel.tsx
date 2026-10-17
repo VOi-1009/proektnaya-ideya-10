@@ -26,10 +26,11 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
 
-  const totalCap = coins.reduce((s, c) => s + c.market_cap, 0);
-  const btc = coins.find((c) => c.id === "bitcoin");
+  const cryptos = coins.filter((c) => !c.kind);
+  const totalCap = cryptos.reduce((s, c) => s + c.market_cap, 0);
+  const btc = cryptos.find((c) => c.id === "bitcoin");
   const dominance = btc ? (btc.market_cap / totalCap) * 100 : 0;
-  const sorted = [...coins].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+  const sorted = [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
 
@@ -67,7 +68,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 max-w-3xl">
           <div className="bg-card rounded-lg p-3 border-l-4 border-primary">
-            <div className="text-muted-foreground text-xs">Капитализация топ-8</div>
+            <div className="text-muted-foreground text-xs">Капитализация крипто</div>
             <div className="font-mono text-white tabular mt-1">{fmtBig(totalCap)}</div>
           </div>
           <div className="bg-card rounded-lg p-3 border-l-4 border-accent">

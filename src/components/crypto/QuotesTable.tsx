@@ -13,8 +13,19 @@ interface Props {
   toggleFav: (id: string) => void;
 }
 
+const COMMODITY_ICON: Record<string, string> = { brent: "Droplet", gold: "Gem" };
+
 const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
   const meta = COIN_META[coin.id];
+  if (COMMODITY_ICON[coin.id])
+    return (
+      <div
+        className="rounded-full flex items-center justify-center text-white flex-shrink-0"
+        style={{ width: size, height: size, background: meta?.color ?? "#888" }}
+      >
+        <Icon name={COMMODITY_ICON[coin.id]} size={Math.round(size * 0.55)} />
+      </div>
+    );
   if (coin.image)
     return <img src={coin.image} alt={coin.name} width={size} height={size} className="rounded-full" loading="lazy" />;
   return (
@@ -146,7 +157,7 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
                     {fmtPct(c.price_change_percentage_7d_in_currency)}
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono text-muted-foreground tabular hidden md:table-cell">
-                    {fmtBig(c.market_cap)}
+                    {c.market_cap ? fmtBig(c.market_cap) : "—"}
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex justify-end">
