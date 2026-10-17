@@ -6,8 +6,9 @@ import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
 import Message from "../Message";
 import LatestArticles from "../LatestArticles";
 import HomeBlocks from "../HomeBlocks";
+import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
-const HERO = "https://cdn.poehali.dev/projects/17c74dba-f379-4376-80b1-440f2ac081c4/files/478dfa0f-7b67-4e33-82ce-a89ee70b614e.jpg";
+const HERO_QUOTES = ["bitcoin", "ethereum", "brent", "gold", "usd-rub", "eur-rub"];
 
 interface Props {
   coins: Coin[];
@@ -25,6 +26,8 @@ const FEATURES = [
 const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
+  const { data: fg } = useFearGreed();
+  const heroQuotes = HERO_QUOTES.map((id) => coins.find((c) => c.id === id)).filter((c): c is Coin => !!c);
 
   const cryptos = coins.filter((c) => !c.kind);
   const totalCap = cryptos.reduce((s, c) => s + c.market_cap, 0);
@@ -47,18 +50,49 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
   return (
     <div className="space-y-5">
-      <div className="relative rounded-xl overflow-hidden border border-border animate-scale-in">
-        <img src={HERO} alt="График роста криптовалют" className="w-full h-48 sm:h-64 object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-          <div className="text-primary font-mono text-xs mb-2 flex items-center gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
+        <div className="p-5 sm:p-7 flex flex-col justify-center bg-gradient-to-br from-primary/20 via-card to-card">
+          <div className="text-primary font-mono text-xs mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
           </div>
-          <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight max-w-xl">
-            Весь крипторынок — в одном месте
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-lg">
+          <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Весь крипторынок — в одном месте</h2>
+          <p className="text-muted-foreground text-sm sm:text-base mt-3 max-w-md">
+            Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
           </p>
+          <div className="flex flex-wrap gap-2 mt-5">
+            <Button onClick={() => go("market")} className="font-semibold">
+              <Icon name="CandlestickChart" size={16} className="mr-2" />
+              Котировки
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => go("portfolio")}
+              className="bg-transparent border-input text-foreground hover:bg-hover hover:text-white"
+            >
+              Мой портфель
+            </Button>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 border-t lg:border-t-0 lg:border-l border-border">
+          <div className="text-muted-foreground text-[11px] uppercase tracking-wider font-semibold mb-2">Главные котировки</div>
+          <div className="grid grid-cols-2 gap-2">
+            {heroQuotes.map((c) => {
+              const up = c.price_change_percentage_24h >= 0;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => go("market", c.id)}
+                  className="text-left bg-rail/60 hover:bg-hover rounded-lg px-3 py-2.5 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-white text-sm font-coin font-medium truncate">{COIN_META[c.id]?.ru ?? c.name}</span>
+                    <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>{fmtPct(c.price_change_percentage_24h)}</span>
+                  </div>
+                  <div className="font-mono text-white/90 tabular text-base mt-0.5">{fmtPrice(c.current_price, c.id)}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -66,7 +100,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <p className="mb-3">
           <strong className="text-white">Сводка по рынку на сегодня</strong>
         </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 max-w-3xl">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
           <div className="bg-card rounded-lg p-3 border-l-4 border-primary">
             <div className="text-muted-foreground text-xs">Капитализация крипто</div>
             <div className="font-mono text-white tabular mt-1">{fmtBig(totalCap)}</div>
@@ -91,6 +125,29 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             </button>
           )}
+          <div
+            className={`bg-card rounded-lg p-3 border-l-4 col-span-2 md:col-span-1 ${fg ? fgBorder(fg.value) : "border-input"}`}
+            title="Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория"
+          >
+            <div className="text-muted-foreground text-xs truncate">Страх и жадность</div>
+            {fg ? (
+              <>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className={`font-mono tabular text-lg leading-none ${fgColor(fg.value)}`}>{fg.value}</span>
+                  <span className="text-white text-xs truncate">{fg.label}</span>
+                </div>
+                <div className="relative h-1.5 rounded-full mt-2 bg-gradient-to-r from-down via-accent to-up">
+                  <span
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-background"
+                    style={{ left: `${fg.value}%` }}
+                  />
+                </div>
+                {fg.prev !== null && <div className="text-muted-foreground text-[10px] font-mono mt-1.5">вчера: {fg.prev}</div>}
+              </>
+            ) : (
+              <div className="font-mono text-muted-foreground mt-1">—</div>
+            )}
+          </div>
         </div>
         {btc && (
           <p className="mt-3 text-muted-foreground text-sm">

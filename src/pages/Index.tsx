@@ -331,7 +331,7 @@ const Index = () => {
             </div>
 
             <div id="chat-scroll" className="flex-1 p-3 sm:p-5 overflow-y-auto scrollbar-thin">
-              <div key={channel} className="max-w-5xl">
+              <div key={channel} className={channel === "welcome" ? "" : "max-w-5xl"}>
                 {isLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-56 w-full bg-card" />
