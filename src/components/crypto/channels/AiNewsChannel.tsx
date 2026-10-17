@@ -13,6 +13,33 @@ const AiAvatar = () => (
   </div>
 );
 
+const DailyCard = ({ title, body }: { title: string; body: string }) => (
+  <article className="relative overflow-hidden rounded-xl border border-indigo-400/40 bg-gradient-to-br from-indigo-500/15 via-card to-card p-4 sm:p-5">
+    <div className="flex items-center gap-2 text-xs">
+      <Icon name="CalendarDays" size={14} className="text-indigo-300" />
+      <span className="text-indigo-300 font-semibold">{AI_NAME}</span>
+      <BotBadge ai compact />
+      <span className="ml-auto text-muted-foreground font-mono">00:05 МСК</span>
+    </div>
+    <h3 className="font-display text-white text-lg sm:text-xl mt-2">{title}</h3>
+    <div className="mt-3 space-y-1.5">
+      {body.split("\n").map((line, i) => {
+        const m = line.match(/^(\d+)\.\s*(.+?)\s+—\s+(.+?)(?:\s+\((.+)\))?$/);
+        if (!m) return <p key={i} className="text-sm text-foreground">{line}</p>;
+        const up = !m[4]?.startsWith("-");
+        return (
+          <div key={i} className="flex items-center gap-3 bg-rail/60 rounded-lg px-3 py-2 text-sm">
+            <span className="text-muted-foreground font-mono w-4">{m[1]}.</span>
+            <span className="text-white font-coin font-medium flex-1">{m[2]}</span>
+            <span className="font-mono text-white tabular">{m[3]}</span>
+            {m[4] && <span className={`font-mono text-xs tabular w-28 text-right ${up ? "text-up" : "text-down"}`}>{m[4]}</span>}
+          </div>
+        );
+      })}
+    </div>
+  </article>
+);
+
 const AiNewsChannel = () => {
   const { data, isLoading } = useAiPosts();
   const openMember = useOpenMember();
@@ -48,7 +75,10 @@ const AiNewsChannel = () => {
           {AI_NAME} пока собирает материал — первый дайджест появится, как только участники оценят свежие новости.
         </div>
       ) : (
-        posts.map((p) => (
+        posts.map((p) =>
+          p.kind === "daily" ? (
+            <DailyCard key={p.id} title={p.title} body={p.body} />
+          ) : (
           <article key={p.id} className="flex gap-3">
             <button onClick={open} className="mt-1 hidden sm:block">
               <AiAvatar />
@@ -84,7 +114,8 @@ const AiNewsChannel = () => {
               )}
             </div>
           </article>
-        ))
+          ),
+        )
       )}
     </div>
   );

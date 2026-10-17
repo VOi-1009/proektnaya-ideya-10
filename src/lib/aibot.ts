@@ -6,7 +6,7 @@ export interface AiPost {
   title: string;
   body: string;
   links: { title: string; url: string }[];
-  kind: "auto" | "manual";
+  kind: "auto" | "manual" | "daily";
   createdAt: string;
 }
 
@@ -20,6 +20,9 @@ export interface AiSettings {
   likeShare: number;
   autoNews: boolean;
   newsHours: number;
+  chatReplies: boolean;
+  replyAll: boolean;
+  dailyPrices: boolean;
 }
 
 export interface AiLog {

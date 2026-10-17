@@ -11,6 +11,7 @@ AI_EMAIL = "aitraderka@bots.traderka.ru"
 DEFAULTS = {
     "enabled": True, "moderation": True, "blockLinks": True, "blockCaps": True, "stopWords": "",
     "reactShare": 90, "likeShare": 70, "autoNews": True, "newsHours": 6,
+    "chatReplies": True, "replyAll": True, "dailyPrices": True,
 }
 PFX = r"(?:на|по|за|от|вы|до|у|при|рас|раз|об|о|с|недо|пере|под|про|въ|из|ни)?"
 BAD_RE = re.compile(
@@ -129,6 +130,39 @@ def maybe_autopost(cur, s: dict) -> None:
         make_digest(cur)
 
 
+def maybe_daily(cur, s: dict) -> None:
+    if not (s.get("enabled") and s.get("dailyPrices", True)):
+        return
+    from aichat import daily_body, date_title, msk
+    t = msk()
+    if t.tm_hour == 0 and t.tm_min < 5:
+        return
+    day = f"{t.tm_year:04d}-{t.tm_mon:02d}-{t.tm_mday:02d}"
+    cur.execute(f"SELECT 1 FROM {SCHEMA}.ai_posts WHERE kind = 'daily' AND post_date = '{day}'")
+    if cur.fetchone():
+        return
+    title = f"Сводка рынка на {date_title(t)}"
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.ai_posts (title, body, kind, post_date, created_at) VALUES ('{esc(title)}', '{esc(daily_body())}', 'daily', '{day}', "
+        f"('{day} 00:05:00'::timestamp - INTERVAL '3 hours')) ON CONFLICT DO NOTHING"
+    )
+
+
+def bot_reply(cur, s: dict, room: str, text: str, user_name: str) -> None:
+    if not (s.get("enabled") and s.get("chatReplies", True)):
+        return
+    from aichat import MENTION_RE, reply
+    if not s.get("replyAll", True) and not MENTION_RE.search(text):
+        return
+    bid = ai_bot_id(cur)
+    if not bid:
+        return
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.users WHERE NOT is_bot")
+    answer = reply(text, user_name, {"users": int(cur.fetchone()[0])})
+    if answer:
+        cur.execute(f"INSERT INTO {SCHEMA}.chat_messages (room, user_id, text) VALUES ('{esc(room)}', {bid}, '{esc(answer[:1000])}')")
+
+
 def post_item(r) -> dict:
     return {"id": r[0], "title": r[1], "body": r[2], "links": json.loads(r[3] or "[]"), "kind": r[4], "createdAt": r[5].isoformat()}
 
@@ -175,6 +209,7 @@ def handle_aibot(event: dict) -> dict:
             return resp(200, {"settings": s, "log": log, "stats": {"blocked7d": blocked, "reactions": reactions, "posts": len(posts)}, "posts": posts, "botId": bid})
 
         if method == "GET":
+            maybe_daily(cur, s)
             maybe_autopost(cur, s)
             cur.execute(f"SELECT {cols} FROM {SCHEMA}.ai_posts ORDER BY id DESC LIMIT 30")
             return resp(200, {"posts": [post_item(x) for x in cur.fetchall()], "botId": ai_bot_id(cur)})
@@ -197,6 +232,9 @@ def handle_aibot(event: dict) -> dict:
                 "likeShare": max(0, min(int(body.get("likeShare", 70) or 0), 100)),
                 "autoNews": bool(body.get("autoNews", True)),
                 "newsHours": max(1, min(int(body.get("newsHours", 6) or 6), 48)),
+                "chatReplies": bool(body.get("chatReplies", True)),
+                "replyAll": bool(body.get("replyAll", True)),
+                "dailyPrices": bool(body.get("dailyPrices", True)),
             }
             val = esc(json.dumps(data, ensure_ascii=False))
             cur.execute(
@@ -218,6 +256,14 @@ def handle_aibot(event: dict) -> dict:
             if not pid:
                 return resp(400, {"error": "За сутки нет новостей с реакциями — дайджест собирать не из чего"})
             return resp(200, {"id": pid})
+
+        if action == "daily-now":
+            from aichat import daily_body, date_title, msk
+            t = msk()
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.ai_posts (title, body, kind) VALUES ('{esc('Сводка рынка на ' + date_title(t))}', '{esc(daily_body())}', 'manual') RETURNING id"
+            )
+            return resp(200, {"id": cur.fetchone()[0]})
 
         if action == "delete-post":
             cur.execute(f"DELETE FROM {SCHEMA}.ai_posts WHERE id = {int(body.get('id', 0) or 0)}")

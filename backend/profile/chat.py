@@ -6,7 +6,7 @@ import psycopg2
 
 from status import level_for, points_sql
 from users import display_name
-from aibot import load_settings, log_block, moderate
+from aibot import bot_reply, load_settings, log_block, maybe_daily, moderate
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
@@ -83,13 +83,18 @@ def handle_chat(event: dict) -> dict:
         )
         if int(cur.fetchone()[0]) >= 5:
             return resp(429, {"error": "Слишком часто — подождите пару секунд"})
+        settings = load_settings(cur)
         if not is_admin:
-            reason = moderate(text, load_settings(cur))
+            reason = moderate(text, settings)
             if reason:
                 log_block(cur, me, room, text, reason)
                 return resp(422, {"error": f"AiTraderKa не пропустил сообщение: {reason}", "moderated": True})
         cur.execute(f"INSERT INTO {SCHEMA}.chat_messages (room, user_id, text) VALUES ('{room}', {me}, '{esc(text)}') RETURNING id")
-        return resp(200, {"id": cur.fetchone()[0]})
+        mid = cur.fetchone()[0]
+        cur.execute(f"SELECT name, email FROM {SCHEMA}.users WHERE id = {me}")
+        nm = cur.fetchone()
+        bot_reply(cur, settings, room, text, display_name(nm[0], nm[1]) if nm else "")
+        return resp(200, {"id": mid})
     finally:
         cur.close()
         conn.close()

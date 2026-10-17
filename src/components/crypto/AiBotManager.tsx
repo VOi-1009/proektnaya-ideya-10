@@ -172,6 +172,46 @@ const AiBotManager = ({ token }: { token: string | null }) => {
         </section>
       </div>
 
+      <div className="grid lg:grid-cols-2 gap-4">
+        <section className="bg-card border border-border rounded-lg p-4 space-y-3">
+          <h2 className="text-white font-semibold flex items-center gap-2">
+            <Icon name="MessagesSquare" size={18} className="text-indigo-300" /> Общение в чатах
+          </h2>
+          <Toggle
+            label="Отвечать на вопросы в чатах"
+            hint="Курсы монет, нефти, золота, валют; как устроен сайт, статусы, Премиум, правила"
+            checked={f.chatReplies}
+            onChange={(v) => setF({ ...f, chatReplies: v })}
+          />
+          <Toggle
+            label="Отвечать на любые вопросы"
+            hint="Если выключить — бот отвечает, только когда к нему обращаются по имени (AiTraderKa, бот)"
+            checked={f.replyAll}
+            onChange={(v) => setF({ ...f, replyAll: v })}
+          />
+        </section>
+        <section className="bg-card border border-border rounded-lg p-4 space-y-3">
+          <h2 className="text-white font-semibold flex items-center gap-2">
+            <Icon name="CalendarDays" size={18} className="text-indigo-300" /> Ежедневная сводка в 00:05
+          </h2>
+          <Toggle
+            label="Публиковать сводку каждый день"
+            hint="Bitcoin, Ethereum, Brent, Gold — цена и изменение за сутки, заголовок с датой"
+            checked={f.dailyPrices}
+            onChange={(v) => setF({ ...f, dailyPrices: v })}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={busy}
+            onClick={() => run({ action: "daily-now" }, "Сводка опубликована")}
+            className="bg-transparent border-indigo-400/40 text-indigo-200 hover:bg-indigo-400/10 hover:text-indigo-100"
+          >
+            <Icon name="Send" size={14} className="mr-1.5" /> Опубликовать сводку сейчас
+          </Button>
+        </section>
+      </div>
+
       <Button onClick={save} disabled={saving} className="font-semibold">
         {saving && <Icon name="Loader2" size={16} className="mr-1.5 animate-spin" />}
         Сохранить настройки

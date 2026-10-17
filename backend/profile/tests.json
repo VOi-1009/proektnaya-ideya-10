@@ -292,6 +292,15 @@
         "action": "settings"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Сводка ИИ без прав",
+      "method": "POST",
+      "path": "/?resource=aibot",
+      "body": {
+        "action": "daily-now"
+      },
+      "expectedStatus": 403
     }
   ]
 }
