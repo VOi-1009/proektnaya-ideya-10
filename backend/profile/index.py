@@ -42,6 +42,17 @@ def load_profile(cur, user_id: int) -> dict:
     if email.endswith("@users.traderka.ru"):
         email = ""
     days, coins = int(r[8]), int(r[9])
+    cur.execute(
+        f"SELECT COALESCE(MAX(c), 0) FROM (SELECT COUNT(*) c FROM (SELECT day, day - (ROW_NUMBER() OVER (ORDER BY day))::int AS g "
+        f"FROM {SCHEMA}.user_visits WHERE user_id = {int(user_id)}) t GROUP BY g) s"
+    )
+    best_streak = int(cur.fetchone()[0])
+    cur.execute(
+        f"SELECT COUNT(*) FROM (SELECT day, MAX(day) OVER () AS top, ROW_NUMBER() OVER (ORDER BY day DESC) AS rn "
+        f"FROM {SCHEMA}.user_visits WHERE user_id = {int(user_id)}) t "
+        f"WHERE t.day = t.top - (t.rn - 1)::int AND t.top >= CURRENT_DATE - 1"
+    )
+    streak = int(cur.fetchone()[0])
     filled = sum(1 for v in (r[2], r[3], r[4], r[5], r[6]) if v)
     points = days * 10 + min(coins, 20) * 5 + filled * 6
     return {
@@ -53,7 +64,12 @@ def load_profile(cur, user_id: int) -> dict:
         "city": r[5] or "",
         "favoriteCoin": r[6] or "",
         "createdAt": r[7].isoformat(),
-        "stats": {"days": days, "coins": coins, "filled": filled, "fields": 5},
+        "stats": {"days": days, "coins": coins, "filled": filled, "fields": 5, "streak": streak, "bestStreak": best_streak},
+        "achievements": [
+            {"id": "streak7", "done": best_streak >= 7, "progress": min(max(best_streak, streak), 7), "goal": 7},
+            {"id": "firstCoin", "done": coins >= 1, "progress": min(coins, 1), "goal": 1},
+            {"id": "fullProfile", "done": filled >= 5, "progress": filled, "goal": 5},
+        ],
         "status": level_for(points, r[10]),
     }
 

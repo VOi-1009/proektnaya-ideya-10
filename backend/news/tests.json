@@ -1,6 +1,22 @@
 {
   "tests": [
-    {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
-    {"name": "Лента новостей", "method": "GET", "path": "/", "expectedStatus": 200}
+    {
+      "name": "CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Лента новостей",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Brent",
+      "method": "GET",
+      "path": "/?resource=brent",
+      "expectedStatus": 200
+    }
   ]
 }

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { COIN_META, fmtPct, fmtPrice, useMarkets } from "@/lib/crypto";
 import Ticker from "@/components/crypto/Ticker";
-import { CoinLogo } from "@/components/crypto/QuotesTable";
 import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
 import MarketChannel from "@/components/crypto/channels/MarketChannel";
 import NewsChannel from "@/components/crypto/channels/NewsChannel";
@@ -20,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import OnlineList from "@/components/crypto/OnlineList";
+import { useBrent } from "@/lib/brent";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 
 const CHANNELS = [
@@ -79,6 +79,7 @@ const Index = () => {
 
   const current = CHANNELS.find((c) => c.id === channel)!;
   const favCoins = coins.filter((c) => favs.includes(c.id));
+  const { data: brent } = useBrent();
   const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
 
   return (
@@ -373,28 +374,40 @@ const Index = () => {
             </button>
             <div>
               <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
-                <Icon name="Star" size={12} /> Мой список — {favCoins.length}
+                <Icon name="Star" size={12} /> Мой список
               </h3>
               <div className="space-y-0">
-                {favCoins.map((c) => {
-                  const up = c.price_change_percentage_24h >= 0;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => go("market", c.id)}
-                      className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 text-left"
-                    >
-                      <CoinLogo coin={c} size={22} />
-                      <div className="flex-1 min-w-0 leading-tight">
-                        <div className="text-white text-sm font-medium truncate font-coin leading-tight">{COIN_META[c.id]?.ru ?? c.name}</div>
-                        <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">{fmtPrice(c.current_price)}</div>
-                      </div>
-                      <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
-                        {fmtPct(c.price_change_percentage_24h)}
-                      </span>
-                    </button>
-                  );
-                })}
+                {favCoins
+                  .filter((c) => c.id !== "the-open-network")
+                  .map((c) => {
+                    const up = c.price_change_percentage_24h >= 0;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => go("market", c.id)}
+                        className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 text-left"
+                      >
+                        <div className="flex-1 min-w-0 leading-tight">
+                          <div className="text-white text-sm font-medium truncate font-coin leading-tight">{COIN_META[c.id]?.ru ?? c.name}</div>
+                          <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">{fmtPrice(c.current_price)}</div>
+                        </div>
+                        <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
+                          {fmtPct(c.price_change_percentage_24h)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                <div className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60" title="Нефть марки Brent, фьючерс, $ за баррель">
+                  <div className="flex-1 min-w-0 leading-tight">
+                    <div className="text-white text-sm font-medium truncate font-coin leading-tight">BRENT</div>
+                    <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">
+                      {brent ? `${fmtPrice(brent.price)} / барр.` : "загрузка…"}
+                    </div>
+                  </div>
+                  {brent && (
+                    <span className={`text-xs font-mono tabular ${brent.change >= 0 ? "text-up" : "text-down"}`}>{fmtPct(brent.change)}</span>
+                  )}
+                </div>
                 {!favCoins.length && (
                   <p className="text-xs text-muted-foreground px-2">Отметьте монеты звёздочкой в #котировки</p>
                 )}

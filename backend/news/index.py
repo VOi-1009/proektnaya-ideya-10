@@ -132,10 +132,47 @@ def load_all() -> tuple:
     return uniq[:60], errors
 
 
+_brent: dict = {"at": 0.0, "data": None}
+BRENT_TTL = 300
+
+
+def load_brent() -> dict:
+    req = urllib.request.Request(
+        "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=1d&interval=1h",
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
+    with urllib.request.urlopen(req, timeout=4) as r:
+        meta = json.loads(r.read())["chart"]["result"][0]["meta"]
+    price = float(meta["regularMarketPrice"])
+    prev = float(meta.get("chartPreviousClose") or meta.get("previousClose") or price)
+    pct = meta.get("regularMarketChangePercent")
+    if pct is None:
+        pct = (price - prev) / prev * 100 if prev else 0
+    return {"price": price, "change": round(float(pct), 2), "updatedAt": int(time.time() * 1000)}
+
+
+def brent_response() -> dict:
+    now = time.time()
+    if not _brent["data"] or now - _brent["at"] > BRENT_TTL:
+        try:
+            _brent.update(at=now, data=load_brent())
+        except Exception as e:
+            print("brent error:", e)
+    status = 200 if _brent["data"] else 502
+    body = _brent["data"] or {"error": "Котировка Brent временно недоступна"}
+    return {
+        "statusCode": status,
+        "headers": {**CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=120"},
+        "body": json.dumps(body),
+    }
+
+
 def handler(event: dict, context) -> dict:
-    """Лента криптоновостей из открытых RSS-источников (ForkLog, Bits.media) с темами и упомянутыми монетами"""
+    """Лента криптоновостей из RSS (ForkLog, Bits.media) и котировка нефти Brent (?resource=brent)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
+    if (event.get("queryStringParameters") or {}).get("resource") == "brent":
+        return brent_response()
 
     now = time.time()
     cached = False

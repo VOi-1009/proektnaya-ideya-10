@@ -4,7 +4,9 @@ import func2url from "../../backend/func2url.json";
 export const AUTH_URL = func2url.auth;
 export const PORTFOLIO_URL = func2url.portfolio;
 export const PROFILE_URL = func2url.profile;
+export const YANDEX_URL = func2url["yandex-auth-yandex-auth"];
 const TOKEN_KEY = "svecha-token";
+const YANDEX_STATE_KEY = "traderka-yandex-state";
 
 export interface User {
   id: number;
@@ -23,6 +25,8 @@ interface AuthCtx {
   authOpen: boolean;
   setAuthOpen: (v: boolean) => void;
   auth: (action: "login" | "register", email: string, password: string) => Promise<void>;
+  loginWithYandex: () => Promise<void>;
+  finishYandex: (code: string, state: string | null) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (u: Partial<User>) => void;
 }
@@ -65,6 +69,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(data.user);
   }, []);
 
+  const loginWithYandex = useCallback(async () => {
+    const r = await fetch(`${YANDEX_URL}?action=auth-url`);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.auth_url) throw new Error("Вход через Яндекс пока не настроен");
+    sessionStorage.setItem(YANDEX_STATE_KEY, data.state ?? "");
+    window.location.href = data.auth_url;
+  }, []);
+
+  const finishYandex = useCallback(async (code: string, state: string | null) => {
+    const expected = sessionStorage.getItem(YANDEX_STATE_KEY);
+    sessionStorage.removeItem(YANDEX_STATE_KEY);
+    if (expected && state !== expected) throw new Error("Сессия входа устарела, попробуйте ещё раз");
+    const r = await fetch(`${YANDEX_URL}?action=callback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.session_token) throw new Error("Не удалось войти через Яндекс");
+    localStorage.setItem(TOKEN_KEY, data.session_token);
+    setToken(data.session_token);
+    setUser({ id: data.user.id, email: data.user.email || data.user.name || "Яндекс ID" });
+    const me = await fetch(AUTH_URL, { headers: { "X-Auth-Token": data.session_token } }).catch(() => null);
+    if (me?.ok) setUser((await me.json()).user);
+  }, []);
+
   const logout = useCallback(async () => {
     const t = token;
     localStorage.removeItem(TOKEN_KEY);
@@ -82,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const patchUser = useCallback((u: Partial<User>) => setUser((p) => (p ? { ...p, ...u } : p)), []);
 
   return (
-    <Ctx.Provider value={{ user, token, ready, authOpen, setAuthOpen, auth, logout, patchUser }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ user, token, ready, authOpen, setAuthOpen, auth, loginWithYandex, finishYandex, logout, patchUser }}>{children}</Ctx.Provider>
   );
 };
 
