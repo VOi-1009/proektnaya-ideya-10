@@ -9,6 +9,7 @@ import HomeBlocks from "../HomeBlocks";
 import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
+import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
 const HERO_QUOTES = ["bitcoin", "ethereum", "brent", "gold", "usd-rub", "eur-rub"];
@@ -58,51 +59,50 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <strong className="text-white">Сводка по рынку на сегодня</strong>
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
-          <div className="bg-card rounded-lg px-3 py-2 border-l-4 border-primary">
-            <div className="text-muted-foreground text-xs">Капитализация крипто</div>
-            <div className="font-mono text-white tabular mt-1">{fmtBig(totalCap)}</div>
+          <div className={cardCls("border-primary")}>
+            <div className={labelCls}>Капитализация крипто</div>
+            <div className={valueCls}>{fmtBig(totalCap)}</div>
           </div>
-          <div className="bg-card rounded-lg px-3 py-2 border-l-4 border-accent">
-            <div className="text-muted-foreground text-xs">Доминация BTC</div>
-            <div className="font-mono text-white tabular mt-1">{dominance.toFixed(1).replace(".", ",")}%</div>
+          <div className={cardCls("border-accent")}>
+            <div className={labelCls}>Доминация BTC</div>
+            <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
           </div>
           {best && (
-            <button onClick={() => go("market", best.id)} className="text-left bg-card rounded-lg px-3 py-2 border-l-4 border-up hover:bg-hover transition-colors">
-              <div className="text-muted-foreground text-xs">Сильнее рынка</div>
-              <div className="font-mono text-white mt-1">
+            <button onClick={() => go("market", best.id)} className={cardCls("border-up", true)}>
+              <div className={labelCls}>Сильнее рынка</div>
+              <div className={valueCls}>
                 {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
               </div>
             </button>
           )}
           {worst && (
-            <button onClick={() => go("market", worst.id)} className="text-left bg-card rounded-lg px-3 py-2 border-l-4 border-down hover:bg-hover transition-colors">
-              <div className="text-muted-foreground text-xs">Аутсайдер</div>
-              <div className="font-mono text-white mt-1">
+            <button onClick={() => go("market", worst.id)} className={cardCls("border-down", true)}>
+              <div className={labelCls}>Аутсайдер</div>
+              <div className={valueCls}>
                 {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
               </div>
             </button>
           )}
           <div
-            className={`bg-card rounded-lg px-3 py-2 border-l-4 col-span-2 md:col-span-1 ${fg ? fgBorder(fg.value) : "border-input"}`}
-            title="Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория"
+            className={cardCls(fg ? fgBorder(fg.value) : "border-input")}
+            title={`Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория${fg?.prev != null ? `. Вчера: ${fg.prev}` : ""}`}
           >
-            <div className="text-muted-foreground text-xs truncate">Страх и жадность</div>
+            <div className={labelCls}>Страх и жадность</div>
             {fg ? (
               <>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className={`font-mono tabular text-lg leading-none ${fgColor(fg.value)}`}>{fg.value}</span>
-                  <span className="text-white text-xs truncate">{fg.label}</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5 w-full min-w-0">
+                  <span className={`font-mono tabular text-sm leading-tight ${fgColor(fg.value)}`}>{fg.value}</span>
+                  <span className="text-white text-[10px] truncate">{fg.label}</span>
                 </div>
-                <div className="relative h-1.5 rounded-full mt-2 bg-gradient-to-r from-down via-accent to-up">
+                <div className="relative h-1 rounded-full mt-1 w-full bg-gradient-to-r from-down via-accent to-up">
                   <span
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-background"
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white border border-background"
                     style={{ left: `${fg.value}%` }}
                   />
                 </div>
-                {fg.prev !== null && <div className="text-muted-foreground text-[9px] font-mono mt-1.5">вчера: {fg.prev}</div>}
               </>
             ) : (
-              <div className="font-mono text-muted-foreground mt-1">—</div>
+              <div className={valueCls}>—</div>
             )}
           </div>
         </div>

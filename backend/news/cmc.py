@@ -2,7 +2,7 @@ import json
 import time
 import urllib.request
 
-TTL = 1800
+TTL = 300
 API = "https://api.coinmarketcap.com/data-api/v3"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124 Safari/537.36", "Accept": "application/json"}
 _cache: dict = {"at": 0.0, "data": None}
@@ -33,12 +33,18 @@ def altseason() -> dict:
     return {"value": val("now"), "yesterday": val("yesterday"), "lastWeek": val("lastWeek"), "lastMonth": val("lastMonth")}
 
 
+def liquidations() -> dict:
+    d = _get("/liquidations/summary")["data"]
+    num = lambda k: float(d[k]) if d.get(k) is not None else None
+    return {"total": num("total"), "change24h": num("totalChange24h"), "longs": num("longs"), "shorts": num("shorts")}
+
+
 def cmc_response(json_resp) -> dict:
     now = time.time()
     if _cache["data"] and now - _cache["at"] < TTL:
         return json_resp(200, _cache["data"])
     data = dict(_cache["data"] or {})
-    for key, fn in (("treasuries", treasuries), ("altseason", altseason)):
+    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations)):
         try:
             data[key] = fn()
         except Exception as e:
