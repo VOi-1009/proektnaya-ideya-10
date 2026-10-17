@@ -20,7 +20,6 @@ import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SiteNewsBlock from "@/components/crypto/SiteNewsBlock";
-import OnlineList from "@/components/crypto/OnlineList";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import SidePolls from "@/components/crypto/SidePolls";
 import RadarDialog from "@/components/crypto/RadarDialog";
@@ -407,7 +406,6 @@ const Index = () => {
 
           {/* Правая панель: онлайн и избранное */}
           <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
-            <OnlineList />
             <button
               onClick={() => navigate("/rating")}
               className="w-full flex items-center gap-2 px-2 py-2 rounded bg-rail hover:bg-hover text-sm text-foreground"
