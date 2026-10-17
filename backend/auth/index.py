@@ -15,6 +15,7 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token",
     "Access-Control-Max-Age": "86400",
 }
+FOUNDERS_LIMIT = 100
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -47,6 +48,14 @@ def create_session(cur, user_id: int) -> str:
     return token
 
 
+def claim_founder(cur, user_id: int) -> None:
+    cur.execute(
+        f"UPDATE {SCHEMA}.users SET founder_no = (SELECT COALESCE(MAX(founder_no), 0) + 1 FROM {SCHEMA}.users) "
+        f"WHERE id = {int(user_id)} AND founder_no IS NULL AND NOT is_bot "
+        f"AND (SELECT COUNT(*) FROM {SCHEMA}.users WHERE founder_no IS NOT NULL) < {FOUNDERS_LIMIT}"
+    )
+
+
 def handler(event: dict, context) -> dict:
     """Регистрация, вход, выход и проверка сессии пользователя по почте и паролю"""
     method = event.get("httpMethod", "GET")
@@ -65,7 +74,7 @@ def handler(event: dict, context) -> dict:
             if not token:
                 return resp(401, {"error": "Не авторизован"})
             cur.execute(
-                f"SELECT u.id, u.email, u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+                f"SELECT u.id, u.email, u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override, u.founder_no FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
                 f"WHERE s.token = '{token}' AND s.expires_at > NOW()"
             )
             row = cur.fetchone()
@@ -79,8 +88,12 @@ def handler(event: dict, context) -> dict:
                     f"INSERT INTO {SCHEMA}.user_visits (user_id, day) VALUES ({int(row[0])}, CURRENT_DATE) ON CONFLICT DO NOTHING"
                 )
                 cur.execute(f"UPDATE {SCHEMA}.users SET last_seen_at = NOW() WHERE id = {int(row[0])}")
+                if row[7] is None:
+                    claim_founder(cur, row[0])
+                    cur.execute(f"SELECT founder_no FROM {SCHEMA}.users WHERE id = {int(row[0])}")
+                    row = (*row[:7], cur.fetchone()[0])
             st = level_for(int(row[5]), row[6])
-            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or "", "isAdmin": bool(row[4]), "level": st["level"], "statusTitle": st["title"]}})
+            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or "", "isAdmin": bool(row[4]), "level": st["level"], "statusTitle": st["title"], "founder": row[7]}})
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})
@@ -121,10 +134,11 @@ def handler(event: dict, context) -> dict:
 
         new_token = create_session(cur, user_id)
         cur.execute(f"UPDATE {SCHEMA}.users SET last_seen_at = NOW() WHERE id = {int(user_id)}")
-        cur.execute(f"SELECT u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}")
+        claim_founder(cur, user_id)
+        cur.execute(f"SELECT u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override, u.founder_no FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}")
         u = cur.fetchone()
         st = level_for(int(u[3]), u[4])
-        return resp(200, {"token": new_token, "user": {"id": user_id, "email": email, "name": u[0] or "", "avatar": u[1] or "", "isAdmin": bool(u[2]), "level": st["level"], "statusTitle": st["title"]}})
+        return resp(200, {"token": new_token, "user": {"id": user_id, "email": email, "name": u[0] or "", "avatar": u[1] or "", "isAdmin": bool(u[2]), "level": st["level"], "statusTitle": st["title"], "founder": u[5]}})
     finally:
         cur.close()
         conn.close()

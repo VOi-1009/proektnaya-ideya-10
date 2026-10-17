@@ -16,6 +16,7 @@ export interface User {
   isAdmin?: boolean;
   level?: number;
   statusTitle?: string;
+  founder?: number | null;
 }
 
 interface AuthCtx {

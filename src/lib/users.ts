@@ -7,6 +7,7 @@ export interface OnlineUser {
   level: number;
   title: string;
   avatar?: string;
+  founder?: number | null;
 }
 
 export interface AdminUser extends OnlineUser {

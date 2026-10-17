@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { LEVELS, nameCls } from "@/lib/status";
 import { AdminUser } from "@/lib/users";
 import StatusBadge from "./StatusBadge";
+import FounderBadge from "./FounderBadge";
 import MemberIcon from "./MemberIcon";
 import { BotForm, ago, inputCls } from "./usersAdmin";
 
@@ -41,6 +42,7 @@ const UserRow = ({ u, myId, busyId, setBot, setCardId, setLevel, setToDelete }: 
             {u.isBot && <Icon name="Bot" size={14} className="text-muted-foreground flex-shrink-0" />}
             <span className={`text-sm font-medium truncate group-hover:underline ${nameCls(u.level)}`}>{u.name}</span>
             <StatusBadge level={u.level} compact />
+            <FounderBadge no={u.founder} compact />
             {u.id === myId && <span className="text-xs text-muted-foreground">(вы)</span>}
           </div>
           <div className="text-muted-foreground text-xs flex flex-wrap gap-x-3">

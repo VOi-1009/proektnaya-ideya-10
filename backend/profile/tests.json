@@ -217,6 +217,12 @@
         "title": "x"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Новости сайта",
+      "method": "GET",
+      "path": "/?resource=sitenews",
+      "expectedStatus": 200
     }
   ]
 }

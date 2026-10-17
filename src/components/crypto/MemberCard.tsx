@@ -10,6 +10,8 @@ import { Achievement } from "./Achievements";
 import MemberIcon from "./MemberIcon";
 import SpecialAchievements from "./SpecialAchievements";
 import StatusBadge from "./StatusBadge";
+import FounderBadge from "./FounderBadge";
+import RareAchievements from "./RareAchievements";
 
 interface Member {
   id: number;
@@ -25,6 +27,7 @@ interface Member {
   online: boolean;
   place: number;
   special: Achievement[];
+  founder?: number | null;
 }
 
 const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void }) => {
@@ -78,6 +81,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                   <DialogDescription asChild>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <StatusBadge level={m.level} compact />
+                      <FounderBadge no={m.founder} />
                       <span className={`text-xs ${m.online ? "text-green-400" : "text-muted-foreground"}`}>
                         {m.online ? "в сети" : "не в сети"}
                       </span>
@@ -121,6 +125,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                 )}
               </div>
 
+              {m.founder && <RareAchievements founder={m.founder} compact />}
               <SpecialAchievements items={m.special} compact />
             </div>
           )}

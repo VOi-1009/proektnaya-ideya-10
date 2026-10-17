@@ -15,6 +15,7 @@ from users import handle_users
 from reactions import handle_reactions
 from polls import handle_polls
 from radars import handle_radars
+from sitenews import handle_site_news
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
@@ -38,7 +39,7 @@ def load_profile(cur, user_id: int) -> dict:
     cur.execute(
         f"SELECT u.id, u.email, u.name, u.avatar_url, u.bio, u.city, u.favorite_coin, u.created_at, "
         f"(SELECT COUNT(*) FROM {SCHEMA}.user_visits v WHERE v.user_id = u.id), "
-        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override "
+        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override, u.founder_no "
         f"FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}"
     )
     r = cur.fetchone()
@@ -51,6 +52,8 @@ def load_profile(cur, user_id: int) -> dict:
         f"FROM {SCHEMA}.user_visits WHERE user_id = {int(user_id)}) t GROUP BY g) s"
     )
     best_streak = int(cur.fetchone()[0])
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.users WHERE founder_no IS NOT NULL")
+    founders_taken = int(cur.fetchone()[0])
     cur.execute(
         f"SELECT COUNT(*) FROM (SELECT day, MAX(day) OVER () AS top, ROW_NUMBER() OVER (ORDER BY day DESC) AS rn "
         f"FROM {SCHEMA}.user_visits WHERE user_id = {int(user_id)}) t "
@@ -76,11 +79,13 @@ def load_profile(cur, user_id: int) -> dict:
         ],
         "status": level_for(points, r[10]),
         "special": special_for(cur, SCHEMA, user_id),
+        "founder": r[11],
+        "foundersTaken": founders_taken,
     }
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -98,6 +103,8 @@ def handler(event: dict, context) -> dict:
         return handle_polls(event)
     if resource == "radars":
         return handle_radars(event)
+    if resource == "sitenews":
+        return handle_site_news(event)
 
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     token = re.sub(r"[^a-f0-9]", "", headers.get("x-auth-token", ""))

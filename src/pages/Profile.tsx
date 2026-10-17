@@ -11,6 +11,8 @@ import UserAvatar from "@/components/crypto/UserAvatar";
 import { LEVELS } from "@/lib/status";
 import Achievements, { Achievement } from "@/components/crypto/Achievements";
 import SpecialAchievements from "@/components/crypto/SpecialAchievements";
+import RareAchievements from "@/components/crypto/RareAchievements";
+import FounderBadge from "@/components/crypto/FounderBadge";
 
 interface ProfileData {
   id: number;
@@ -24,6 +26,8 @@ interface ProfileData {
   stats: { days: number; coins: number; filled: number; fields: number; streak?: number; bestStreak?: number };
   achievements?: Achievement[];
   special?: Achievement[];
+  founder?: number | null;
+  foundersTaken?: number;
   status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null; manual?: boolean };
 }
 
@@ -191,6 +195,7 @@ const Profile = () => {
                     <Icon name={LEVELS[s.level - 1].icon} size={14} />
                     {s.title}
                   </span>
+                  <FounderBadge no={profile.founder} />
                   <span className="text-muted-foreground text-xs">с нами с {since}</span>
                 </div>
                 {profile.avatar && (
@@ -307,6 +312,7 @@ const Profile = () => {
             </div>
 
             {profile.achievements && <Achievements items={profile.achievements} streak={profile.stats.streak ?? 0} />}
+            <RareAchievements founder={profile.founder} taken={profile.foundersTaken} />
             {profile.special && <SpecialAchievements items={profile.special} />}
 
             <section className="bg-card border border-border rounded-xl p-5 sm:p-6">

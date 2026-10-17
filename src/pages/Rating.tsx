@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { nameCls } from "@/lib/status";
 import StatusBadge from "@/components/crypto/StatusBadge";
+import FounderBadge from "@/components/crypto/FounderBadge";
 import MemberIcon from "@/components/crypto/MemberIcon";
 import { useOpenMember } from "@/lib/memberCard";
 import { useAuth } from "@/lib/auth";
@@ -19,6 +20,7 @@ interface RatingRow {
   city: string;
   place: number;
   avatar?: string;
+  founder?: number | null;
 }
 
 const MEDALS: Record<number, string> = {
@@ -68,6 +70,7 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
           <div className="text-muted-foreground text-xs truncate">{r.city}</div>
         )}
       </div>
+      <FounderBadge no={r.founder} compact className="hidden sm:inline-flex" />
       <StatusBadge level={r.level} compact className="hidden sm:inline-flex" />
       <div className="text-right w-20 flex-shrink-0">
         <div className="text-white font-mono tabular text-sm">

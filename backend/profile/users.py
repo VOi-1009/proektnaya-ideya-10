@@ -79,11 +79,11 @@ def handle_users(event: dict) -> dict:
                 me, is_admin = int(r[0]), bool(r[1])
 
         pts = points_sql(SCHEMA)
-        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin FROM {SCHEMA}.users u"
+        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no FROM {SCHEMA}.users u"
 
         def to_user(r, full=False) -> dict:
             st = level_for(int(r[3]), r[4])
-            u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"], "avatar": r[9] or ""}
+            u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"], "avatar": r[9] or "", "founder": r[14]}
             if full:
                 email = r[2] or ""
                 u.update({
@@ -130,13 +130,13 @@ def handle_users(event: dict) -> dict:
                     "level": st["level"], "title": st["title"], "points": int(r[3]),
                     "city": r[8] or "", "bio": r[11] or "", "favoriteCoin": r[12] or "",
                     "createdAt": r[6].isoformat(), "online": online, "place": place,
-                    "special": special_for(cur, SCHEMA, r[0]),
+                    "special": special_for(cur, SCHEMA, r[0]), "founder": r[14],
                 }})
 
             if qs.get("rating") == "1":
                 cur.execute(
                     f"SELECT t.id, t.name, t.email, t.pts, t.status_override, t.city, t.created_at, "
-                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url "
+                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url, t.founder_no FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url, u.founder_no "
                     f"FROM {SCHEMA}.users u) t ORDER BY t.pts DESC, t.created_at ASC"
                 )
                 rows = cur.fetchall()
@@ -145,7 +145,7 @@ def handle_users(event: dict) -> dict:
                 def to_row(r, place):
                     st = level_for(int(r[3]), r[4])
                     return {"id": r[0], "name": display_name(r[1], r[2]), "points": int(r[3]), "level": st["level"],
-                            "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or ""}
+                            "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or "", "founder": r[9]}
 
                 top = [to_row(r, i + 1) for i, r in enumerate(rows[:50])]
                 mine = None
