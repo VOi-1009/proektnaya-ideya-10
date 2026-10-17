@@ -1,8 +1,8 @@
-import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 import { levelInfo, nameCls } from "@/lib/status";
 import { useOnline } from "@/lib/users";
+import MemberIcon from "./MemberIcon";
 
 const OnlineList = () => {
   const { user, token } = useAuth();
@@ -27,9 +27,7 @@ const OnlineList = () => {
             const me = user?.id === u.id;
             return (
               <li key={u.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60">
-                <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full flex-shrink-0 ${l.cls}`} title={l.title}>
-                  <Icon name={l.icon} size={11} />
-                </span>
+                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} />
                 <span className={`text-sm truncate flex-1 ${nameCls(u.level, "text-foreground")}`}>
                   {u.name}
                   {me && <span className="text-muted-foreground font-normal"> (вы)</span>}

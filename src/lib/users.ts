@@ -6,6 +6,7 @@ export interface OnlineUser {
   name: string;
   level: number;
   title: string;
+  avatar?: string;
 }
 
 export interface AdminUser extends OnlineUser {
@@ -17,6 +18,13 @@ export interface AdminUser extends OnlineUser {
   isBot: boolean;
   online: boolean;
   city: string;
+  bonus: number;
+  bio: string;
+  favoriteCoin: string;
+  isAdmin: boolean;
+  autoTitle: string;
+  next: number | null;
+  nextTitle: string | null;
 }
 
 const URL_BASE = `${PROFILE_URL}?resource=users`;

@@ -139,6 +139,17 @@
         "level": 1
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Подарок очков без прав",
+      "method": "POST",
+      "path": "/?resource=users",
+      "body": {
+        "action": "gift-points",
+        "userId": 1,
+        "amount": 10
+      },
+      "expectedStatus": 403
     }
   ]
 }

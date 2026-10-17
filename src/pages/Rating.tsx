@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { nameCls } from "@/lib/status";
 import StatusBadge from "@/components/crypto/StatusBadge";
+import MemberIcon from "@/components/crypto/MemberIcon";
 import { useAuth } from "@/lib/auth";
 import { usersRequest } from "@/lib/users";
 
@@ -16,6 +17,7 @@ interface RatingRow {
   title: string;
   city: string;
   place: number;
+  avatar?: string;
 }
 
 const MEDALS: Record<number, string> = {
@@ -41,6 +43,7 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => (
     }`}
   >
     <Place n={r.place} />
+    <MemberIcon name={r.name} level={r.level} avatar={r.avatar} className="w-9 h-9 text-sm" iconSize={16} />
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 min-w-0 flex-wrap">
         <span className={`text-sm font-medium truncate ${nameCls(r.level)}`}>{r.name}</span>

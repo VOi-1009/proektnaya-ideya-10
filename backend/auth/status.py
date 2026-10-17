@@ -1,11 +1,11 @@
 LEVELS = [
     (0, "Новичок"),
-    (50, "Наблюдатель"),
-    (150, "Трейдер"),
-    (350, "Аналитик"),
-    (700, "Кит"),
+    (750, "Наблюдатель"),
+    (2250, "Трейдер"),
+    (5250, "Аналитик"),
+    (10500, "Кит"),
 ]
-TITLES = [t for _, t in LEVELS] + ["Медведь"]
+TITLES = [t for _, t in LEVELS] + ["Медведь", "Бык"]
 MAX_LEVEL = len(TITLES)
 
 
@@ -15,7 +15,8 @@ def points_sql(schema: str, alias: str = "u") -> str:
         f"((SELECT COUNT(*) FROM {schema}.user_visits v WHERE v.user_id = {a}.id) * 10 "
         f"+ LEAST((SELECT COUNT(*) FROM {schema}.holdings h WHERE h.user_id = {a}.id), 20) * 5 "
         f"+ ((COALESCE({a}.name, '') <> '')::int + ({a}.avatar_url IS NOT NULL)::int + (COALESCE({a}.bio, '') <> '')::int "
-        f"+ (COALESCE({a}.city, '') <> '')::int + (COALESCE({a}.favorite_coin, '') <> '')::int) * 6)"
+        f"+ (COALESCE({a}.city, '') <> '')::int + (COALESCE({a}.favorite_coin, '') <> '')::int) * 6 "
+        f"+ COALESCE({a}.bonus_points, 0))"
     )
 
 

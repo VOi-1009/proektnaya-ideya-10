@@ -1,10 +1,13 @@
+import base64
 import hashlib
 import json
 import os
 import re
 import secrets
 import time
+import uuid
 
+import boto3
 import psycopg2
 
 from status import MAX_LEVEL, TITLES, level_for, points_sql
@@ -15,6 +18,23 @@ ONLINE_MINUTES = 5
 BOT_SLOT = 15 * 60
 BOT_ONLINE_SHARE = 60
 BOT_DOMAIN = "@bots.traderka.ru"
+IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+MAX_GIFT = 100000
+
+
+def upload_avatar(uid: int, ctype: str, raw: str) -> str:
+    data = base64.b64decode(raw.split(",")[-1])
+    if not data or len(data) > 3 * 1024 * 1024:
+        raise ValueError("Картинка должна быть до 3 МБ")
+    key = f"avatars/{uid}/{uuid.uuid4().hex}.{IMAGE_TYPES[ctype]}"
+    s3 = boto3.client(
+        "s3",
+        endpoint_url="https://bucket.poehali.dev",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    s3.put_object(Bucket="files", Key=key, Body=data, ContentType=ctype)
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
 
 
 def bot_online(uid: int, now: float = None) -> bool:
@@ -58,11 +78,11 @@ def handle_users(event: dict) -> dict:
                 me, is_admin = int(r[0]), bool(r[1])
 
         pts = points_sql(SCHEMA)
-        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city FROM {SCHEMA}.users u"
+        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin FROM {SCHEMA}.users u"
 
         def to_user(r, full=False) -> dict:
             st = level_for(int(r[3]), r[4])
-            u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"]}
+            u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"], "avatar": r[9] or ""}
             if full:
                 email = r[2] or ""
                 u.update({
@@ -70,6 +90,13 @@ def handle_users(event: dict) -> dict:
                     "isBot": bool(r[7]),
                     "online": bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60),
                     "city": r[8] or "",
+                    "bonus": int(r[10] or 0),
+                    "bio": r[11] or "",
+                    "favoriteCoin": r[12] or "",
+                    "isAdmin": bool(r[13]),
+                    "autoTitle": level_for(int(r[3]))["title"],
+                    "next": st["next"],
+                    "nextTitle": st["nextTitle"],
                     "points": st["points"],
                     "manual": st["manual"],
                     "lastSeen": r[5].isoformat() if r[5] else None,
@@ -88,7 +115,7 @@ def handle_users(event: dict) -> dict:
             if qs.get("rating") == "1":
                 cur.execute(
                     f"SELECT t.id, t.name, t.email, t.pts, t.status_override, t.city, t.created_at, "
-                    f"RANK() OVER (ORDER BY t.pts DESC) FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at "
+                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url "
                     f"FROM {SCHEMA}.users u) t ORDER BY t.pts DESC, t.created_at ASC"
                 )
                 rows = cur.fetchall()
@@ -97,7 +124,7 @@ def handle_users(event: dict) -> dict:
                 def to_row(r, place):
                     st = level_for(int(r[3]), r[4])
                     return {"id": r[0], "name": display_name(r[1], r[2]), "points": int(r[3]), "level": st["level"],
-                            "title": st["title"], "city": r[5] or "", "place": place}
+                            "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or ""}
 
                 top = [to_row(r, i + 1) for i, r in enumerate(rows[:50])]
                 mine = None
@@ -167,6 +194,38 @@ def handle_users(event: dict) -> dict:
                 )
                 if not cur.fetchone():
                     return resp(404, {"error": "Бот не найден"})
+            cur.execute(f"{base} WHERE u.id = {uid}")
+            return resp(200, {"user": to_user(cur.fetchone(), True)})
+
+        if action in ("bot-avatar", "remove-bot-avatar"):
+            uid = int(body.get("userId", 0) or 0)
+            cur.execute(f"SELECT 1 FROM {SCHEMA}.users WHERE id = {uid} AND is_bot")
+            if not cur.fetchone():
+                return resp(404, {"error": "Бот не найден"})
+            if action == "bot-avatar":
+                ctype = str(body.get("contentType", ""))
+                if ctype not in IMAGE_TYPES:
+                    return resp(400, {"error": "Подойдёт картинка JPG, PNG или WEBP"})
+                try:
+                    url = upload_avatar(uid, ctype, str(body.get("data", "")))
+                except ValueError as err:
+                    return resp(400, {"error": str(err)})
+                cur.execute(f"UPDATE {SCHEMA}.users SET avatar_url = '{url}' WHERE id = {uid}")
+            else:
+                cur.execute(f"UPDATE {SCHEMA}.users SET avatar_url = NULL WHERE id = {uid}")
+            cur.execute(f"{base} WHERE u.id = {uid}")
+            return resp(200, {"user": to_user(cur.fetchone(), True)})
+
+        if action == "gift-points":
+            uid = int(body.get("userId", 0) or 0)
+            amount = int(body.get("amount", 0) or 0)
+            if amount == 0 or abs(amount) > MAX_GIFT:
+                return resp(400, {"error": f"Укажите количество очков от 1 до {MAX_GIFT}"})
+            cur.execute(
+                f"UPDATE {SCHEMA}.users SET bonus_points = GREATEST(bonus_points + {amount}, 0) WHERE id = {uid} RETURNING id"
+            )
+            if not cur.fetchone():
+                return resp(404, {"error": "Пользователь не найден"})
             cur.execute(f"{base} WHERE u.id = {uid}")
             return resp(200, {"user": to_user(cur.fetchone(), True)})
 
