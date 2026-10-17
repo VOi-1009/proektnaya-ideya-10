@@ -26,6 +26,7 @@ import RadarDialog from "@/components/crypto/RadarDialog";
 import { Radar, useRadars } from "@/lib/radars";
 import ChatChannel from "@/components/crypto/channels/ChatChannel";
 import { CHAT_ROOMS, ChatRoom } from "@/lib/chat";
+import DonateButton from "@/components/crypto/DonateButton";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -147,6 +148,7 @@ const Index = () => {
                 Войти
               </Button>
             )}
+            <DonateButton className="ml-2" />
             <Button
               className="ml-2 font-semibold"
               onClick={() => {
@@ -174,6 +176,7 @@ const Index = () => {
                 {c.name}
               </Button>
             ))}
+            <DonateButton full />
             <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
               <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
                 <Icon name="MessageCircle" size={16} className="mr-2" />

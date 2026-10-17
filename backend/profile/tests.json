@@ -229,6 +229,21 @@
       "method": "GET",
       "path": "/?resource=chat&room=green",
       "expectedStatus": 401
+    },
+    {
+      "name": "Донаты",
+      "method": "GET",
+      "path": "/?resource=donate",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Донаты без прав",
+      "method": "POST",
+      "path": "/?resource=donate",
+      "body": {
+        "url": "https://x.ru"
+      },
+      "expectedStatus": 403
     }
   ]
 }

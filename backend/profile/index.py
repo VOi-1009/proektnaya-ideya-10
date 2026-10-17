@@ -17,6 +17,7 @@ from polls import handle_polls
 from radars import handle_radars
 from sitenews import handle_site_news
 from chat import handle_chat
+from donate import handle_donate
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
@@ -86,7 +87,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), чаты зелёных и красных (?resource=chat&room=green|red)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), чаты зелёных и красных (?resource=chat&room=green|red), донаты (?resource=donate)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -108,6 +109,8 @@ def handler(event: dict, context) -> dict:
         return handle_site_news(event)
     if resource == "chat":
         return handle_chat(event)
+    if resource == "donate":
+        return handle_donate(event)
 
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     token = re.sub(r"[^a-f0-9]", "", headers.get("x-auth-token", ""))
