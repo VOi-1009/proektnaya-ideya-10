@@ -118,6 +118,27 @@
       "method": "GET",
       "path": "/?resource=reactions&top=1",
       "expectedStatus": 200
+    },
+    {
+      "name": "Удаление без прав",
+      "method": "POST",
+      "path": "/?resource=users",
+      "body": {
+        "action": "delete-user",
+        "userId": 999999
+      },
+      "expectedStatus": 403
+    },
+    {
+      "name": "Создание бота без прав",
+      "method": "POST",
+      "path": "/?resource=users",
+      "body": {
+        "action": "create-bot",
+        "name": "Тест",
+        "level": 1
+      },
+      "expectedStatus": 403
     }
   ]
 }

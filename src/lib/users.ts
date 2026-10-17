@@ -14,6 +14,9 @@ export interface AdminUser extends OnlineUser {
   manual: boolean;
   lastSeen: string | null;
   createdAt: string;
+  isBot: boolean;
+  online: boolean;
+  city: string;
 }
 
 const URL_BASE = `${PROFILE_URL}?resource=users`;

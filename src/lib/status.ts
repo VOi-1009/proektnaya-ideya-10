@@ -4,6 +4,7 @@ export interface StatusLevel {
   icon: string;
   desc: string;
   cls: string;
+  name?: string;
 }
 
 export const LEVELS: StatusLevel[] = [
@@ -15,10 +16,21 @@ export const LEVELS: StatusLevel[] = [
   {
     title: "Медведь",
     need: null,
-    icon: "Gem",
+    icon: "TrendingDown",
     desc: "Привилегированный статус — присваивает только администрация",
-    cls: "bg-gradient-to-r from-amber-400 to-orange-500 text-black",
+    cls: "bg-red-600 text-white shadow-[0_0_10px_rgba(239,68,68,0.55)]",
+    name: "text-red-500 font-semibold",
+  },
+  {
+    title: "Бык",
+    need: null,
+    icon: "TrendingUp",
+    desc: "Привилегированный статус — присваивает только администрация",
+    cls: "bg-green-500 text-black shadow-[0_0_10px_rgba(34,197,94,0.55)]",
+    name: "text-green-400 font-semibold",
   },
 ];
+
+export const nameCls = (level?: number, fallback = "text-white") => levelInfo(level).name ?? fallback;
 
 export const levelInfo = (level?: number) => LEVELS[Math.min(Math.max((level ?? 1) - 1, 0), LEVELS.length - 1)];

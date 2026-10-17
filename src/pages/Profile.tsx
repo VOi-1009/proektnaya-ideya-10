@@ -308,10 +308,10 @@ const Profile = () => {
 
             <section className="bg-card border border-border rounded-xl p-5 sm:p-6">
               <h2 className="font-display text-lg text-white mb-4">Статусы</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
                 {LEVELS.map((l, i) => {
-                  const reached = s.level > i;
                   const current = s.level === i + 1;
+                  const reached = l.need === null ? current : s.level > i;
                   return (
                     <div
                       key={l.title}

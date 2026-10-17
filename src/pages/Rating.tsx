@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { nameCls } from "@/lib/status";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import { useAuth } from "@/lib/auth";
 import { usersRequest } from "@/lib/users";
@@ -42,7 +43,7 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => (
     <Place n={r.place} />
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 min-w-0 flex-wrap">
-        <span className={`text-sm font-medium truncate ${r.level === 6 ? "text-amber-300" : "text-white"}`}>{r.name}</span>
+        <span className={`text-sm font-medium truncate ${nameCls(r.level)}`}>{r.name}</span>
         {me && <span className="text-xs text-primary">вы</span>}
       </div>
       {r.city && <div className="text-muted-foreground text-xs truncate">{r.city}</div>}

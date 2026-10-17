@@ -5,7 +5,7 @@ LEVELS = [
     (350, "Аналитик"),
     (700, "Кит"),
 ]
-TITLES = [t for _, t in LEVELS] + ["Медведь"]
+TITLES = [t for _, t in LEVELS] + ["Медведь", "Бык"]
 MAX_LEVEL = len(TITLES)
 
 
