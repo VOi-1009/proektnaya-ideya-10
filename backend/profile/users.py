@@ -164,7 +164,7 @@ def handle_users(event: dict) -> dict:
                 return resp(404, {"error": "Пользователь не найден"})
             if r[0]:
                 return resp(400, {"error": "Нельзя удалить администратора"})
-            for t in ("sessions", "refresh_tokens", "holdings", "news_reactions", "user_visits"):
+            for t in ("sessions", "refresh_tokens", "holdings", "news_reactions", "user_visits", "poll_votes"):
                 cur.execute(f"DELETE FROM {SCHEMA}.{t} WHERE user_id = {uid}")
             cur.execute(f"UPDATE {SCHEMA}.articles SET author_id = NULL WHERE author_id = {uid}")
             cur.execute(f"DELETE FROM {SCHEMA}.users WHERE id = {uid}")

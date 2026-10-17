@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { Article, articlesRequest, fmtDate, useCategories } from "@/lib/articles";
 import CategoriesManager from "@/components/crypto/CategoriesManager";
+import PollsManager from "@/components/crypto/PollsManager";
 import UsersManager from "@/components/crypto/UsersManager";
 import BlocksManager from "@/components/crypto/BlocksManager";
 
@@ -31,7 +32,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks" | "side">("articles");
+  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks" | "side" | "polls">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -191,6 +192,7 @@ const Admin = () => {
                 ["blocks", "Блоки главной", "LayoutPanelLeft"],
                 ["side", "Боковые блоки", "PanelRight"],
                 ["users", "Пользователи", "Users"],
+                ["polls", "Опросы", "ListChecks"],
               ] as const
             ).map(([id, label, icon]) => (
               <button
@@ -210,6 +212,8 @@ const Admin = () => {
           <BlocksManager key="main" token={token} placement="main" />
         ) : editing === null && tab === "side" ? (
           <BlocksManager key="side" token={token} placement="side" />
+        ) : editing === null && tab === "polls" ? (
+          <PollsManager token={token} />
         ) : editing === null && tab === "users" ? (
           <UsersManager token={token} myId={user.id} />
         ) : editing === null && tab === "categories" ? (

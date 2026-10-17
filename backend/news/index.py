@@ -19,6 +19,10 @@ FEEDS = {
     "crypto": [
         ("ForkLog", "https://forklog.com/feed"),
         ("Bits.media", "https://bits.media/rss2/"),
+        ("Investing.com", "https://ru.investing.com/rss/news_11.rss"),
+        ("Investing.com", "https://ru.investing.com/rss/commodities_Metals.rss"),
+        ("Ведомости", "https://www.vedomosti.ru/rss/news"),
+        ("Финам", "https://www.finam.ru/analysis/conews/rsspoint/"),
     ],
     "world": [
         ("ТАСС", "https://tass.ru/rss/v2.xml"),
@@ -27,6 +31,10 @@ FEEDS = {
         ("Ведомости", "https://www.vedomosti.ru/rss/news"),
     ],
 }
+
+COMMODITY_SOURCES = {"Investing.com", "Ведомости", "Финам"}
+OIL_RX = r"(?<![а-яё])нефт|brent|\bwti\b|(?<![а-яё])опек\+?|\bopec|баррел"
+GOLD_RX = r"(?<![а-яё])золот(о|а|у|ом|е)?(?![а-яё])|\bgold\b|\bxau\b|драгметалл"
 
 NS = {"dc": "http://purl.org/dc/elements/1.1/", "media": "http://search.yahoo.com/mrss/"}
 
@@ -52,7 +60,18 @@ COINS = [
     ("ADA", r"cardano|кардано|\bada\b"),
     ("USDT", r"usdt|tether|тезер"),
     ("USDC", r"usdc|circle"),
+    ("BRENT", OIL_RX),
+    ("GOLD", GOLD_RX),
 ]
+
+
+def classify_commodity(title: str) -> str:
+    t = title.lower()
+    if re.search(OIL_RX, t):
+        return "Нефть"
+    if re.search(GOLD_RX, t):
+        return "Золото"
+    return ""
 
 
 def clean(raw: str) -> str:
@@ -109,6 +128,11 @@ def fetch_feed(source: str, url: str, kind: str = "crypto") -> list:
         if not title or not link:
             continue
         cats = [clean(c.text or "") for c in it.findall("category")]
+        commodity = ""
+        if kind == "crypto" and source in COMMODITY_SOURCES:
+            commodity = classify_commodity(title)
+            if not commodity:
+                continue
         try:
             ts = int(parsedate_to_datetime(it.findtext("pubDate", "")).timestamp() * 1000)
         except (TypeError, ValueError):
@@ -130,8 +154,8 @@ def fetch_feed(source: str, url: str, kind: str = "crypto") -> list:
             "source": source,
             "author": author,
             "ts": ts,
-            "tag": classify(title, text, cats) if kind == "crypto" else classify_world(title, cats),
-            "coins": detect_coins(title, text) if kind == "crypto" else [],
+            "tag": commodity or (classify(title, text, cats) if kind == "crypto" else classify_world(title, cats)),
+            "coins": (["BRENT"] if commodity == "Нефть" else ["GOLD"]) if commodity else (detect_coins(title, text) if kind == "crypto" else []),
         })
     return items
 
@@ -142,9 +166,14 @@ def load_all(kind: str) -> tuple:
     feeds = FEEDS[kind]
     with ThreadPoolExecutor(max_workers=len(feeds)) as ex:
         futures = {ex.submit(fetch_feed, s, u, kind): s for s, u in feeds}
+        per_source: dict = {}
         for f, s in futures.items():
             try:
                 got = f.result()
+                if kind == "crypto" and s in COMMODITY_SOURCES:
+                    room = 12 - per_source.get(s, 0)
+                    got = got[:max(room, 0)]
+                    per_source[s] = per_source.get(s, 0) + len(got)
                 items.extend(got if kind == "crypto" else got[:25])
             except Exception as e:  # noqa: BLE001
                 errors.append(f"{s}: {type(e).__name__}")
@@ -156,6 +185,10 @@ def load_all(kind: str) -> tuple:
             continue
         seen.add(key)
         uniq.append(it)
+    if kind == "crypto":
+        crypto = [i for i in uniq if i["tag"] not in ("Нефть", "Золото")][:50]
+        comm = [i for i in uniq if i["tag"] in ("Нефть", "Золото")][:20]
+        return sorted(crypto + comm, key=lambda x: x["ts"], reverse=True), errors
     return uniq[:60], errors
 
 

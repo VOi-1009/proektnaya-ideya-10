@@ -47,8 +47,12 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
   const list = items.filter(
     (n) => (tag === "Все" || n.tag === tag) && (!coin || n.coins.includes(coin)) && (!source || n.source === source),
   );
-  const visibleIds = list.slice(0, limit).map((n) => n.id);
-  const { reactions, react } = useReactions(visibleIds, token);
+  const visibleItems = useMemo(
+    () => list.slice(0, limit).map((n) => ({ id: n.id, title: n.title, link: n.link, source: n.source, ts: n.ts, kind })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [list.map((n) => n.id).join(","), limit, kind],
+  );
+  const { reactions, react } = useReactions(visibleItems, token);
   const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
 
   const chip = (active: boolean) =>

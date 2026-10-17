@@ -12,6 +12,7 @@ from blocks import handle_blocks
 from status import level_for
 from users import handle_users
 from reactions import handle_reactions
+from polls import handle_polls
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
@@ -76,7 +77,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -90,6 +91,8 @@ def handler(event: dict, context) -> dict:
         return handle_reactions(event)
     if resource == "blocks":
         return handle_blocks(event)
+    if resource == "polls":
+        return handle_polls(event)
 
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     token = re.sub(r"[^a-f0-9]", "", headers.get("x-auth-token", ""))

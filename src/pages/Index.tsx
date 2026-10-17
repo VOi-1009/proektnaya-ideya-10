@@ -20,6 +20,7 @@ import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import OnlineList from "@/components/crypto/OnlineList";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
+import SidePolls from "@/components/crypto/SidePolls";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -422,6 +423,7 @@ const Index = () => {
               </div>
             </div>
             <SideBlocks />
+            <SidePolls />
           </aside>
         </div>
       </div>

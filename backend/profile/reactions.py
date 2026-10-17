@@ -1,12 +1,75 @@
+import hashlib
 import json
 import os
 import re
+import time
 
 import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
 ID_RE = re.compile(r"^[a-f0-9]{6,32}$")
+BOT_REACT_SHARE = 45
+BOT_LIKE_SHARE = 78
+BOT_SPREAD_MIN = 8 * 60
+
+
+def hh(*parts) -> int:
+    return int(hashlib.md5(":".join(str(p) for p in parts).encode()).hexdigest()[:8], 16)
+
+
+def esc(v: str) -> str:
+    return v.replace("'", "''")
+
+
+def register_items(cur, items: list) -> None:
+    rows = []
+    for it in items[:100]:
+        nid = str(it.get("id", ""))
+        title = str(it.get("title", "")).strip()[:500]
+        link = str(it.get("link", "")).strip()[:1000]
+        if not ID_RE.match(nid) or not title or not link.startswith("http"):
+            continue
+        source = str(it.get("source", "")).strip()[:60]
+        kind = "world" if it.get("kind") == "world" else "crypto"
+        ts = int(it.get("ts", 0) or 0)
+        ts_sql = str(ts) if 0 < ts < 10**14 else "NULL"
+        rows.append(f"('{nid}', '{kind}', '{esc(title)}', '{esc(link)}', '{esc(source)}', {ts_sql})")
+    if rows:
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.news_items (id, kind, title, link, source, published_ms) VALUES {', '.join(rows)} "
+            f"ON CONFLICT (id) DO UPDATE SET published_ms = COALESCE({SCHEMA}.news_items.published_ms, EXCLUDED.published_ms)"
+        )
+
+
+def bots_react(cur, ids: list) -> None:
+    if not ids:
+        return
+    cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_bot")
+    bots = [r[0] for r in cur.fetchall()]
+    if not bots:
+        return
+    in_list = ", ".join(f"'{i}'" for i in ids)
+    cur.execute(
+        f"SELECT id, COALESCE(published_ms, (EXTRACT(EPOCH FROM created_at) * 1000)::bigint) FROM {SCHEMA}.news_items "
+        f"WHERE id IN ({in_list})"
+    )
+    now_ms = time.time() * 1000
+    rows = []
+    for nid, pub in cur.fetchall():
+        age_min = (now_ms - int(pub)) / 60000
+        for b in bots:
+            if hh("react", nid, b) % 100 >= BOT_REACT_SHARE:
+                continue
+            if age_min < hh("delay", nid, b) % BOT_SPREAD_MIN:
+                continue
+            value = 1 if hh("like", nid, b) % 100 < BOT_LIKE_SHARE else -1
+            rows.append(f"('{nid}', {b}, {value})")
+    if rows:
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.news_reactions (news_id, user_id, value) VALUES {', '.join(rows)} "
+            f"ON CONFLICT (news_id, user_id) DO NOTHING"
+        )
 
 
 def resp(status: int, body: dict) -> dict:
@@ -62,9 +125,15 @@ def handle_reactions(event: dict) -> dict:
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})
+        body = json.loads(event.get("body") or "{}")
+        if body.get("action") == "summary":
+            items = body.get("items") or []
+            register_items(cur, items)
+            ids = [str(i.get("id", "")) for i in items if ID_RE.match(str(i.get("id", "")))][:100]
+            bots_react(cur, ids)
+            return resp(200, {"reactions": summary(cur, ids, me)})
         if not me:
             return resp(401, {"error": "Войдите, чтобы оценивать новости"})
-        body = json.loads(event.get("body") or "{}")
         nid = str(body.get("newsId", ""))
         value = int(body.get("value", 0) or 0)
         if not ID_RE.match(nid) or value not in (-1, 0, 1):

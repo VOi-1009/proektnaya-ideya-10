@@ -150,6 +150,51 @@
         "amount": 10
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Опросы",
+      "method": "GET",
+      "path": "/?resource=polls",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Создание опроса без прав",
+      "method": "POST",
+      "path": "/?resource=polls",
+      "body": {
+        "action": "create",
+        "question": "Тест?",
+        "options": [
+          {
+            "text": "Да"
+          },
+          {
+            "text": "Нет"
+          }
+        ]
+      },
+      "expectedStatus": 403
+    },
+    {
+      "name": "Голос без входа",
+      "method": "POST",
+      "path": "/?resource=polls",
+      "body": {
+        "action": "vote",
+        "pollId": 1,
+        "optionId": 1
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Сводка реакций",
+      "method": "POST",
+      "path": "/?resource=reactions",
+      "body": {
+        "action": "summary",
+        "items": []
+      },
+      "expectedStatus": 200
     }
   ]
 }

@@ -18,12 +18,12 @@ export interface NewsItem {
 }
 
 export const NEWS_TAGS: Record<NewsKind, NewsTag[]> = {
-  crypto: ["Рынок", "Аналитика", "Регулирование", "Технологии", "DeFi"],
+  crypto: ["Рынок", "Нефть", "Золото", "Аналитика", "Регулирование", "Технологии", "DeFi"],
   world: ["Политика", "Экономика", "В мире", "Происшествия", "Общество", "Технологии"],
 };
 
 export const NEWS_SOURCES: Record<NewsKind, string[]> = {
-  crypto: ["ForkLog", "Bits.media"],
+  crypto: ["ForkLog", "Bits.media", "Investing.com", "Финам", "Ведомости"],
   world: ["ТАСС", "РБК", "Lenta.ru", "Ведомости"],
 };
 
@@ -33,6 +33,8 @@ export const TAG_STYLE: Record<string, string> = {
   Регулирование: "text-sky-400 border-sky-400/40",
   Технологии: "text-violet-300 border-violet-300/40",
   DeFi: "text-pink-300 border-pink-300/40",
+  Нефть: "text-amber-500 border-amber-500/40",
+  Золото: "text-yellow-300 border-yellow-300/40",
   Политика: "text-sky-400 border-sky-400/40",
   Экономика: "text-primary border-primary/40",
   "В мире": "text-accent border-accent/40",
@@ -43,6 +45,8 @@ export const TAG_STYLE: Record<string, string> = {
 export const SOURCE_STYLE: Record<string, { avatar: string; cls: string }> = {
   ForkLog: { avatar: "F", cls: "bg-orange-500 text-white" },
   "Bits.media": { avatar: "B", cls: "bg-sky-500 text-white" },
+  "Investing.com": { avatar: "I", cls: "bg-amber-400 text-black" },
+  Финам: { avatar: "Ф", cls: "bg-yellow-400 text-black" },
   ТАСС: { avatar: "Т", cls: "bg-blue-700 text-white" },
   РБК: { avatar: "Р", cls: "bg-emerald-600 text-white" },
   "Lenta.ru": { avatar: "L", cls: "bg-zinc-200 text-black" },

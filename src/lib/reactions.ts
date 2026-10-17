@@ -12,18 +12,33 @@ export type ReactionMap = Record<string, Reaction>;
 const URL_BASE = `${PROFILE_URL}?resource=reactions`;
 const hdrs = (token: string | null) => ({ "Content-Type": "application/json", ...(token ? { "X-Auth-Token": token } : {}) });
 
-export const useReactions = (ids: string[], token: string | null) => {
+export interface ReactionItem {
+  id: string;
+  title: string;
+  link: string;
+  source: string;
+  ts: number;
+  kind: string;
+}
+
+export const useReactions = (items: ReactionItem[], token: string | null) => {
+  const ids = items.map((i) => i.id);
   const key = ["reactions", token, ids.join(",")];
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: key,
     enabled: ids.length > 0,
     queryFn: async () => {
-      const r = await fetch(`${URL_BASE}&ids=${ids.join(",")}`, { headers: hdrs(token) });
+      const r = await fetch(URL_BASE, {
+        method: "POST",
+        headers: hdrs(token),
+        body: JSON.stringify({ action: "summary", items }),
+      });
       const d = await r.json().catch(() => ({}));
       return (d.reactions ?? {}) as ReactionMap;
     },
     staleTime: 30_000,
+    refetchInterval: 3 * 60_000,
   });
 
   const react = async (newsId: string, value: 1 | -1, meta?: { title: string; link: string; source: string; kind: string }) => {
