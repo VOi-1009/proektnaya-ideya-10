@@ -24,6 +24,8 @@ import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import SidePolls from "@/components/crypto/SidePolls";
 import RadarDialog from "@/components/crypto/RadarDialog";
 import { Radar, useRadars } from "@/lib/radars";
+import ChatChannel from "@/components/crypto/channels/ChatChannel";
+import { CHAT_ROOMS, ChatRoom } from "@/lib/chat";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -35,6 +37,8 @@ const CHANNELS = [
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
 ];
+
+const CHAT_CHANNELS = CHAT_ROOMS.map((r) => ({ id: `chat-${r.id}`, name: r.name, topic: r.topic, icon: "MessageCircle" }));
 
 const PINNED = ["bitcoin", "brent", "usd-rub", "eur-rub"];
 
@@ -91,7 +95,7 @@ const Index = () => {
     document.getElementById("chat-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const current = CHANNELS.find((c) => c.id === channel)!;
+  const current = [...CHANNELS, ...CHAT_CHANNELS].find((c) => c.id === channel) ?? CHANNELS[0];
   const favCoins = coins.filter((c) => favs.includes(c.id));
   const sideCoins = [
     ...PINNED.map((id) => coins.find((c) => c.id === id)).filter((c): c is (typeof coins)[number] => !!c),
@@ -253,6 +257,27 @@ const Index = () => {
                   </button>
                 </div>
               </div>
+              <div>
+                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+                  <Icon name="ChevronDown" size={12} />
+                  <span>Чат</span>
+                </div>
+                <div className="mt-0.5 space-y-1 px-1">
+                  {CHAT_ROOMS.map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => go(`chat-${r.id}`)}
+                      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${
+                        channel === `chat-${r.id}` ? r.active : r.btn
+                      }`}
+                    >
+                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${r.dot}`} />
+                      <span className="text-[14px] truncate">{r.name}</span>
+                      {r.id === "premium" && <Icon name="Crown" size={12} className="ml-auto text-amber-300" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {radars && radars.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
@@ -360,7 +385,7 @@ const Index = () => {
             </div>
 
             <div id="chat-scroll" className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin">
-              <div key={channel} className={channel === "welcome" ? "" : "max-w-5xl"}>
+              <div key={channel} className={channel === "welcome" ? "" : channel.startsWith("chat-") ? "max-w-4xl" : "max-w-5xl"}>
                 {isLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-56 w-full bg-card" />
@@ -393,6 +418,8 @@ const Index = () => {
                   <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
                 ) : channel === "alerts" ? (
                   <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
+                ) : channel.startsWith("chat-") ? (
+                  <ChatChannel room={channel.slice(5) as ChatRoom} />
                 ) : channel === "portfolio" ? (
                   <PortfolioChannel coins={coins} go={go} />
                 ) : (

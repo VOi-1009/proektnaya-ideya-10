@@ -223,6 +223,12 @@
       "method": "GET",
       "path": "/?resource=sitenews",
       "expectedStatus": 200
+    },
+    {
+      "name": "Чат без входа",
+      "method": "GET",
+      "path": "/?resource=chat&room=green",
+      "expectedStatus": 401
     }
   ]
 }
