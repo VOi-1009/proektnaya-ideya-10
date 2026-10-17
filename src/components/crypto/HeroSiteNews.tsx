@@ -5,7 +5,7 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "n
 
 const HeroSiteNews = () => {
   const { data, isLoading } = useSiteNews();
-  const items = (data ?? []).slice(0, 5);
+  const items = (data ?? []).slice(0, 6);
 
   return (
     <div className="p-4 sm:p-5 h-full flex flex-col">

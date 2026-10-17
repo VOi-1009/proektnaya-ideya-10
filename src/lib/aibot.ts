@@ -18,7 +18,7 @@ export interface AiComment {
   text: string;
   createdAt: string;
   canDelete: boolean;
-  user: { id: number; name: string; avatar: string; supporter: number | null; creator: boolean; isAi: boolean; founder: number | null };
+  user: { id: number; name: string; avatar: string; supporter: number | null; creator: boolean; isAi: boolean; founder: number | null; tier?: number };
 }
 
 export const REACTIONS: { kind: string; icon?: string; emoji?: string; label: string; cls: string }[] = [
@@ -45,6 +45,24 @@ export interface AiSettings {
   chatReplies: boolean;
   replyAll: boolean;
   dailyPrices: boolean;
+}
+
+export interface AiMailSettings {
+  enabled: boolean;
+  daily: boolean;
+  digest: boolean;
+  fromName: string;
+  subjectPrefix: string;
+}
+
+export interface AiMailStats {
+  sent: number;
+  pending: number;
+  failed: number;
+  gold: number;
+  goldMailOn: number;
+  configured: boolean;
+  log: { id: number; email: string; status: string; error: string; createdAt: string; sentAt: string | null; title: string }[];
 }
 
 export interface AiLog {

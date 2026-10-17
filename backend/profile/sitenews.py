@@ -45,7 +45,7 @@ def handle_site_news(event: dict) -> dict:
             if all_ and not is_admin:
                 return resp(403, {"error": "Доступ только для администратора"})
             cond = "" if all_ else "WHERE published"
-            limit = 200 if all_ else 5
+            limit = 200 if all_ else 6
             cur.execute(f"SELECT {COLS} FROM {SCHEMA}.site_news {cond} ORDER BY created_at DESC, id DESC LIMIT {limit}")
             return resp(200, {"items": [to_item(r) for r in cur.fetchall()]})
 

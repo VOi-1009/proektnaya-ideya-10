@@ -5,6 +5,7 @@ import re
 import psycopg2
 
 from status import level_for, points_sql
+from plans import viewer
 from users import display_name
 from aibot import bot_reply, load_settings, log_block, maybe_daily, moderate
 
@@ -47,17 +48,20 @@ def handle_chat(event: dict) -> dict:
         if not r:
             return resp(401, {"error": "Сессия истекла, войдите снова"})
         me, is_admin = int(r[0]), bool(r[3])
+        my_level = level_for(int(r[1]), r[2])["level"]
+        tier = viewer(cur, token)["tier"]
         if room == "premium":
-            if not (is_admin or r[4] or r[5]):
-                return resp(403, {"error": "Премиум-чат доступен тем, кто поддержал проект"})
-        elif level_for(int(r[1]), r[2])["level"] < MIN_LEVEL and not is_admin:
+            if not (is_admin or r[4] or r[5] or tier >= 1):
+                return resp(403, {"error": "Премиум-чат доступен подписчикам и тем, кто поддержал проект"})
+        elif my_level < MIN_LEVEL and not is_admin and tier < 1:
             return resp(403, {"error": "Чат доступен со статуса «Наблюдатель»"})
 
         if method == "GET":
             after = int(qs.get("after") or 0)
             cond = f"AND m.id > {after}" if after else ""
             cur.execute(
-                f"SELECT * FROM (SELECT m.id, m.text, m.created_at, u.id, u.name, u.email, u.avatar_url, {pts}, u.status_override, u.supporter_no, u.is_creator, u.is_bot, u.is_ai "
+                f"SELECT * FROM (SELECT m.id, m.text, m.created_at, u.id, u.name, u.email, u.avatar_url, {pts}, u.status_override, u.supporter_no, u.is_creator, u.is_bot, u.is_ai, "
+                f"(SELECT sb.tier FROM {SCHEMA}.subscriptions sb WHERE sb.user_id = u.id AND sb.expires_at > NOW()) "
                 f"FROM {SCHEMA}.chat_messages m JOIN {SCHEMA}.users u ON u.id = m.user_id "
                 f"WHERE m.room = '{room}' {cond} ORDER BY m.id DESC LIMIT 100) t ORDER BY 1"
             )
@@ -66,7 +70,7 @@ def handle_chat(event: dict) -> dict:
                     "id": x[0], "text": x[1], "createdAt": x[2].isoformat(),
                     "user": {"id": x[3], "name": display_name(x[4], x[5]), "avatar": x[6] or "", "level": level_for(int(x[7]), x[8])["level"],
                              "supporter": x[9], "creator": bool(x[10]),
-                             "isBot": bool(x[11]), "isAi": bool(x[12])},
+                             "isBot": bool(x[11]), "isAi": bool(x[12]), "tier": int(x[13] or 0)},
                     "mine": x[3] == me,
                 }
                 for x in cur.fetchall()
@@ -93,7 +97,7 @@ def handle_chat(event: dict) -> dict:
         mid = cur.fetchone()[0]
         cur.execute(f"SELECT name, email FROM {SCHEMA}.users WHERE id = {me}")
         nm = cur.fetchone()
-        bot_reply(cur, settings, room, text, display_name(nm[0], nm[1]) if nm else "")
+        bot_reply(cur, settings, room, text, display_name(nm[0], nm[1]) if nm else "", my_level)
         return resp(200, {"id": mid})
     finally:
         cur.close()

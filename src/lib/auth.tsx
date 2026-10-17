@@ -19,6 +19,7 @@ export interface User {
   founder?: number | null;
   supporter?: number | null;
   creator?: boolean;
+  tier?: number;
 }
 
 interface AuthCtx {

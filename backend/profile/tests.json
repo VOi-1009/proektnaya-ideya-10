@@ -329,6 +329,61 @@
       "method": "GET",
       "path": "/?resource=aibot&comments=1",
       "expectedStatus": 200
+    },
+    {
+      "name": "Тарифы",
+      "method": "GET",
+      "path": "/?resource=plans",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Заявка на тариф без входа",
+      "method": "POST",
+      "path": "/?resource=plans",
+      "body": {
+        "action": "request",
+        "tier": 1
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Админка тарифов без прав",
+      "method": "GET",
+      "path": "/?resource=plans&admin=1",
+      "expectedStatus": 403
+    },
+    {
+      "name": "Форум разделы",
+      "method": "GET",
+      "path": "/?resource=forum",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Форум админка без прав",
+      "method": "GET",
+      "path": "/?resource=forum&admin=1",
+      "expectedStatus": 403
+    },
+    {
+      "name": "Тема форума без входа",
+      "method": "POST",
+      "path": "/?resource=forum",
+      "body": {
+        "action": "topic",
+        "sectionId": 3,
+        "title": "Тест",
+        "text": "текст"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Рассылка без прав",
+      "method": "POST",
+      "path": "/?resource=aibot",
+      "body": {
+        "action": "mail-send"
+      },
+      "expectedStatus": 403
     }
   ]
 }

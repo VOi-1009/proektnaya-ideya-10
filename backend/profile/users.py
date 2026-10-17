@@ -46,6 +46,12 @@ def bot_online(uid: int, now: float = None) -> bool:
     return h % 100 < BOT_ONLINE_SHARE
 
 
+def tier_of(cur, uid: int) -> int:
+    cur.execute(f"SELECT tier FROM {SCHEMA}.subscriptions WHERE user_id = {int(uid)} AND expires_at > NOW()")
+    r = cur.fetchone()
+    return int(r[0]) if r else 0
+
+
 def resp(status: int, body: dict) -> dict:
     return {"statusCode": status, "headers": CORS, "body": json.dumps(body, ensure_ascii=False, default=str)}
 
@@ -137,6 +143,7 @@ def handle_users(event: dict) -> dict:
                     "createdAt": r[6].isoformat(), "online": online, "place": place,
                     "special": special_for(cur, SCHEMA, r[0]), "founder": r[14],
                     "supporter": r[15], "creator": bool(r[16]), "isBot": bool(r[7]), "isAi": bool(r[18]),
+                    "tier": tier_of(cur, r[0]),
                 }})
 
             if qs.get("rating") == "1":

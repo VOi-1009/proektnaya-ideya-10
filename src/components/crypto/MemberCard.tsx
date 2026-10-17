@@ -12,6 +12,7 @@ import SpecialAchievements from "./SpecialAchievements";
 import StatusBadge from "./StatusBadge";
 import FounderBadge from "./FounderBadge";
 import BotBadge from "./BotBadge";
+import TierBadge from "./TierBadge";
 import SupporterBadge from "./SupporterBadge";
 import RareAchievements from "./RareAchievements";
 
@@ -34,6 +35,7 @@ interface Member {
   creator?: boolean;
   isBot?: boolean;
   isAi?: boolean;
+  tier?: number;
 }
 
 const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void }) => {
@@ -88,6 +90,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <StatusBadge level={m.level} compact />
                       {m.isAi && <BotBadge ai />}
+                      <TierBadge tier={m.tier} />
                       <SupporterBadge no={m.supporter} creator={m.creator} />
                       <FounderBadge no={m.founder} />
                       <span className={`text-xs ${m.online ? "text-green-400" : "text-muted-foreground"}`}>

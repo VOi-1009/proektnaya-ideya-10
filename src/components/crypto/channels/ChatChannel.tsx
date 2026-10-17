@@ -12,6 +12,7 @@ import MemberIcon from "../MemberIcon";
 import SupporterBadge from "../SupporterBadge";
 import DonateButton from "../DonateButton";
 import BotBadge from "../BotBadge";
+import TierBadge from "../TierBadge";
 
 const Locked = ({ icon, title, text, action }: { icon: string; title: string; text: string; action?: React.ReactNode }) => (
   <div className="bg-card border border-border rounded-xl p-8 text-center max-w-lg mx-auto mt-6">
@@ -82,6 +83,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
                     {m.user.name}
                   </button>
                   {m.user.isAi && <BotBadge ai compact className="self-center" />}
+                  <TierBadge tier={m.user.tier} compact className="self-center" />
                   <SupporterBadge no={m.user.supporter} creator={m.user.creator} compact className="self-center" />
                   <span className={`text-[9px] ${levelInfo(m.user.level).text}`}>{levelInfo(m.user.level).title}</span>
                   <span className="text-muted-foreground text-[10px] font-mono">{time(m.createdAt)}</span>
@@ -129,16 +131,23 @@ const ChatChannel = ({ room }: { room: ChatRoom }) => {
         action={<Button onClick={() => setAuthOpen(true)}>Войти</Button>}
       />
     );
-  if (room === "premium" && !user.supporter && !user.creator && !user.isAdmin)
+  if (room === "premium" && !user.supporter && !user.creator && !user.isAdmin && !user.tier)
     return (
       <Locked
         icon="Crown"
-        title="Премиум-чат — для тех, кто поддержал проект"
-        text="Поддержите проект любой суммой — получите доступ в этот чат, значок «Поддержал проект» и личный промокод."
-        action={<DonateButton />}
+        title="Премиум-чат — для подписчиков и тех, кто поддержал проект"
+        text="Оформите подписку Бронза, Серебро или Золото — или поддержите проект любой суммой: получите доступ в этот чат."
+        action={
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button asChild>
+              <a href="/plans">Выбрать подписку</a>
+            </Button>
+            <DonateButton />
+          </div>
+        }
       />
     );
-  if (room !== "premium" && (user.level ?? 1) < CHAT_MIN_LEVEL && !user.isAdmin)
+  if (room !== "premium" && (user.level ?? 1) < CHAT_MIN_LEVEL && !user.isAdmin && !user.tier)
     return (
       <Locked
         icon="Sprout"

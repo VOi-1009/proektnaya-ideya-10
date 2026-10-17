@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
-import { AI_NAME, AiLog, AiPost, AiSettings, aiRequest } from "@/lib/aibot";
+import { AI_NAME, AiLog, AiMailSettings, AiMailStats, AiPost, AiSettings, aiRequest } from "@/lib/aibot";
 import BotBadge from "./BotBadge";
 
 const inputCls =
@@ -16,6 +16,8 @@ const fmt = (iso: string) => new Date(iso).toLocaleString("ru-RU", { day: "numer
 
 interface AdminData {
   settings: AiSettings;
+  mail: AiMailSettings;
+  mailStats: AiMailStats;
   log: AiLog[];
   posts: AiPost[];
   stats: { blocked7d: number; reactions: number; posts: number };
@@ -36,13 +38,16 @@ const AiBotManager = ({ token }: { token: string | null }) => {
   const key = ["ai-admin", token];
   const { data } = useQuery({ queryKey: key, queryFn: () => aiRequest<AdminData>(token, "&admin=1") });
   const [f, setF] = useState<AiSettings | null>(null);
+  const [m, setM] = useState<AiMailSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [post, setPost] = useState({ title: "", body: "" });
   const [busy, setBusy] = useState(false);
+  const [sendMail, setSendMail] = useState(false);
 
   useEffect(() => {
     if (data && !f) setF(data.settings);
-  }, [data, f]);
+    if (data && !m) setM(data.mail);
+  }, [data, f, m]);
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["ai-admin"] });
@@ -71,7 +76,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
     setSaving(false);
   };
 
-  if (!f || !data) return <p className="text-muted-foreground text-sm">Загружаю…</p>;
+  if (!f || !m || !data) return <p className="text-muted-foreground text-sm">Загружаю…</p>;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -217,6 +222,91 @@ const AiBotManager = ({ token }: { token: string | null }) => {
         Сохранить настройки
       </Button>
 
+      <section className="bg-card border border-yellow-400/30 rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="text-white font-semibold flex items-center gap-2">
+            <Icon name="Mail" size={18} className="text-yellow-300" /> Рассылка на email · подписчики «Золото»
+          </h2>
+          <label className="flex items-center gap-2 text-sm text-white">
+            <Switch checked={m.enabled} onCheckedChange={(v) => setM({ ...m, enabled: v })} />
+            {m.enabled ? "Рассылка включена" : "Рассылка выключена"}
+          </label>
+        </div>
+        {!data.mailStats.configured && (
+          <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100 flex items-start gap-2">
+            <Icon name="TriangleAlert" size={16} className="mt-0.5 flex-shrink-0" />
+            <span>Почта не подключена: письма копятся в очереди и уйдут, как только будут добавлены SMTP_HOST, SMTP_USER и SMTP_PASSWORD в секреты проекта.</span>
+          </div>
+        )}
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Toggle label="Ежедневная сводка (00:05)" hint="Bitcoin, Ethereum, Brent, Gold" checked={m.daily} onChange={(v) => setM({ ...m, daily: v })} />
+          <Toggle label="Дайджесты новостей" hint="Автодайджесты и публикации, отправленные вручную" checked={m.digest} onChange={(v) => setM({ ...m, digest: v })} />
+          <label className="space-y-1">
+            <span className="text-xs text-muted-foreground">Имя отправителя</span>
+            <input className={inputCls} value={m.fromName} maxLength={60} onChange={(e) => setM({ ...m, fromName: e.target.value })} />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-muted-foreground">Начало темы письма</span>
+            <input className={inputCls} value={m.subjectPrefix} maxLength={60} onChange={(e) => setM({ ...m, subjectPrefix: e.target.value })} />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {[
+            ["Получателей", `${data.mailStats.goldMailOn} из ${data.mailStats.gold}`],
+            ["Отправлено", data.mailStats.sent],
+            ["В очереди", data.mailStats.pending],
+            ["Ошибок", data.mailStats.failed],
+          ].map(([label, v]) => (
+            <div key={String(label)} className="bg-rail/60 rounded-lg px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">{label}</div>
+              <div className="text-white font-mono">{v}</div>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => run({ action: "mail-settings", ...m }, "Настройки рассылки сохранены")} className="font-semibold">
+            Сохранить
+          </Button>
+          <Button
+            variant="outline"
+            disabled={busy || data.mailStats.pending === 0}
+            onClick={() => run({ action: "mail-send" }, "Очередь обработана")}
+            className="bg-transparent border-input hover:bg-hover hover:text-white"
+          >
+            <Icon name="Send" size={14} className="mr-1.5" /> Отправить очередь сейчас
+          </Button>
+          {data.mailStats.failed > 0 && (
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() => run({ action: "mail-retry" }, "Ошибочные письма вернулись в очередь")}
+              className="text-muted-foreground hover:text-white hover:bg-hover"
+            >
+              Повторить неудачные
+            </Button>
+          )}
+        </div>
+        {data.mailStats.log.length > 0 && (
+          <details className="text-sm">
+            <summary className="text-muted-foreground cursor-pointer hover:text-white">Журнал писем ({data.mailStats.log.length})</summary>
+            <div className="mt-2 space-y-1">
+              {data.mailStats.log.map((l) => (
+                <div key={l.id} className="flex items-center gap-2 text-xs">
+                  <Icon
+                    name={l.status === "sent" ? "CircleCheck" : l.status === "failed" ? "CircleX" : "Clock"}
+                    size={13}
+                    className={l.status === "sent" ? "text-up" : l.status === "failed" ? "text-down" : "text-muted-foreground"}
+                  />
+                  <span className="text-white truncate">{l.email}</span>
+                  <span className="text-muted-foreground truncate flex-1">{l.error || l.title}</span>
+                  <span className="text-muted-foreground font-mono flex-shrink-0">{fmt(l.sentAt ?? l.createdAt)}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+      </section>
+
       <section className="bg-card border border-border rounded-lg p-4 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className="text-white font-semibold flex items-center gap-2">
@@ -240,9 +330,13 @@ const AiBotManager = ({ token }: { token: string | null }) => {
           onChange={(e) => setPost({ ...post, body: e.target.value })}
           placeholder="Текст публикации"
         />
+        <label className="flex items-center gap-2 text-sm text-white">
+          <Switch checked={sendMail} onCheckedChange={setSendMail} />
+          Разослать подписчикам «Золото» на email
+        </label>
         <Button
           disabled={busy || post.title.trim().length < 2}
-          onClick={async () => (await run({ action: "post", ...post }, "Опубликовано в канале")) && setPost({ title: "", body: "" })}
+          onClick={async () => (await run({ action: "post", ...post, sendMail }, "Опубликовано в канале")) && setPost({ title: "", body: "" })}
           className="font-semibold bg-indigo-500 hover:bg-indigo-400 text-white"
         >
           Опубликовать

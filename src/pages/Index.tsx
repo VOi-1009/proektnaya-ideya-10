@@ -27,7 +27,9 @@ import { Radar, useRadars } from "@/lib/radars";
 import ChatChannel from "@/components/crypto/channels/ChatChannel";
 import { CHAT_ROOMS, ChatRoom } from "@/lib/chat";
 import DonateButton from "@/components/crypto/DonateButton";
+import TierBadge from "@/components/crypto/TierBadge";
 import AiNewsChannel from "@/components/crypto/channels/AiNewsChannel";
+import ForumChannel from "@/components/crypto/channels/ForumChannel";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -36,6 +38,7 @@ const CHANNELS = [
   { id: "world", name: "мировые-новости", short: "Мир", topic: "Политика, экономика и события в мире: ТАСС, РБК, Lenta.ru, Ведомости", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
   { id: "ainews", name: "Новости от AiTraderKa", short: "AiTraderKa", topic: "Дайджесты и заметки ИИ-бота AiTraderKa", icon: "Sparkles" },
+  { id: "forum", name: "форум", topic: "Обсуждения по разделам: рынок, идеи, закрытые клубы", icon: "Hash" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
@@ -142,6 +145,7 @@ const Index = () => {
                 <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
                 <span className="text-white text-sm max-w-[120px] truncate hidden xl:inline">{user.name || user.email}</span>
                 <StatusBadge level={user.level} compact />
+                <TierBadge tier={user.tier} compact />
                 <SupporterBadge no={user.supporter} creator={user.creator} compact />
                 <FounderBadge no={user.founder} compact />
               </Button>
@@ -151,6 +155,13 @@ const Index = () => {
                 Войти
               </Button>
             )}
+            <Button
+              onClick={() => navigate("/plans")}
+              className="ml-2 font-semibold bg-gradient-to-r from-orange-700 via-slate-400 to-yellow-400 text-slate-950 hover:opacity-90"
+            >
+              <Icon name="Crown" size={16} className="mr-2" />
+              Подписка
+            </Button>
             <DonateButton className="ml-2" />
             <Button
               className="ml-2 font-semibold"
@@ -179,6 +190,10 @@ const Index = () => {
                 {c.name}
               </Button>
             ))}
+            <Button variant="ghost" onClick={() => navigate("/plans")} className="justify-start text-yellow-300 hover:text-yellow-200 hover:bg-hover">
+              <Icon name="Crown" size={16} className="mr-2" />
+              Подписка: Бронза, Серебро, Золото
+            </Button>
             <DonateButton full />
             <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
               <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
@@ -425,6 +440,8 @@ const Index = () => {
                   <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
                 ) : channel === "ainews" ? (
                   <AiNewsChannel />
+                ) : channel === "forum" ? (
+                  <ForumChannel />
                 ) : channel === "alerts" ? (
                   <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
                 ) : channel.startsWith("chat-") ? (
