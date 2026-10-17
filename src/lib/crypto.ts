@@ -26,6 +26,8 @@ export const COIN_IDS = [
   "ripple",
   "solana",
   "dogecoin",
+  "hyperliquid",
+  "zcash",
 ];
 
 export const COMMODITY_IDS = ["brent", "gold", "usd-rub", "eur-rub"];
@@ -40,6 +42,8 @@ export const COIN_META: Record<string, { ru: string; color: string; short: strin
   ripple: { ru: "XRP", color: "#3b9cf2", short: "XRP" },
   solana: { ru: "Solana", color: "#14f195", short: "SOL" },
   dogecoin: { ru: "Dogecoin", color: "#c2a633", short: "DOGE" },
+  hyperliquid: { ru: "Hyperliquid", color: "#50d2c1", short: "HYPE" },
+  zcash: { ru: "Zcash", color: "#f4b728", short: "ZEC" },
   brent: { ru: "BRENT", color: "#3d3d3d", short: "BRENT" },
   gold: { ru: "Gold", color: "#d4af37", short: "GOLD" },
   "usd-rub": { ru: "USD/RUB", color: "#2f855a", short: "USD/RUB" },
@@ -54,6 +58,8 @@ const FALLBACK: Array<[string, string, string, number, number, number]> = [
   ["ripple", "xrp", "XRP", 1.31, -2.13, 82593709005],
   ["solana", "sol", "Solana", 104.04, -1.7, 61326063653],
   ["dogecoin", "doge", "Dogecoin", 0.08045, -0.97, 12573739539],
+  ["hyperliquid", "hype", "Hyperliquid", 77.98, -2.82, 17347205579],
+  ["zcash", "zec", "Zcash", 1114.28, -2.37, 18932508680],
   ["brent", "brent", "BRENT", 109.86, 3.72, 0],
   ["gold", "xau", "Gold", 4181.1, 0.26, 0],
   ["usd-rub", "usd", "USD/RUB", 83.46, -0.48, 0],

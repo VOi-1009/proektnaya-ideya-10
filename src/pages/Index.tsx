@@ -123,25 +123,27 @@ const Index = () => {
               <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости крипторынка</p>
             </div>
           </button>
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 lg:hidden 2xl:flex">
             {CHANNELS.slice(1).filter((c) => c.id !== "ainews").map((c) => (
               <Button
                 key={c.id}
                 variant="ghost"
                 onClick={() => go(c.id)}
-                className={`hover:bg-hover hover:text-white ${channel === c.id ? "text-white bg-hover" : "text-muted-foreground"}`}
+                className={`h-8 px-2 text-[13px] hover:bg-hover hover:text-white ${channel === c.id ? "text-white bg-hover" : "text-muted-foreground"}`}
               >
                 {"short" in c && c.short ? c.short : (c.name[0].toUpperCase() + c.name.slice(1)).replace("-", " ")}
               </Button>
             ))}
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
+            </div>
+            <Button variant="ghost" asChild className="h-8 px-2 text-[13px] text-muted-foreground hover:text-white hover:bg-hover" title="Канал в MAX">
               <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
-                <Icon name="MessageCircle" size={16} className="mr-2" />
-                MAX
+                <Icon name="MessageCircle" size={14} className="xl:mr-1.5" />
+                <span className="hidden xl:inline">MAX</span>
               </a>
             </Button>
             {user ? (
-              <Button variant="ghost" onClick={() => navigate("/profile")} className="text-muted-foreground hover:text-white hover:bg-hover px-2 gap-2" title="Личный кабинет">
+              <Button variant="ghost" onClick={() => navigate("/profile")} className="h-8 text-muted-foreground hover:text-white hover:bg-hover px-2 gap-2" title="Личный кабинет">
                 <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
                 <span className="text-white text-sm max-w-[120px] truncate hidden xl:inline">{user.name || user.email}</span>
                 <StatusBadge level={user.level} compact />
@@ -150,21 +152,21 @@ const Index = () => {
                 <FounderBadge no={user.founder} compact />
               </Button>
             ) : (
-              <Button variant="ghost" onClick={() => setAuthOpen(true)} className="text-muted-foreground hover:text-white hover:bg-hover">
-                <Icon name="UserRound" size={16} className="mr-2" />
+              <Button variant="ghost" onClick={() => setAuthOpen(true)} className="h-8 px-2 text-[13px] text-muted-foreground hover:text-white hover:bg-hover">
+                <Icon name="UserRound" size={14} className="mr-1.5" />
                 Войти
               </Button>
             )}
             <Button
               onClick={() => navigate("/plans")}
-              className="ml-2 font-semibold bg-gradient-to-r from-orange-700 via-slate-400 to-yellow-400 text-slate-950 hover:opacity-90"
+              className="ml-1 h-8 px-2.5 text-[13px] font-semibold bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30 hover:text-rose-100"
             >
-              <Icon name="Crown" size={16} className="mr-2" />
+              <Icon name="Crown" size={14} className="mr-1.5" />
               Подписка
             </Button>
-            <DonateButton className="ml-2" />
+            <DonateButton className="ml-1" />
             <Button
-              className="ml-2 font-semibold"
+              className="ml-1 h-8 px-2.5 text-[13px] font-semibold"
               onClick={() => {
                 go("welcome");
                 setTimeout(() => document.getElementById("subscribe")?.scrollIntoView({ behavior: "smooth" }), 100);

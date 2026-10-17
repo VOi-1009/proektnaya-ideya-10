@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 _cache: dict = {"at": 0.0, "data": {}}
 TTL = 120
 YAHOO = {"brent": "BZ=F", "gold": "GC=F", "usd-rub": "RUB=X", "eur-rub": "EURRUB=X"}
-GECKO = {"bitcoin": "bitcoin", "ethereum": "ethereum", "solana": "solana", "toncoin": "the-open-network", "xrp": "ripple", "bnb": "binancecoin", "dogecoin": "dogecoin"}
+GECKO = {"bitcoin": "bitcoin", "ethereum": "ethereum", "solana": "solana", "toncoin": "the-open-network", "xrp": "ripple", "bnb": "binancecoin", "dogecoin": "dogecoin", "hyperliquid": "hyperliquid", "zcash": "zcash"}
 
 
 def _get(url: str) -> dict:

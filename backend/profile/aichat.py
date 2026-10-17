@@ -16,6 +16,8 @@ ASSETS = [
     ("xrp", "XRP", r"\bxrp\b|рипл"),
     ("bnb", "BNB", r"\bbnb\b"),
     ("dogecoin", "Dogecoin", r"доге|doge"),
+    ("hyperliquid", "Hyperliquid", r"hyperliquid|гиперликвид|\bhype\b|хайп"),
+    ("zcash", "Zcash", r"zcash|\bzec\b|зикэш|зкэш|зи-кэш"),
     ("brent", "Нефть Brent", r"нефт|brent|брент"),
     ("gold", "Золото", r"золот|gold|xau"),
     ("usd-rub", "Доллар", r"доллар|usd|бакс"),

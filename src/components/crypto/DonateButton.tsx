@@ -21,9 +21,9 @@ const DonateButton = ({ className = "", full = false }: { className?: string; fu
     <>
       <Button
         onClick={() => setOpen(true)}
-        className={`font-semibold bg-emerald-400/15 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-400/25 hover:text-emerald-100 ${full ? "justify-start" : ""} ${className}`}
+        className={`font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-500/30 hover:text-emerald-100 ${full ? "justify-start" : "h-8 px-2.5 text-[13px]"} ${className}`}
       >
-        <Icon name="Heart" size={16} className="mr-2" />
+        <Icon name="Heart" size={full ? 16 : 14} className={full ? "mr-2" : "mr-1.5"} />
         {data.buttonText}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>

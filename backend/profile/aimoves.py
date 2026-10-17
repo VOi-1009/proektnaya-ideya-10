@@ -12,6 +12,8 @@ WATCH = [
     ("xrp", "XRP", "xrp|рипл"),
     ("bnb", "BNB", "bnb"),
     ("dogecoin", "Dogecoin", "dogecoin|доге"),
+    ("hyperliquid", "Hyperliquid", "hyperliquid|hype"),
+    ("zcash", "Zcash", "zcash|zec"),
     ("brent", "Нефть Brent", "brent|нефт"),
     ("gold", "Золото", "золот|gold"),
 ]
