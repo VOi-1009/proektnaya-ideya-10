@@ -47,6 +47,12 @@
       "method": "GET",
       "path": "/?resource=toptxs",
       "expectedStatus": 200
+    },
+    {
+      "name": "Казначейства и альтсезон",
+      "method": "GET",
+      "path": "/?resource=cmc",
+      "expectedStatus": 200
     }
   ]
 }

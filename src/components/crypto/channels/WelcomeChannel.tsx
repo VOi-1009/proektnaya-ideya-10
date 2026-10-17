@@ -8,6 +8,7 @@ import LatestArticles from "../LatestArticles";
 import HomeBlocks from "../HomeBlocks";
 import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
+import MarketMetricsRow from "../MarketMetricsRow";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
 const HERO_QUOTES = ["bitcoin", "ethereum", "brent", "gold", "usd-rub", "eur-rub"];
@@ -105,6 +106,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             )}
           </div>
         </div>
+        <MarketMetricsRow />
         {btc && (
           <p className="mt-3 text-muted-foreground text-sm">
             Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
