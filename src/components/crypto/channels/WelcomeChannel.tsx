@@ -22,7 +22,7 @@ const FEATURES = [
   { icon: "Activity", title: "Котировки онлайн", desc: "Цены, изменения за час, сутки и неделю — без перезагрузки" },
   { icon: "CandlestickChart", title: "Графики по периодам", desc: "От одного дня до года, с подсказкой цены в каждой точке" },
   { icon: "Newspaper", title: "Новости без шума", desc: "Только то, что двигает рынок, с фильтром по темам" },
-  { icon: "Star", title: "Избранные монеты", desc: "Отметьте свои активы — список запомнится в браузере" },
+  { icon: "Star", title: "Избранные монеты", desc: "Отметьте свои активы. Портфели для пользователей." },
 ];
 
 const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
@@ -57,7 +57,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="text-primary font-mono text-xs mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
           </div>
-          <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Весь крипторынок — в одном месте</h2>
+          <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Новости рынков и мира.</h2>
           <p className="text-muted-foreground text-sm sm:text-base mt-3 max-w-md">
             Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
           </p>
