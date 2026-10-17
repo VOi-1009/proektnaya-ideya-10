@@ -122,6 +122,8 @@ const RadarsManager = ({ token }: { token: string | null }) => {
                 />
                 <span className="text-[11px] text-muted-foreground">Например BTCUSDT, ETHUSDT, SOLUSDT, TONUSDT</span>
               </label>
+            ) : form.kind === "top_txs" ? (
+              <div className="text-xs text-muted-foreground self-end pb-2">Данные TradingView, обновляются каждые 5 минут</div>
             ) : (
               <label className="space-y-1">
                 <span className="text-xs text-muted-foreground">Ссылка</span>
@@ -198,7 +200,7 @@ const RadarsManager = ({ token }: { token: string | null }) => {
               <div className="text-white text-sm font-medium truncate">{r.title}</div>
               <div className="text-muted-foreground text-xs truncate">
                 {RADAR_KINDS.find((k) => k.id === r.kind)?.label}
-                {r.kind === "liq_heatmap" ? ` · ${r.symbol}` : ` · ${r.url}`}
+                {r.kind === "liq_heatmap" ? ` · ${r.symbol}` : r.kind === "link" ? ` · ${r.url}` : ""}
                 {!r.published && " · скрыт"}
               </div>
             </div>

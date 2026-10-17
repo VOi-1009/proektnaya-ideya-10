@@ -1,0 +1,2 @@
+INSERT INTO t_p98937530_proektnaya_ideya_10.radars (title, color, kind, symbol, description, sort_order)
+VALUES ('ТОП-количество-сделок', '#a78bfa', 'top_txs', 'BTCUSDT', '10 криптовалют с наибольшим числом транзакций за 24 часа', 1);

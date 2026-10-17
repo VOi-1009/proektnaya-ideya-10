@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Radar } from "@/lib/radars";
 import LiqHeatmap from "./LiqHeatmap";
+import TopTxsTable from "./TopTxsTable";
 
 const RadarDialog = ({ radar, onClose }: { radar: Radar | null; onClose: () => void }) => (
   <Dialog open={!!radar} onOpenChange={(o) => !o && onClose()}>
@@ -19,6 +20,8 @@ const RadarDialog = ({ radar, onClose }: { radar: Radar | null; onClose: () => v
           </DialogHeader>
           {radar.kind === "liq_heatmap" ? (
             <LiqHeatmap symbol={radar.symbol} />
+          ) : radar.kind === "top_txs" ? (
+            <TopTxsTable color={radar.color} />
           ) : (
             <div className="py-6 flex flex-col items-center gap-4 text-center">
               <Icon name="Radar" size={40} style={{ color: radar.color }} fallback="Radio" />

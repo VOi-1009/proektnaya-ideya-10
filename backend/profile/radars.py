@@ -7,7 +7,7 @@ import psycopg2
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
 COLS = "id, title, color, kind, symbol, url, description, sort_order, published"
-KINDS = ("liq_heatmap", "link")
+KINDS = ("liq_heatmap", "top_txs", "link")
 COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 SYMBOL_RE = re.compile(r"^[A-Z0-9]{3,20}$")
 

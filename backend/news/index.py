@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 
 from radar import heatmap_response
+from toptxs import toptxs_response
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -303,7 +304,7 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}
@@ -316,6 +317,8 @@ def handler(event: dict, context) -> dict:
         return chart_response(qs)
     if resource == "heatmap":
         return heatmap_response(qs, json_resp)
+    if resource == "toptxs":
+        return toptxs_response(json_resp)
 
     kind = qs.get("kind") if qs.get("kind") in FEEDS else "crypto"
     cache = _cache[kind]

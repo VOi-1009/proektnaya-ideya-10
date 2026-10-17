@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import func2url from "../../backend/func2url.json";
 import { PROFILE_URL } from "@/lib/auth";
 
-export type RadarKind = "liq_heatmap" | "link";
+export type RadarKind = "liq_heatmap" | "top_txs" | "link";
 
 export interface Radar {
   id: number;
@@ -37,6 +37,7 @@ export interface Heatmap {
 
 export const RADAR_KINDS: { id: RadarKind; label: string; hint: string }[] = [
   { id: "liq_heatmap", label: "Тепловая карта ликвидаций", hint: "Карта по данным фьючерсов Binance / Bybit" },
+  { id: "top_txs", label: "ТОП по количеству сделок", hint: "10 криптовалют с наибольшим числом транзакций" },
   { id: "link", label: "Внешний сервис (ссылка)", hint: "Окно с кнопкой перехода на внешний сайт" },
 ];
 
@@ -77,4 +78,31 @@ export const useHeatmap = (symbol: string, range: string, enabled: boolean) =>
   });
 
 export const fmtUsd = (v: number) =>
-  v >= 1e9 ? `$${(v / 1e9).toFixed(2)} млрд` : v >= 1e6 ? `$${(v / 1e6).toFixed(1)} млн` : `$${Math.round(v / 1e3)} тыс`;
+  v >= 1e12 ? `$${(v / 1e12).toFixed(2)} трлн` : v >= 1e9 ? `$${(v / 1e9).toFixed(2)} млрд` : v >= 1e6 ? `$${(v / 1e6).toFixed(1)} млн` : `$${Math.round(v / 1e3)} тыс`;
+
+export interface TopTx {
+  place: number;
+  symbol: string;
+  name: string;
+  logo: string;
+  txs: number;
+  price: number;
+  change: number;
+  marketCap: number;
+  volume: number;
+  rank: number;
+}
+
+export const useTopTxs = (enabled: boolean) =>
+  useQuery({
+    queryKey: ["top-txs"],
+    enabled,
+    queryFn: async () => {
+      const r = await fetch(`${func2url.news}?resource=toptxs`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !Array.isArray(d.items)) throw new Error(d.error ?? "Данные временно недоступны");
+      return d as { items: TopTx[]; updatedAt: number };
+    },
+    refetchInterval: 5 * 60_000,
+    staleTime: 4 * 60_000,
+  });
