@@ -273,7 +273,6 @@ const Index = () => {
                   </div>
                 </div>
               )}
-              <SiteNewsBlock />
             </div>
             <RadarDialog radar={radar} onClose={() => setRadar(null)} />
             <div className="p-2 bg-rail/70 flex items-center gap-2">
@@ -452,6 +451,7 @@ const Index = () => {
             </div>
             <SideBlocks />
             <SidePolls />
+            <SiteNewsBlock />
           </aside>
         </div>
       </div>
