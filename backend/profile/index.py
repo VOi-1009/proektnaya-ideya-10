@@ -8,6 +8,7 @@ import boto3
 import psycopg2
 
 from articles import handle_articles
+from blocks import handle_blocks
 from status import level_for
 from users import handle_users
 
@@ -68,6 +69,8 @@ def handler(event: dict, context) -> dict:
         return handle_articles(event)
     if resource == "users":
         return handle_users(event)
+    if resource == "blocks":
+        return handle_blocks(event)
 
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     token = re.sub(r"[^a-f0-9]", "", headers.get("x-auth-token", ""))

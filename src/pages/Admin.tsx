@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth";
 import { Article, articlesRequest, fmtDate, useCategories } from "@/lib/articles";
 import CategoriesManager from "@/components/crypto/CategoriesManager";
 import UsersManager from "@/components/crypto/UsersManager";
+import BlocksManager from "@/components/crypto/BlocksManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -30,7 +31,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"articles" | "categories" | "users">("articles");
+  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -187,6 +188,7 @@ const Admin = () => {
               [
                 ["articles", "Статьи", "FileText"],
                 ["categories", "Рубрики", "FolderTree"],
+        ["blocks", "Блоки главной", "LayoutPanelLeft"],
                 ["users", "Пользователи", "Users"],
               ] as const
             ).map(([id, label, icon]) => (
@@ -203,7 +205,9 @@ const Admin = () => {
             ))}
           </div>
         )}
-        {editing === null && tab === "users" ? (
+        {editing === null && tab === "blocks" ? (
+          <BlocksManager token={token} />
+        ) : editing === null && tab === "users" ? (
           <UsersManager token={token} myId={user.id} />
         ) : editing === null && tab === "categories" ? (
           <CategoriesManager token={token} onChanged={refresh} />

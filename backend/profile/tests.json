@@ -53,6 +53,22 @@
       "expectedStatus": 403
     },
     {
+      "name": "Блоки главной",
+      "method": "GET",
+      "path": "/?resource=blocks",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Блок без прав",
+      "method": "POST",
+      "path": "/?resource=blocks",
+      "body": {
+        "action": "save",
+        "leftText": "Тест"
+      },
+      "expectedStatus": 403
+    },
+    {
       "name": "Онлайн",
       "method": "GET",
       "path": "/?resource=users",

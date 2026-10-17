@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
 import Message from "../Message";
 import LatestArticles from "../LatestArticles";
+import HomeBlocks from "../HomeBlocks";
 
 const HERO = "https://cdn.poehali.dev/projects/17c74dba-f379-4376-80b1-440f2ac081c4/files/478dfa0f-7b67-4e33-82ce-a89ee70b614e.jpg";
 
@@ -101,6 +102,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       </Message>
 
       <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
+
+      <HomeBlocks />
 
 
 
