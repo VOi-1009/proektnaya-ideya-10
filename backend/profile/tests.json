@@ -261,6 +261,22 @@
         "on": true
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Заявка на донат без входа",
+      "method": "POST",
+      "path": "/?resource=donate",
+      "body": {
+        "action": "request",
+        "amount": 500
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Список заявок без прав",
+      "method": "GET",
+      "path": "/?resource=donate&requests=1",
+      "expectedStatus": 403
     }
   ]
 }

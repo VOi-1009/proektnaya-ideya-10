@@ -20,7 +20,6 @@ import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
-import SiteNewsBlock from "@/components/crypto/SiteNewsBlock";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import SidePolls from "@/components/crypto/SidePolls";
 import RadarDialog from "@/components/crypto/RadarDialog";
@@ -484,7 +483,6 @@ const Index = () => {
             </div>
             <SideBlocks />
             <SidePolls />
-            <SiteNewsBlock />
           </aside>
         </div>
       </div>

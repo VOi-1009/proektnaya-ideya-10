@@ -10,6 +10,7 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
+import HeroSiteNews from "../HeroSiteNews";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
@@ -118,49 +119,54 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         )}
       </Message>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
-        <div className="p-4 sm:p-5 flex flex-col justify-center bg-gradient-to-br from-primary/20 via-card to-card">
-          <div className="text-primary font-mono text-xs mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px] rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
+        <div className="flex flex-col">
+          <div className="p-4 sm:p-5 bg-gradient-to-br from-primary/20 via-card to-card">
+            <div className="text-primary font-mono text-xs mb-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
+            </div>
+            <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Новости рынков и мира.</h2>
+            <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-xl">
+              Ваш надежный источник информации и площадка для общения. Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Button onClick={() => go("market")} className="font-semibold">
+                <Icon name="CandlestickChart" size={16} className="mr-2" />
+                Котировки
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => go("portfolio")}
+                className="bg-transparent border-input text-foreground hover:bg-hover hover:text-white"
+              >
+                Мой портфель
+              </Button>
+            </div>
           </div>
-          <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Новости рынков и мира.</h2>
-          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-md">
-            Ваш надежный источник информации и площадка для общения. Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
-          </p>
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Button onClick={() => go("market")} className="font-semibold">
-              <Icon name="CandlestickChart" size={16} className="mr-2" />
-              Котировки
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => go("portfolio")}
-              className="bg-transparent border-input text-foreground hover:bg-hover hover:text-white"
-            >
-              Мой портфель
-            </Button>
+          <div className="p-3 sm:p-4 border-t border-border flex-1">
+            <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-2">Главные котировки</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {heroQuotes.map((c) => {
+                const up = c.price_change_percentage_24h >= 0;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => go("market", c.id)}
+                    className="text-left bg-rail/60 hover:bg-hover rounded-lg px-3 py-2.5 transition-colors min-w-0"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-white text-sm font-coin font-medium truncate">{COIN_META[c.id]?.ru ?? c.name}</span>
+                      <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>{fmtPct(c.price_change_percentage_24h)}</span>
+                    </div>
+                    <div className="font-mono text-white/90 tabular text-base mt-0.5 truncate">{fmtPrice(c.current_price, c.id)}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-        <div className="p-3 sm:p-4 border-t lg:border-t-0 lg:border-l border-border">
-          <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-2">Главные котировки</div>
-          <div className="grid grid-cols-2 gap-2">
-            {heroQuotes.map((c) => {
-              const up = c.price_change_percentage_24h >= 0;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => go("market", c.id)}
-                  className="text-left bg-rail/60 hover:bg-hover rounded-lg px-3 py-2.5 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-white text-sm font-coin font-medium truncate">{COIN_META[c.id]?.ru ?? c.name}</span>
-                    <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>{fmtPct(c.price_change_percentage_24h)}</span>
-                  </div>
-                  <div className="font-mono text-white/90 tabular text-base mt-0.5">{fmtPrice(c.current_price, c.id)}</div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="border-t lg:border-t-0 lg:border-l border-border">
+          <HeroSiteNews />
         </div>
       </div>
 

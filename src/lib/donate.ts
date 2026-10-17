@@ -10,8 +10,8 @@ export interface DonateSettings {
   details: string;
 }
 
-export const donateRequest = async <T,>(token: string | null, body?: object): Promise<T> => {
-  const r = await fetch(`${PROFILE_URL}?resource=donate`, {
+export const donateRequest = async <T,>(token: string | null, body?: object, query = ""): Promise<T> => {
+  const r = await fetch(`${PROFILE_URL}?resource=donate${query}`, {
     method: body ? "POST" : "GET",
     headers: { "Content-Type": "application/json", ...(token ? { "X-Auth-Token": token } : {}) },
     body: body ? JSON.stringify(body) : undefined,
@@ -26,4 +26,24 @@ export const useDonate = () =>
     queryKey: ["donate"],
     queryFn: () => donateRequest<{ donate: DonateSettings }>(null).then((d) => d.donate),
     staleTime: 10 * 60_000,
+  });
+
+export interface DonationRequest {
+  id: number;
+  amount: number;
+  comment: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  decidedAt: string | null;
+  user: { id: number; name: string; avatar: string; supporter: number | null; promo: string };
+}
+
+export const useMyDonation = (token: string | null, enabled: boolean) =>
+  useQuery({
+    queryKey: ["donate-mine", token],
+    enabled: enabled && !!token,
+    queryFn: () =>
+      donateRequest<{ last: { id: number; amount: number; status: DonationRequest["status"]; createdAt: string } | null }>(token, undefined, "&mine=1").then(
+        (d) => d.last,
+      ),
   });

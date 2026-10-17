@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { DonateSettings, donateRequest, useDonate } from "@/lib/donate";
+import DonationRequests from "./DonationRequests";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -43,6 +44,7 @@ const DonateManager = ({ token }: { token: string | null }) => {
         <h1 className="font-display text-2xl text-white">Донаты</h1>
         <p className="text-muted-foreground text-sm max-w-2xl">Зелёная кнопка в шапке сайта и окно с QR-кодом для перевода.</p>
       </div>
+      <DonationRequests token={token} />
       <div className="grid lg:grid-cols-[1fr_260px] gap-4">
         <div className="bg-card border border-border rounded-lg p-4 space-y-3">
           <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">

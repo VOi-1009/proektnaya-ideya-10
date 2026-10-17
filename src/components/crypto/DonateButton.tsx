@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useDonate } from "@/lib/donate";
+import DonateClaim from "./DonateClaim";
 
 const DonateButton = ({ className = "", full = false }: { className?: string; full?: boolean }) => {
   const { data } = useDonate();
@@ -65,6 +66,10 @@ const DonateButton = ({ className = "", full = false }: { className?: string; fu
               </button>
             </div>
           )}
+
+          <div className="border-t border-border pt-3">
+            <DonateClaim open={open} />
+          </div>
         </DialogContent>
       </Dialog>
     </>
