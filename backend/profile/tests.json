@@ -201,6 +201,22 @@
       "method": "GET",
       "path": "/?resource=users&card=99999999",
       "expectedStatus": 404
+    },
+    {
+      "name": "Радары",
+      "method": "GET",
+      "path": "/?resource=radars",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Радар без прав",
+      "method": "POST",
+      "path": "/?resource=radars",
+      "body": {
+        "action": "save",
+        "title": "x"
+      },
+      "expectedStatus": 403
     }
   ]
 }

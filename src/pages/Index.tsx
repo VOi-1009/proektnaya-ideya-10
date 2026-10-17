@@ -21,6 +21,8 @@ import StatusBadge from "@/components/crypto/StatusBadge";
 import OnlineList from "@/components/crypto/OnlineList";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import SidePolls from "@/components/crypto/SidePolls";
+import RadarDialog from "@/components/crypto/RadarDialog";
+import { Radar, useRadars } from "@/lib/radars";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -55,6 +57,8 @@ const Index = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { user, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
+  const { data: radars } = useRadars();
+  const [radar, setRadar] = useState<Radar | null>(null);
   const { data: news } = useNews("crypto");
   const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
@@ -247,7 +251,28 @@ const Index = () => {
                   </button>
                 </div>
               </div>
+              {radars && radars.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[11px] font-semibold uppercase tracking-wider">
+                    <Icon name="ChevronDown" size={12} />
+                    <span>Радары</span>
+                  </div>
+                  <div className="mt-1 space-y-0.5">
+                    {radars.map((r) => (
+                      <button
+                        key={r.id}
+                        onClick={() => setRadar(r)}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                      >
+                        <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
+                        <span className="text-[15px] truncate">{r.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+            <RadarDialog radar={radar} onClose={() => setRadar(null)} />
             <div className="p-2 bg-rail/70 flex items-center gap-2">
               <button
                 onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}

@@ -35,6 +35,12 @@
       "method": "GET",
       "path": "/?resource=chart&id=gold&days=7",
       "expectedStatus": 200
+    },
+    {
+      "name": "Карта ликвидаций",
+      "method": "GET",
+      "path": "/?resource=heatmap&symbol=BTCUSDT&range=1d",
+      "expectedStatus": 200
     }
   ]
 }

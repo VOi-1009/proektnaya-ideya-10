@@ -8,6 +8,8 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 
+from radar import heatmap_response
+
 CORS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -301,7 +303,7 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}
@@ -312,6 +314,8 @@ def handler(event: dict, context) -> dict:
         return commodities_response()
     if resource == "chart":
         return chart_response(qs)
+    if resource == "heatmap":
+        return heatmap_response(qs, json_resp)
 
     kind = qs.get("kind") if qs.get("kind") in FEEDS else "crypto"
     cache = _cache[kind]
