@@ -163,6 +163,39 @@ def bot_reply(cur, s: dict, room: str, text: str, user_name: str) -> None:
         cur.execute(f"INSERT INTO {SCHEMA}.chat_messages (room, user_id, text) VALUES ('{esc(room)}', {bid}, '{esc(answer[:1000])}')")
 
 
+REACTION_KINDS = ("like", "dislike", "fire", "heart", "rocket", "laugh", "wow", "sad")
+
+
+def social(cur, ids: list, me) -> dict:
+    out = {i: {"reactions": {}, "mine": [], "comments": 0} for i in ids}
+    if not ids:
+        return out
+    in_list = ", ".join(str(int(i)) for i in ids)
+    cur.execute(f"SELECT post_id, kind, COUNT(*) FROM {SCHEMA}.ai_post_reactions WHERE post_id IN ({in_list}) GROUP BY post_id, kind")
+    for pid, kind, n in cur.fetchall():
+        out[pid]["reactions"][kind] = int(n)
+    if me:
+        cur.execute(f"SELECT post_id, kind FROM {SCHEMA}.ai_post_reactions WHERE user_id = {int(me)} AND post_id IN ({in_list})")
+        for pid, kind in cur.fetchall():
+            out[pid]["mine"].append(kind)
+    cur.execute(f"SELECT post_id, COUNT(*) FROM {SCHEMA}.ai_post_comments WHERE post_id IN ({in_list}) GROUP BY post_id")
+    for pid, n in cur.fetchall():
+        out[pid]["comments"] = int(n)
+    return out
+
+
+def comments_list(cur, pid: int, me, is_admin: bool) -> list:
+    cur.execute(
+        f"SELECT c.id, c.text, c.created_at, u.id, u.name, u.email, u.avatar_url, u.supporter_no, u.is_creator, u.is_ai, u.founder_no "
+        f"FROM {SCHEMA}.ai_post_comments c JOIN {SCHEMA}.users u ON u.id = c.user_id WHERE c.post_id = {int(pid)} ORDER BY c.id ASC LIMIT 200"
+    )
+    from users import display_name
+    return [{
+        "id": x[0], "text": x[1], "createdAt": x[2].isoformat(), "canDelete": bool(is_admin or (me and x[3] == me)),
+        "user": {"id": x[3], "name": display_name(x[4], x[5]), "avatar": x[6] or "", "supporter": x[7], "creator": bool(x[8]), "isAi": bool(x[9]), "founder": x[10]},
+    } for x in cur.fetchall()]
+
+
 def post_item(r) -> dict:
     return {"id": r[0], "title": r[1], "body": r[2], "links": json.loads(r[3] or "[]"), "kind": r[4], "createdAt": r[5].isoformat()}
 
@@ -177,14 +210,15 @@ def handle_aibot(event: dict) -> dict:
     conn.autocommit = True
     cur = conn.cursor()
     try:
-        is_admin = False
+        is_admin, me = False, None
         if token:
             cur.execute(
-                f"SELECT u.is_admin FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+                f"SELECT u.is_admin, u.id FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
                 f"WHERE s.token = '{token}' AND s.expires_at > NOW()"
             )
             r = cur.fetchone()
             is_admin = bool(r and r[0])
+            me = int(r[1]) if r else None
         s = load_settings(cur)
         cols = "id, title, body, links, kind, created_at"
 
@@ -208,18 +242,75 @@ def handle_aibot(event: dict) -> dict:
             posts = [post_item(x) for x in cur.fetchall()]
             return resp(200, {"settings": s, "log": log, "stats": {"blocked7d": blocked, "reactions": reactions, "posts": len(posts)}, "posts": posts, "botId": bid})
 
+        if method == "GET" and qs.get("comments"):
+            pid = int(re.sub(r"\D", "", str(qs.get("comments")))[:9] or 0)
+            return resp(200, {"comments": comments_list(cur, pid, me, is_admin)})
+
         if method == "GET":
             maybe_daily(cur, s)
             maybe_autopost(cur, s)
             cur.execute(f"SELECT {cols} FROM {SCHEMA}.ai_posts ORDER BY id DESC LIMIT 30")
-            return resp(200, {"posts": [post_item(x) for x in cur.fetchall()], "botId": ai_bot_id(cur)})
+            posts = [post_item(x) for x in cur.fetchall()]
+            soc = social(cur, [p["id"] for p in posts], me)
+            for p in posts:
+                p.update(soc[p["id"]])
+            return resp(200, {"posts": posts, "botId": ai_bot_id(cur)})
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})
-        if not is_admin:
-            return resp(403, {"error": "Доступ только для администратора"})
         body = json.loads(event.get("body") or "{}")
         action = body.get("action")
+
+        if action in ("react", "comment", "delete-comment"):
+            if not me:
+                return resp(401, {"error": "Войдите, чтобы оценивать и комментировать"})
+            if action == "react":
+                pid = int(body.get("postId", 0) or 0)
+                kind = str(body.get("kind", ""))
+                if kind not in REACTION_KINDS:
+                    return resp(400, {"error": "Неизвестная реакция"})
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.ai_posts WHERE id = {pid}")
+                if not cur.fetchone():
+                    return resp(404, {"error": "Публикация не найдена"})
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.ai_post_reactions WHERE post_id = {pid} AND user_id = {me} AND kind = '{kind}'")
+                if cur.fetchone():
+                    cur.execute(f"DELETE FROM {SCHEMA}.ai_post_reactions WHERE post_id = {pid} AND user_id = {me} AND kind = '{kind}'")
+                else:
+                    if kind in ("like", "dislike"):
+                        other = "dislike" if kind == "like" else "like"
+                        cur.execute(f"DELETE FROM {SCHEMA}.ai_post_reactions WHERE post_id = {pid} AND user_id = {me} AND kind = '{other}'")
+                    cur.execute(f"INSERT INTO {SCHEMA}.ai_post_reactions (post_id, user_id, kind) VALUES ({pid}, {me}, '{kind}') ON CONFLICT DO NOTHING")
+                return resp(200, {"post": social(cur, [pid], me)[pid]})
+            if action == "comment":
+                pid = int(body.get("postId", 0) or 0)
+                text = re.sub(r"\n{3,}", "\n\n", str(body.get("text", ""))).strip()[:1000]
+                if not text:
+                    return resp(400, {"error": "Пустой комментарий"})
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.ai_posts WHERE id = {pid}")
+                if not cur.fetchone():
+                    return resp(404, {"error": "Публикация не найдена"})
+                cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.ai_post_comments WHERE user_id = {me} AND created_at > NOW() - INTERVAL '30 seconds'")
+                if int(cur.fetchone()[0]) >= 3:
+                    return resp(429, {"error": "Слишком часто — подождите немного"})
+                if not is_admin:
+                    reason = moderate(text, s)
+                    if reason:
+                        log_block(cur, me, "ainews", text, reason)
+                        return resp(422, {"error": f"AiTraderKa не пропустил комментарий: {reason}"})
+                cur.execute(f"INSERT INTO {SCHEMA}.ai_post_comments (post_id, user_id, text) VALUES ({pid}, {me}, '{esc(text)}')")
+                return resp(200, {"comments": comments_list(cur, pid, me, is_admin)})
+            cid = int(body.get("id", 0) or 0)
+            cur.execute(f"SELECT user_id, post_id FROM {SCHEMA}.ai_post_comments WHERE id = {cid}")
+            c = cur.fetchone()
+            if not c:
+                return resp(404, {"error": "Комментарий не найден"})
+            if not is_admin and c[0] != me:
+                return resp(403, {"error": "Удалить можно только свой комментарий"})
+            cur.execute(f"DELETE FROM {SCHEMA}.ai_post_comments WHERE id = {cid}")
+            return resp(200, {"comments": comments_list(cur, int(c[1]), me, is_admin)})
+
+        if not is_admin:
+            return resp(403, {"error": "Доступ только для администратора"})
 
         if action == "settings":
             data = {
@@ -266,7 +357,10 @@ def handle_aibot(event: dict) -> dict:
             return resp(200, {"id": cur.fetchone()[0]})
 
         if action == "delete-post":
-            cur.execute(f"DELETE FROM {SCHEMA}.ai_posts WHERE id = {int(body.get('id', 0) or 0)}")
+            pid = int(body.get("id", 0) or 0)
+            cur.execute(f"DELETE FROM {SCHEMA}.ai_post_reactions WHERE post_id = {pid}")
+            cur.execute(f"DELETE FROM {SCHEMA}.ai_post_comments WHERE post_id = {pid}")
+            cur.execute(f"DELETE FROM {SCHEMA}.ai_posts WHERE id = {pid}")
             return resp(200, {"ok": True})
 
         if action == "clear-log":

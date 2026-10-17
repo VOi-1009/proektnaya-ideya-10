@@ -1,8 +1,9 @@
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AI_NAME, useAiPosts } from "@/lib/aibot";
+import { AI_NAME, AiPost, useAiPosts } from "@/lib/aibot";
 import { useOpenMember } from "@/lib/memberCard";
 import BotBadge from "../BotBadge";
+import AiPostSocial from "../AiPostSocial";
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -13,7 +14,9 @@ const AiAvatar = () => (
   </div>
 );
 
-const DailyCard = ({ title, body }: { title: string; body: string }) => (
+const DailyCard = ({ post }: { post: AiPost }) => {
+  const { title, body } = post;
+  return (
   <article className="relative overflow-hidden rounded-xl border border-indigo-400/40 bg-gradient-to-br from-indigo-500/15 via-card to-card p-4 sm:p-5">
     <div className="flex items-center gap-2 text-xs">
       <Icon name="CalendarDays" size={14} className="text-indigo-300" />
@@ -37,8 +40,10 @@ const DailyCard = ({ title, body }: { title: string; body: string }) => (
         );
       })}
     </div>
+    <AiPostSocial post={post} />
   </article>
-);
+  );
+};
 
 const AiNewsChannel = () => {
   const { data, isLoading } = useAiPosts();
@@ -77,7 +82,7 @@ const AiNewsChannel = () => {
       ) : (
         posts.map((p) =>
           p.kind === "daily" ? (
-            <DailyCard key={p.id} title={p.title} body={p.body} />
+            <DailyCard key={p.id} post={p} />
           ) : (
           <article key={p.id} className="flex gap-3">
             <button onClick={open} className="mt-1 hidden sm:block">
@@ -112,6 +117,7 @@ const AiNewsChannel = () => {
                   ))}
                 </div>
               )}
+              <AiPostSocial post={p} />
             </div>
           </article>
           ),

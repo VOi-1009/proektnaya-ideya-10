@@ -8,7 +8,29 @@ export interface AiPost {
   links: { title: string; url: string }[];
   kind: "auto" | "manual" | "daily";
   createdAt: string;
+  reactions?: Record<string, number>;
+  mine?: string[];
+  comments?: number;
 }
+
+export interface AiComment {
+  id: number;
+  text: string;
+  createdAt: string;
+  canDelete: boolean;
+  user: { id: number; name: string; avatar: string; supporter: number | null; creator: boolean; isAi: boolean; founder: number | null };
+}
+
+export const REACTIONS: { kind: string; icon?: string; emoji?: string; label: string; cls: string }[] = [
+  { kind: "like", icon: "ThumbsUp", label: "Нравится", cls: "bg-up/15 border-up text-up" },
+  { kind: "dislike", icon: "ThumbsDown", label: "Не нравится", cls: "bg-down/15 border-down text-down" },
+  { kind: "fire", emoji: "🔥", label: "Огонь", cls: "bg-amber-400/15 border-amber-400/60 text-amber-200" },
+  { kind: "heart", emoji: "❤️", label: "Сердце", cls: "bg-rose-400/15 border-rose-400/60 text-rose-200" },
+  { kind: "rocket", emoji: "🚀", label: "На луну", cls: "bg-sky-400/15 border-sky-400/60 text-sky-200" },
+  { kind: "laugh", emoji: "😂", label: "Смешно", cls: "bg-yellow-400/15 border-yellow-400/60 text-yellow-200" },
+  { kind: "wow", emoji: "😮", label: "Ого", cls: "bg-violet-400/15 border-violet-400/60 text-violet-200" },
+  { kind: "sad", emoji: "😢", label: "Грустно", cls: "bg-indigo-400/15 border-indigo-400/60 text-indigo-200" },
+];
 
 export interface AiSettings {
   enabled: boolean;

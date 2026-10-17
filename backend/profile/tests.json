@@ -301,6 +301,34 @@
         "action": "daily-now"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Реакция на сводку без входа",
+      "method": "POST",
+      "path": "/?resource=aibot",
+      "body": {
+        "action": "react",
+        "postId": 1,
+        "kind": "like"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Комментарий к сводке без входа",
+      "method": "POST",
+      "path": "/?resource=aibot",
+      "body": {
+        "action": "comment",
+        "postId": 1,
+        "text": "привет"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Комментарии сводки",
+      "method": "GET",
+      "path": "/?resource=aibot&comments=1",
+      "expectedStatus": 200
     }
   ]
 }
