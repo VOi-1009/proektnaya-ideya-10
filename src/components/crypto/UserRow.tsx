@@ -6,6 +6,7 @@ import StatusBadge from "./StatusBadge";
 import FounderBadge from "./FounderBadge";
 import SupporterBadge from "./SupporterBadge";
 import MemberIcon from "./MemberIcon";
+import BotBadge from "./BotBadge";
 import { BotForm, ago, inputCls } from "./usersAdmin";
 
 interface Props {
@@ -40,7 +41,7 @@ const UserRow = ({ u, myId, busyId, setBot, setCardId, setLevel, setToDelete }: 
         <MemberIcon name={u.name} level={u.level} avatar={u.avatar} className="w-10 h-10 text-base" iconSize={18} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            {u.isBot && <Icon name="Bot" size={14} className="text-muted-foreground flex-shrink-0" />}
+            {u.isAi ? <BotBadge ai compact /> : u.isBot && <Icon name="Bot" size={14} className="text-muted-foreground flex-shrink-0" />}
             <span className={`text-sm font-medium truncate group-hover:underline ${nameCls(u.level)}`}>{u.name}</span>
             <StatusBadge level={u.level} compact />
             <SupporterBadge no={u.supporter} creator={u.creator} compact />

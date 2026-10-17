@@ -23,6 +23,7 @@ import PollsManager from "@/components/crypto/PollsManager";
 import RadarsManager from "@/components/crypto/RadarsManager";
 import SiteNewsManager from "@/components/crypto/SiteNewsManager";
 import DonateManager from "@/components/crypto/DonateManager";
+import AiBotManager from "@/components/crypto/AiBotManager";
 import UsersManager from "@/components/crypto/UsersManager";
 import BlocksManager from "@/components/crypto/BlocksManager";
 
@@ -35,7 +36,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "donate">("articles");
+  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "donate" | "aibot">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -199,6 +200,7 @@ const Admin = () => {
                 ["radars", "Радары", "Radar"],
                 ["sitenews", "Новости сайта", "Megaphone"],
                 ["donate", "Донаты", "Heart"],
+                ["aibot", "AiTraderKa", "Sparkles"],
               ] as const
             ).map(([id, label, icon]) => (
               <button
@@ -222,6 +224,8 @@ const Admin = () => {
           <RadarsManager token={token} />
         ) : editing === null && tab === "sitenews" ? (
           <SiteNewsManager token={token} />
+        ) : editing === null && tab === "aibot" ? (
+          <AiBotManager token={token} />
         ) : editing === null && tab === "donate" ? (
           <DonateManager token={token} />
         ) : editing === null && tab === "polls" ? (

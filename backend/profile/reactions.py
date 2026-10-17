@@ -45,8 +45,16 @@ def register_items(cur, items: list) -> None:
 def bots_react(cur, ids: list) -> None:
     if not ids:
         return
-    cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_bot")
-    bots = [r[0] for r in cur.fetchall()]
+    cur.execute(f"SELECT id, is_ai FROM {SCHEMA}.users WHERE is_bot")
+    all_bots = cur.fetchall()
+    bots = [r[0] for r in all_bots]
+    ai_ids = {r[0] for r in all_bots if r[1]}
+    ai = {"react": 90, "like": 70, "on": True}
+    if ai_ids:
+        cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'ai_bot'")
+        r = cur.fetchone()
+        cfg = json.loads(r[0]) if r else {}
+        ai = {"react": int(cfg.get("reactShare", 90)), "like": int(cfg.get("likeShare", 70)), "on": bool(cfg.get("enabled", True))}
     if not bots:
         return
     in_list = ", ".join(f"'{i}'" for i in ids)
@@ -59,11 +67,14 @@ def bots_react(cur, ids: list) -> None:
     for nid, pub in cur.fetchall():
         age_min = (now_ms - int(pub)) / 60000
         for b in bots:
-            if hh("react", nid, b) % 100 >= BOT_REACT_SHARE:
+            is_ai = b in ai_ids
+            if is_ai and not ai["on"]:
                 continue
-            if age_min < hh("delay", nid, b) % BOT_SPREAD_MIN:
+            if hh("react", nid, b) % 100 >= (ai["react"] if is_ai else BOT_REACT_SHARE):
                 continue
-            value = 1 if hh("like", nid, b) % 100 < BOT_LIKE_SHARE else -1
+            if age_min < hh("delay", nid, b) % (2 * 60 if is_ai else BOT_SPREAD_MIN):
+                continue
+            value = 1 if hh("like", nid, b) % 100 < (ai["like"] if is_ai else BOT_LIKE_SHARE) else -1
             rows.append(f"('{nid}', {b}, {value})")
     if rows:
         cur.execute(

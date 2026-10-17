@@ -27,6 +27,7 @@ import { Radar, useRadars } from "@/lib/radars";
 import ChatChannel from "@/components/crypto/channels/ChatChannel";
 import { CHAT_ROOMS, ChatRoom } from "@/lib/chat";
 import DonateButton from "@/components/crypto/DonateButton";
+import AiNewsChannel from "@/components/crypto/channels/AiNewsChannel";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -34,6 +35,7 @@ const CHANNELS = [
   { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: Bits.media, Investing.com, Финам, Ведомости", icon: "Hash" },
   { id: "world", name: "мировые-новости", short: "Мир", topic: "Политика, экономика и события в мире: ТАСС, РБК, Lenta.ru, Ведомости", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
+  { id: "ainews", name: "Новости от AiTraderKa", short: "AiTraderKa", topic: "Дайджесты и заметки ИИ-бота AiTraderKa", icon: "Sparkles" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
@@ -119,7 +121,7 @@ const Index = () => {
             </div>
           </button>
           <div className="hidden md:flex items-center gap-1">
-            {CHANNELS.slice(1).map((c) => (
+            {CHANNELS.slice(1).filter((c) => c.id !== "ainews").map((c) => (
               <Button
                 key={c.id}
                 variant="ghost"
@@ -173,7 +175,7 @@ const Index = () => {
           <div className="md:hidden mt-3 pt-3 border-t border-border flex flex-col gap-1 animate-fade-in">
             {CHANNELS.map((c) => (
               <Button key={c.id} variant="ghost" onClick={() => go(c.id)} className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
-                <span className="w-2 h-2 rounded-full bg-primary mr-2.5 flex-shrink-0" />
+                <span className={`w-2 h-2 rounded-full mr-2.5 flex-shrink-0 ${c.id === "ainews" ? "bg-white" : "bg-primary"}`} />
                 {c.name}
               </Button>
             ))}
@@ -240,8 +242,8 @@ const Index = () => {
                         channel === c.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                       }`}
                     >
-                      <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
-                      <span className="text-[14px]">{c.name}</span>
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${c.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : "bg-primary"}`} />
+                      <span className="text-[14px] truncate">{c.name}</span>
                       {c.id === "alerts" && activeAlerts > 0 && (
                         <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
                       )}
@@ -364,7 +366,7 @@ const Index = () => {
               >
                 <Icon name="Menu" size={20} />
               </Button>
-              <span className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0" />
+              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${channel === "ainews" ? "bg-white" : "bg-primary"}`} />
               <span className="text-white font-semibold">{current.name}</span>
               <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
               <span className="text-muted-foreground text-sm hidden sm:block truncate">{current.topic}</span>
@@ -421,6 +423,8 @@ const Index = () => {
                   <NewsChannel key="world" kind="world" />
                 ) : channel === "articles" ? (
                   <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
+                ) : channel === "ainews" ? (
+                  <AiNewsChannel />
                 ) : channel === "alerts" ? (
                   <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
                 ) : channel.startsWith("chat-") ? (

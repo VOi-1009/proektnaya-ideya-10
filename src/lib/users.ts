@@ -10,6 +10,7 @@ export interface OnlineUser {
   founder?: number | null;
   supporter?: number | null;
   creator?: boolean;
+  isAi?: boolean;
 }
 
 export interface AdminUser extends OnlineUser {

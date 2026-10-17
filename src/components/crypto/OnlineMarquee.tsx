@@ -3,6 +3,7 @@ import { levelInfo, nameCls } from "@/lib/status";
 import { useOnline } from "@/lib/users";
 import { useOpenMember } from "@/lib/memberCard";
 import MemberIcon from "./MemberIcon";
+import BotBadge from "./BotBadge";
 
 const OnlineMarquee = () => {
   const { user, token } = useAuth();
@@ -35,7 +36,7 @@ const OnlineMarquee = () => {
                 {u.name}
                 {user?.id === u.id && <span className="text-muted-foreground font-normal"> (вы)</span>}
               </span>
-              <span className={`text-[9px] whitespace-nowrap ${l.text}`}>{l.title}</span>
+              {u.isAi ? <BotBadge ai compact /> : <span className={`text-[9px] whitespace-nowrap ${l.text}`}>{l.title}</span>}
             </button>
           );
         })}

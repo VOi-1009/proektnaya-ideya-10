@@ -80,19 +80,21 @@ def handle_users(event: dict) -> dict:
                 me, is_admin = int(r[0]), bool(r[1])
 
         pts = points_sql(SCHEMA)
-        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no, u.supporter_no, u.is_creator, u.promo_code FROM {SCHEMA}.users u"
+        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no, u.supporter_no, u.is_creator, u.promo_code, u.is_ai FROM {SCHEMA}.users u"
 
         def to_user(r, full=False) -> dict:
             st = level_for(int(r[3]), r[4])
             u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"], "avatar": r[9] or "", "founder": r[14],
-                 "supporter": r[15], "creator": bool(r[16])}
+                 "supporter": r[15], "creator": bool(r[16]), "isBot": bool(r[7]), "isAi": bool(r[18])}
+            if r[18]:
+                u["online"] = True
             if full:
                 u["promo"] = r[17] or ""
                 email = r[2] or ""
                 u.update({
                     "email": "" if email.endswith("@users.traderka.ru") or email.endswith(BOT_DOMAIN) else email,
                     "isBot": bool(r[7]),
-                    "online": bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60),
+                    "online": True if r[18] else bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60),
                     "city": r[8] or "",
                     "bonus": int(r[10] or 0),
                     "bio": r[11] or "",
@@ -127,14 +129,14 @@ def handle_users(event: dict) -> dict:
                 )
                 place = int(cur.fetchone()[0])
                 st = level_for(int(r[3]), r[4])
-                online = bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60)
+                online = True if r[18] else bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60)
                 return resp(200, {"member": {
                     "id": r[0], "name": display_name(r[1], r[2]), "avatar": r[9] or "",
                     "level": st["level"], "title": st["title"], "points": int(r[3]),
                     "city": r[8] or "", "bio": r[11] or "", "favoriteCoin": r[12] or "",
                     "createdAt": r[6].isoformat(), "online": online, "place": place,
                     "special": special_for(cur, SCHEMA, r[0]), "founder": r[14],
-                    "supporter": r[15], "creator": bool(r[16]),
+                    "supporter": r[15], "creator": bool(r[16]), "isBot": bool(r[7]), "isAi": bool(r[18]),
                 }})
 
             if qs.get("rating") == "1":
@@ -168,8 +170,8 @@ def handle_users(event: dict) -> dict:
                 f"ORDER BY COALESCE(t.status_override, 0) DESC LIMIT 400"
             )
             now = time.time()
-            users = [to_user(r) for r in cur.fetchall() if not r[7] or bot_online(r[0], now)]
-            users.sort(key=lambda u: (-u["level"], u["name"].lower()))
+            users = [to_user(r) for r in cur.fetchall() if not r[7] or r[18] or bot_online(r[0], now)]
+            users.sort(key=lambda u: (not u.get("isAi"), -u["level"], u["name"].lower()))
             return resp(200, {"online": users[:20], "total": len(users)})
 
         if method != "POST":

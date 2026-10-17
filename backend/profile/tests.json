@@ -277,6 +277,21 @@
       "method": "GET",
       "path": "/?resource=donate&requests=1",
       "expectedStatus": 403
+    },
+    {
+      "name": "Новости AiTraderKa",
+      "method": "GET",
+      "path": "/?resource=aibot",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Настройки ИИ без прав",
+      "method": "POST",
+      "path": "/?resource=aibot",
+      "body": {
+        "action": "settings"
+      },
+      "expectedStatus": 403
     }
   ]
 }
