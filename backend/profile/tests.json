@@ -112,6 +112,12 @@
         "value": 1
       },
       "expectedStatus": 401
+    },
+    {
+      "name": "Топ новостей",
+      "method": "GET",
+      "path": "/?resource=reactions&top=1",
+      "expectedStatus": 200
     }
   ]
 }

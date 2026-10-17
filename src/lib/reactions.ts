@@ -26,7 +26,7 @@ export const useReactions = (ids: string[], token: string | null) => {
     staleTime: 30_000,
   });
 
-  const react = async (newsId: string, value: 1 | -1) => {
+  const react = async (newsId: string, value: 1 | -1, meta?: { title: string; link: string; source: string; kind: string }) => {
     const prev = q.data?.[newsId] ?? { likes: 0, dislikes: 0, mine: 0 };
     const next = prev.mine === value ? 0 : value;
     const optimistic: Reaction = {
@@ -35,14 +35,38 @@ export const useReactions = (ids: string[], token: string | null) => {
       mine: next,
     };
     qc.setQueryData<ReactionMap>(key, (old) => ({ ...(old ?? {}), [newsId]: optimistic }));
-    const r = await fetch(URL_BASE, { method: "POST", headers: hdrs(token), body: JSON.stringify({ newsId, value: next }) });
+    const r = await fetch(URL_BASE, { method: "POST", headers: hdrs(token), body: JSON.stringify({ newsId, value: next, ...(meta ?? {}) }) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) {
       qc.setQueryData<ReactionMap>(key, (old) => ({ ...(old ?? {}), [newsId]: prev }));
       throw new Error(d.error ?? "Не удалось сохранить оценку");
     }
     qc.setQueryData<ReactionMap>(key, (old) => ({ ...(old ?? {}), [newsId]: { likes: d.likes, dislikes: d.dislikes, mine: d.mine } }));
+    qc.invalidateQueries({ queryKey: ["top-news"] });
   };
 
   return { reactions: q.data ?? {}, react };
 };
+
+export interface TopNews {
+  id: string;
+  title: string;
+  link: string;
+  source: string;
+  kind: string;
+  likes: number;
+  dislikes: number;
+  total: number;
+}
+
+export const useTopNews = () =>
+  useQuery({
+    queryKey: ["top-news"],
+    queryFn: async () => {
+      const r = await fetch(`${URL_BASE}&top=1`);
+      const d = await r.json().catch(() => ({}));
+      return (d.top ?? []) as TopNews[];
+    },
+    staleTime: 60_000,
+    refetchInterval: 2 * 60_000,
+  });

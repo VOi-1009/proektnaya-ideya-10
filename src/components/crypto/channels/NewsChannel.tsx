@@ -184,7 +184,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
                   <p className={`text-muted-foreground text-sm ${isOpen ? "" : "line-clamp-2"}`}>{n.text}</p>
                 )}
                 <div className="flex items-center gap-4 mt-3 text-xs flex-wrap">
-                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v)} />
+                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v, { title: n.title, link: n.link, source: n.source, kind })} />
                   {n.text.length > 140 && (
                     <button onClick={() => setOpen(isOpen ? null : n.id)} className="text-primary hover:underline">
                       {isOpen ? "Свернуть" : "Читать полностью"}

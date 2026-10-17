@@ -6,6 +6,8 @@ import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
 import Message from "../Message";
 import LatestArticles from "../LatestArticles";
 import HomeBlocks from "../HomeBlocks";
+import TopNewsBlock from "../TopNewsBlock";
+import BtcLiveChart from "../BtcLiveChart";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
 const HERO_QUOTES = ["bitcoin", "ethereum", "brent", "gold", "usd-rub", "eur-rub"];
@@ -93,6 +95,13 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
+        <TopNewsBlock onAll={() => go("news")} />
+        <div className="border-t lg:border-t-0 lg:border-l border-border">
+          <BtcLiveChart onOpen={() => go("market", "bitcoin")} />
         </div>
       </div>
 
