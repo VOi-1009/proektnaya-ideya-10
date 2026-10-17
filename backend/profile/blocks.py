@@ -15,7 +15,8 @@ CORS = {
     "Access-Control-Max-Age": "86400",
 }
 IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
-COLS = "id, title, left_text, left_image, right_text, right_image, sort_order, published"
+COLS = "id, title, left_text, left_image, right_text, right_image, sort_order, published, placement"
+PLACEMENTS = ("main", "side")
 
 
 def resp(status: int, body: dict) -> dict:
@@ -36,6 +37,7 @@ def row_to_block(r) -> dict:
         "rightImage": r[5] or "",
         "sort": r[6],
         "published": r[7],
+        "placement": r[8] or "main",
     }
 
 
@@ -85,7 +87,11 @@ def handle_blocks(event: dict) -> dict:
             admin_id = int(r[0]) if r else None
 
         if method == "GET":
-            where = "" if (qs.get("all") == "1" and admin_id) else " WHERE published = TRUE"
+            conds = [] if (qs.get("all") == "1" and admin_id) else ["published = TRUE"]
+            pl = str(qs.get("placement", ""))
+            if pl in PLACEMENTS:
+                conds.append(f"placement = '{pl}'")
+            where = f" WHERE {' AND '.join(conds)}" if conds else ""
             cur.execute(f"SELECT {COLS} FROM {SCHEMA}.home_blocks{where} ORDER BY sort_order, id")
             return resp(200, {"blocks": [row_to_block(r) for r in cur.fetchall()]})
 
@@ -104,7 +110,9 @@ def handle_blocks(event: dict) -> dict:
         if action == "move":
             bid = int(body.get("id", 0))
             direction = -1 if body.get("dir") == "up" else 1
-            cur.execute(f"SELECT id FROM {SCHEMA}.home_blocks ORDER BY sort_order, id")
+            cur.execute(
+                f"SELECT id FROM {SCHEMA}.home_blocks WHERE placement = (SELECT placement FROM {SCHEMA}.home_blocks WHERE id = {bid}) ORDER BY sort_order, id"
+            )
             ids = [r[0] for r in cur.fetchall()]
             if bid in ids:
                 i = ids.index(bid)
@@ -122,6 +130,7 @@ def handle_blocks(event: dict) -> dict:
         left_text = str(body.get("leftText", "")).strip()[:20000]
         right_text = str(body.get("rightText", "")).strip()[:20000]
         published = "TRUE" if body.get("published", True) else "FALSE"
+        placement = body.get("placement") if body.get("placement") in PLACEMENTS else "main"
         try:
             left_img = image_sql(body, "left")
             right_img = image_sql(body, "right")
@@ -137,14 +146,14 @@ def handle_blocks(event: dict) -> dict:
                 extra += f", right_image = {right_img}"
             cur.execute(
                 f"UPDATE {SCHEMA}.home_blocks SET title = '{esc(title)}', left_text = '{esc(left_text)}', right_text = '{esc(right_text)}', "
-                f"published = {published}, updated_at = NOW(){extra} WHERE id = {bid} RETURNING {COLS}"
+                f"published = {published}, placement = '{placement}', updated_at = NOW(){extra} WHERE id = {bid} RETURNING {COLS}"
             )
         else:
             if not (left_text or right_text or left_img or right_img):
                 return resp(400, {"error": "Добавьте текст или картинку"})
             cur.execute(
-                f"INSERT INTO {SCHEMA}.home_blocks (title, left_text, left_image, right_text, right_image, published, sort_order) "
-                f"VALUES ('{esc(title)}', '{esc(left_text)}', {left_img or 'NULL'}, '{esc(right_text)}', {right_img or 'NULL'}, {published}, "
+                f"INSERT INTO {SCHEMA}.home_blocks (title, left_text, left_image, right_text, right_image, published, placement, sort_order) "
+                f"VALUES ('{esc(title)}', '{esc(left_text)}', {left_img or 'NULL'}, '{esc(right_text)}', {right_img or 'NULL'}, {published}, '{placement}', "
                 f"COALESCE((SELECT MAX(sort_order) FROM {SCHEMA}.home_blocks), 0) + 1) RETURNING {COLS}"
             )
         r = cur.fetchone()

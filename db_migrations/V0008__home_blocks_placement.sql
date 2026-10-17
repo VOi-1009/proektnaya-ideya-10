@@ -1,0 +1,1 @@
+ALTER TABLE t_p98937530_proektnaya_ideya_10.home_blocks ADD COLUMN IF NOT EXISTS placement VARCHAR(20) NOT NULL DEFAULT 'main';

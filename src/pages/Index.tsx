@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import OnlineList from "@/components/crypto/OnlineList";
+import { SideBlocks } from "@/components/crypto/HomeBlocks";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -374,19 +375,19 @@ const Index = () => {
               <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
                 <Icon name="Star" size={12} /> Мой список — {favCoins.length}
               </h3>
-              <div className="space-y-0.5">
+              <div className="space-y-0">
                 {favCoins.map((c) => {
                   const up = c.price_change_percentage_24h >= 0;
                   return (
                     <button
                       key={c.id}
                       onClick={() => go("market", c.id)}
-                      className="w-full flex items-center gap-2.5 p-2 rounded hover:bg-hover/60 text-left"
+                      className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 text-left"
                     >
-                      <CoinLogo coin={c} size={28} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm font-medium truncate font-coin">{COIN_META[c.id]?.ru ?? c.name}</div>
-                        <div className="text-muted-foreground text-xs font-mono tabular">{fmtPrice(c.current_price)}</div>
+                      <CoinLogo coin={c} size={22} />
+                      <div className="flex-1 min-w-0 leading-tight">
+                        <div className="text-white text-sm font-medium truncate font-coin leading-tight">{COIN_META[c.id]?.ru ?? c.name}</div>
+                        <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">{fmtPrice(c.current_price)}</div>
                       </div>
                       <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
                         {fmtPct(c.price_change_percentage_24h)}
@@ -399,6 +400,7 @@ const Index = () => {
                 )}
               </div>
             </div>
+            <SideBlocks />
           </aside>
         </div>
       </div>

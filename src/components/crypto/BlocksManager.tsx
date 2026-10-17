@@ -15,8 +15,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { blocksRequest, HomeBlock } from "@/lib/blocks";
-import { HomeBlockView } from "./HomeBlocks";
+import { blocksRequest, HomeBlock, Placement } from "@/lib/blocks";
+import { HomeBlockView, SideBlockView } from "./HomeBlocks";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -83,11 +83,12 @@ const ImagePicker = ({ img, onChange }: { img: Img; onChange: (i: Img) => void }
   );
 };
 
-const BlocksManager = ({ token }: { token: string | null }) => {
+const BlocksManager = ({ token, placement = "main" }: { token: string | null; placement?: Placement }) => {
   const qc = useQueryClient();
+  const side = placement === "side";
   const { data, isLoading } = useQuery({
-    queryKey: ["home-blocks-admin", token],
-    queryFn: () => blocksRequest<{ blocks: HomeBlock[] }>(token, "&all=1").then((d) => d.blocks),
+    queryKey: ["home-blocks-admin", token, placement],
+    queryFn: () => blocksRequest<{ blocks: HomeBlock[] }>(token, `&all=1&placement=${placement}`).then((d) => d.blocks),
   });
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
@@ -129,6 +130,7 @@ const BlocksManager = ({ token }: { token: string | null }) => {
     const done = await run(
       {
         action: "save",
+        placement,
         id: form.id || undefined,
         title: form.title,
         leftText: form.leftText,
@@ -141,7 +143,7 @@ const BlocksManager = ({ token }: { token: string | null }) => {
         rightImageType: form.right.type,
         rightImageRemove: form.right.remove,
       },
-      form.id ? "Блок обновлён" : "Блок добавлен на главную",
+      form.id ? "Блок обновлён" : side ? "Блок добавлен в боковую панель" : "Блок добавлен на главную",
     );
     if (done) setForm(null);
   };
@@ -156,6 +158,7 @@ const BlocksManager = ({ token }: { token: string | null }) => {
       rightImage: form.right.url,
       sort: 0,
       published: form.published,
+      placement,
     };
     return (
       <div className="space-y-4">
@@ -173,14 +176,14 @@ const BlocksManager = ({ token }: { token: string | null }) => {
             placeholder="Заголовок блока (необязательно)"
             className={inputCls}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(["left", "right"] as const).map((side) => (
-              <div key={side} className="space-y-3">
-                <div className="text-xs font-mono text-primary uppercase">{side === "left" ? "Левая часть" : "Правая часть"}</div>
-                <ImagePicker img={form[side]} onChange={(i) => setForm({ ...form, [side]: i })} />
+          <div className={`grid grid-cols-1 gap-4 ${side ? "max-w-sm" : "md:grid-cols-2"}`}>
+            {(side ? (["left"] as const) : (["left", "right"] as const)).map((part) => (
+              <div key={part} className="space-y-3">
+                {!side && <div className="text-xs font-mono text-primary uppercase">{part === "left" ? "Левая часть" : "Правая часть"}</div>}
+                <ImagePicker img={form[part]} onChange={(i) => setForm({ ...form, [part]: i })} />
                 <textarea
-                  value={side === "left" ? form.leftText : form.rightText}
-                  onChange={(e) => setForm({ ...form, [side === "left" ? "leftText" : "rightText"]: e.target.value })}
+                  value={part === "left" ? form.leftText : form.rightText}
+                  onChange={(e) => setForm({ ...form, [part === "left" ? "leftText" : "rightText"]: e.target.value })}
                   placeholder="Текст"
                   className={areaCls}
                 />
@@ -198,7 +201,13 @@ const BlocksManager = ({ token }: { token: string | null }) => {
           </div>
         </div>
         <div className="text-xs font-mono text-muted-foreground">ПРЕДПРОСМОТР</div>
-        <HomeBlockView block={preview} />
+        {side ? (
+          <div className="w-64 bg-card p-3 rounded-lg">
+            <SideBlockView block={preview} />
+          </div>
+        ) : (
+          <HomeBlockView block={preview} />
+        )}
       </div>
     );
   }
@@ -213,13 +222,13 @@ const BlocksManager = ({ token }: { token: string | null }) => {
         <Skeleton className="h-24 w-full" />
       ) : !data?.length ? (
         <div className="bg-card border border-border rounded-lg p-6 text-center text-muted-foreground text-sm">
-          Блоков пока нет. Создайте первый — он появится на главной странице.
+          {side ? "Боковых блоков пока нет. Создайте первый — он появится в правой панели сайта." : "Блоков пока нет. Создайте первый — он появится на главной странице."}
         </div>
       ) : (
         data.map((b, i) => (
           <div key={b.id} className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
             <div className="flex gap-1 flex-shrink-0">
-              {[b.leftImage, b.rightImage].map((src, k) =>
+              {(side ? [b.leftImage] : [b.leftImage, b.rightImage]).map((src, k) =>
                 src ? (
                   <img key={k} src={src} alt="" className="w-12 h-12 rounded object-cover" />
                 ) : (
@@ -231,7 +240,7 @@ const BlocksManager = ({ token }: { token: string | null }) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-white text-sm font-medium truncate">{b.title || b.leftText || b.rightText || "Без названия"}</div>
-              <div className="text-xs text-muted-foreground">{b.published ? "Показывается на главной" : "Скрыт"}</div>
+              <div className="text-xs text-muted-foreground">{b.published ? (side ? "Показывается в боковой панели" : "Показывается на главной") : "Скрыт"}</div>
             </div>
             <div className="flex gap-1 flex-shrink-0">
               <Button size="icon" variant="ghost" disabled={busy || i === 0} onClick={() => run({ action: "move", id: b.id, dir: "up" })}>

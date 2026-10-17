@@ -19,8 +19,30 @@ export const HomeBlockView = ({ block }: { block: HomeBlock }) => (
   </div>
 );
 
+export const SideBlockView = ({ block }: { block: HomeBlock }) => (
+  <div className="bg-rail rounded-lg overflow-hidden">
+    {block.leftImage && <img src={block.leftImage} alt="" className="w-full max-h-48 object-cover" loading="lazy" />}
+    <div className="p-3 space-y-1.5">
+      {block.title && <h3 className="text-white text-sm font-semibold">{block.title}</h3>}
+      {block.leftText && <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{block.leftText}</p>}
+    </div>
+  </div>
+);
+
+export const SideBlocks = () => {
+  const { data } = useHomeBlocks("side");
+  if (!data?.length) return null;
+  return (
+    <div className="space-y-3">
+      {data.map((b) => (
+        <SideBlockView key={b.id} block={b} />
+      ))}
+    </div>
+  );
+};
+
 const HomeBlocks = () => {
-  const { data } = useHomeBlocks();
+  const { data } = useHomeBlocks("main");
   if (!data?.length) return null;
   return (
     <div className="space-y-5">

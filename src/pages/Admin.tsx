@@ -31,7 +31,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks">("articles");
+  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks" | "side">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -188,7 +188,8 @@ const Admin = () => {
               [
                 ["articles", "Статьи", "FileText"],
                 ["categories", "Рубрики", "FolderTree"],
-        ["blocks", "Блоки главной", "LayoutPanelLeft"],
+                ["blocks", "Блоки главной", "LayoutPanelLeft"],
+                ["side", "Боковые блоки", "PanelRight"],
                 ["users", "Пользователи", "Users"],
               ] as const
             ).map(([id, label, icon]) => (
@@ -206,7 +207,9 @@ const Admin = () => {
           </div>
         )}
         {editing === null && tab === "blocks" ? (
-          <BlocksManager token={token} />
+          <BlocksManager key="main" token={token} placement="main" />
+        ) : editing === null && tab === "side" ? (
+          <BlocksManager key="side" token={token} placement="side" />
         ) : editing === null && tab === "users" ? (
           <UsersManager token={token} myId={user.id} />
         ) : editing === null && tab === "categories" ? (
