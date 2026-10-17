@@ -51,22 +51,22 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <Message author="Traderka Бот" time="Сегодня в 09:00" icon="CandlestickChart" bot delay={80}>
-        <p className="mb-3">
+        <p className="mb-2">
           <strong className="text-white">Сводка по рынку на сегодня</strong>
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
-          <div className="bg-card rounded-lg p-3 border-l-4 border-primary">
+          <div className="bg-card rounded-lg px-3 py-2 border-l-4 border-primary">
             <div className="text-muted-foreground text-xs">Капитализация крипто</div>
             <div className="font-mono text-white tabular mt-1">{fmtBig(totalCap)}</div>
           </div>
-          <div className="bg-card rounded-lg p-3 border-l-4 border-accent">
+          <div className="bg-card rounded-lg px-3 py-2 border-l-4 border-accent">
             <div className="text-muted-foreground text-xs">Доминация BTC</div>
             <div className="font-mono text-white tabular mt-1">{dominance.toFixed(1).replace(".", ",")}%</div>
           </div>
           {best && (
-            <button onClick={() => go("market", best.id)} className="text-left bg-card rounded-lg p-3 border-l-4 border-up hover:bg-hover transition-colors">
+            <button onClick={() => go("market", best.id)} className="text-left bg-card rounded-lg px-3 py-2 border-l-4 border-up hover:bg-hover transition-colors">
               <div className="text-muted-foreground text-xs">Сильнее рынка</div>
               <div className="font-mono text-white mt-1">
                 {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
@@ -74,7 +74,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </button>
           )}
           {worst && (
-            <button onClick={() => go("market", worst.id)} className="text-left bg-card rounded-lg p-3 border-l-4 border-down hover:bg-hover transition-colors">
+            <button onClick={() => go("market", worst.id)} className="text-left bg-card rounded-lg px-3 py-2 border-l-4 border-down hover:bg-hover transition-colors">
               <div className="text-muted-foreground text-xs">Аутсайдер</div>
               <div className="font-mono text-white mt-1">
                 {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
@@ -82,7 +82,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </button>
           )}
           <div
-            className={`bg-card rounded-lg p-3 border-l-4 col-span-2 md:col-span-1 ${fg ? fgBorder(fg.value) : "border-input"}`}
+            className={`bg-card rounded-lg px-3 py-2 border-l-4 col-span-2 md:col-span-1 ${fg ? fgBorder(fg.value) : "border-input"}`}
             title="Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория"
           >
             <div className="text-muted-foreground text-xs truncate">Страх и жадность</div>
@@ -116,15 +116,15 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       </Message>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
-        <div className="p-5 sm:p-7 flex flex-col justify-center bg-gradient-to-br from-primary/20 via-card to-card">
-          <div className="text-primary font-mono text-xs mb-3 flex items-center gap-2">
+        <div className="p-4 sm:p-5 flex flex-col justify-center bg-gradient-to-br from-primary/20 via-card to-card">
+          <div className="text-primary font-mono text-xs mb-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
           </div>
           <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Новости рынков и мира.</h2>
-          <p className="text-muted-foreground text-sm sm:text-base mt-3 max-w-md">
+          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-md">
             Ваш надежный источник информации и площадка для общения. Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
           </p>
-          <div className="flex flex-wrap gap-2 mt-5">
+          <div className="flex flex-wrap gap-2 mt-4">
             <Button onClick={() => go("market")} className="font-semibold">
               <Icon name="CandlestickChart" size={16} className="mr-2" />
               Котировки
@@ -138,7 +138,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </Button>
           </div>
         </div>
-        <div className="p-4 sm:p-5 border-t lg:border-t-0 lg:border-l border-border">
+        <div className="p-3 sm:p-4 border-t lg:border-t-0 lg:border-l border-border">
           <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-2">Главные котировки</div>
           <div className="grid grid-cols-2 gap-2">
             {heroQuotes.map((c) => {
@@ -174,11 +174,11 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
 
 
-      <div className="bg-card border border-border rounded-lg p-4 sm:p-6 animate-fade-in" style={{ animationDelay: "300ms" }}>
+      <div className="bg-card border border-border rounded-lg p-4 sm:p-5 animate-fade-in" style={{ animationDelay: "300ms" }}>
         <h3 className="font-display text-lg sm:text-xl text-white mb-4">Что умеет TRADERKA.RU</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {FEATURES.map((f) => (
-            <div key={f.title} className="flex items-start gap-3 p-3 rounded hover:bg-hover/60 transition-colors">
+            <div key={f.title} className="flex items-start gap-3 p-2 rounded hover:bg-hover/60 transition-colors">
               <div className="w-9 h-9 rounded-lg bg-primary/15 text-primary flex items-center justify-center flex-shrink-0">
                 <Icon name={f.icon} size={18} />
               </div>
@@ -189,7 +189,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </div>
           ))}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 mt-5">
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
           <Button onClick={() => go("market")} className="font-semibold">
             <Icon name="CandlestickChart" size={16} className="mr-2" />
             Смотреть котировки
@@ -201,7 +201,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         </div>
       </div>
 
-      <div id="subscribe" className="bg-gradient-to-br from-primary/15 to-card border border-primary/30 rounded-lg p-4 sm:p-6">
+      <div id="subscribe" className="bg-gradient-to-br from-primary/15 to-card border border-primary/30 rounded-lg p-4 sm:p-5">
         <div className="flex items-center gap-2 text-primary text-xs font-mono mb-2">
           <Icon name="Bell" size={14} /> ДАЙДЖЕСТ
         </div>

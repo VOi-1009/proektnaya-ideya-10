@@ -31,7 +31,7 @@ const BtcLiveChart = ({ onOpen }: { onOpen: () => void }) => {
   const lo = data?.length ? Math.min(...data.map((d) => d.l)) : 0;
 
   return (
-    <div className="p-4 sm:p-5 flex flex-col h-full">
+    <div className="p-3 sm:p-4 flex flex-col h-full">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div>
           <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">

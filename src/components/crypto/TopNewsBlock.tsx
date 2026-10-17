@@ -6,8 +6,8 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
   const { data, isLoading } = useTopNews();
 
   return (
-    <div className="p-4 sm:p-5 flex flex-col h-full">
-      <div className="flex items-center justify-between gap-3 mb-3">
+    <div className="p-3 sm:p-4 flex flex-col h-full">
+      <div className="flex items-center justify-between gap-3 mb-2">
         <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
           <Icon name="Flame" size={12} className="text-primary" /> Обсуждаемые новости
         </div>
