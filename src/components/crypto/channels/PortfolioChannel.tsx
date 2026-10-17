@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { Coin, COIN_META, fmtPct, fmtPrice } from "@/lib/crypto";
+import { Coin, COIN_META, fmtPct, fmtPrice, isFx } from "@/lib/crypto";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { PORTFOLIO_URL, useAuth } from "@/lib/auth";
@@ -236,7 +236,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {coins.map((c) => (
+                {coins.filter((c) => !isFx(c.id)).map((c) => (
                   <SelectItem key={c.id} value={c.id} className="font-coin">
                     {COIN_META[c.id]?.short ?? c.symbol.toUpperCase()} · {COIN_META[c.id]?.ru ?? c.name}
                   </SelectItem>

@@ -162,6 +162,8 @@ def load_all(kind: str) -> tuple:
 COMMODITIES = {
     "brent": {"ticker": "BZ=F", "symbol": "brent", "name": "BRENT"},
     "gold": {"ticker": "GC=F", "symbol": "xau", "name": "Gold"},
+    "usd-rub": {"ticker": "RUB=X", "symbol": "usd", "name": "USD/RUB", "quote": "RUB"},
+    "eur-rub": {"ticker": "EURRUB=X", "symbol": "eur", "name": "EUR/RUB", "quote": "RUB"},
 }
 QUOTE_TTL = 300
 _quotes: dict = {"at": 0.0, "data": None}
@@ -202,6 +204,7 @@ def load_commodity(cid: str) -> dict:
         "name": c["name"],
         "image": "",
         "kind": "commodity",
+        "quote": c.get("quote", "USD"),
         "current_price": price,
         "market_cap": 0,
         "total_volume": float(meta.get("regularMarketVolume") or 0),
@@ -226,13 +229,13 @@ def commodities_response() -> dict:
     now = time.time()
     if not _quotes["data"] or now - _quotes["at"] > QUOTE_TTL:
         try:
-            with ThreadPoolExecutor(max_workers=2) as ex:
+            with ThreadPoolExecutor(max_workers=len(COMMODITIES)) as ex:
                 data = list(ex.map(load_commodity, COMMODITIES.keys()))
             _quotes.update(at=now, data=data)
         except Exception as e:
             print("commodities error:", e)
     if not _quotes["data"]:
-        return json_resp(502, {"error": "Котировки сырья временно недоступны"})
+        return json_resp(502, {"error": "Котировки сырья и валют временно недоступны"})
     return json_resp(200, {"items": _quotes["data"], "updatedAt": int(_quotes["at"] * 1000)})
 
 
@@ -265,7 +268,7 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent и золота (?resource=commodities) и их графики (?resource=chart&id=&days=)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}

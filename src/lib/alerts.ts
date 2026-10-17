@@ -77,7 +77,7 @@ export function usePriceAlerts(coins: Coin[], live: boolean) {
     fired.forEach((a) => {
       const name = COIN_META[a.coinId]?.ru ?? a.coinId;
       const verb = a.direction === "above" ? "поднялся до" : "опустился до";
-      const text = `${name} ${verb} ${fmtPrice(a.target)} — сейчас ${fmtPrice(a.triggeredPrice!)}`;
+      const text = `${name} ${verb} ${fmtPrice(a.target, a.coinId)} — сейчас ${fmtPrice(a.triggeredPrice!, a.coinId)}`;
       toast({ title: "🔔 Цель достигнута", description: text, duration: 15000 });
       if (notificationsSupported() && Notification.permission === "granted" && document.hidden) {
         new Notification("TRADERKA.RU — цель достигнута", { body: text, tag: a.id });

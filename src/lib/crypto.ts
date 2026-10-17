@@ -16,6 +16,7 @@ export interface Coin {
   price_change_percentage_7d_in_currency?: number;
   sparkline_in_7d?: { price: number[] };
   kind?: "commodity";
+  quote?: "USD" | "RUB";
 }
 
 export const COIN_IDS = [
@@ -27,7 +28,9 @@ export const COIN_IDS = [
   "dogecoin",
 ];
 
-export const COMMODITY_IDS = ["brent", "gold"];
+export const COMMODITY_IDS = ["brent", "gold", "usd-rub", "eur-rub"];
+export const FX_IDS = ["usd-rub", "eur-rub"];
+export const isFx = (id: string) => FX_IDS.includes(id);
 export const isCommodity = (id: string) => COMMODITY_IDS.includes(id);
 
 export const COIN_META: Record<string, { ru: string; color: string; short: string }> = {
@@ -39,6 +42,8 @@ export const COIN_META: Record<string, { ru: string; color: string; short: strin
   dogecoin: { ru: "Dogecoin", color: "#c2a633", short: "DOGE" },
   brent: { ru: "BRENT", color: "#3d3d3d", short: "BRENT" },
   gold: { ru: "Gold", color: "#d4af37", short: "GOLD" },
+  "usd-rub": { ru: "USD/RUB", color: "#2f855a", short: "USD/RUB" },
+  "eur-rub": { ru: "EUR/RUB", color: "#2b6cb0", short: "EUR/RUB" },
 };
 
 // Резервные данные на случай, если биржевой источник временно недоступен
@@ -51,6 +56,8 @@ const FALLBACK: Array<[string, string, string, number, number, number]> = [
   ["dogecoin", "doge", "Dogecoin", 0.08045, -0.97, 12573739539],
   ["brent", "brent", "BRENT", 109.86, 3.72, 0],
   ["gold", "xau", "Gold", 4181.1, 0.26, 0],
+  ["usd-rub", "usd", "USD/RUB", 83.46, -0.48, 0],
+  ["eur-rub", "eur", "EUR/RUB", 93.83, -0.29, 0],
 ];
 
 function synthSeries(base: number, n: number, seed: number, drift = 0) {
@@ -74,6 +81,7 @@ const fallbackCoins = (): Coin[] =>
     name,
     image: "",
     kind: isCommodity(id) ? ("commodity" as const) : undefined,
+    quote: isFx(id) ? ("RUB" as const) : ("USD" as const),
     current_price: price,
     market_cap: cap,
     total_volume: cap * 0.04,
@@ -153,9 +161,15 @@ export function useChart(id: string, days: number, fallbackPrice?: number) {
   });
 }
 
-export const fmtPrice = (v: number) => {
+export const fmtPrice = (v: number, id?: string) => {
+  if (id && isFx(id)) return v.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₽";
   const digits = v >= 1000 ? 0 : v >= 1 ? 2 : v >= 0.01 ? 4 : 6;
   return "$" + v.toLocaleString("ru-RU", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+};
+
+export const fmtRub = (v: number) => {
+  const digits = v >= 1000 ? 0 : v >= 1 ? 2 : 4;
+  return v.toLocaleString("ru-RU", { minimumFractionDigits: digits, maximumFractionDigits: digits }) + " ₽";
 };
 
 export const fmtBig = (v: number) => {

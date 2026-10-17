@@ -29,10 +29,10 @@ const CHANNELS = [
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
-  { id: "converter", name: "конвертер", topic: "Пересчёт монет по текущему курсу", icon: "Hash" },
+  { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
 ];
 
-const PINNED = ["bitcoin", "brent"];
+const PINNED = ["bitcoin", "brent", "usd-rub", "eur-rub"];
 
 const loadFavs = (): string[] => {
   try {
@@ -159,7 +159,7 @@ const Index = () => {
           <div className="md:hidden mt-3 pt-3 border-t border-border flex flex-col gap-1 animate-fade-in">
             {CHANNELS.map((c) => (
               <Button key={c.id} variant="ghost" onClick={() => go(c.id)} className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
-                <Icon name="Hash" size={16} className="mr-2" />
+                <span className="w-2 h-2 rounded-full bg-primary mr-2.5 flex-shrink-0" />
                 {c.name}
               </Button>
             ))}
@@ -221,11 +221,11 @@ const Index = () => {
                     <button
                       key={c.id}
                       onClick={() => go(c.id)}
-                      className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left transition-colors ${
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${
                         channel === c.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                       }`}
                     >
-                      <Icon name="Hash" size={18} className="opacity-70" />
+                      <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
                       <span className="text-[15px]">{c.name}</span>
                       {c.id === "alerts" && activeAlerts > 0 && (
                         <span className="ml-auto text-[11px] font-mono text-primary">{activeAlerts}</span>
@@ -239,9 +239,9 @@ const Index = () => {
                   ))}
                   <button
                     onClick={() => navigate("/rating")}
-                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
                   >
-                    <Icon name="Trophy" size={18} className="opacity-70" />
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
                     <span className="text-[15px]">рейтинг</span>
                   </button>
                 </div>
@@ -305,7 +305,7 @@ const Index = () => {
               >
                 <Icon name="Menu" size={20} />
               </Button>
-              <Icon name="Hash" size={20} className="text-muted-foreground" />
+              <span className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0" />
               <span className="text-white font-semibold">{current.name}</span>
               <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
               <span className="text-muted-foreground text-sm hidden sm:block truncate">{current.topic}</span>
@@ -405,7 +405,7 @@ const Index = () => {
                           {pinned && <Icon name="Pin" size={10} className="text-muted-foreground" />}
                         </div>
                         <div className="text-muted-foreground text-[11px] font-mono tabular leading-tight">
-                          {fmtPrice(c.current_price)}
+                          {fmtPrice(c.current_price, c.id)}
                           {c.id === "brent" && " / барр."}
                           {c.id === "gold" && " / унц."}
                         </div>

@@ -41,7 +41,7 @@ const PriceChart = ({ coin }: { coin: Coin }) => {
               </span>
             </div>
             <div className="flex items-baseline gap-3 mt-0.5">
-              <span className="font-mono text-2xl sm:text-3xl text-white tabular">{fmtPrice(coin.current_price)}</span>
+              <span className="font-mono text-2xl sm:text-3xl text-white tabular">{fmtPrice(coin.current_price, coin.id)}</span>
               <span className={`font-mono text-sm tabular ${up ? "text-up" : "text-down"}`}>
                 {fmtPct(change)} за период
               </span>
@@ -87,7 +87,7 @@ const PriceChart = ({ coin }: { coin: Coin }) => {
                 dataKey="p"
                 domain={["auto", "auto"]}
                 orientation="right"
-                tickFormatter={(v: number) => fmtPrice(v)}
+                tickFormatter={(v: number) => fmtPrice(v, coin.id)}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
@@ -104,7 +104,7 @@ const PriceChart = ({ coin }: { coin: Coin }) => {
                 labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                 itemStyle={{ color: "#fff" }}
                 labelFormatter={(t: number) => new Date(t).toLocaleString("ru-RU")}
-                formatter={(v: number) => [fmtPrice(v), "Цена"]}
+                formatter={(v: number) => [fmtPrice(v, coin.id), "Цена"]}
               />
               <Area type="monotone" dataKey="p" stroke={color} strokeWidth={2} fill="url(#pc-grad)" />
             </AreaChart>
@@ -114,8 +114,8 @@ const PriceChart = ({ coin }: { coin: Coin }) => {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-border text-xs">
         {[
-          ["Макс. 24ч", fmtPrice(coin.high_24h)],
-          ["Мин. 24ч", fmtPrice(coin.low_24h)],
+          ["Макс. 24ч", fmtPrice(coin.high_24h, coin.id)],
+          ["Мин. 24ч", fmtPrice(coin.low_24h, coin.id)],
           ["Объём 24ч", coin.kind ? `${coin.total_volume.toLocaleString("ru-RU")} контр.` : fmtBig(coin.total_volume)],
           ["Капитализация", coin.market_cap ? fmtBig(coin.market_cap) : "—"],
         ].map(([k, v]) => (

@@ -149,7 +149,7 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-white tabular">{fmtPrice(c.current_price)}</td>
+                  <td className="px-3 py-2.5 text-right font-mono text-white tabular">{fmtPrice(c.current_price, c.id)}</td>
                   <td className={`px-3 py-2.5 text-right font-mono tabular ${up24 ? "text-up" : "text-down"}`}>
                     {fmtPct(c.price_change_percentage_24h)}
                   </td>

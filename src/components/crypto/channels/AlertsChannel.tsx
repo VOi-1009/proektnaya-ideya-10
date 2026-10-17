@@ -51,7 +51,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
     setTarget("");
     toast({
       title: "Уведомление создано",
-      description: `${COIN_META[coinId]?.ru ?? coinId}: сообщим, когда курс ${a.direction === "above" ? "поднимется до" : "опустится до"} ${fmtPrice(t)}`,
+      description: `${COIN_META[coinId]?.ru ?? coinId}: сообщим, когда курс ${a.direction === "above" ? "поднимется до" : "опустится до"} ${fmtPrice(t, coinId)}`,
     });
     if (perm === "default") askPermission();
   };
@@ -95,7 +95,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-xs">
             <span className="text-muted-foreground">
-              Сейчас: <span className="font-mono text-white">{price ? fmtPrice(price) : "—"}</span>
+              Сейчас: <span className="font-mono text-white">{price ? fmtPrice(price, coinId) : "—"}</span>
               {diff !== null && Math.abs(diff) > 0 && (
                 <span className={`font-mono ml-2 ${diff > 0 ? "text-up" : "text-down"}`}>
                   {diff > 0 ? "↑ рост" : "↓ падение"} на {fmtPct(Math.abs(diff)).replace("+", "")}
@@ -170,13 +170,13 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
                       <Icon name={a.direction === "above" ? "TrendingUp" : "TrendingDown"} size={13} />
                       {a.direction === "above" ? "выше" : "ниже"}
                     </span>
-                    <span className="font-mono text-white">{fmtPrice(a.target)}</span>
+                    <span className="font-mono text-white">{fmtPrice(a.target, a.coinId)}</span>
                   </div>
                   <div className="h-1.5 bg-rail rounded-full mt-2 overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
                   </div>
                   <div className="text-[11px] text-muted-foreground mt-1 font-mono">
-                    сейчас {fmtPrice(now)} · осталось {fmtPct(left).replace("+", "")} · с {fmtDate(a.createdAt)}
+                    сейчас {fmtPrice(now, a.coinId)} · осталось {fmtPct(left).replace("+", "")} · с {fmtDate(a.createdAt)}
                   </div>
                 </div>
                 <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-down p-1" aria-label="Удалить">
@@ -211,9 +211,9 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
                 <div className="flex-1 min-w-0">
                   <span className="text-white font-coin">{COIN_META[a.coinId]?.ru ?? a.coinId}</span>
                   <span className="text-muted-foreground"> достиг </span>
-                  <span className="font-mono text-white">{fmtPrice(a.target)}</span>
+                  <span className="font-mono text-white">{fmtPrice(a.target, a.coinId)}</span>
                   <div className="text-[11px] text-muted-foreground font-mono">
-                    {fmtDate(a.triggeredAt!)} · курс был {fmtPrice(a.triggeredPrice!)}
+                    {fmtDate(a.triggeredAt!)} · курс был {fmtPrice(a.triggeredPrice!, a.coinId)}
                   </div>
                 </div>
                 <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-down p-1" aria-label="Удалить">
