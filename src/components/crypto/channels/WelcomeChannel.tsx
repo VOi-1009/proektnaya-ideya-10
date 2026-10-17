@@ -19,10 +19,10 @@ interface Props {
 }
 
 const FEATURES = [
-  { icon: "Activity", title: "Котировки онлайн", desc: "Цены, изменения за час, сутки и неделю — без перезагрузки" },
-  { icon: "CandlestickChart", title: "Графики по периодам", desc: "От одного дня до года, с подсказкой цены в каждой точке" },
-  { icon: "Newspaper", title: "Новости без шума", desc: "Только то, что двигает рынок, с фильтром по темам" },
-  { icon: "Star", title: "Избранные монеты", desc: "Отметьте свои активы. Портфели для пользователей." },
+  { icon: "Activity", title: "Комьюнити", desc: "Создавайте группы, общайтесь с экспертами и единомышленниками в безопасной среде." },
+  { icon: "CandlestickChart", title: "Развитие", desc: "Учитесь, анализируйте рыночные тренды и расширяйте кругозор." },
+  { icon: "Newspaper", title: "Достоверность", desc: "Только проверенные источники новостей и точные данные по котировкам." },
+  { icon: "Star", title: "Доступность", desc: "Работаем стабильно, без необходимости использования VPN." },
 ];
 
 const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
@@ -59,7 +59,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           </div>
           <h2 className="font-display text-2xl sm:text-4xl text-white leading-tight">Новости рынков и мира.</h2>
           <p className="text-muted-foreground text-sm sm:text-base mt-3 max-w-md">
-            Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
+            Ваш надежный источник информации и площадка для общения. Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
           </p>
           <div className="flex flex-wrap gap-2 mt-5">
             <Button onClick={() => go("market")} className="font-semibold">

@@ -23,7 +23,7 @@ export const NEWS_TAGS: Record<NewsKind, NewsTag[]> = {
 };
 
 export const NEWS_SOURCES: Record<NewsKind, string[]> = {
-  crypto: ["ForkLog", "Bits.media", "Investing.com", "Финам", "Ведомости"],
+  crypto: ["Bits.media", "Investing.com", "Финам", "Ведомости"],
   world: ["ТАСС", "РБК", "Lenta.ru", "Ведомости"],
 };
 
@@ -43,7 +43,6 @@ export const TAG_STYLE: Record<string, string> = {
 };
 
 export const SOURCE_STYLE: Record<string, { avatar: string; cls: string }> = {
-  ForkLog: { avatar: "F", cls: "bg-orange-500 text-white" },
   "Bits.media": { avatar: "B", cls: "bg-sky-500 text-white" },
   "Investing.com": { avatar: "I", cls: "bg-amber-400 text-black" },
   Финам: { avatar: "Ф", cls: "bg-yellow-400 text-black" },

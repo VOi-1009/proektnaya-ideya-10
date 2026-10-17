@@ -20,7 +20,6 @@ CORS = {
 
 FEEDS = {
     "crypto": [
-        ("ForkLog", "https://forklog.com/feed"),
         ("Bits.media", "https://bits.media/rss2/"),
         ("Investing.com", "https://ru.investing.com/rss/news_11.rss"),
         ("Investing.com", "https://ru.investing.com/rss/commodities_Metals.rss"),
