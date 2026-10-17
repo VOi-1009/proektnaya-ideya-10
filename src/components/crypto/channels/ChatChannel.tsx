@@ -9,6 +9,8 @@ import { CHAT_MIN_LEVEL, CHAT_ROOMS, ChatMessage, ChatRoom, chatRequest } from "
 import { levelInfo, nameCls } from "@/lib/status";
 import { useOpenMember } from "@/lib/memberCard";
 import MemberIcon from "../MemberIcon";
+import SupporterBadge from "../SupporterBadge";
+import DonateButton from "../DonateButton";
 
 const Locked = ({ icon, title, text, action }: { icon: string; title: string; text: string; action?: React.ReactNode }) => (
   <div className="bg-card border border-border rounded-xl p-8 text-center max-w-lg mx-auto mt-6">
@@ -78,6 +80,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
                   <button onClick={() => openMember(m.user.id)} className={`text-sm font-medium hover:underline ${nameCls(m.user.level, "text-white")}`}>
                     {m.user.name}
                   </button>
+                  <SupporterBadge no={m.user.supporter} creator={m.user.creator} compact className="self-center" />
                   <span className={`text-[9px] ${levelInfo(m.user.level).text}`}>{levelInfo(m.user.level).title}</span>
                   <span className="text-muted-foreground text-[10px] font-mono">{time(m.createdAt)}</span>
                 </div>
@@ -115,8 +118,6 @@ const ChatChannel = ({ room }: { room: ChatRoom }) => {
   const { user, setAuthOpen } = useAuth();
   const meta = CHAT_ROOMS.find((r) => r.id === room)!;
 
-  if (room === "premium")
-    return <Locked icon="Crown" title="Премиум-чат скоро откроется" text="Закрытый чат для премиум-участников сейчас готовится. Следите за новостями сайта." />;
   if (!user)
     return (
       <Locked
@@ -126,7 +127,16 @@ const ChatChannel = ({ room }: { room: ChatRoom }) => {
         action={<Button onClick={() => setAuthOpen(true)}>Войти</Button>}
       />
     );
-  if ((user.level ?? 1) < CHAT_MIN_LEVEL && !user.isAdmin)
+  if (room === "premium" && !user.supporter && !user.creator && !user.isAdmin)
+    return (
+      <Locked
+        icon="Crown"
+        title="Премиум-чат — для тех, кто поддержал проект"
+        text="Поддержите проект любой суммой — получите доступ в этот чат, значок «Поддержал проект» и личный промокод."
+        action={<DonateButton />}
+      />
+    );
+  if (room !== "premium" && (user.level ?? 1) < CHAT_MIN_LEVEL && !user.isAdmin)
     return (
       <Locked
         icon="Sprout"

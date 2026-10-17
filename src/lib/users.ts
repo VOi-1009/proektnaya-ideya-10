@@ -8,6 +8,8 @@ export interface OnlineUser {
   title: string;
   avatar?: string;
   founder?: number | null;
+  supporter?: number | null;
+  creator?: boolean;
 }
 
 export interface AdminUser extends OnlineUser {
@@ -23,6 +25,7 @@ export interface AdminUser extends OnlineUser {
   bio: string;
   favoriteCoin: string;
   isAdmin: boolean;
+  promo: string;
   autoTitle: string;
   next: number | null;
   nextTitle: string | null;

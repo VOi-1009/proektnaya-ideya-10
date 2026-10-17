@@ -74,7 +74,7 @@ def handler(event: dict, context) -> dict:
             if not token:
                 return resp(401, {"error": "Не авторизован"})
             cur.execute(
-                f"SELECT u.id, u.email, u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override, u.founder_no FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
+                f"SELECT u.id, u.email, u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override, u.founder_no, u.supporter_no, u.is_creator FROM {SCHEMA}.sessions s JOIN {SCHEMA}.users u ON u.id = s.user_id "
                 f"WHERE s.token = '{token}' AND s.expires_at > NOW()"
             )
             row = cur.fetchone()
@@ -91,9 +91,9 @@ def handler(event: dict, context) -> dict:
                 if row[7] is None:
                     claim_founder(cur, row[0])
                     cur.execute(f"SELECT founder_no FROM {SCHEMA}.users WHERE id = {int(row[0])}")
-                    row = (*row[:7], cur.fetchone()[0])
+                    row = (*row[:7], cur.fetchone()[0], *row[8:])
             st = level_for(int(row[5]), row[6])
-            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or "", "isAdmin": bool(row[4]), "level": st["level"], "statusTitle": st["title"], "founder": row[7]}})
+            return resp(200, {"user": {"id": row[0], "email": email, "name": row[2] or "", "avatar": row[3] or "", "isAdmin": bool(row[4]), "level": st["level"], "statusTitle": st["title"], "founder": row[7], "supporter": row[8], "creator": bool(row[9])}})
 
         if method != "POST":
             return resp(405, {"error": "Метод не поддерживается"})
@@ -135,10 +135,10 @@ def handler(event: dict, context) -> dict:
         new_token = create_session(cur, user_id)
         cur.execute(f"UPDATE {SCHEMA}.users SET last_seen_at = NOW() WHERE id = {int(user_id)}")
         claim_founder(cur, user_id)
-        cur.execute(f"SELECT u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override, u.founder_no FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}")
+        cur.execute(f"SELECT u.name, u.avatar_url, u.is_admin, {points_sql(SCHEMA)}, u.status_override, u.founder_no, u.supporter_no, u.is_creator FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}")
         u = cur.fetchone()
         st = level_for(int(u[3]), u[4])
-        return resp(200, {"token": new_token, "user": {"id": user_id, "email": email, "name": u[0] or "", "avatar": u[1] or "", "isAdmin": bool(u[2]), "level": st["level"], "statusTitle": st["title"], "founder": u[5]}})
+        return resp(200, {"token": new_token, "user": {"id": user_id, "email": email, "name": u[0] or "", "avatar": u[1] or "", "isAdmin": bool(u[2]), "level": st["level"], "statusTitle": st["title"], "founder": u[5], "supporter": u[6], "creator": bool(u[7])}})
     finally:
         cur.close()
         conn.close()

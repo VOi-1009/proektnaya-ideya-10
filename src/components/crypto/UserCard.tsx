@@ -8,6 +8,8 @@ import { LEVELS, nameCls } from "@/lib/status";
 import { AdminUser, usersRequest } from "@/lib/users";
 import MemberIcon from "./MemberIcon";
 import StatusBadge from "./StatusBadge";
+import SupporterBadge from "./SupporterBadge";
+import { Switch } from "@/components/ui/switch";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -49,6 +51,21 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
     }
   };
 
+  const setSupporter = async (on: boolean) => {
+    if (!u) return;
+    if (!on && !window.confirm(`Снять отметку «Поддержал проект» с ${u.name}? Промокод ${u.promo} будет удалён.`)) return;
+    setBusy(true);
+    try {
+      const { user } = await usersRequest<{ user: AdminUser }>(token, "", { action: "set-supporter", userId: u.id, on });
+      onChange(user);
+      toast({ title: on ? `${user.name} поддержал проект` : "Отметка снята", description: on && user.promo ? `Промокод: ${user.promo}` : undefined });
+    } catch (e) {
+      toast({ title: "Не получилось", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const typed = parseInt(amount.replace(/\s/g, ""), 10);
 
   return (
@@ -64,6 +81,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
                   <DialogDescription asChild>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <StatusBadge level={u.level} compact />
+                      <SupporterBadge no={u.supporter} creator={u.creator} />
                       {u.isAdmin && <span className="text-xs text-primary">администратор</span>}
                       {isMe && <span className="text-xs text-muted-foreground">это вы</span>}
                     </div>
@@ -88,6 +106,27 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
               ))}
             </div>
             {u.bio && <p className="text-sm text-muted-foreground bg-rail/60 rounded-lg px-3 py-2">{u.bio}</p>}
+
+            {!u.isBot && (
+              <section className="bg-emerald-400/5 border border-emerald-400/20 rounded-lg p-3 flex items-center gap-3">
+                <Icon name="Heart" size={18} className="text-emerald-300 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-semibold">Поддержал проект</div>
+                  <div className="text-xs text-muted-foreground">
+                    {u.promo ? (
+                      <>Промокод: <span className="font-mono text-emerald-200">{u.promo}</span>{u.supporter ? ` · №${u.supporter}` : ""}</>
+                    ) : (
+                      "Значок, доступ в Премиум-чат и личный промокод"
+                    )}
+                  </div>
+                </div>
+                {u.creator ? (
+                  <span className="text-xs text-violet-300">создатель</span>
+                ) : (
+                  <Switch checked={!!u.supporter} disabled={busy} onCheckedChange={setSupporter} />
+                )}
+              </section>
+            )}
 
             <section className="bg-rail/60 rounded-lg p-3 space-y-3">
               <div className="flex items-baseline justify-between gap-2">

@@ -11,6 +11,7 @@ import MemberIcon from "./MemberIcon";
 import SpecialAchievements from "./SpecialAchievements";
 import StatusBadge from "./StatusBadge";
 import FounderBadge from "./FounderBadge";
+import SupporterBadge from "./SupporterBadge";
 import RareAchievements from "./RareAchievements";
 
 interface Member {
@@ -28,6 +29,8 @@ interface Member {
   place: number;
   special: Achievement[];
   founder?: number | null;
+  supporter?: number | null;
+  creator?: boolean;
 }
 
 const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void }) => {
@@ -81,6 +84,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                   <DialogDescription asChild>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <StatusBadge level={m.level} compact />
+                      <SupporterBadge no={m.supporter} creator={m.creator} />
                       <FounderBadge no={m.founder} />
                       <span className={`text-xs ${m.online ? "text-green-400" : "text-muted-foreground"}`}>
                         {m.online ? "в сети" : "не в сети"}

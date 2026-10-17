@@ -41,7 +41,7 @@ def load_profile(cur, user_id: int) -> dict:
     cur.execute(
         f"SELECT u.id, u.email, u.name, u.avatar_url, u.bio, u.city, u.favorite_coin, u.created_at, "
         f"(SELECT COUNT(*) FROM {SCHEMA}.user_visits v WHERE v.user_id = u.id), "
-        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override, u.founder_no "
+        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override, u.founder_no, u.supporter_no, u.is_creator, u.promo_code "
         f"FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}"
     )
     r = cur.fetchone()
@@ -82,6 +82,9 @@ def load_profile(cur, user_id: int) -> dict:
         "status": level_for(points, r[10]),
         "special": special_for(cur, SCHEMA, user_id),
         "founder": r[11],
+        "supporter": r[12],
+        "creator": bool(r[13]),
+        "promo": r[14] or "",
         "foundersTaken": founders_taken,
     }
 

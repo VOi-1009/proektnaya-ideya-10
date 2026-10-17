@@ -244,6 +244,23 @@
         "url": "https://x.ru"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Премиум-чат без входа",
+      "method": "GET",
+      "path": "/?resource=chat&room=premium",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Отметка поддержавшего без прав",
+      "method": "POST",
+      "path": "/?resource=users",
+      "body": {
+        "action": "set-supporter",
+        "userId": 1,
+        "on": true
+      },
+      "expectedStatus": 403
     }
   ]
 }

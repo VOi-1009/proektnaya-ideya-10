@@ -13,6 +13,8 @@ import Achievements, { Achievement } from "@/components/crypto/Achievements";
 import SpecialAchievements from "@/components/crypto/SpecialAchievements";
 import RareAchievements from "@/components/crypto/RareAchievements";
 import FounderBadge from "@/components/crypto/FounderBadge";
+import SupporterBadge from "@/components/crypto/SupporterBadge";
+import PromoBlock from "@/components/crypto/PromoBlock";
 
 interface ProfileData {
   id: number;
@@ -28,6 +30,9 @@ interface ProfileData {
   special?: Achievement[];
   founder?: number | null;
   foundersTaken?: number;
+  supporter?: number | null;
+  creator?: boolean;
+  promo?: string;
   status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null; manual?: boolean };
 }
 
@@ -195,6 +200,7 @@ const Profile = () => {
                     <Icon name={LEVELS[s.level - 1].icon} size={14} />
                     {s.title}
                   </span>
+                  <SupporterBadge no={profile.supporter} creator={profile.creator} />
                   <FounderBadge no={profile.founder} />
                   <span className="text-muted-foreground text-xs">с нами с {since}</span>
                 </div>
@@ -311,6 +317,7 @@ const Profile = () => {
               </section>
             </div>
 
+            <PromoBlock promo={profile.promo} supporter={profile.supporter} creator={profile.creator} />
             {profile.achievements && <Achievements items={profile.achievements} streak={profile.stats.streak ?? 0} />}
             <RareAchievements founder={profile.founder} taken={profile.foundersTaken} />
             {profile.special && <SpecialAchievements items={profile.special} />}

@@ -17,6 +17,8 @@ export interface User {
   level?: number;
   statusTitle?: string;
   founder?: number | null;
+  supporter?: number | null;
+  creator?: boolean;
 }
 
 interface AuthCtx {

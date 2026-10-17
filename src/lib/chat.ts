@@ -7,7 +7,7 @@ export interface ChatMessage {
   text: string;
   createdAt: string;
   mine: boolean;
-  user: { id: number; name: string; avatar: string; level: number };
+  user: { id: number; name: string; avatar: string; level: number; supporter?: number | null; creator?: boolean };
 }
 
 export const CHAT_ROOMS: { id: ChatRoom; name: string; topic: string; dot: string; btn: string; active: string }[] = [

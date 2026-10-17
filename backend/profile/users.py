@@ -79,12 +79,14 @@ def handle_users(event: dict) -> dict:
                 me, is_admin = int(r[0]), bool(r[1])
 
         pts = points_sql(SCHEMA)
-        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no FROM {SCHEMA}.users u"
+        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no, u.supporter_no, u.is_creator, u.promo_code FROM {SCHEMA}.users u"
 
         def to_user(r, full=False) -> dict:
             st = level_for(int(r[3]), r[4])
-            u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"], "avatar": r[9] or "", "founder": r[14]}
+            u = {"id": r[0], "name": display_name(r[1], r[2]), "level": st["level"], "title": st["title"], "avatar": r[9] or "", "founder": r[14],
+                 "supporter": r[15], "creator": bool(r[16])}
             if full:
+                u["promo"] = r[17] or ""
                 email = r[2] or ""
                 u.update({
                     "email": "" if email.endswith("@users.traderka.ru") or email.endswith(BOT_DOMAIN) else email,
@@ -131,12 +133,13 @@ def handle_users(event: dict) -> dict:
                     "city": r[8] or "", "bio": r[11] or "", "favoriteCoin": r[12] or "",
                     "createdAt": r[6].isoformat(), "online": online, "place": place,
                     "special": special_for(cur, SCHEMA, r[0]), "founder": r[14],
+                    "supporter": r[15], "creator": bool(r[16]),
                 }})
 
             if qs.get("rating") == "1":
                 cur.execute(
                     f"SELECT t.id, t.name, t.email, t.pts, t.status_override, t.city, t.created_at, "
-                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url, t.founder_no FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url, u.founder_no "
+                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url, t.founder_no, t.supporter_no, t.is_creator FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url, u.founder_no, u.supporter_no, u.is_creator "
                     f"FROM {SCHEMA}.users u) t ORDER BY t.pts DESC, t.created_at ASC"
                 )
                 rows = cur.fetchall()
@@ -145,7 +148,8 @@ def handle_users(event: dict) -> dict:
                 def to_row(r, place):
                     st = level_for(int(r[3]), r[4])
                     return {"id": r[0], "name": display_name(r[1], r[2]), "points": int(r[3]), "level": st["level"],
-                            "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or "", "founder": r[9]}
+                            "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or "", "founder": r[9],
+                            "supporter": r[10], "creator": bool(r[11])}
 
                 top = [to_row(r, i + 1) for i, r in enumerate(rows[:50])]
                 mine = None
@@ -247,6 +251,24 @@ def handle_users(event: dict) -> dict:
             )
             if not cur.fetchone():
                 return resp(404, {"error": "Пользователь не найден"})
+            cur.execute(f"{base} WHERE u.id = {uid}")
+            return resp(200, {"user": to_user(cur.fetchone(), True)})
+
+        if action == "set-supporter":
+            uid = int(body.get("userId", 0) or 0)
+            cur.execute(f"SELECT supporter_no, is_creator FROM {SCHEMA}.users WHERE id = {uid}")
+            r = cur.fetchone()
+            if not r:
+                return resp(404, {"error": "Пользователь не найден"})
+            if body.get("on"):
+                if r[0] is None:
+                    cur.execute(f"SELECT COALESCE(MAX(supporter_no), 0) + 1 FROM {SCHEMA}.users")
+                    no = int(cur.fetchone()[0])
+                    promo = "" if r[1] else f", promo_code = 'BAA{no:04d}'"
+                    cur.execute(f"UPDATE {SCHEMA}.users SET supporter_no = {no}, supported_at = COALESCE(supported_at, NOW()){promo} WHERE id = {uid}")
+            else:
+                promo = "" if r[1] else ", promo_code = NULL, supported_at = NULL"
+                cur.execute(f"UPDATE {SCHEMA}.users SET supporter_no = NULL{promo} WHERE id = {uid}")
             cur.execute(f"{base} WHERE u.id = {uid}")
             return resp(200, {"user": to_user(cur.fetchone(), True)})
 

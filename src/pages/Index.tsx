@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import FounderBadge from "@/components/crypto/FounderBadge";
+import SupporterBadge from "@/components/crypto/SupporterBadge";
 import SiteNewsBlock from "@/components/crypto/SiteNewsBlock";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import SidePolls from "@/components/crypto/SidePolls";
@@ -140,6 +141,7 @@ const Index = () => {
                 <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
                 <span className="text-white text-sm max-w-[120px] truncate hidden xl:inline">{user.name || user.email}</span>
                 <StatusBadge level={user.level} compact />
+                <SupporterBadge no={user.supporter} creator={user.creator} compact />
                 <FounderBadge no={user.founder} compact />
               </Button>
             ) : (
@@ -323,6 +325,7 @@ const Index = () => {
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</span>
                   {user && <StatusBadge level={user.level} compact />}
+                  {user && <SupporterBadge no={user.supporter} creator={user.creator} compact />}
                   {user && <FounderBadge no={user.founder} compact />}
                 </div>
                 <div className="text-muted-foreground text-xs truncate hover:text-primary">
