@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { PROFILE_URL, useAuth } from "@/lib/auth";
 import { COIN_META } from "@/lib/crypto";
 import UserAvatar from "@/components/crypto/UserAvatar";
+import { LEVELS } from "@/lib/status";
 
 interface ProfileData {
   id: number;
@@ -19,16 +20,8 @@ interface ProfileData {
   favoriteCoin: string;
   createdAt: string;
   stats: { days: number; coins: number; filled: number; fields: number };
-  status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null };
+  status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null; manual?: boolean };
 }
-
-const LEVELS = [
-  { title: "Новичок", need: 0, icon: "Sprout", desc: "Только начинаете знакомство с рынком" },
-  { title: "Наблюдатель", need: 50, icon: "Eye", desc: "Регулярно следите за котировками" },
-  { title: "Трейдер", need: 150, icon: "CandlestickChart", desc: "Ведёте портфель и заходите почти каждый день" },
-  { title: "Аналитик", need: 350, icon: "BrainCircuit", desc: "Глубоко в рынке уже не первый месяц" },
-  { title: "Кит", need: 700, icon: "Crown", desc: "Самые преданные участники сообщества" },
-];
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -55,7 +48,7 @@ const Profile = () => {
   const apply = (p: ProfileData) => {
     setProfile(p);
     setForm({ name: p.name, bio: p.bio, city: p.city, favoriteCoin: p.favoriteCoin });
-    patchUser({ name: p.name, avatar: p.avatar });
+    patchUser({ name: p.name, avatar: p.avatar, level: p.status.level, statusTitle: p.status.title });
   };
 
   const call = async (body?: object) => {
@@ -190,7 +183,7 @@ const Profile = () => {
                 <h1 className="font-display text-2xl text-white truncate">{profile.name || "Без имени"}</h1>
                 <div className="text-muted-foreground text-sm truncate">{profile.email || "Вход через Яндекс ID"}</div>
                 <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <span className="inline-flex items-center gap-1.5 bg-primary/15 text-primary rounded-full px-3 py-1 text-sm font-semibold">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${LEVELS[s.level - 1].cls}`}>
                     <Icon name={LEVELS[s.level - 1].icon} size={14} />
                     {s.title}
                   </span>
@@ -311,7 +304,7 @@ const Profile = () => {
 
             <section className="bg-card border border-border rounded-xl p-5 sm:p-6">
               <h2 className="font-display text-lg text-white mb-4">Статусы</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {LEVELS.map((l, i) => {
                   const reached = s.level > i;
                   const current = s.level === i + 1;
@@ -322,7 +315,7 @@ const Profile = () => {
                     >
                       <Icon name={reached ? l.icon : "Lock"} size={20} className={reached ? "text-primary" : "text-muted-foreground"} />
                       <div className="text-white font-semibold text-sm mt-2">{l.title}</div>
-                      <div className="text-muted-foreground text-xs font-mono">от {l.need} очков</div>
+                      <div className="text-muted-foreground text-xs font-mono">{l.need === null ? "по решению админа" : `от ${l.need} очков`}</div>
                       <div className="text-muted-foreground text-xs mt-1">{l.desc}</div>
                     </div>
                   );

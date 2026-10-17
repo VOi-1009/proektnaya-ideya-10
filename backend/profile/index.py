@@ -8,6 +8,8 @@ import boto3
 import psycopg2
 
 from articles import handle_articles
+from status import level_for
+from users import handle_users
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
@@ -19,15 +21,6 @@ CORS = {
 COIN_RE = re.compile(r"^[a-z0-9-]{0,64}$")
 IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 
-LEVELS = [
-    (0, "Новичок"),
-    (50, "Наблюдатель"),
-    (150, "Трейдер"),
-    (350, "Аналитик"),
-    (700, "Кит"),
-]
-
-
 def resp(status: int, body: dict) -> dict:
     return {"statusCode": status, "headers": {**CORS, "Content-Type": "application/json"}, "body": json.dumps(body, ensure_ascii=False, default=str)}
 
@@ -36,27 +29,11 @@ def esc(v: str) -> str:
     return v.replace("'", "''")
 
 
-def level_for(points: int) -> dict:
-    idx = 0
-    for i, (need, _) in enumerate(LEVELS):
-        if points >= need:
-            idx = i
-    nxt = LEVELS[idx + 1] if idx + 1 < len(LEVELS) else None
-    return {
-        "level": idx + 1,
-        "title": LEVELS[idx][1],
-        "points": points,
-        "current": LEVELS[idx][0],
-        "next": nxt[0] if nxt else None,
-        "nextTitle": nxt[1] if nxt else None,
-    }
-
-
 def load_profile(cur, user_id: int) -> dict:
     cur.execute(
         f"SELECT u.id, u.email, u.name, u.avatar_url, u.bio, u.city, u.favorite_coin, u.created_at, "
         f"(SELECT COUNT(*) FROM {SCHEMA}.user_visits v WHERE v.user_id = u.id), "
-        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id) "
+        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override "
         f"FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}"
     )
     r = cur.fetchone()
@@ -76,18 +53,21 @@ def load_profile(cur, user_id: int) -> dict:
         "favoriteCoin": r[6] or "",
         "createdAt": r[7].isoformat(),
         "stats": {"days": days, "coins": coins, "filled": filled, "fields": 5},
-        "status": level_for(points),
+        "status": level_for(points, r[10]),
     }
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар) и статьи (?resource=articles: чтение для всех, правка для администратора)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
-    if (event.get("queryStringParameters") or {}).get("resource") == "articles":
+    resource = (event.get("queryStringParameters") or {}).get("resource")
+    if resource == "articles":
         return handle_articles(event)
+    if resource == "users":
+        return handle_users(event)
 
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     token = re.sub(r"[^a-f0-9]", "", headers.get("x-auth-token", ""))

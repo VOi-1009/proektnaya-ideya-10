@@ -18,6 +18,8 @@ import { usePriceAlerts } from "@/lib/alerts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/crypto/UserAvatar";
+import StatusBadge from "@/components/crypto/StatusBadge";
+import OnlineList from "@/components/crypto/OnlineList";
 
 const CHANNELS = [
   { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
@@ -110,8 +112,10 @@ const Index = () => {
               </a>
             </Button>
             {user ? (
-              <Button variant="ghost" onClick={() => navigate("/profile")} className="text-muted-foreground hover:text-white hover:bg-hover px-2" title="Личный кабинет">
+              <Button variant="ghost" onClick={() => navigate("/profile")} className="text-muted-foreground hover:text-white hover:bg-hover px-2 gap-2" title="Личный кабинет">
                 <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
+                <span className="text-white text-sm max-w-[120px] truncate hidden xl:inline">{user.name || user.email}</span>
+                <StatusBadge level={user.level} compact />
               </Button>
             ) : (
               <Button variant="ghost" onClick={() => setAuthOpen(true)} className="text-muted-foreground hover:text-white hover:bg-hover">
@@ -240,7 +244,10 @@ const Index = () => {
                 onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
                 className="flex-1 min-w-0 text-left"
               >
-                <div className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</span>
+                  {user && <StatusBadge level={user.level} compact />}
+                </div>
                 <div className="text-muted-foreground text-xs truncate hover:text-primary">
                   {user ? "Личный кабинет →" : `Избранных: ${favs.length}`}
                 </div>
@@ -345,8 +352,9 @@ const Index = () => {
 
           </main>
 
-          {/* Правая панель: избранное */}
+          {/* Правая панель: онлайн и избранное */}
           <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
+            <OnlineList />
             <div>
               <h3 className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
                 <Icon name="Star" size={12} /> Мой список — {favCoins.length}

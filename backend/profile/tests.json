@@ -51,6 +51,29 @@
         "name": "Тест"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Онлайн",
+      "method": "GET",
+      "path": "/?resource=users",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Список юзеров без прав",
+      "method": "GET",
+      "path": "/?resource=users&admin=1",
+      "expectedStatus": 403
+    },
+    {
+      "name": "Смена статуса без прав",
+      "method": "POST",
+      "path": "/?resource=users",
+      "body": {
+        "action": "set-status",
+        "userId": 1,
+        "level": 6
+      },
+      "expectedStatus": 403
     }
   ]
 }

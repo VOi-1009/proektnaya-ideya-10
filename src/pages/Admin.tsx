@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { Article, articlesRequest, fmtDate, useCategories } from "@/lib/articles";
 import CategoriesManager from "@/components/crypto/CategoriesManager";
+import UsersManager from "@/components/crypto/UsersManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -29,7 +30,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"articles" | "categories">("articles");
+  const [tab, setTab] = useState<"articles" | "categories" | "users">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -181,11 +182,12 @@ const Admin = () => {
       {header}
       <main className="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-5">
         {editing === null && (
-          <div className="flex gap-1 bg-card border border-border rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-card border border-border rounded-lg p-1 w-fit max-w-full overflow-x-auto">
             {(
               [
                 ["articles", "Статьи", "FileText"],
                 ["categories", "Рубрики", "FolderTree"],
+                ["users", "Пользователи", "Users"],
               ] as const
             ).map(([id, label, icon]) => (
               <button
@@ -201,7 +203,9 @@ const Admin = () => {
             ))}
           </div>
         )}
-        {editing === null && tab === "categories" ? (
+        {editing === null && tab === "users" ? (
+          <UsersManager token={token} myId={user.id} />
+        ) : editing === null && tab === "categories" ? (
           <CategoriesManager token={token} onChanged={refresh} />
         ) : editing === null ? (
           <>

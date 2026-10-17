@@ -14,6 +14,8 @@ export interface User {
   name?: string;
   avatar?: string;
   isAdmin?: boolean;
+  level?: number;
+  statusTitle?: string;
 }
 
 interface AuthCtx {
@@ -89,6 +91,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(TOKEN_KEY, data.session_token);
     setToken(data.session_token);
     setUser({ id: data.user.id, email: data.user.email || data.user.name || "Яндекс ID" });
+    const me = await fetch(AUTH_URL, { headers: { "X-Auth-Token": data.session_token } }).catch(() => null);
+    if (me?.ok) setUser((await me.json()).user);
   }, []);
 
   const logout = useCallback(async () => {
