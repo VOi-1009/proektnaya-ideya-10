@@ -89,3 +89,16 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+.radar-page { line-height: 1.65; word-wrap: break-word; }
+.radar-page h2 { font-family: Unbounded, sans-serif; font-size: 1.5rem; color: #fff; margin: 0.8em 0 0.4em; }
+.radar-page h3 { font-family: Unbounded, sans-serif; font-size: 1.15rem; color: #fff; margin: 0.8em 0 0.4em; }
+.radar-page p, .radar-page div { margin: 0.35em 0; }
+.radar-page ul { list-style: disc; padding-left: 1.4em; }
+.radar-page ol { list-style: decimal; padding-left: 1.4em; }
+.radar-page a { color: hsl(var(--primary)); text-decoration: underline; }
+.radar-page blockquote { border-left: 3px solid hsl(var(--primary)); padding-left: 0.9em; color: hsl(var(--muted-foreground)); font-style: italic; margin: 0.6em 0; }
+.radar-page img, .radar-page iframe, .radar-page video { max-width: 100%; border-radius: 8px; }
+.radar-page table { border-collapse: collapse; }
+.radar-page td, .radar-page th { border: 1px solid hsl(var(--border)); padding: 4px 8px; }
+.radar-page[contenteditable]:empty::before { content: attr(data-placeholder); color: hsl(var(--muted-foreground)); }

@@ -6,8 +6,8 @@ import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
-COLS = "id, title, color, kind, symbol, url, description, sort_order, published"
-KINDS = ("liq_heatmap", "top_txs", "link")
+COLS = "id, title, color, kind, symbol, url, description, sort_order, published, page_title, page_html"
+KINDS = ("liq_heatmap", "top_txs", "link", "page")
 COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 SYMBOL_RE = re.compile(r"^[A-Z0-9]{3,20}$")
 
@@ -22,7 +22,7 @@ def esc(v: str) -> str:
 
 def to_radar(r) -> dict:
     return {"id": r[0], "title": r[1], "color": r[2], "kind": r[3], "symbol": r[4], "url": r[5],
-            "description": r[6], "sort": r[7], "published": bool(r[8])}
+            "description": r[6], "sort": r[7], "published": bool(r[8]), "pageTitle": r[9], "pageHtml": r[10]}
 
 
 def handle_radars(event: dict) -> dict:
@@ -67,6 +67,8 @@ def handle_radars(event: dict) -> dict:
             symbol = str(body.get("symbol", "BTCUSDT")).strip().upper()
             url = str(body.get("url", "")).strip()[:1000]
             desc = str(body.get("description", "")).strip()[:500]
+            page_title = str(body.get("pageTitle", "")).strip()[:200]
+            page_html = str(body.get("pageHtml", ""))[:300000]
             published = "TRUE" if body.get("published", True) else "FALSE"
             if len(title) < 2:
                 return resp(400, {"error": "Название — минимум 2 символа"})
@@ -78,15 +80,17 @@ def handle_radars(event: dict) -> dict:
                 return resp(400, {"error": "Тикер вида BTCUSDT"})
             if kind == "link" and not url.startswith("https://"):
                 return resp(400, {"error": "Ссылка должна начинаться с https://"})
-            vals = f"title = '{esc(title)}', color = '{color}', kind = '{kind}', symbol = '{esc(symbol)}', url = '{esc(url)}', description = '{esc(desc)}', published = {published}"
+            if kind == "page" and not (page_title or re.sub(r"<[^>]+>|\s|&nbsp;", "", page_html)):
+                return resp(400, {"error": "Добавьте заголовок или текст страницы"})
+            vals = f"page_title = '{esc(page_title)}', page_html = '{esc(page_html)}', title = '{esc(title)}', color = '{color}', kind = '{kind}', symbol = '{esc(symbol)}', url = '{esc(url)}', description = '{esc(desc)}', published = {published}"
             if rid:
                 cur.execute(f"UPDATE {SCHEMA}.radars SET {vals} WHERE id = {rid} RETURNING {COLS}")
             else:
                 cur.execute(f"SELECT COALESCE(MAX(sort_order), -1) + 1 FROM {SCHEMA}.radars")
                 nxt = cur.fetchone()[0]
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.radars (title, color, kind, symbol, url, description, published, sort_order) "
-                    f"VALUES ('{esc(title)}', '{color}', '{kind}', '{esc(symbol)}', '{esc(url)}', '{esc(desc)}', {published}, {nxt}) RETURNING {COLS}"
+                    f"INSERT INTO {SCHEMA}.radars (title, color, kind, symbol, url, description, published, sort_order, page_title, page_html) "
+                    f"VALUES ('{esc(title)}', '{color}', '{kind}', '{esc(symbol)}', '{esc(url)}', '{esc(desc)}', {published}, {nxt}, '{esc(page_title)}', '{esc(page_html)}') RETURNING {COLS}"
                 )
             r = cur.fetchone()
             if not r:

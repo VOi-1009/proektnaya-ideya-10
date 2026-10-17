@@ -7,13 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { Radar, RADAR_COLORS, RADAR_KINDS, RadarKind, radarsRequest } from "@/lib/radars";
 import RadarDialog from "./RadarDialog";
+import RichEditor from "./RichEditor";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
 
-type Form = { id?: number; title: string; color: string; kind: RadarKind; symbol: string; url: string; description: string; published: boolean };
+type Form = { id?: number; title: string; color: string; kind: RadarKind; symbol: string; url: string; description: string; published: boolean; pageTitle: string; pageHtml: string };
 
-const EMPTY: Form = { title: "", color: RADAR_COLORS[1], kind: "liq_heatmap", symbol: "ETHUSDT", url: "", description: "", published: true };
+const EMPTY: Form = { title: "", color: RADAR_COLORS[1], kind: "liq_heatmap", symbol: "ETHUSDT", url: "", description: "", published: true, pageTitle: "", pageHtml: "" };
 
 const RadarsManager = ({ token }: { token: string | null }) => {
   const qc = useQueryClient();
@@ -122,6 +123,8 @@ const RadarsManager = ({ token }: { token: string | null }) => {
                 />
                 <span className="text-[10px] text-muted-foreground">Например BTCUSDT, ETHUSDT, SOLUSDT, TONUSDT</span>
               </label>
+            ) : form.kind === "page" ? (
+              <div className="text-xs text-muted-foreground self-end pb-2">Страница откроется прямо на сайте — заполните её ниже</div>
             ) : form.kind === "top_txs" ? (
               <div className="text-xs text-muted-foreground self-end pb-2">Данные TradingView, обновляются каждые 5 минут</div>
             ) : (
@@ -146,6 +149,24 @@ const RadarsManager = ({ token }: { token: string | null }) => {
               />
             </label>
           </div>
+          {form.kind === "page" && (
+            <div className="space-y-3">
+              <label className="space-y-1 block">
+                <span className="text-xs text-muted-foreground">Заголовок страницы</span>
+                <input
+                  className={`${inputCls} text-base font-semibold`}
+                  value={form.pageTitle}
+                  maxLength={200}
+                  onChange={(e) => setForm({ ...form, pageTitle: e.target.value })}
+                  placeholder="Например: Как читать тепловую карту"
+                />
+              </label>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Текст страницы — выделите текст и выберите оформление, или вставьте HTML-код</span>
+                <RichEditor value={form.pageHtml} onChange={(pageHtml) => setForm((f) => (f ? { ...f, pageHtml } : f))} />
+              </div>
+            </div>
+          )}
           <div className="space-y-1.5">
             <span className="text-xs text-muted-foreground">Цвет точки</span>
             <div className="flex items-center gap-2 flex-wrap">
@@ -225,7 +246,7 @@ const RadarsManager = ({ token }: { token: string | null }) => {
                 <Icon name="Eye" size={16} />
               </button>
               <button
-                onClick={() => setForm({ id: r.id, title: r.title, color: r.color, kind: r.kind, symbol: r.symbol, url: r.url, description: r.description, published: r.published })}
+                onClick={() => setForm({ id: r.id, title: r.title, color: r.color, kind: r.kind, symbol: r.symbol, url: r.url, description: r.description, published: r.published, pageTitle: r.pageTitle ?? "", pageHtml: r.pageHtml ?? "" })}
                 className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground hover:text-white hover:bg-hover"
                 title="Изменить"
               >

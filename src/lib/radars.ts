@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import func2url from "../../backend/func2url.json";
 import { PROFILE_URL } from "@/lib/auth";
 
-export type RadarKind = "liq_heatmap" | "top_txs" | "link";
+export type RadarKind = "liq_heatmap" | "top_txs" | "link" | "page";
 
 export interface Radar {
   id: number;
@@ -14,6 +14,8 @@ export interface Radar {
   description: string;
   sort: number;
   published: boolean;
+  pageTitle: string;
+  pageHtml: string;
 }
 
 export interface Heatmap {
@@ -38,6 +40,7 @@ export interface Heatmap {
 export const RADAR_KINDS: { id: RadarKind; label: string; hint: string }[] = [
   { id: "liq_heatmap", label: "Тепловая карта ликвидаций", hint: "Карта по данным фьючерсов Binance / Bybit" },
   { id: "top_txs", label: "ТОП по количеству сделок", hint: "10 криптовалют с наибольшим числом транзакций" },
+  { id: "page", label: "Своя страница", hint: "Заголовок и оформленный текст / HTML-код прямо на сайте" },
   { id: "link", label: "Внешний сервис (ссылка)", hint: "Окно с кнопкой перехода на внешний сайт" },
 ];
 
