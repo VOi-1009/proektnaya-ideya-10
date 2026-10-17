@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import YandexCallback from "./pages/YandexCallback";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import Rating from "./pages/Rating";
 import { AuthProvider } from "@/lib/auth";
 import AuthDialog from "@/components/crypto/AuthDialog";
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/rating" element={<Rating />} />
             <Route path="/auth/yandex/callback" element={<YandexCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

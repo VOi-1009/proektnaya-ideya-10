@@ -69,6 +69,29 @@ def handle_users(event: dict) -> dict:
                 users = [to_user(r, True) for r in cur.fetchall()]
                 return resp(200, {"users": users, "titles": TITLES})
 
+            if qs.get("rating") == "1":
+                cur.execute(
+                    f"SELECT t.id, t.name, t.email, t.pts, t.status_override, t.city, t.created_at, "
+                    f"RANK() OVER (ORDER BY t.pts DESC) FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at "
+                    f"FROM {SCHEMA}.users u) t ORDER BY t.pts DESC, t.created_at ASC"
+                )
+                rows = cur.fetchall()
+                total = len(rows)
+
+                def to_row(r, place):
+                    st = level_for(int(r[3]), r[4])
+                    return {"id": r[0], "name": display_name(r[1], r[2]), "points": int(r[3]), "level": st["level"],
+                            "title": st["title"], "city": r[5] or "", "place": place}
+
+                top = [to_row(r, i + 1) for i, r in enumerate(rows[:50])]
+                mine = None
+                if me:
+                    for i, r in enumerate(rows):
+                        if r[0] == me:
+                            mine = to_row(r, i + 1)
+                            break
+                return resp(200, {"top": top, "me": mine, "total": total})
+
             if me:
                 cur.execute(f"UPDATE {SCHEMA}.users SET last_seen_at = NOW() WHERE id = {me}")
             cur.execute(

@@ -67,12 +67,12 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
         <form onSubmit={submit} className="bg-card border border-border rounded-lg p-4 max-w-2xl" noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-[190px_1fr_auto] gap-2">
             <Select value={coinId} onValueChange={setCoinId}>
-              <SelectTrigger className="bg-rail border-0 h-10">
+              <SelectTrigger className="bg-rail border-0 h-10 font-coin">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {coins.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
+                  <SelectItem key={c.id} value={c.id} className="font-coin">
                     {COIN_META[c.id]?.short ?? c.symbol.toUpperCase()} · {COIN_META[c.id]?.ru ?? c.name}
                   </SelectItem>
                 ))}
@@ -165,7 +165,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-white font-medium">{COIN_META[a.coinId]?.ru ?? a.coinId}</span>
+                    <span className="text-white font-medium font-coin">{COIN_META[a.coinId]?.ru ?? a.coinId}</span>
                     <span className={`text-xs flex items-center gap-0.5 ${a.direction === "above" ? "text-up" : "text-down"}`}>
                       <Icon name={a.direction === "above" ? "TrendingUp" : "TrendingDown"} size={13} />
                       {a.direction === "above" ? "выше" : "ниже"}
@@ -209,7 +209,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
               <div key={a.id} className="p-3 sm:px-4 flex items-center gap-3 text-sm">
                 <Icon name="BellRing" size={18} className="text-primary flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-white">{COIN_META[a.coinId]?.ru ?? a.coinId}</span>
+                  <span className="text-white font-coin">{COIN_META[a.coinId]?.ru ?? a.coinId}</span>
                   <span className="text-muted-foreground"> достиг </span>
                   <span className="font-mono text-white">{fmtPrice(a.target)}</span>
                   <div className="text-[11px] text-muted-foreground font-mono">

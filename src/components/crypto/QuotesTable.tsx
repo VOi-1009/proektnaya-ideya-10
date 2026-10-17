@@ -133,7 +133,7 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
                     <div className="flex items-center gap-2.5">
                       <CoinLogo coin={c} />
                       <div>
-                        <div className="text-white font-medium leading-tight">{COIN_META[c.id]?.ru ?? c.name}</div>
+                        <div className="text-white font-medium leading-tight font-coin">{COIN_META[c.id]?.ru ?? c.name}</div>
                         <div className="text-muted-foreground text-xs font-mono">{COIN_META[c.id]?.short ?? c.symbol.toUpperCase()}</div>
                       </div>
                     </div>

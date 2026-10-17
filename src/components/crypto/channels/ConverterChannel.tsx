@@ -45,12 +45,12 @@ const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
               placeholder="0"
             />
             <Select value={from} onValueChange={setFrom}>
-              <SelectTrigger className="w-[150px] bg-rail border-0 h-auto">
+              <SelectTrigger className="w-[150px] bg-rail border-0 h-auto font-coin">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {options.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>
+                  <SelectItem key={o.id} value={o.id} className="font-coin">
                     {label(o.id)} · {o.name}
                   </SelectItem>
                 ))}
@@ -75,12 +75,12 @@ const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
               {result !== null ? fmtResult(result) : "—"}
             </div>
             <Select value={to} onValueChange={setTo}>
-              <SelectTrigger className="w-[150px] bg-rail border-0 h-auto">
+              <SelectTrigger className="w-[150px] bg-rail border-0 h-auto font-coin">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {options.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>
+                  <SelectItem key={o.id} value={o.id} className="font-coin">
                     {label(o.id)} · {o.name}
                   </SelectItem>
                 ))}

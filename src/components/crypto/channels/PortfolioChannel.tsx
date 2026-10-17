@@ -232,12 +232,12 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         <form onSubmit={add} className="bg-card border border-border rounded-lg p-4 max-w-2xl" noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr_1fr_auto] gap-2">
             <Select value={coinId} onValueChange={setCoinId}>
-              <SelectTrigger className="bg-rail border-0 h-10">
+              <SelectTrigger className="bg-rail border-0 h-10 font-coin">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {coins.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
+                  <SelectItem key={c.id} value={c.id} className="font-coin">
                     {COIN_META[c.id]?.short ?? c.symbol.toUpperCase()} · {COIN_META[c.id]?.ru ?? c.name}
                   </SelectItem>
                 ))}
@@ -292,7 +292,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
                     <button onClick={() => go("market", r.coinId)} className="flex items-center gap-2.5 text-left">
                       {r.coin && <CoinLogo coin={r.coin} />}
                       <div>
-                        <div className="text-white font-medium leading-tight hover:underline">{COIN_META[r.coinId]?.ru ?? r.coinId}</div>
+                        <div className="text-white font-medium leading-tight hover:underline font-coin">{COIN_META[r.coinId]?.ru ?? r.coinId}</div>
                         <div className="text-muted-foreground text-xs font-mono">{COIN_META[r.coinId]?.short}</div>
                       </div>
                     </button>

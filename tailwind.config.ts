@@ -22,6 +22,7 @@ export default {
 				display: ['Unbounded', 'sans-serif'],
 				body: ['"IBM Plex Sans"', 'sans-serif'],
 				mono: ['"JetBrains Mono"', 'monospace'],
+				coin: ['Tahoma', 'Verdana', 'Geneva', 'sans-serif'],
 			},
 			colors: {
 				up: 'hsl(var(--up))',

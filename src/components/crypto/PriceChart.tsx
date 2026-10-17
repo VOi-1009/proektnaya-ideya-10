@@ -35,7 +35,7 @@ const PriceChart = ({ coin }: { coin: Coin }) => {
           <CoinLogo coin={coin} size={40} />
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-display text-white text-lg">{COIN_META[coin.id]?.ru ?? coin.name}</span>
+              <span className="font-coin font-bold text-white text-lg">{COIN_META[coin.id]?.ru ?? coin.name}</span>
               <span className="font-mono text-xs text-muted-foreground bg-rail px-1.5 py-0.5 rounded">
                 {COIN_META[coin.id]?.short ?? coin.symbol.toUpperCase()}/USD
               </span>

@@ -74,6 +74,12 @@
         "level": 6
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Рейтинг",
+      "method": "GET",
+      "path": "/?resource=users&rating=1",
+      "expectedStatus": 200
     }
   ]
 }
