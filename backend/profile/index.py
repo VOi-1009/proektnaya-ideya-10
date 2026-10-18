@@ -77,7 +77,7 @@ def load_profile(cur, user_id: int) -> dict:
         "city": r[5] or "",
         "favoriteCoin": r[6] or "",
         "createdAt": r[7].isoformat(),
-        "stats": {"days": days, "coins": coins, "filled": filled, "fields": 5, "streak": streak, "bestStreak": best_streak},
+        "stats": {"days": days, "coins": coins, "filled": filled, "fields": 5, "streak": streak, "bestStreak": best_streak, "minutes": int(r[15])},
         "achievements": [
             {"id": "streak7", "done": best_streak >= 7, "progress": min(max(best_streak, streak), 7), "goal": 7},
             {"id": "firstCoin", "done": coins >= 1, "progress": min(coins, 1), "goal": 1},

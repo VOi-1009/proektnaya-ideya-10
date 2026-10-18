@@ -25,7 +25,7 @@ interface ProfileData {
   city: string;
   favoriteCoin: string;
   createdAt: string;
-  stats: { days: number; coins: number; filled: number; fields: number; streak?: number; bestStreak?: number };
+  stats: { days: number; coins: number; filled: number; fields: number; streak?: number; bestStreak?: number; minutes?: number };
   achievements?: Achievement[];
   special?: Achievement[];
   founder?: number | null;
@@ -298,6 +298,7 @@ const Profile = () => {
                 <div className="space-y-3 text-sm">
                   {[
                     { icon: "CalendarCheck", label: "Дней на сайте", value: `${profile.stats.days} ${plural(profile.stats.days, ["день", "дня", "дней"])}`, hint: "+10 очков за день" },
+                    { icon: "Clock", label: "Время на сайте", value: `${profile.stats.minutes ?? 0} мин`, hint: "+2 очка за 10 минут" },
                     { icon: "Wallet", label: "Монет в портфеле", value: String(profile.stats.coins), hint: "+5 за позицию" },
                     { icon: "UserCheck", label: "Заполнен профиль", value: `${profile.stats.filled} из ${profile.stats.fields}`, hint: "+6 за поле" },
                   ].map((r) => (
@@ -314,6 +315,26 @@ const Profile = () => {
                     </div>
                   ))}
                 </div>
+                {(() => {
+                  const mins = profile.stats.minutes ?? 0;
+                  const pct = Math.min(100, (mins / 1000) * 100);
+                  return (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="text-white flex items-center gap-1.5">
+                          <Icon name="Telescope" size={14} className="text-accent" /> До достижения «Смотритель»
+                        </span>
+                        <span className="text-muted-foreground font-mono">{Math.min(mins, 1000)} / 1000</span>
+                      </div>
+                      <div className="h-1.5 bg-rail rounded-full overflow-hidden">
+                        <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="text-muted-foreground text-[11px] mt-1.5">
+                        {mins >= 1000 ? "Достижение получено" : `Осталось ${1000 - mins} мин`}
+                      </div>
+                    </div>
+                  );
+                })()}
               </section>
             </div>
 
