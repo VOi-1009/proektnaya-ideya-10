@@ -1,41 +1,37 @@
-import { PROFILE_URL } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
+import { PROFILE_URL, useAuth } from "@/lib/auth";
 
-export type ChatRoom = "green" | "red" | "premium";
+export type ChatRoom = string;
 
 export interface ChatMessage {
   id: number;
   text: string;
   createdAt: string;
   mine: boolean;
-  user: { id: number; name: string; avatar: string; level: number; supporter?: number | null; creator?: boolean; isBot?: boolean; isAi?: boolean; tier?: number };
+  user: { id: number; name: string; avatar: string; level: number; supporter?: number | null; creator?: boolean; isBot?: boolean; isAi?: boolean };
 }
 
-export const CHAT_ROOMS: { id: ChatRoom; name: string; topic: string; dot: string; btn: string; active: string }[] = [
-  {
-    id: "green",
-    name: "Чат зеленых",
-    topic: "Общение для тех, кто ждёт роста рынка",
-    dot: "bg-emerald-300",
-    btn: "bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20",
-    active: "bg-emerald-400/25 text-emerald-100",
-  },
-  {
-    id: "red",
-    name: "Чат красных",
-    topic: "Общение для тех, кто ждёт падения рынка",
-    dot: "bg-rose-300",
-    btn: "bg-rose-400/10 text-rose-200 hover:bg-rose-400/20",
-    active: "bg-rose-400/25 text-rose-100",
-  },
-  {
-    id: "premium",
-    name: "Премиум",
-    topic: "Закрытый чат для премиум-участников",
-    dot: "bg-gradient-to-br from-yellow-200 via-amber-400 to-yellow-600 shadow-[0_0_6px_rgba(251,191,36,0.7)]",
-    btn: "text-amber-200 hover:bg-amber-400/10",
-    active: "bg-amber-400/15 text-amber-100",
-  },
-];
+export interface ChatRoomInfo {
+  id: string;
+  name: string;
+  topic: string;
+  color: string;
+  access: "all" | "level" | "list";
+  minLevel: number;
+  sort: number;
+  canEnter?: boolean;
+}
+
+export const CHAT_COLORS: Record<string, { label: string; dot: string; btn: string; active: string }> = {
+  emerald: { label: "Зелёный", dot: "bg-emerald-300", btn: "bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20", active: "bg-emerald-400/25 text-emerald-100" },
+  rose: { label: "Красный", dot: "bg-rose-300", btn: "bg-rose-400/10 text-rose-200 hover:bg-rose-400/20", active: "bg-rose-400/25 text-rose-100" },
+  sky: { label: "Голубой", dot: "bg-sky-300", btn: "bg-sky-400/10 text-sky-200 hover:bg-sky-400/20", active: "bg-sky-400/25 text-sky-100" },
+  amber: { label: "Золотой", dot: "bg-amber-300", btn: "bg-amber-400/10 text-amber-200 hover:bg-amber-400/20", active: "bg-amber-400/25 text-amber-100" },
+  violet: { label: "Фиолетовый", dot: "bg-violet-300", btn: "bg-violet-400/10 text-violet-200 hover:bg-violet-400/20", active: "bg-violet-400/25 text-violet-100" },
+  slate: { label: "Серый", dot: "bg-slate-300", btn: "bg-slate-400/10 text-slate-200 hover:bg-slate-400/20", active: "bg-slate-400/25 text-slate-100" },
+};
+
+export const chatColor = (c: string) => CHAT_COLORS[c] ?? CHAT_COLORS.sky;
 
 export const CHAT_MIN_LEVEL = 2;
 
@@ -48,4 +44,13 @@ export const chatRequest = async <T,>(token: string | null, room: ChatRoom, quer
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.error ?? "Не удалось связаться с сервером");
   return data as T;
+};
+
+export const useChatRooms = () => {
+  const { token } = useAuth();
+  return useQuery({
+    queryKey: ["chat-rooms", token],
+    queryFn: () => chatRequest<{ rooms: ChatRoomInfo[] }>(token, "", "&rooms=1").then((d) => d.rooms),
+    staleTime: 60_000,
+  });
 };

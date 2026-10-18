@@ -1,5 +1,3 @@
-import { CHAT_ROOMS } from "@/lib/chat";
-
 export type GoFn = (ch: string, coinId?: string) => void;
 
 export const CHANNELS = [
@@ -14,8 +12,6 @@ export const CHANNELS = [
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
   { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
 ];
-
-export const CHAT_CHANNELS = CHAT_ROOMS.map((r) => ({ id: `chat-${r.id}`, name: r.name, topic: r.topic, icon: "MessageCircle" }));
 
 export const PINNED = ["bitcoin", "brent", "usd-rub", "eur-rub"];
 

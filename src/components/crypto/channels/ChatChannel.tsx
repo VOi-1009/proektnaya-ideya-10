@@ -5,14 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { CHAT_MIN_LEVEL, CHAT_ROOMS, ChatMessage, ChatRoom, chatRequest } from "@/lib/chat";
+import { ChatMessage, ChatRoom, chatRequest, useChatRooms } from "@/lib/chat";
 import { levelInfo, nameCls } from "@/lib/status";
 import { useOpenMember } from "@/lib/memberCard";
 import MemberIcon from "../MemberIcon";
 import SupporterBadge from "../SupporterBadge";
-import DonateButton from "../DonateButton";
 import BotBadge from "../BotBadge";
-import TierBadge from "../TierBadge";
 
 const Locked = ({ icon, title, text, action }: { icon: string; title: string; text: string; action?: React.ReactNode }) => (
   <div className="bg-card border border-border rounded-xl p-8 text-center max-w-lg mx-auto mt-6">
@@ -36,16 +34,27 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
   const endRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, error } = useQuery({
     queryKey: ["chat", room, token],
-    queryFn: () => chatRequest<{ items: ChatMessage[] }>(token, room),
+    queryFn: () => chatRequest<{ items: ChatMessage[]; canModerate?: boolean }>(token, room),
     refetchInterval: 4000,
     refetchIntervalInBackground: false,
   });
   const items = data?.items ?? [];
+  const canModerate = !!data?.canModerate;
   const lastId = items[items.length - 1]?.id;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [lastId]);
+
+  const removeMsg = async (id: number) => {
+    if (!window.confirm("Удалить это сообщение?")) return;
+    try {
+      await chatRequest(token, room, "", { action: "msg-delete", id });
+      await qc.invalidateQueries({ queryKey: ["chat", room] });
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
+    }
+  };
 
   const send = async () => {
     const t = text.trim();
@@ -73,7 +82,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
           <p className="text-muted-foreground text-sm text-center mt-10">Здесь пока тихо — напишите первым!</p>
         ) : (
           items.map((m) => (
-            <div key={m.id} className="flex gap-2.5">
+            <div key={m.id} className="flex gap-2.5 group">
               <button onClick={() => openMember(m.user.id)} className="flex-shrink-0 mt-0.5">
                 <MemberIcon name={m.user.name} level={m.user.level} avatar={m.user.avatar} className="w-8 h-8 text-xs" iconSize={15} />
               </button>
@@ -83,13 +92,22 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
                     {m.user.name}
                   </button>
                   {m.user.isAi && <BotBadge ai compact className="self-center" />}
-                  <TierBadge tier={m.user.tier} compact className="self-center" />
                   <SupporterBadge no={m.user.supporter} creator={m.user.creator} compact className="self-center" />
                   <span className={`text-[9px] ${levelInfo(m.user.level).text}`}>{levelInfo(m.user.level).title}</span>
                   <span className="text-muted-foreground text-[10px] font-mono">{time(m.createdAt)}</span>
                 </div>
                 <p className="text-foreground text-sm whitespace-pre-wrap break-words">{m.text}</p>
               </div>
+              {canModerate && (
+                <button
+                  onClick={() => removeMsg(m.id)}
+                  className="ml-auto self-start text-muted-foreground hover:text-down opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Удалить сообщение"
+                  aria-label="Удалить сообщение"
+                >
+                  <Icon name="Trash2" size={14} />
+                </button>
+              )}
             </div>
           ))
         )}
@@ -120,8 +138,11 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
 
 const ChatChannel = ({ room }: { room: ChatRoom }) => {
   const { user, setAuthOpen } = useAuth();
-  const meta = CHAT_ROOMS.find((r) => r.id === room)!;
+  const { data: rooms, isLoading } = useChatRooms();
+  const meta = rooms?.find((r) => r.id === room);
 
+  if (isLoading) return <p className="text-muted-foreground text-sm">Загружаю чат…</p>;
+  if (!meta) return <Locked icon="Lock" title="Чат не найден" text="Возможно, он был закрыт администратором." />;
   if (!user)
     return (
       <Locked
@@ -131,27 +152,13 @@ const ChatChannel = ({ room }: { room: ChatRoom }) => {
         action={<Button onClick={() => setAuthOpen(true)}>Войти</Button>}
       />
     );
-  if (room === "premium" && !user.supporter && !user.creator && !user.isAdmin && !user.tier)
-    return (
-      <Locked
-        icon="Crown"
-        title="Премиум-чат — для подписчиков и тех, кто поддержал проект"
-        text="Оформите подписку Бронза, Серебро или Золото — или поддержите проект любой суммой: получите доступ в этот чат."
-        action={
-          <div className="flex flex-wrap gap-2 justify-center">
-            <Button asChild>
-              <a href="/plans">Выбрать подписку</a>
-            </Button>
-            <DonateButton />
-          </div>
-        }
-      />
-    );
-  if (room !== "premium" && (user.level ?? 1) < CHAT_MIN_LEVEL && !user.isAdmin && !user.tier)
+  if (meta.access === "list" && !user.isAdmin && !meta.canEnter)
+    return <Locked icon="Lock" title="Закрытый чат" text="Доступ в этот чат выдаёт администратор." />;
+  if (meta.access === "level" && (user.level ?? 1) < meta.minLevel && !user.isAdmin)
     return (
       <Locked
         icon="Sprout"
-        title="Чат откроется со статуса «Наблюдатель»"
+        title={meta.minLevel <= 2 ? "Чат откроется со статуса «Наблюдатель»" : "Чат откроется с более высокого статуса"}
         text="Заходите на сайт каждый день, заполните профиль и добавьте монеты в портфель — так вы быстрее наберёте очки и получите доступ."
       />
     );

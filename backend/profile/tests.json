@@ -246,12 +246,6 @@
       "expectedStatus": 403
     },
     {
-      "name": "Премиум-чат без входа",
-      "method": "GET",
-      "path": "/?resource=chat&room=premium",
-      "expectedStatus": 401
-    },
-    {
       "name": "Отметка поддержавшего без прав",
       "method": "POST",
       "path": "/?resource=users",
@@ -393,6 +387,12 @@
         "action": "moves-now"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Список чатов",
+      "method": "GET",
+      "path": "/?resource=chat&rooms=1",
+      "expectedStatus": 200
     }
   ]
 }

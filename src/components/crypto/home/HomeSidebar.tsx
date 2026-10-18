@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import RadarDialog from "@/components/crypto/RadarDialog";
 import { Radar, useRadars } from "@/lib/radars";
-import { CHAT_ROOMS } from "@/lib/chat";
+import { chatColor, useChatRooms } from "@/lib/chat";
 import { CHANNELS, GoFn } from "./homeConfig";
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
 const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, setMobileSidebarOpen }: Props) => {
   const navigate = useNavigate();
   const { data: radars } = useRadars();
+  const { data: chatRooms } = useChatRooms();
   const [radar, setRadar] = useState<Radar | null>(null);
 
   return (
@@ -77,17 +78,17 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             <span>Чат</span>
           </div>
           <div className="mt-0.5 space-y-1 px-1">
-            {CHAT_ROOMS.map((r) => (
+            {(chatRooms ?? []).map((r) => (
               <button
                 key={r.id}
                 onClick={() => go(`chat-${r.id}`)}
                 className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${
-                  channel === `chat-${r.id}` ? r.active : r.btn
+                  channel === `chat-${r.id}` ? chatColor(r.color).active : chatColor(r.color).btn
                 }`}
               >
-                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${r.dot}`} />
+                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${chatColor(r.color).dot}`} />
                 <span className="text-[14px] truncate">{r.name}</span>
-                {r.id === "premium" && <Icon name="Crown" size={12} className="ml-auto text-amber-300" />}
+                {r.access === "list" && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
               </button>
             ))}
           </div>

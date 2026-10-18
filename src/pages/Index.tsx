@@ -3,11 +3,12 @@ import { useMarkets } from "@/lib/crypto";
 import Ticker from "@/components/crypto/Ticker";
 import { getSeen, useNews } from "@/components/crypto/news";
 import { usePriceAlerts } from "@/lib/alerts";
+import { useChatRooms } from "@/lib/chat";
 import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
 import HomeRightPanel from "@/components/crypto/home/HomeRightPanel";
-import { CHANNELS, CHAT_CHANNELS, PINNED, loadFavs } from "@/components/crypto/home/homeConfig";
+import { CHANNELS, PINNED, loadFavs } from "@/components/crypto/home/homeConfig";
 
 const Index = () => {
   const { data, isLoading, dataUpdatedAt } = useMarkets();
@@ -18,6 +19,7 @@ const Index = () => {
   const [favs, setFavs] = useState<string[]>(loadFavs);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { data: chatRooms } = useChatRooms();
   const { data: news } = useNews("crypto");
   const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
@@ -49,7 +51,8 @@ const Index = () => {
     document.getElementById("chat-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const current = [...CHANNELS, ...CHAT_CHANNELS].find((c) => c.id === channel) ?? CHANNELS[0];
+  const chatChannels = (chatRooms ?? []).map((r) => ({ id: `chat-${r.id}`, name: r.name, topic: r.topic }));
+  const current = [...CHANNELS, ...chatChannels].find((c) => c.id === channel) ?? CHANNELS[0];
   const favCoins = coins.filter((c) => favs.includes(c.id));
   const sideCoins = [
     ...PINNED.map((id) => coins.find((c) => c.id === id)).filter((c): c is (typeof coins)[number] => !!c),

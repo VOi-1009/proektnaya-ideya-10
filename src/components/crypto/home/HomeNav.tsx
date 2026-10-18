@@ -2,12 +2,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
-import UserAvatar from "@/components/crypto/UserAvatar";
-import StatusBadge from "@/components/crypto/StatusBadge";
-import FounderBadge from "@/components/crypto/FounderBadge";
-import SupporterBadge from "@/components/crypto/SupporterBadge";
 import DonateButton from "@/components/crypto/DonateButton";
-import TierBadge from "@/components/crypto/TierBadge";
 import { CHANNELS, GoFn } from "./homeConfig";
 
 interface Props {
@@ -52,28 +47,6 @@ const HomeNav = ({ channel, go, mobileMenuOpen, setMobileMenuOpen }: Props) => {
               <span className="hidden xl:inline">MAX</span>
             </a>
           </Button>
-          {user ? (
-            <Button variant="ghost" onClick={() => navigate("/profile")} className="h-8 text-muted-foreground hover:text-white hover:bg-hover px-2 gap-2" title="Личный кабинет">
-              <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
-              <span className="text-white text-sm max-w-[120px] truncate hidden xl:inline">{user.name || user.email}</span>
-              <StatusBadge level={user.level} compact />
-              <TierBadge tier={user.tier} compact />
-              <SupporterBadge no={user.supporter} creator={user.creator} compact />
-              <FounderBadge no={user.founder} compact />
-            </Button>
-          ) : (
-            <Button variant="ghost" onClick={() => setAuthOpen(true)} className="h-8 px-2 text-[13px] text-muted-foreground hover:text-white hover:bg-hover">
-              <Icon name="UserRound" size={14} className="mr-1.5" />
-              Войти
-            </Button>
-          )}
-          <Button
-            onClick={() => navigate("/plans")}
-            className="ml-1 h-8 px-2.5 text-[13px] font-semibold bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30 hover:text-rose-100"
-          >
-            <Icon name="Crown" size={14} className="mr-1.5" />
-            Подписка
-          </Button>
           <DonateButton className="ml-1" />
           <Button
             className="ml-1 h-8 px-2.5 text-[13px] font-semibold"
@@ -102,10 +75,6 @@ const HomeNav = ({ channel, go, mobileMenuOpen, setMobileMenuOpen }: Props) => {
               {c.name}
             </Button>
           ))}
-          <Button variant="ghost" onClick={() => navigate("/plans")} className="justify-start text-yellow-300 hover:text-yellow-200 hover:bg-hover">
-            <Icon name="Crown" size={16} className="mr-2" />
-            Подписка: Бронза, Серебро, Золото
-          </Button>
           <DonateButton full />
           <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
             <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">

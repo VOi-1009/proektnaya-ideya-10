@@ -8,7 +8,6 @@ import { AiComment, AiPost, REACTIONS, aiRequest } from "@/lib/aibot";
 import { useOpenMember } from "@/lib/memberCard";
 import UserAvatar from "./UserAvatar";
 import BotBadge from "./BotBadge";
-import TierBadge from "./TierBadge";
 import SupporterBadge from "./SupporterBadge";
 
 const fmt = (iso: string) => new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -123,7 +122,6 @@ const AiPostSocial = ({ post }: { post: AiPost }) => {
                       {c.user.name}
                     </button>
                     {c.user.isAi && <BotBadge ai compact />}
-                    <TierBadge tier={c.user.tier} compact />
                     <SupporterBadge no={c.user.supporter} creator={c.user.creator} compact />
                     <span className="text-muted-foreground/70 font-mono text-[10px]">{fmt(c.createdAt)}</span>
                     {c.canDelete && (

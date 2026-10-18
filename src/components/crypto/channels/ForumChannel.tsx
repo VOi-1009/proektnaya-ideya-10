@@ -11,7 +11,6 @@ import {
 import { useOpenMember } from "@/lib/memberCard";
 import UserAvatar from "../UserAvatar";
 import BotBadge from "../BotBadge";
-import TierBadge from "../TierBadge";
 import SupporterBadge from "../SupporterBadge";
 
 const inputCls =
@@ -75,15 +74,6 @@ const Home = ({ token, open }: { token: string | null; open: (id: number) => voi
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {!data?.tier && (
-        <div className="rounded-xl border border-slate-300/30 bg-slate-300/10 p-3 text-sm text-slate-100 flex flex-wrap items-center gap-2">
-          <Icon name="Lock" size={15} />
-          <span className="flex-1">Форум открыт для подписчиков «Серебро» и «Золото». Некоторые разделы могут быть закрыты.</span>
-          <Button asChild size="sm" className="bg-slate-300 hover:bg-slate-200 text-slate-900 font-semibold">
-            <a href="/plans">Выбрать подписку</a>
-          </Button>
-        </div>
-      )}
       {roots.map((r) => {
         const kids = all.filter((s) => s.parentId === r.id);
         return (
@@ -137,7 +127,6 @@ const Author = ({ u, small }: { u: ForumTopicItem["user"]; small?: boolean }) =>
         {u.name}
       </button>
       {u.isAi && <BotBadge ai compact />}
-      <TierBadge tier={u.tier} compact />
       <SupporterBadge no={u.supporter} creator={u.creator} compact />
     </span>
   );
@@ -179,7 +168,7 @@ const Section = ({ token, id, back, open }: { token: string | null; id: number; 
     return (
       <div className="space-y-3">
         <Back onClick={back} label="Все разделы" />
-        <Gate icon="Lock" title="Раздел недоступен" text={(error as Error)?.message ?? "Нет доступа"} action={<Button asChild><a href="/plans">Выбрать подписку</a></Button>} />
+        <Gate icon="Lock" title="Раздел недоступен" text={(error as Error)?.message ?? "Нет доступа"} />
       </div>
     );
 

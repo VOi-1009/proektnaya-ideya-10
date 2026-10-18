@@ -1,23 +1,51 @@
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
+import { PROFILE_URL, useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
+import { Achievement, META } from "@/components/crypto/Achievements";
+import { SPECIAL_META } from "@/components/crypto/SpecialAchievements";
 
 interface Props {
   favsCount: number;
 }
 
+interface Mini {
+  id: string;
+  title: string;
+  icon: string;
+  color: string;
+  done: boolean;
+}
+
 const ProfileMiniCard = ({ favsCount }: Props) => {
-  const { user, logout, setAuthOpen } = useAuth();
+  const { user, token, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
+  const { data: profile } = useQuery({
+    queryKey: ["profile-mini", token],
+    enabled: !!user && !!token,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const r = await fetch(PROFILE_URL, { headers: { "X-Auth-Token": token ?? "" } });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? "Ошибка");
+      return d.profile as { achievements?: Achievement[]; special?: Achievement[]; founder?: number | null };
+    },
+  });
+  const minis: Mini[] = [
+    ...(profile?.achievements ?? []).filter((a) => META[a.id]).map((a) => ({ id: a.id, title: META[a.id].title, icon: META[a.id].icon, color: META[a.id].color, done: a.done })),
+    ...(profile?.special ?? []).filter((a) => SPECIAL_META[a.id]).map((a) => ({ id: a.id, title: SPECIAL_META[a.id].title, icon: SPECIAL_META[a.id].icon, color: SPECIAL_META[a.id].color, done: a.done })),
+    ...(profile ? [{ id: "founder", title: "Основатель", icon: "Gem", color: "from-amber-200 via-yellow-400 to-amber-600", done: !!profile.founder }] : []),
+  ];
 
   return (
-    <div className="p-2 bg-rail rounded-lg flex items-center gap-2">
+    <div className="p-2 bg-rail rounded-lg space-y-2">
+      <div className="flex items-center gap-2">
       <button
         onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
         className="relative"
@@ -62,6 +90,22 @@ const ProfileMiniCard = ({ favsCount }: Props) => {
         <Button size="sm" className="h-8 px-3 font-semibold" onClick={() => setAuthOpen(true)}>
           Войти
         </Button>
+      )}
+      </div>
+      {user && minis.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-border/60" aria-label="Достижения">
+          {minis.map((m) => (
+            <span
+              key={m.id}
+              title={`${m.title}${m.done ? "" : " — ещё не получено"}`}
+              className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                m.done ? `bg-gradient-to-br ${m.color} text-black` : "bg-card text-muted-foreground/50"
+              }`}
+            >
+              <Icon name={m.icon} size={12} fallback="Award" />
+            </span>
+          ))}
+        </div>
       )}
     </div>
   );

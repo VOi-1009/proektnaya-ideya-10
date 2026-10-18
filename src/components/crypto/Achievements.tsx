@@ -7,7 +7,7 @@ export interface Achievement {
   goal: number;
 }
 
-const META: Record<string, { title: string; desc: string; icon: string; color: string }> = {
+export const META: Record<string, { title: string; desc: string; icon: string; color: string }> = {
   streak7: { title: "Неделя в строю", desc: "Заходите на сайт 7 дней подряд", icon: "Flame", color: "from-orange-400 to-red-500" },
   firstCoin: { title: "Первая монета", desc: "Добавьте первую монету в портфель", icon: "Coins", color: "from-amber-300 to-yellow-500" },
   fullProfile: { title: "Всё о себе", desc: "Заполните все поля профиля и загрузите аватар", icon: "BadgeCheck", color: "from-sky-400 to-violet-500" },
