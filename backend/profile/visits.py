@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from datetime import timedelta
 
 import psycopg2
 
@@ -85,12 +86,17 @@ def handle_visits(event: dict) -> dict:
         online = int(one(f"SELECT COUNT(DISTINCT visitor_id) FROM {t} WHERE created_at > NOW() - INTERVAL '5 minutes'")[0])
 
         cur.execute(
-            f"SELECT d::date, COALESCE(v.visitors, 0), COALESCE(v.views, 0), COALESCE(v.fresh, 0) "
-            f"FROM generate_series(CURRENT_DATE - {days - 1}, CURRENT_DATE, INTERVAL '1 day') d "
-            f"LEFT JOIN (SELECT created_at::date day, COUNT(DISTINCT visitor_id) visitors, COUNT(*) views, COUNT(*) FILTER (WHERE is_new) fresh "
-            f"FROM {t} WHERE created_at >= CURRENT_DATE - {days - 1} GROUP BY 1) v ON v.day = d::date ORDER BY 1"
+            f"SELECT created_at::date AS vdate, COUNT(DISTINCT visitor_id), COUNT(*), COUNT(*) FILTER (WHERE is_new) "
+            f"FROM {t} WHERE created_at >= CURRENT_DATE - {days - 1} GROUP BY 1"
         )
-        daily = [{"day": x[0].isoformat(), "visitors": int(x[1]), "views": int(x[2]), "newVisitors": int(x[3])} for x in cur.fetchall()]
+        by_day = {x[0]: x for x in cur.fetchall()}
+        today = one("SELECT CURRENT_DATE")[0]
+        rows = []
+        for i in range(days - 1, -1, -1):
+            dt = today - timedelta(days=i)
+            x = by_day.get(dt)
+            rows.append((dt, x[1] if x else 0, x[2] if x else 0, x[3] if x else 0))
+        daily = [{"day": x[0].isoformat(), "visitors": int(x[1]), "views": int(x[2]), "newVisitors": int(x[3])} for x in rows]
 
         since = f"created_at >= CURRENT_DATE - {days - 1}"
         cur.execute(f"SELECT path, COUNT(*) FROM {t} WHERE {since} GROUP BY 1 ORDER BY 2 DESC LIMIT 10")
