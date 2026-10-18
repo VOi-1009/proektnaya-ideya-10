@@ -26,25 +26,25 @@ interface Sec {
 
 const EMPTY: Sec = {
   id: 0, parentId: null, title: "", description: "", sort: 10, guestsRead: false,
-  readPlan: 2, readLevel: 1, topicPlan: 2, topicLevel: 1, replyPlan: 2, replyLevel: 1, allowUsers: [], allowNames: [], topics: 0,
+  readPlan: 0, readLevel: 1, topicPlan: 0, topicLevel: 1, replyPlan: 0, replyLevel: 1, allowUsers: [], allowNames: [], topics: 0,
 };
-const PLANS = [
-  [0, "Все участники"], [1, "Бронза и выше"], [2, "Серебро и выше"], [3, "Только Золото"], [9, "Только администраторы"],
-] as const;
 const inputCls = "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
 
-const Perm = ({ label, plan, level, onPlan, onLevel }: { label: string; plan: number; level: number; onPlan: (v: number) => void; onLevel: (v: number) => void }) => (
-  <div className="grid grid-cols-[110px_1fr_1fr] items-center gap-2">
+const Perm = ({ label, plan, level, onChange }: { label: string; plan: number; level: number; onChange: (plan: number, level: number) => void }) => (
+  <div className="grid grid-cols-[110px_1fr] items-center gap-2">
     <span className="text-sm text-white">{label}</span>
-    <select className={inputCls} value={plan} onChange={(e) => onPlan(Number(e.target.value))}>
-      {PLANS.map(([v, n]) => (
-        <option key={v} value={v}>{n}</option>
-      ))}
-    </select>
-    <select className={inputCls} value={level} disabled={plan === 9} onChange={(e) => onLevel(Number(e.target.value))}>
+    <select
+      className={inputCls}
+      value={plan === 9 ? 9 : level}
+      onChange={(e) => {
+        const v = Number(e.target.value);
+        onChange(v === 9 ? 9 : 0, v === 9 ? 1 : v);
+      }}
+    >
       {LEVEL_NAMES.slice(1, 6).map((n, i) => (
-        <option key={n} value={i + 1}>{i === 0 ? "Любой статус" : `от «${n}»`}</option>
+        <option key={n} value={i + 1}>{i === 0 ? "Любой статус" : `От «${n}»`}</option>
       ))}
+      <option value={9}>Только администраторы</option>
     </select>
   </div>
 );
@@ -100,7 +100,7 @@ const ForumManager = ({ token }: { token: string | null }) => {
   };
 
   const roots = (data ?? []).filter((s) => !s.parentId);
-  const needLabel = (plan: number, lvl: number) => `${PLANS.find((p) => p[0] === plan)?.[1] ?? ""}${lvl > 1 && plan !== 9 ? `, от «${LEVEL_NAMES[lvl]}»` : ""}`;
+  const needLabel = (plan: number, lvl: number) => (plan === 9 ? "только администраторы" : lvl > 1 ? `от «${LEVEL_NAMES[lvl]}»` : "любой статус");
 
   if (f)
     return (
@@ -138,14 +138,13 @@ const ForumManager = ({ token }: { token: string | null }) => {
           <h3 className="text-white font-semibold flex items-center gap-2">
             <Icon name="ShieldCheck" size={17} className="text-primary" /> Кто что может
           </h3>
-          <div className="grid grid-cols-[110px_1fr_1fr] gap-2 text-[11px] text-muted-foreground uppercase tracking-wider">
+          <div className="grid grid-cols-[110px_1fr] gap-2 text-[11px] text-muted-foreground uppercase tracking-wider">
             <span />
-            <span>Подписка</span>
             <span>Статус на сайте</span>
           </div>
-          <Perm label="Читать" plan={f.readPlan} level={f.readLevel} onPlan={(v) => setF({ ...f, readPlan: v })} onLevel={(v) => setF({ ...f, readLevel: v })} />
-          <Perm label="Создавать темы" plan={f.topicPlan} level={f.topicLevel} onPlan={(v) => setF({ ...f, topicPlan: v })} onLevel={(v) => setF({ ...f, topicLevel: v })} />
-          <Perm label="Отвечать" plan={f.replyPlan} level={f.replyLevel} onPlan={(v) => setF({ ...f, replyPlan: v })} onLevel={(v) => setF({ ...f, replyLevel: v })} />
+          <Perm label="Читать" plan={f.readPlan} level={f.readLevel} onChange={(p, l) => setF({ ...f, readPlan: p, readLevel: l })} />
+          <Perm label="Создавать темы" plan={f.topicPlan} level={f.topicLevel} onChange={(p, l) => setF({ ...f, topicPlan: p, topicLevel: l })} />
+          <Perm label="Отвечать" plan={f.replyPlan} level={f.replyLevel} onChange={(p, l) => setF({ ...f, replyPlan: p, replyLevel: l })} />
           <label className="flex items-start gap-3 cursor-pointer pt-1">
             <Switch checked={f.guestsRead} onCheckedChange={(v) => setF({ ...f, guestsRead: v })} className="mt-0.5" />
             <span>
@@ -160,7 +159,7 @@ const ForumManager = ({ token }: { token: string | null }) => {
           <h3 className="text-white font-semibold flex items-center gap-2">
             <Icon name="UserCheck" size={17} className="text-primary" /> Личный доступ по списку
           </h3>
-          <p className="text-xs text-muted-foreground">Эти участники получают полный доступ к разделу независимо от подписки и статуса.</p>
+          <p className="text-xs text-muted-foreground">Эти участники получают полный доступ к разделу независимо от статуса.</p>
           <div className="flex flex-wrap gap-1.5">
             {f.allowUsers.map((id) => (
               <span key={id} className="inline-flex items-center gap-1.5 bg-primary/15 text-white text-xs rounded-full pl-2.5 pr-1.5 py-1">

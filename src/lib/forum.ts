@@ -58,5 +58,4 @@ export const forumRequest = async <T,>(token: string | null, query = "", body?: 
   return data as T;
 };
 
-export const PLAN_NAMES: Record<number, string> = { 0: "для всех", 1: "Бронза и выше", 2: "Серебро и выше", 3: "только Золото", 9: "только администраторы" };
 export const LEVEL_NAMES = ["", "Новичок", "Наблюдатель", "Трейдер", "Аналитик", "Кит", "Медведь", "Бык"];

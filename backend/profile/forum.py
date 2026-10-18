@@ -48,7 +48,7 @@ def can(sec: dict, v: dict, kind: str) -> bool:
     plan = sec[kind + "Plan"]
     if plan == ADMIN_ONLY:
         return False
-    return v["tier"] >= plan and v["level"] >= sec[kind + "Level"]
+    return v["level"] >= sec[kind + "Level"]
 
 
 def perms(sec: dict, v: dict) -> dict:

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import {
-  ForumPost, ForumSectionItem, ForumTopicItem, ForumPerms, LEVEL_NAMES, PLAN_NAMES, forumRequest,
+  ForumPost, ForumSectionItem, ForumTopicItem, ForumPerms, LEVEL_NAMES, forumRequest,
 } from "@/lib/forum";
 import { useOpenMember } from "@/lib/memberCard";
 import UserAvatar from "../UserAvatar";
@@ -55,9 +55,8 @@ const Gate = ({ icon, title, text, action }: { icon: string; title: string; text
 );
 
 const needText = (s: ForumSectionItem) => {
-  const parts = [PLAN_NAMES[s.need.plan] ?? ""];
-  if (s.need.level > 1) parts.push(`статус «${LEVEL_NAMES[s.need.level]}» и выше`);
-  return parts.filter(Boolean).join(", ");
+  if (s.need.plan === 9) return "только администраторы";
+  return s.need.level > 1 ? `статус «${LEVEL_NAMES[s.need.level]}» и выше` : "для всех";
 };
 
 const Home = ({ token, open }: { token: string | null; open: (id: number) => void }) => {
