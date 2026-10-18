@@ -1,61 +1,13 @@
 import { useEffect, useState } from "react";
-import Icon from "@/components/ui/icon";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { COIN_META, fmtPct, fmtPrice, useMarkets } from "@/lib/crypto";
+import { useMarkets } from "@/lib/crypto";
 import Ticker from "@/components/crypto/Ticker";
-import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
-import MarketChannel from "@/components/crypto/channels/MarketChannel";
-import NewsChannel from "@/components/crypto/channels/NewsChannel";
-import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
-import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
-import { useAuth } from "@/lib/auth";
 import { getSeen, useNews } from "@/components/crypto/news";
-import ArticlesChannel from "@/components/crypto/channels/ArticlesChannel";
-import AlertsChannel from "@/components/crypto/channels/AlertsChannel";
 import { usePriceAlerts } from "@/lib/alerts";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
-import UserAvatar from "@/components/crypto/UserAvatar";
-import StatusBadge from "@/components/crypto/StatusBadge";
-import FounderBadge from "@/components/crypto/FounderBadge";
-import SupporterBadge from "@/components/crypto/SupporterBadge";
-import { SideBlocks } from "@/components/crypto/HomeBlocks";
-import SidePolls from "@/components/crypto/SidePolls";
-import RadarDialog from "@/components/crypto/RadarDialog";
-import { Radar, useRadars } from "@/lib/radars";
-import ChatChannel from "@/components/crypto/channels/ChatChannel";
-import { CHAT_ROOMS, ChatRoom } from "@/lib/chat";
-import DonateButton from "@/components/crypto/DonateButton";
-import TierBadge from "@/components/crypto/TierBadge";
-import AiNewsChannel from "@/components/crypto/channels/AiNewsChannel";
-import ForumChannel from "@/components/crypto/channels/ForumChannel";
-
-const CHANNELS = [
-  { id: "welcome", name: "обзор-рынка", topic: "Сводка дня и главное за утро", icon: "Hash" },
-  { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
-  { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: Bits.media, Investing.com, Финам, Ведомости", icon: "Hash" },
-  { id: "world", name: "мировые-новости", short: "Мир", topic: "Политика, экономика и события в мире: ТАСС, РБК, Lenta.ru, Ведомости", icon: "Hash" },
-  { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
-  { id: "ainews", name: "Новости от AiTraderKa", short: "AiTraderKa", topic: "Дайджесты и заметки ИИ-бота AiTraderKa", icon: "Sparkles" },
-  { id: "forum", name: "форум", topic: "Обсуждения по разделам: рынок, идеи, закрытые клубы", icon: "Hash" },
-  { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
-  { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
-  { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
-];
-
-const CHAT_CHANNELS = CHAT_ROOMS.map((r) => ({ id: `chat-${r.id}`, name: r.name, topic: r.topic, icon: "MessageCircle" }));
-
-const PINNED = ["bitcoin", "brent", "usd-rub", "eur-rub"];
-
-const loadFavs = (): string[] => {
-  try {
-    const v = JSON.parse(localStorage.getItem("svecha-favs") ?? "null");
-    return Array.isArray(v) ? v : ["ethereum", "gold"];
-  } catch {
-    return ["ethereum", "gold"];
-  }
-};
+import HomeNav from "@/components/crypto/home/HomeNav";
+import HomeSidebar from "@/components/crypto/home/HomeSidebar";
+import HomeMain from "@/components/crypto/home/HomeMain";
+import HomeRightPanel from "@/components/crypto/home/HomeRightPanel";
+import { CHANNELS, CHAT_CHANNELS, PINNED, loadFavs } from "@/components/crypto/home/homeConfig";
 
 const Index = () => {
   const { data, isLoading, dataUpdatedAt } = useMarkets();
@@ -66,10 +18,6 @@ const Index = () => {
   const [favs, setFavs] = useState<string[]>(loadFavs);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { user, logout, setAuthOpen } = useAuth();
-  const navigate = useNavigate();
-  const { data: radars } = useRadars();
-  const [radar, setRadar] = useState<Radar | null>(null);
   const { data: news } = useNews("crypto");
   const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
@@ -111,114 +59,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
-      {/* Навигация */}
-      <nav className="bg-card border-b border-border px-4 sm:px-6 py-3 sticky top-0 z-30">
-        <div className="flex items-center justify-between">
-          <button onClick={() => go("welcome")} className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-black text-xl sm:text-2xl leading-none">
-              Т
-            </div>
-            <div className="text-left">
-              <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADERKA<span className="text-primary">.RU</span></h1>
-              <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости крипторынка</p>
-            </div>
-          </button>
-          <div className="hidden md:flex items-center gap-0.5">
-            <div className="flex items-center gap-0.5 lg:hidden 2xl:flex">
-            {CHANNELS.slice(1).filter((c) => c.id !== "ainews").map((c) => (
-              <Button
-                key={c.id}
-                variant="ghost"
-                onClick={() => go(c.id)}
-                className={`h-8 px-2 text-[13px] hover:bg-hover hover:text-white ${channel === c.id ? "text-white bg-hover" : "text-muted-foreground"}`}
-              >
-                {"short" in c && c.short ? c.short : (c.name[0].toUpperCase() + c.name.slice(1)).replace("-", " ")}
-              </Button>
-            ))}
-            </div>
-            <Button variant="ghost" asChild className="h-8 px-2 text-[13px] text-muted-foreground hover:text-white hover:bg-hover" title="Канал в MAX">
-              <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
-                <Icon name="MessageCircle" size={14} className="xl:mr-1.5" />
-                <span className="hidden xl:inline">MAX</span>
-              </a>
-            </Button>
-            {user ? (
-              <Button variant="ghost" onClick={() => navigate("/profile")} className="h-8 text-muted-foreground hover:text-white hover:bg-hover px-2 gap-2" title="Личный кабинет">
-                <UserAvatar name={user.name} email={user.email} avatar={user.avatar} className="w-7 h-7 text-xs" />
-                <span className="text-white text-sm max-w-[120px] truncate hidden xl:inline">{user.name || user.email}</span>
-                <StatusBadge level={user.level} compact />
-                <TierBadge tier={user.tier} compact />
-                <SupporterBadge no={user.supporter} creator={user.creator} compact />
-                <FounderBadge no={user.founder} compact />
-              </Button>
-            ) : (
-              <Button variant="ghost" onClick={() => setAuthOpen(true)} className="h-8 px-2 text-[13px] text-muted-foreground hover:text-white hover:bg-hover">
-                <Icon name="UserRound" size={14} className="mr-1.5" />
-                Войти
-              </Button>
-            )}
-            <Button
-              onClick={() => navigate("/plans")}
-              className="ml-1 h-8 px-2.5 text-[13px] font-semibold bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30 hover:text-rose-100"
-            >
-              <Icon name="Crown" size={14} className="mr-1.5" />
-              Подписка
-            </Button>
-            <DonateButton className="ml-1" />
-            <Button
-              className="ml-1 h-8 px-2.5 text-[13px] font-semibold"
-              onClick={() => {
-                go("welcome");
-                setTimeout(() => document.getElementById("subscribe")?.scrollIntoView({ behavior: "smooth" }), 100);
-              }}
-            >
-              Дайджест
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            className="md:hidden text-muted-foreground hover:text-white hover:bg-hover p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Меню"
-          >
-            <Icon name={mobileMenuOpen ? "X" : "Menu"} size={20} />
-          </Button>
-        </div>
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-3 pt-3 border-t border-border flex flex-col gap-1 animate-fade-in">
-            {CHANNELS.map((c) => (
-              <Button key={c.id} variant="ghost" onClick={() => go(c.id)} className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
-                <span className={`w-2 h-2 rounded-full mr-2.5 flex-shrink-0 ${c.id === "ainews" ? "bg-white" : "bg-primary"}`} />
-                {c.name}
-              </Button>
-            ))}
-            <Button variant="ghost" onClick={() => navigate("/plans")} className="justify-start text-yellow-300 hover:text-yellow-200 hover:bg-hover">
-              <Icon name="Crown" size={16} className="mr-2" />
-              Подписка: Бронза, Серебро, Золото
-            </Button>
-            <DonateButton full />
-            <Button variant="ghost" asChild className="justify-start text-muted-foreground hover:text-white hover:bg-hover">
-              <a href="https://max.ru/join/NlGkb3arf9YBdWjvXf-a5gVYZdEOEYGX6A79q2w7LEg" target="_blank" rel="noreferrer">
-                <Icon name="MessageCircle" size={16} className="mr-2" />
-                Канал в MAX
-              </a>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-              className="justify-start text-muted-foreground hover:text-white hover:bg-hover"
-            >
-              <Icon name="UserRound" size={16} className="mr-2" />
-              {user ? "Личный кабинет" : "Войти"}
-            </Button>
-          </div>
-        )}
-      </nav>
+      <HomeNav channel={channel} go={go} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 
       <div className="flex min-h-[calc(100vh-96px)]">
-        {/* Рейл */}
         <div className="hidden lg:flex w-[72px] bg-rail flex-col items-center py-3 gap-2 flex-shrink-0">
           <button
             onClick={() => go("welcome")}
@@ -230,283 +75,34 @@ const Index = () => {
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row min-w-0">
-          {/* Каналы */}
-          <aside
-            className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
-          >
-            <div className="h-12 px-4 border-b border-border flex items-center justify-between shadow-sm">
-              <h2 className="text-white font-semibold text-sm">TRADERKA.RU</h2>
-              <Button
-                variant="ghost"
-                className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
-                onClick={() => setMobileSidebarOpen(false)}
-              >
-                <Icon name="X" size={16} />
-              </Button>
-            </div>
-            <div className="flex-1 p-2 space-y-2">
-              <div>
-                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-                  <Icon name="ChevronDown" size={12} />
-                  <span>Текстовые каналы</span>
-                </div>
-                <div className="mt-0.5 space-y-0">
-                  {CHANNELS.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => go(c.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                        channel === c.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${c.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : "bg-primary"}`} />
-                      <span className="text-[14px] truncate">{c.name}</span>
-                      {c.id === "alerts" && activeAlerts > 0 && (
-                        <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
-                      )}
-                      {unreadOf(c.id) > 0 && (
-                        <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
-                          {unreadOf(c.id) > 30 ? "30+" : unreadOf(c.id)}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => navigate("/rating")}
-                    className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
-                    <span className="text-[14px]">рейтинг</span>
-                  </button>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-                  <Icon name="ChevronDown" size={12} />
-                  <span>Чат</span>
-                </div>
-                <div className="mt-0.5 space-y-1 px-1">
-                  {CHAT_ROOMS.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => go(`chat-${r.id}`)}
-                      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${
-                        channel === `chat-${r.id}` ? r.active : r.btn
-                      }`}
-                    >
-                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${r.dot}`} />
-                      <span className="text-[14px] truncate">{r.name}</span>
-                      {r.id === "premium" && <Icon name="Crown" size={12} className="ml-auto text-amber-300" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {radars && radars.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-                    <Icon name="ChevronDown" size={12} />
-                    <span>Радары</span>
-                  </div>
-                  <div className="mt-0.5 space-y-0">
-                    {radars.map((r) => (
-                      <button
-                        key={r.id}
-                        onClick={() => setRadar(r)}
-                        className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                      >
-                        <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
-                        <span className="text-[14px] truncate">{r.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <RadarDialog radar={radar} onClose={() => setRadar(null)} />
-            <div className="p-2 bg-rail/70 flex items-center gap-2">
-              <button
-                onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-                className="relative"
-                title={user ? "Личный кабинет" : "Войти"}
-              >
-                {user ? (
-                  <UserAvatar name={user.name} email={user.email} avatar={user.avatar} />
-                ) : (
-                  <UserAvatar />
-                )}
-                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-card rounded-full ${user ? "bg-up" : "bg-muted-foreground"}`} />
-              </button>
-              <button
-                onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-                className="flex-1 min-w-0 text-left"
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</span>
-                  {user && <StatusBadge level={user.level} compact />}
-                  {user && <SupporterBadge no={user.supporter} creator={user.creator} compact />}
-                  {user && <FounderBadge no={user.founder} compact />}
-                </div>
-                <div className="text-muted-foreground text-xs truncate hover:text-primary">
-                  {user ? "Личный кабинет →" : `Избранных: ${favs.length}`}
-                </div>
-              </button>
-              {user ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-8 h-8 p-0 hover:bg-hover text-muted-foreground hover:text-down"
-                  onClick={() => {
-                    logout();
-                    toast({ title: "Вы вышли из аккаунта" });
-                  }}
-                  aria-label="Выйти"
-                  title="Выйти"
-                >
-                  <Icon name="LogOut" size={16} />
-                </Button>
-              ) : (
-                <Button size="sm" className="h-8 px-3 font-semibold" onClick={() => setAuthOpen(true)}>
-                  Войти
-                </Button>
-              )}
-            </div>
-          </aside>
-
-          {/* Чат */}
-          <main className="flex-1 flex flex-col min-w-0 grain">
-            <div className="h-12 border-b border-border flex items-center px-4 gap-2 shadow-sm bg-background/80 backdrop-blur">
-              <Button
-                variant="ghost"
-                className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto mr-1"
-                onClick={() => setMobileSidebarOpen(true)}
-                aria-label="Каналы"
-              >
-                <Icon name="Menu" size={20} />
-              </Button>
-              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${channel === "ainews" ? "bg-white" : "bg-primary"}`} />
-              <span className="text-white font-semibold">{current.name}</span>
-              <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
-              <span className="text-muted-foreground text-sm hidden sm:block truncate">{current.topic}</span>
-              <div className="ml-auto flex items-center gap-3 text-muted-foreground">
-                {updated && (
-                  <span className="hidden md:flex items-center gap-1.5 text-xs font-mono">
-                    <span className={`w-1.5 h-1.5 rounded-full ${data?.live ? "bg-up animate-pulse" : "bg-accent"}`} />
-                    {data?.live ? "онлайн" : "кэш"} · {updated}
-                  </span>
-                )}
-                <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
-                  <Icon name="Bell" size={18} />
-                  {activeAlerts > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">
-                      {activeAlerts}
-                    </span>
-                  )}
-                </button>
-                <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет">
-                  <Icon name="Search" size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div id="chat-scroll" className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin">
-              <div key={channel} className={channel === "welcome" ? "" : channel.startsWith("chat-") ? "max-w-4xl" : "max-w-5xl"}>
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-56 w-full bg-card" />
-                    <Skeleton className="h-24 w-full bg-card" />
-                    <Skeleton className="h-24 w-2/3 bg-card" />
-                  </div>
-                ) : channel === "welcome" ? (
-                  <WelcomeChannel
-                    coins={coins}
-                    go={go}
-                    openArticle={(id) => {
-                      go("articles");
-                      setArticleId(id);
-                    }}
-                  />
-                ) : channel === "market" ? (
-                  <MarketChannel
-                    coins={coins}
-                    selected={selected}
-                    onSelect={setSelected}
-                    favs={favs}
-                    toggleFav={toggleFav}
-                    live={!!data?.live}
-                  />
-                ) : channel === "news" ? (
-                  <NewsChannel key="crypto" kind="crypto" />
-                ) : channel === "world" ? (
-                  <NewsChannel key="world" kind="world" />
-                ) : channel === "articles" ? (
-                  <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
-                ) : channel === "ainews" ? (
-                  <AiNewsChannel />
-                ) : channel === "forum" ? (
-                  <ForumChannel />
-                ) : channel === "alerts" ? (
-                  <AlertsChannel coins={coins} live={!!data?.live} api={alertsApi} go={go} />
-                ) : channel.startsWith("chat-") ? (
-                  <ChatChannel room={channel.slice(5) as ChatRoom} />
-                ) : channel === "portfolio" ? (
-                  <PortfolioChannel coins={coins} go={go} />
-                ) : (
-                  <ConverterChannel coins={coins} />
-                )}
-              </div>
-            </div>
-
-          </main>
-
-          {/* Правая панель: онлайн и избранное */}
-          <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
-            <button
-              onClick={() => navigate("/rating")}
-              className="w-full flex items-center gap-2 px-2 py-2 rounded bg-rail hover:bg-hover text-sm text-foreground"
-            >
-              <Icon name="Trophy" size={16} className="text-primary" />
-              Рейтинг участников
-              <Icon name="ChevronRight" size={14} className="ml-auto text-muted-foreground" />
-            </button>
-            <div>
-              <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
-                <Icon name="Star" size={12} /> Мой список
-              </h3>
-              <div className="space-y-0">
-                {sideCoins.map((c) => {
-                  const up = c.price_change_percentage_24h >= 0;
-                  const pinned = PINNED.includes(c.id);
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => go("market", c.id)}
-                      className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 text-left"
-                    >
-                      <div className="flex-1 min-w-0 leading-tight">
-                        <div className="text-white text-sm font-medium truncate font-coin leading-tight flex items-center gap-1">
-                          {COIN_META[c.id]?.ru ?? c.name}
-                          {pinned && <Icon name="Pin" size={10} className="text-muted-foreground" />}
-                        </div>
-                        <div className="text-muted-foreground text-[10px] font-mono tabular leading-tight">
-                          {fmtPrice(c.current_price, c.id)}
-                          {c.id === "brent" && " / барр."}
-                          {c.id === "gold" && " / унц."}
-                        </div>
-                      </div>
-                      <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>
-                        {fmtPct(c.price_change_percentage_24h)}
-                      </span>
-                    </button>
-                  );
-                })}
-                {!sideCoins.length && (
-                  <p className="text-xs text-muted-foreground px-2">Отметьте монеты звёздочкой в #котировки</p>
-                )}
-              </div>
-            </div>
-            <SideBlocks />
-            <SidePolls />
-          </aside>
+          <HomeSidebar
+            channel={channel}
+            go={go}
+            activeAlerts={activeAlerts}
+            unreadOf={unreadOf}
+            mobileSidebarOpen={mobileSidebarOpen}
+            setMobileSidebarOpen={setMobileSidebarOpen}
+            favsCount={favs.length}
+          />
+          <HomeMain
+            channel={channel}
+            current={current}
+            go={go}
+            coins={coins}
+            live={!!data?.live}
+            isLoading={isLoading}
+            updated={updated}
+            activeAlerts={activeAlerts}
+            alertsApi={alertsApi}
+            selected={selected}
+            setSelected={setSelected}
+            favs={favs}
+            toggleFav={toggleFav}
+            articleId={articleId}
+            setArticleId={setArticleId}
+            setMobileSidebarOpen={setMobileSidebarOpen}
+          />
+          <HomeRightPanel sideCoins={sideCoins} go={go} />
         </div>
       </div>
     </div>
