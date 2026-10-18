@@ -393,6 +393,22 @@
       "method": "GET",
       "path": "/?resource=chat&rooms=1",
       "expectedStatus": 200
+    },
+    {
+      "name": "Визит без идентификатора",
+      "method": "POST",
+      "path": "/?resource=visits",
+      "body": {
+        "vid": "x",
+        "path": "/"
+      },
+      "expectedStatus": 400
+    },
+    {
+      "name": "Статистика без прав",
+      "method": "GET",
+      "path": "/?resource=visits",
+      "expectedStatus": 403
     }
   ]
 }

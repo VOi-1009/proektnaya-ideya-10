@@ -1,20 +1,29 @@
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
+import { Suspense, lazy } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Coin } from "@/lib/crypto";
 import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
-import MarketChannel from "@/components/crypto/channels/MarketChannel";
-import NewsChannel from "@/components/crypto/channels/NewsChannel";
-import ConverterChannel from "@/components/crypto/channels/ConverterChannel";
-import PortfolioChannel from "@/components/crypto/channels/PortfolioChannel";
-import ArticlesChannel from "@/components/crypto/channels/ArticlesChannel";
-import AlertsChannel from "@/components/crypto/channels/AlertsChannel";
-import ChatChannel from "@/components/crypto/channels/ChatChannel";
-import AiNewsChannel from "@/components/crypto/channels/AiNewsChannel";
-import ForumChannel from "@/components/crypto/channels/ForumChannel";
 import { ChatRoom } from "@/lib/chat";
 import { PriceAlertsApi } from "@/lib/alerts";
 import { GoFn } from "./homeConfig";
+
+const MarketChannel = lazy(() => import("@/components/crypto/channels/MarketChannel"));
+const NewsChannel = lazy(() => import("@/components/crypto/channels/NewsChannel"));
+const ConverterChannel = lazy(() => import("@/components/crypto/channels/ConverterChannel"));
+const PortfolioChannel = lazy(() => import("@/components/crypto/channels/PortfolioChannel"));
+const ArticlesChannel = lazy(() => import("@/components/crypto/channels/ArticlesChannel"));
+const AlertsChannel = lazy(() => import("@/components/crypto/channels/AlertsChannel"));
+const ChatChannel = lazy(() => import("@/components/crypto/channels/ChatChannel"));
+const AiNewsChannel = lazy(() => import("@/components/crypto/channels/AiNewsChannel"));
+const ForumChannel = lazy(() => import("@/components/crypto/channels/ForumChannel"));
+
+const ChannelFallback = () => (
+  <div className="space-y-3">
+    <Skeleton className="h-56 w-full bg-card" />
+    <Skeleton className="h-24 w-full bg-card" />
+  </div>
+);
 
 interface Props {
   channel: string;
@@ -90,6 +99,7 @@ const HomeMain = ({
 
     <div id="chat-scroll" className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin">
       <div key={channel} className={channel === "welcome" ? "" : channel.startsWith("chat-") ? "max-w-4xl" : "max-w-5xl"}>
+        <Suspense fallback={<ChannelFallback />}>
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-56 w-full bg-card" />
@@ -133,6 +143,7 @@ const HomeMain = ({
         ) : (
           <ConverterChannel coins={coins} />
         )}
+        </Suspense>
       </div>
     </div>
 

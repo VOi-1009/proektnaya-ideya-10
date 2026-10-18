@@ -25,6 +25,7 @@ import SiteNewsManager from "@/components/crypto/SiteNewsManager";
 import DonateManager from "@/components/crypto/DonateManager";
 import AiBotManager from "@/components/crypto/AiBotManager";
 import ChatsManager from "@/components/crypto/ChatsManager";
+import VisitsManager from "@/components/crypto/VisitsManager";
 import ForumManager from "@/components/crypto/ForumManager";
 import UsersManager from "@/components/crypto/UsersManager";
 import BlocksManager from "@/components/crypto/BlocksManager";
@@ -38,7 +39,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "donate" | "aibot" | "chats" | "forum">("articles");
+  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "donate" | "aibot" | "chats" | "forum">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -193,6 +194,7 @@ const Admin = () => {
           <div className="flex gap-1 bg-card border border-border rounded-lg p-1 w-fit max-w-full overflow-x-auto">
             {(
               [
+                ["visits", "Посетители", "Activity"],
                 ["articles", "Статьи", "FileText"],
                 ["categories", "Рубрики", "FolderTree"],
                 ["blocks", "Блоки главной", "LayoutPanelLeft"],
@@ -230,6 +232,8 @@ const Admin = () => {
           <SiteNewsManager token={token} />
         ) : editing === null && tab === "chats" ? (
           <ChatsManager token={token} />
+        ) : editing === null && tab === "visits" ? (
+          <VisitsManager token={token} />
         ) : editing === null && tab === "forum" ? (
           <ForumManager token={token} />
         ) : editing === null && tab === "aibot" ? (
