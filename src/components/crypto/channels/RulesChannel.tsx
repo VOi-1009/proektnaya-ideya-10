@@ -61,6 +61,7 @@ const RulesChannel = () => (
       <h3 className="text-white text-sm font-semibold mt-4 mb-2">Как набрать очки</h3>
       <ul className="text-muted-foreground text-sm space-y-1.5">
         <li className="flex gap-2"><Icon name="CalendarCheck" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 10 очков за каждый день, когда вы заходите на сайт.</li>
+        <li className="flex gap-2"><Icon name="Clock" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 2 очка за каждые 10 минут, проведённые на сайте.</li>
         <li className="flex gap-2"><Icon name="Coins" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 5 очков за каждую монету в портфеле (до 20 монет).</li>
         <li className="flex gap-2"><Icon name="UserRound" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 6 очков за каждое заполненное поле профиля: имя, фото, о себе, город, любимая монета.</li>
         <li className="flex gap-2"><Icon name="Gift" size={15} className="text-primary mt-0.5 flex-shrink-0" /> Бонусные очки иногда дарит администрация.</li>

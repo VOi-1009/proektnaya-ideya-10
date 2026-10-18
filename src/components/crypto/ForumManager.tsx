@@ -41,7 +41,7 @@ const Perm = ({ label, plan, level, onChange }: { label: string; plan: number; l
         onChange(v === 9 ? 9 : 0, v === 9 ? 1 : v);
       }}
     >
-      {LEVEL_NAMES.slice(1, 6).map((n, i) => (
+      {LEVEL_NAMES.slice(1, 7).map((n, i) => (
         <option key={n} value={i + 1}>{i === 0 ? "Любой статус" : `От «${n}»`}</option>
       ))}
       <option value={9}>Только администраторы</option>

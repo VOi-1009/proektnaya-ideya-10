@@ -21,7 +21,7 @@ interface AdminRoom {
 }
 
 const EMPTY: AdminRoom = {
-  id: "", name: "", topic: "", color: "sky", access: "level", minLevel: 2, sort: 10, archived: false, members: [], memberNames: [], messages: 0,
+  id: "", name: "", topic: "", color: "sky", access: "level", minLevel: 3, sort: 10, archived: false, members: [], memberNames: [], messages: 0,
 };
 
 const ACCESS_LABELS: Record<string, string> = {
@@ -195,7 +195,7 @@ const ChatsManager = ({ token }: { token: string | null }) => {
             <label className="space-y-1 block">
               <span className="text-xs text-muted-foreground">Минимальный статус</span>
               <select className={inputCls} value={f.minLevel} onChange={(e) => setF({ ...f, minLevel: Number(e.target.value) })}>
-                {LEVEL_NAMES.slice(1, 6).map((n, i) => (
+                {LEVEL_NAMES.slice(1, 7).map((n, i) => (
                   <option key={n} value={i + 1}>{i === 0 ? "Любой статус" : `от «${n}»`}</option>
                 ))}
               </select>

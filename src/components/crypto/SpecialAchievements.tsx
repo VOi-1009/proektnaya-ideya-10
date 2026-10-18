@@ -8,6 +8,7 @@ export const SPECIAL_META: Record<string, { title: string; desc: string; icon: s
   marathon: { title: "Железная воля", desc: "30 дней подряд без пропусков", icon: "Zap", color: "from-yellow-300 to-orange-500", unit: "дней подряд" },
   investor: { title: "Диверсификатор", desc: "Соберите портфель из 10 активов", icon: "PieChart", color: "from-violet-400 to-fuchsia-600", unit: "активов" },
   legend: { title: "Легенда TRADERKA", desc: "100 дней на сайте", icon: "Trophy", color: "from-amber-300 via-yellow-400 to-amber-600", unit: "дней" },
+  watcher: { title: "Смотритель", desc: "1000 минут на сайте", icon: "Telescope", color: "from-cyan-300 to-blue-600", unit: "минут" },
 };
 
 interface Props {

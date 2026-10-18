@@ -45,6 +45,13 @@ def handle_visits(event: dict) -> dict:
                 uid, is_admin = int(r[0]), bool(r[1])
 
         if method == "POST":
+            if json.loads(event.get("body") or "{}").get("beat"):
+                if uid:
+                    cur.execute(
+                        f"UPDATE {SCHEMA}.users SET active_minutes = active_minutes + 1, last_beat_at = NOW() "
+                        f"WHERE id = {uid} AND (last_beat_at IS NULL OR last_beat_at < NOW() - INTERVAL '50 seconds')"
+                    )
+                return resp(200, {"ok": True})
             if BOT_RE.search(headers.get("user-agent", "")):
                 return resp(200, {"ok": True})
             body = json.loads(event.get("body") or "{}")

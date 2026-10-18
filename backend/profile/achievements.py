@@ -7,6 +7,7 @@ SPECIAL = [
     ("marathon", 30),
     ("investor", 10),
     ("legend", 100),
+    ("watcher", 1000),
 ]
 
 
@@ -30,12 +31,12 @@ def special_for(cur, schema: str, uid: int) -> list:
         f"(SELECT COUNT(*) FROM {schema}.holdings WHERE user_id = {uid}), "
         f"(SELECT COALESCE(MAX(c), 0) FROM (SELECT COUNT(*) c FROM (SELECT day, day - (ROW_NUMBER() OVER (ORDER BY day))::int AS g "
         f"FROM {schema}.user_visits WHERE user_id = {uid}) t GROUP BY g) s), "
-        f"u.is_bot, COALESCE(u.status_override, 1) FROM {schema}.users u WHERE u.id = {uid}"
+        f"u.is_bot, COALESCE(u.status_override, 1), COALESCE(u.active_minutes, 0) FROM {schema}.users u WHERE u.id = {uid}"
     )
     r = cur.fetchone()
     if not r:
         return []
-    reacts, votes, days, coins, best, is_bot, lvl = (int(r[0]), int(r[1]), int(r[2]), int(r[3]), int(r[4]), bool(r[5]), int(r[6]))
+    reacts, votes, days, coins, best, is_bot, lvl, mins = (int(r[0]), int(r[1]), int(r[2]), int(r[3]), int(r[4]), bool(r[5]), int(r[6]), int(r[7]))
     if is_bot:
         chance = 20 + lvl * 11
         fake = {}
@@ -44,4 +45,4 @@ def special_for(cur, schema: str, uid: int) -> list:
         fake["critic"] = max(fake["critic"], min(reacts, 25))
         fake["voter"] = max(fake["voter"], min(votes, 5))
         return _pack(fake)
-    return _pack({"critic": reacts, "voter": votes, "month": days, "marathon": best, "investor": coins, "legend": days})
+    return _pack({"critic": reacts, "voter": votes, "month": days, "marathon": best, "investor": coins, "legend": days, "watcher": mins})

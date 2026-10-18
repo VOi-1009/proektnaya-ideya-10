@@ -56,7 +56,7 @@ def can_enter(room: dict, uid, is_admin: bool, level: int) -> bool:
 def denied_text(room: dict) -> str:
     if room["access"] == "list":
         return "Это закрытый чат — доступ выдаёт администратор"
-    return "Чат доступен со статуса «Наблюдатель»" if room["minLevel"] <= 2 else "Чат откроется с более высокого статуса"
+    return "Чат доступен со статуса «Наблюдатель»" if room["minLevel"] <= 3 else "Чат откроется с более высокого статуса"
 
 
 def handle_chat(event: dict) -> dict:
@@ -133,7 +133,7 @@ def handle_chat(event: dict) -> dict:
                     return resp(400, {"error": "Введите название чата"})
                 if color not in COLORS or access not in ACCESS:
                     return resp(400, {"error": "Неверные настройки чата"})
-                min_level = min(max(int(body.get("minLevel", 2) or 2), 1), 7)
+                min_level = min(max(int(body.get("minLevel", 3) or 3), 1), 8)
                 sort = min(max(int(body.get("sort", 10) or 0), 0), 9999)
                 members = sorted({int(i) for i in (body.get("members") or []) if str(i).isdigit()})[:500]
                 if rid:

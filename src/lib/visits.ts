@@ -51,7 +51,24 @@ export const useTrackVisit = () => {
   }, [pathname, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 };
 
+export const useActiveTime = () => {
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) return;
+    const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      fetch(`${PROFILE_URL}?resource=visits`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Auth-Token": token },
+        body: JSON.stringify({ beat: true }),
+      }).catch(() => undefined);
+    }, 60000);
+    return () => clearInterval(id);
+  }, [token]);
+};
+
 export const VisitTracker = () => {
   useTrackVisit();
+  useActiveTime();
   return null;
 };

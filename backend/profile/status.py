@@ -1,5 +1,6 @@
 LEVELS = [
     (0, "Новичок"),
+    (300, "Студент"),
     (750, "Наблюдатель"),
     (2250, "Трейдер"),
     (5250, "Аналитик"),
@@ -16,6 +17,7 @@ def points_sql(schema: str, alias: str = "u") -> str:
         f"+ LEAST((SELECT COUNT(*) FROM {schema}.holdings h WHERE h.user_id = {a}.id), 20) * 5 "
         f"+ ((COALESCE({a}.name, '') <> '')::int + ({a}.avatar_url IS NOT NULL)::int + (COALESCE({a}.bio, '') <> '')::int "
         f"+ (COALESCE({a}.city, '') <> '')::int + (COALESCE({a}.favorite_coin, '') <> '')::int) * 6 "
+        f"+ (COALESCE({a}.active_minutes, 0) / 10) * 2 "
         f"+ COALESCE({a}.bonus_points, 0))"
     )
 

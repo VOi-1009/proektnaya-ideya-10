@@ -10,6 +10,7 @@ export interface StatusLevel {
 
 export const LEVELS: StatusLevel[] = [
   { title: "Новичок", need: 0, icon: "Sprout", desc: "Только начинаете знакомство с рынком", cls: "bg-slate-400/15 text-slate-300", text: "text-slate-300" },
+  { title: "Студент", need: 300, icon: "GraduationCap", desc: "Освоились на сайте и изучаете рынок", cls: "bg-lime-400/15 text-lime-300", text: "text-lime-300" },
   { title: "Наблюдатель", need: 750, icon: "Eye", desc: "Регулярно следите за котировками", cls: "bg-sky-400/15 text-sky-300", text: "text-sky-300" },
   { title: "Трейдер", need: 2250, icon: "CandlestickChart", desc: "Ведёте портфель и заходите почти каждый день", cls: "bg-teal-400/15 text-teal-300", text: "text-teal-300" },
   { title: "Аналитик", need: 5250, icon: "BrainCircuit", desc: "Глубоко в рынке уже не первый месяц", cls: "bg-violet-400/15 text-violet-300", text: "text-violet-300" },
