@@ -1,14 +1,18 @@
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useSiteNews } from "@/lib/siteNews";
 
 const SiteNewsBlock = () => {
+  const navigate = useNavigate();
   const { data } = useSiteNews();
   if (!data || data.length === 0) return null;
   return (
     <div>
-      <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
-        <Icon name="Megaphone" size={12} /> Новости сайта
-      </h3>
+      <button onClick={() => navigate("/news")} className="w-full text-left hover:opacity-80 transition-opacity">
+        <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5 hover:text-white">
+          <Icon name="Megaphone" size={12} /> Новости сайта
+        </h3>
+      </button>
       <div className="space-y-1.5">
         {data.map((n) => (
           <div key={n.id} className="rounded-lg bg-rail/60 px-3 py-2">
