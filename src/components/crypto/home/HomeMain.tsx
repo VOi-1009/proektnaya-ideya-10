@@ -16,6 +16,7 @@ const ArticlesChannel = lazy(() => import("@/components/crypto/channels/Articles
 const AlertsChannel = lazy(() => import("@/components/crypto/channels/AlertsChannel"));
 const ChatChannel = lazy(() => import("@/components/crypto/channels/ChatChannel"));
 const AiNewsChannel = lazy(() => import("@/components/crypto/channels/AiNewsChannel"));
+const RadarChannel = lazy(() => import("@/components/crypto/channels/RadarChannel"));
 const ForumChannel = lazy(() => import("@/components/crypto/channels/ForumChannel"));
 
 const ChannelFallback = () => (
@@ -136,6 +137,8 @@ const HomeMain = ({
           <ForumChannel />
         ) : channel === "alerts" ? (
           <AlertsChannel coins={coins} live={live} api={alertsApi} go={go} />
+        ) : channel.startsWith("radar-") ? (
+          <RadarChannel id={Number(channel.slice(6))} />
         ) : channel.startsWith("chat-") ? (
           <ChatChannel room={channel.slice(5) as ChatRoom} />
         ) : channel === "portfolio" ? (

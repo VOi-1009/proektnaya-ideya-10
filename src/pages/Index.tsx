@@ -4,6 +4,7 @@ import Ticker from "@/components/crypto/Ticker";
 import { getSeen, useNews } from "@/components/crypto/news";
 import { usePriceAlerts } from "@/lib/alerts";
 import { useChatRooms } from "@/lib/chat";
+import { useRadars } from "@/lib/radars";
 import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
@@ -20,6 +21,7 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { data: chatRooms } = useChatRooms();
+  const { data: radarList } = useRadars();
   const { data: news } = useNews("crypto");
   const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
@@ -52,7 +54,8 @@ const Index = () => {
   };
 
   const chatChannels = (chatRooms ?? []).map((r) => ({ id: `chat-${r.id}`, name: r.name, topic: r.topic }));
-  const current = [...CHANNELS, ...chatChannels].find((c) => c.id === channel) ?? CHANNELS[0];
+  const radarChannels = (radarList ?? []).map((r) => ({ id: `radar-${r.id}`, name: r.title, topic: r.kind === "liq_heatmap" ? `${r.description || "Радар"} · ${r.symbol}` : r.description || "Радар" }));
+  const current = [...CHANNELS, ...chatChannels, ...radarChannels].find((c) => c.id === channel) ?? CHANNELS[0];
   const favCoins = coins.filter((c) => favs.includes(c.id));
   const sideCoins = [
     ...PINNED.map((id) => coins.find((c) => c.id === id)).filter((c): c is (typeof coins)[number] => !!c),

@@ -1,9 +1,7 @@
-import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import RadarDialog from "@/components/crypto/RadarDialog";
-import { Radar, useRadars } from "@/lib/radars";
+import { useRadars } from "@/lib/radars";
 import { chatColor, useChatRooms } from "@/lib/chat";
 import { CHANNELS, GoFn } from "./homeConfig";
 
@@ -20,7 +18,6 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
   const navigate = useNavigate();
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
-  const [radar, setRadar] = useState<Radar | null>(null);
 
   return (
     <aside
@@ -103,8 +100,10 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
               {radars.map((r) => (
                 <button
                   key={r.id}
-                  onClick={() => setRadar(r)}
-                  className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                  onClick={() => go(`radar-${r.id}`)}
+                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                    channel === `radar-${r.id}` ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                  }`}
                 >
                   <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
                   <span className="text-[14px] truncate">{r.title}</span>
@@ -114,7 +113,6 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           </div>
         )}
       </div>
-      <RadarDialog radar={radar} onClose={() => setRadar(null)} />
     </aside>
   );
 };
