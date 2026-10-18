@@ -82,7 +82,6 @@ const Index = () => {
             unreadOf={unreadOf}
             mobileSidebarOpen={mobileSidebarOpen}
             setMobileSidebarOpen={setMobileSidebarOpen}
-            favsCount={favs.length}
           />
           <HomeMain
             channel={channel}
@@ -102,7 +101,7 @@ const Index = () => {
             setArticleId={setArticleId}
             setMobileSidebarOpen={setMobileSidebarOpen}
           />
-          <HomeRightPanel sideCoins={sideCoins} go={go} />
+          <HomeRightPanel sideCoins={sideCoins} go={go} favsCount={favs.length} />
         </div>
       </div>
     </div>

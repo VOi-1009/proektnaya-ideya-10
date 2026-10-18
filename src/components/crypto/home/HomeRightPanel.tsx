@@ -3,18 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { COIN_META, Coin, fmtPct, fmtPrice } from "@/lib/crypto";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import SidePolls from "@/components/crypto/SidePolls";
+import ProfileMiniCard from "./ProfileMiniCard";
 import { GoFn, PINNED } from "./homeConfig";
 
 interface Props {
   sideCoins: Coin[];
   go: GoFn;
+  favsCount: number;
 }
 
-const HomeRightPanel = ({ sideCoins, go }: Props) => {
+const HomeRightPanel = ({ sideCoins, go, favsCount }: Props) => {
   const navigate = useNavigate();
 
   return (
     <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
+      <ProfileMiniCard favsCount={favsCount} />
       <button
         onClick={() => navigate("/rating")}
         className="w-full flex items-center gap-2 px-2 py-2 rounded bg-rail hover:bg-hover text-sm text-foreground"
