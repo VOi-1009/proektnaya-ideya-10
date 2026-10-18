@@ -1,10 +1,13 @@
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
-import { useSiteNews } from "@/lib/siteNews";
+import { useSiteNews, type SiteNews } from "@/lib/siteNews";
+import SiteNewsDialog from "@/components/crypto/SiteNewsDialog";
 
 const fmt = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 
 const HeroSiteNews = () => {
   const { data, isLoading } = useSiteNews();
+  const [opened, setOpened] = useState<SiteNews | null>(null);
   const items = (data ?? []).slice(0, 6);
 
   return (
@@ -19,7 +22,7 @@ const HeroSiteNews = () => {
       ) : (
         <ul className="space-y-3 flex-1">
           {items.map((n, i) => (
-            <li key={n.id} className={i > 0 ? "pt-3 border-t border-border/60" : ""}>
+            <li key={n.id} onClick={() => setOpened(n)} className={`cursor-pointer hover:bg-hover/40 rounded transition-colors ${i > 0 ? "pt-3 border-t border-border/60" : ""}`}>
               <div className="flex items-baseline gap-2">
                 <span className="text-muted-foreground/70 text-[10px] font-mono flex-shrink-0">{fmt(n.createdAt)}</span>
                 <span className="text-sky-400 text-sm font-semibold leading-snug">{n.title}</span>
@@ -29,6 +32,7 @@ const HeroSiteNews = () => {
           ))}
         </ul>
       )}
+      <SiteNewsDialog item={opened} onClose={() => setOpened(null)} />
     </div>
   );
 };
