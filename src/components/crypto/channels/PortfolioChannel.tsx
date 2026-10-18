@@ -229,7 +229,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         <p className="text-muted-foreground mb-3">
           Добавьте купленные монеты — сайт посчитает текущую стоимость и результат по живому курсу. Если не указать цену покупки, возьму текущую.
         </p>
-        <form onSubmit={add} className="bg-card border border-border rounded-lg p-4 max-w-2xl" noValidate>
+        <form onSubmit={add} className="bg-card border border-border rounded-lg p-4" noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr_1fr_auto] gap-2">
             <Select value={coinId} onValueChange={setCoinId}>
               <SelectTrigger className="bg-rail border-0 h-10 font-coin">

@@ -66,7 +66,7 @@ const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
         <p className="text-muted-foreground mb-3">
           Пересчёт между монетами, золотом, нефтью, рублём, долларом и евро по текущему курсу.
         </p>
-        <div className="bg-card border border-border rounded-lg p-4 max-w-xl space-y-3">
+        <div className="bg-card border border-border rounded-lg p-4 space-y-3">
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <input
               value={amount}

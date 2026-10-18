@@ -140,13 +140,13 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
             <Skeleton className="w-10 h-10 rounded-full bg-card" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-40 bg-card" />
-              <Skeleton className="h-24 w-full max-w-2xl bg-card" />
+              <Skeleton className="h-24 w-full bg-card" />
             </div>
           </div>
         ))}
 
       {isError && !items.length && (
-        <div className="bg-card border border-border rounded-lg p-6 text-center max-w-2xl">
+        <div className="bg-card border border-border rounded-lg p-6 text-center">
           <Icon name="WifiOff" size={28} className="mx-auto mb-2 text-muted-foreground" />
           <div className="text-white font-semibold">Не удалось загрузить новости</div>
           <div className="text-muted-foreground text-sm mb-3">{(error as Error)?.message}</div>
@@ -164,7 +164,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
         const isOpen = open === n.id;
         return (
           <Message key={n.id} author="" time="" bot delay={Math.min(idx, 8) * 40}>
-            <article className="bg-card border-l-4 border-primary rounded overflow-hidden max-w-2xl flex flex-col sm:flex-row">
+            <article className="bg-card border-l-4 border-primary rounded overflow-hidden flex flex-col sm:flex-row">
               <div className="p-3 sm:p-4 flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="text-xs text-white/80 font-medium">{n.source}</span>

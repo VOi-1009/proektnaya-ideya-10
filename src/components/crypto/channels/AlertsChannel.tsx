@@ -64,7 +64,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
         <p className="text-muted-foreground mb-3">
           Выберите монету и цену — сайт оповестит, когда курс её достигнет. Направление (рост или падение) определяется автоматически.
         </p>
-        <form onSubmit={submit} className="bg-card border border-border rounded-lg p-4 max-w-2xl" noValidate>
+        <form onSubmit={submit} className="bg-card border border-border rounded-lg p-4" noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-[190px_1fr_auto] gap-2">
             <Select value={coinId} onValueChange={setCoinId}>
               <SelectTrigger className="bg-rail border-0 h-10 font-coin">
@@ -121,7 +121,7 @@ const AlertsChannel = ({ coins, live, api, go }: Props) => {
       </Message>
 
       {notificationsSupported() && perm !== "granted" && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-primary/10 border border-primary/30 rounded-lg p-4 max-w-3xl">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-primary/10 border border-primary/30 rounded-lg p-4">
           <Icon name="BellRing" size={22} className="text-primary flex-shrink-0" />
           <div className="flex-1 text-sm">
             <div className="text-white font-semibold">Уведомления в браузере</div>

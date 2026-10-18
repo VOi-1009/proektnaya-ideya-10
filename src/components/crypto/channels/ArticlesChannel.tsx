@@ -9,7 +9,7 @@ import { fmtDate, useArticle, useArticles, useCategories } from "@/lib/articles"
 const ArticleView = ({ id, onBack }: { id: number; onBack: () => void }) => {
   const { data, isLoading, isError } = useArticle(id);
   return (
-    <div className="max-w-3xl animate-fade-in">
+    <div className="animate-fade-in">
       <button onClick={onBack} className="text-muted-foreground hover:text-white text-sm inline-flex items-center gap-1 mb-4">
         <Icon name="ArrowLeft" size={14} /> Все статьи
       </button>
