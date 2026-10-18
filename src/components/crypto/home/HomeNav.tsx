@@ -25,7 +25,7 @@ const HomeNav = ({ channel, go, mobileMenuOpen, setMobileMenuOpen }: Props) => {
           </div>
           <div className="text-left">
             <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADERKA<span className="text-primary">.RU</span></h1>
-            <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости крипторынка</p>
+            <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости.</p>
           </div>
         </button>
         <div className="hidden md:flex items-center gap-0.5">
