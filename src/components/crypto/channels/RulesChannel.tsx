@@ -89,7 +89,7 @@ const RulesChannel = () => (
           </span>
           <div className="min-w-0">
             <div className="text-white text-sm font-semibold">Основатель</div>
-            <div className="text-muted-foreground text-xs mt-0.5">Редкий значок для первых 100 участников. Больше его не получить.</div>
+            <div className="text-muted-foreground text-xs mt-0.5">Редкий значок для первых 100 участников.</div>
           </div>
         </div>
       </div>
