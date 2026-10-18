@@ -37,7 +37,7 @@ const CHANNELS = [
   { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: Bits.media, Investing.com, Финам, Ведомости", icon: "Hash" },
   { id: "world", name: "мировые-новости", short: "Мир", topic: "Политика, экономика и события в мире: ТАСС, РБК, Lenta.ru, Ведомости", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
-  { id: "ainews", name: "новости-AiTraderKa", short: "AiTraderKa", topic: "Дайджесты и заметки ИИ-бота AiTraderKa", icon: "Sparkles" },
+  { id: "ainews", name: "Новости от AiTraderKa", short: "AiTraderKa", topic: "Дайджесты и заметки ИИ-бота AiTraderKa", icon: "Sparkles" },
   { id: "forum", name: "форум", topic: "Обсуждения по разделам: рынок, идеи, закрытые клубы", icon: "Hash" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
