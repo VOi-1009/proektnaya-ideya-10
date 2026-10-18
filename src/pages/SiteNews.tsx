@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { useSiteNews } from "@/lib/siteNews";
 
 const SiteNews = () => {
-  const { data, isLoading } = useSiteNews(true);
+  const { data, isLoading } = useSiteNews();
 
   return (
     <div className="min-h-screen bg-background">
