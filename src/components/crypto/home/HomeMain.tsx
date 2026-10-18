@@ -99,7 +99,7 @@ const HomeMain = ({
     </div>
 
     <div id="chat-scroll" className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin">
-      <div key={channel} className={channel === "welcome" ? "" : channel.startsWith("chat-") ? "max-w-4xl" : "max-w-5xl"}>
+      <div key={channel} className={channel === "welcome" || channel.startsWith("chat-") || channel.startsWith("radar-") ? "" : "max-w-5xl"}>
         <Suspense fallback={<ChannelFallback />}>
         {isLoading ? (
           <div className="space-y-3">
