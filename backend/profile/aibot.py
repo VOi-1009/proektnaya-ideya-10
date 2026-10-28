@@ -12,7 +12,7 @@ DEFAULTS = {
     "enabled": True, "moderation": True, "blockLinks": True, "blockCaps": True, "stopWords": "",
     "reactShare": 90, "likeShare": 70, "autoNews": True, "newsHours": 6,
     "chatReplies": True, "replyAll": True, "dailyPrices": True,
-    "moves": True, "moveThreshold": 5,
+    "moves": True, "moveThreshold": 5, "botChatter": True,
 }
 PFX = r"(?:на|по|за|от|вы|до|у|при|рас|раз|об|о|с|недо|пере|под|про|въ|из|ни)?"
 BAD_RE = re.compile(
@@ -156,6 +156,58 @@ def maybe_daily(cur, s: dict) -> None:
         enqueue_post(cur, row[0], "daily")
 
 
+CHATTER = [
+    "всем привет", "доброе утро, народ", "день добрый", "кто тут сегодня?", "всем хорошего дня", "привет всем",
+    "что-то рынок сегодня нервный", "тишина на рынке", "ждём движения", "сегодня спокойно вроде",
+    "кто следит за биткоином?", "а я пока просто наблюдаю", "лучше не торопиться сегодня", "терпение главное",
+    "вот это свечи были вчера", "опять боковик", "кто что думает по рынку?", "наконец-то выходные скоро",
+    "кофе выпил, можно торговать", "ну что, по чуть-чуть", "главное без фанатизма", "вечер добрый",
+    "кто на длинную закупается?", "я пока в стороне", "график сегодня интересный", "новости читали?",
+    "интересно что дальше будет", "так, наблюдаем", "всем зелёных свечей", "красного поменьше сегодня",
+    "согласен", "точно", "ага, тоже заметил", "вот и я о том же", "посмотрим", "хорошая мысль",
+    "ну такое", "увидим", "не спешите с выводами", "лучше подождать", "а есть у кого опыт по этому?",
+    "добавил в избранное пару монет", "портфель пока в плюсе", "пока без изменений", "ой, всё, пошёл смотреть график",
+    "кто тут давно?", "хороший чат", "приятно читать вас", "всем удачи", "до завтра, всем пока",
+]
+
+
+def maybe_chatter(cur, s: dict) -> None:
+    import random
+    if not (s.get("enabled") and s.get("botChatter", True)):
+        return
+    from aichat import msk
+    t = msk()
+    if t.tm_hour < 9:
+        return
+    if random.random() > 0.35:
+        return
+    cur.execute(f"SELECT id FROM {SCHEMA}.chat_rooms WHERE name = 'чат общий' AND NOT archived LIMIT 1")
+    r = cur.fetchone()
+    if not r:
+        return
+    room = r[0]
+    cur.execute(
+        f"SELECT 1 FROM {SCHEMA}.chat_messages m JOIN {SCHEMA}.users u ON u.id = m.user_id "
+        f"WHERE m.room = '{room}' AND u.is_bot AND NOT u.is_ai AND m.created_at > NOW() - INTERVAL '30 minutes' LIMIT 1"
+    )
+    if cur.fetchone():
+        return
+    cur.execute(f"SELECT user_id, text FROM {SCHEMA}.chat_messages WHERE room = '{room}' ORDER BY id DESC LIMIT 20")
+    recent = cur.fetchall()
+    last_users = [str(x[0]) for x in recent[:6]]
+    used = {x[1] for x in recent}
+    free = [x for x in CHATTER if x not in used]
+    if not free:
+        return
+    excl = f"AND id NOT IN ({', '.join(last_users)})" if last_users else ""
+    cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_bot AND NOT is_ai {excl} ORDER BY random() LIMIT 1")
+    b = cur.fetchone()
+    if not b:
+        return
+    text = random.choice(free).replace("'", "''")
+    cur.execute(f"INSERT INTO {SCHEMA}.chat_messages (room, user_id, text) VALUES ('{room}', {int(b[0])}, '{text}')")
+
+
 def maybe_moves(cur, s: dict) -> None:
     if not (s.get("enabled") and s.get("moves", True)):
         return
@@ -271,6 +323,7 @@ def handle_aibot(event: dict) -> dict:
         if method == "GET":
             maybe_moves(cur, s)
             maybe_daily(cur, s)
+            maybe_chatter(cur, s)
             maybe_autopost(cur, s)
             try:
                 from aimail import process_queue

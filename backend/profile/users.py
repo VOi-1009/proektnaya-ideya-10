@@ -172,10 +172,11 @@ def handle_users(event: dict) -> dict:
 
             if me:
                 cur.execute(f"UPDATE {SCHEMA}.users SET last_seen_at = NOW() WHERE id = {me}")
-            from aibot import load_settings, maybe_daily, maybe_moves
+            from aibot import load_settings, maybe_chatter, maybe_daily, maybe_moves
             _s = load_settings(cur)
             maybe_daily(cur, _s)
             maybe_moves(cur, _s)
+            maybe_chatter(cur, _s)
             cur.execute(
                 f"SELECT * FROM ({base} WHERE u.last_seen_at > NOW() - INTERVAL '{ONLINE_MINUTES} minutes' OR u.is_bot) t "
                 f"ORDER BY COALESCE(t.status_override, 0) DESC LIMIT 400"
