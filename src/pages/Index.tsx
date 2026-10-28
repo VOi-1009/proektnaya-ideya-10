@@ -5,7 +5,6 @@ import { getSeen, useNews } from "@/components/crypto/news";
 import { usePriceAlerts } from "@/lib/alerts";
 import { useChatRooms } from "@/lib/chat";
 import { useRadars } from "@/lib/radars";
-import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
 import HomeRightPanel from "@/components/crypto/home/HomeRightPanel";
@@ -74,7 +73,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
-      <HomeNav go={go} />
 
       {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 

@@ -24,8 +24,16 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
     <aside
       className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
     >
-      <div className="h-12 px-4 flex items-center justify-between">
-        <h2 className="text-white font-semibold text-sm"></h2>
+      <div className="px-4 py-3 flex items-center justify-between gap-2">
+        <button onClick={() => go("welcome")} className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-display font-black text-xl leading-none flex-shrink-0">
+            Т
+          </div>
+          <div className="text-left min-w-0">
+            <h1 className="font-display text-lg text-white leading-none tracking-wide">TRADERKA<span className="text-primary">.RU</span></h1>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Котировки, графики и новости.</p>
+          </div>
+        </button>
         <Button
           variant="ghost"
           className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
