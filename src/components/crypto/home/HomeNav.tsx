@@ -5,7 +5,7 @@ interface Props {
 }
 
 const HomeNav = ({ go }: Props) => (
-  <nav className="bg-card border-b border-border sticky top-0 z-30 grid grid-cols-2">
+  <nav className="bg-card sticky top-0 z-30 grid grid-cols-2">
     <div className="px-4 sm:px-6 py-3">
       <button onClick={() => go("welcome")} className="flex items-center gap-3">
         <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-black text-xl sm:text-2xl leading-none">
