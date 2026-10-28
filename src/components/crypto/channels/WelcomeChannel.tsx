@@ -11,7 +11,6 @@ import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
 import QuoteBlock from "../QuoteBlock";
 import FearGreedGauge from "../FearGreedGauge";
-import FearGreedCard from "../FearGreedCard";
 import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
 import HeroSiteNews from "../HeroSiteNews";
@@ -84,10 +83,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             </div>
             <div className="flex-1 flex flex-col border-t border-transparent">
-              <div className="flex-1 min-h-[60px] grid grid-cols-2 gap-2 p-3 items-center">
-                <FearGreedCard />
-                <AltseasonCard />
-              </div>
+              <div className="flex-1 min-h-[60px]" />
               <div className="flex-1 min-h-[60px] border-t border-transparent flex items-center overflow-hidden">
                 <div className="w-full">
                   <OnlineMarquee />
