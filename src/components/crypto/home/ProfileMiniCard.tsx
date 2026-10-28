@@ -42,7 +42,7 @@ const ProfileMiniCard = ({ part = "main" }: { part?: "main" | "achievements" }) 
   if (part === "achievements") {
     if (!user || minis.length === 0) return null;
     return (
-      <div className="flex flex-wrap gap-1.5 p-2 bg-rail rounded-lg" aria-label="Достижения">
+      <div className="flex flex-wrap gap-1.5 max-w-[260px] p-2 bg-rail rounded-lg" aria-label="Достижения">
         {minis.map((m) => (
           <span
             key={m.id}

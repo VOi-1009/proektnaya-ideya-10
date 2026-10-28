@@ -18,8 +18,11 @@ const HomeNav = ({ go }: Props) => (
         </div>
       </button>
     </div>
-    <div className="border-l border-transparent px-4 sm:px-6 py-3 flex items-center justify-end">
-      <ProfileMiniCard />
+    <div className="border-l border-transparent px-4 sm:px-6 py-3 flex items-center justify-end min-w-0">
+      <div className="flex items-center gap-4 min-w-0">
+        <ProfileMiniCard />
+        <ProfileMiniCard part="achievements" />
+      </div>
     </div>
   </nav>
 );
