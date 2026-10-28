@@ -1,5 +1,5 @@
 export const cardCls = (border: string, interactive = false) =>
-  `bg-card rounded-lg px-3 h-[58px] border-l-4 ${border} flex flex-col justify-center items-start text-left min-w-0 overflow-hidden ${
+  `bg-card rounded-lg px-3 h-[48px] border-l-4 ${border} flex flex-col justify-center items-start text-left min-w-0 overflow-hidden ${
     interactive ? "hover:bg-hover transition-colors" : ""
   }`;
 
