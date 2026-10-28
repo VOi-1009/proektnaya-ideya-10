@@ -47,6 +47,8 @@ export interface AiSettings {
   dailyPrices: boolean;
   moves: boolean;
   moveThreshold: number;
+  botChatter: boolean;
+  chatterPhrases: string;
 }
 
 export interface AiMailSettings {

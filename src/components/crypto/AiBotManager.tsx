@@ -137,6 +137,27 @@ const AiBotManager = ({ token }: { token: string | null }) => {
 
         <section className="bg-card border border-border rounded-lg p-4 space-y-4">
           <h2 className="text-white font-semibold flex items-center gap-2">
+            <Icon name="MessagesSquare" size={18} className="text-indigo-300" /> Болтовня ботов в «чат общий»
+          </h2>
+          <Toggle
+            label="Боты изредка пишут в чат"
+            hint="Короткие фразы от обычных ботов, не чаще раза в полчаса и только днём по Москве"
+            checked={f.botChatter}
+            onChange={(v) => setF({ ...f, botChatter: v })}
+          />
+          <label className="block space-y-1">
+            <span className="text-xs text-muted-foreground">Фразы для ботов — каждая с новой строки</span>
+            <textarea
+              className={`${inputCls} h-48 py-2 resize-y`}
+              value={f.chatterPhrases}
+              onChange={(e) => setF({ ...f, chatterPhrases: e.target.value })}
+              placeholder="всем привет"
+            />
+          </label>
+        </section>
+
+        <section className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <h2 className="text-white font-semibold flex items-center gap-2">
             <Icon name="ThumbsUp" size={18} className="text-indigo-300" /> Лайки и дизлайки
           </h2>
           <div className="space-y-2">

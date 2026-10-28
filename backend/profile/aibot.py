@@ -43,7 +43,10 @@ def esc(v: str) -> str:
 def load_settings(cur) -> dict:
     cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'ai_bot'")
     r = cur.fetchone()
-    return {**DEFAULTS, **(json.loads(r[0]) if r else {})}
+    res = {**DEFAULTS, **(json.loads(r[0]) if r else {})}
+    if not str(res.get("chatterPhrases", "")).strip():
+        res["chatterPhrases"] = "\n".join(CHATTER)
+    return res
 
 
 def ai_bot_id(cur):
@@ -196,7 +199,8 @@ def maybe_chatter(cur, s: dict) -> None:
     recent = cur.fetchall()
     last_users = [str(x[0]) for x in recent[:6]]
     used = {x[1] for x in recent}
-    free = [x for x in CHATTER if x not in used]
+    phrases = [x.strip()[:200] for x in re.split(r"[\n;]+", str(s.get("chatterPhrases", ""))) if x.strip()] or CHATTER
+    free = [x for x in phrases if x not in used]
     if not free:
         return
     excl = f"AND id NOT IN ({', '.join(last_users)})" if last_users else ""
@@ -409,6 +413,8 @@ def handle_aibot(event: dict) -> dict:
                 "dailyPrices": bool(body.get("dailyPrices", True)),
                 "moves": bool(body.get("moves", True)),
                 "moveThreshold": max(1, min(int(body.get("moveThreshold", 5) or 5), 50)),
+                "botChatter": bool(body.get("botChatter", True)),
+                "chatterPhrases": "\n".join(x.strip()[:200] for x in str(body.get("chatterPhrases", "")).split("\n") if x.strip())[:6000],
             }
             val = esc(json.dumps(data, ensure_ascii=False))
             cur.execute(
