@@ -1,6 +1,6 @@
 import Icon from "@/components/ui/icon";
 import { Coin, COIN_META, fmtPct, fmtPrice } from "@/lib/crypto";
-import { GoFn } from "./homeConfig";
+import { GoFn, PINNED } from "./homeConfig";
 
 interface Props {
   sideCoins: Coin[];
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const HeaderQuotes = ({ sideCoins, go }: Props) => {
-  const list = sideCoins;
+  const list = sideCoins.filter((c) => PINNED.includes(c.id));
   if (!list.length) return null;
 
   return (
