@@ -136,7 +136,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </Button>
             </div>
           </div>
-          <div className="p-2 sm:p-3 border-t lg:border-t-0 lg:border-l border-border min-h-[120px]" />
+          <div className="border-t lg:border-t-0 lg:border-l border-border">
+            <BtcLiveChart onOpen={() => go("market", "bitcoin")} />
+          </div>
         </div>
       </div>
 
@@ -144,9 +146,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
         <TopNewsBlock onAll={() => go("news")} />
-        <div className="border-t lg:border-t-0 lg:border-l border-border">
-          <BtcLiveChart onOpen={() => go("market", "bitcoin")} />
-        </div>
+        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
       </div>
 
       <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
