@@ -8,7 +8,7 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "n
 const HeroSiteNews = () => {
   const { data, isLoading } = useSiteNews();
   const [opened, setOpened] = useState<SiteNews | null>(null);
-  const items = (data ?? []).slice(0, 4);
+  const items = (data ?? []).slice(0, 5);
 
   return (
     <div className="p-3 sm:p-4 h-full flex flex-col">
@@ -27,7 +27,7 @@ const HeroSiteNews = () => {
                 <span className="text-muted-foreground/70 text-[10px] font-mono flex-shrink-0">{fmt(n.createdAt)}</span>
                 <span className="text-sky-400 text-sm font-semibold leading-snug">{n.title}</span>
               </div>
-              {n.body && <p className="text-muted-foreground text-xs mt-1 leading-relaxed line-clamp-2 whitespace-pre-line">{n.body}</p>}
+              {n.body && <p className="text-muted-foreground text-xs mt-1 leading-relaxed line-clamp-4 whitespace-pre-line">{n.body}</p>}
             </li>
           ))}
         </ul>
