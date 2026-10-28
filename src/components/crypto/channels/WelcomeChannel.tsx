@@ -56,7 +56,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
     <div className="space-y-3">
       <div className="grid grid-cols-1 lg:grid-cols-[20fr_50fr_30fr] gap-3 animate-scale-in">
         <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-2">
-          <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5 text-center">Сводка по рынку на сегодня</div>
           <div className="grid grid-cols-2 gap-2">
             <div className={cardCls("border-primary")}>
               <div className={labelCls}>Капитализация крипто</div>
