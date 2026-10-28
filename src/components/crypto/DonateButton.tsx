@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { useDonate } from "@/lib/donate";
 import DonateClaim from "./DonateClaim";
 
-const DonateButton = ({ className = "", full = false }: { className?: string; full?: boolean }) => {
+const DonateButton = ({ className = "", full = false, menu = false }: { className?: string; full?: boolean; menu?: boolean }) => {
   const { data } = useDonate();
   const [open, setOpen] = useState(false);
   if (!data?.enabled || (!data.url && !data.details)) return null;
@@ -19,6 +19,15 @@ const DonateButton = ({ className = "", full = false }: { className?: string; fu
 
   return (
     <>
+      {menu ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+        >
+          <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
+          <span className="text-[14px]">{data.buttonText}</span>
+        </button>
+      ) : (
       <Button
         onClick={() => setOpen(true)}
         className={`font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-500/30 hover:text-emerald-100 ${full ? "justify-start" : "h-8 px-2.5 text-[13px]"} ${className}`}
@@ -26,6 +35,7 @@ const DonateButton = ({ className = "", full = false }: { className?: string; fu
         <Icon name="Heart" size={full ? 16 : 14} className={full ? "mr-2" : "mr-1.5"} />
         {data.buttonText}
       </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-card border-border max-w-md">
           <DialogHeader>

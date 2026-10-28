@@ -68,7 +68,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
               <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
               <span className="text-[14px]">рейтинг</span>
             </button>
-            <DonateButton full className="mt-2 w-full" />
+            <DonateButton menu />
           </div>
         </div>
         <div>
