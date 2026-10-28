@@ -17,7 +17,7 @@ const HomeNav = ({ go }: Props) => (
         </div>
       </button>
     </div>
-    <div className="border-l border-border px-4 sm:px-6 py-3" />
+    <div className="border-l border-transparent px-4 sm:px-6 py-3" />
   </nav>
 );
 
