@@ -7,6 +7,7 @@ import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
 import { ChatRoom } from "@/lib/chat";
 import { PriceAlertsApi } from "@/lib/alerts";
 import { GoFn } from "./homeConfig";
+import HeaderQuotes from "./HeaderQuotes";
 
 const MarketChannel = lazy(() => import("@/components/crypto/channels/MarketChannel"));
 const NewsChannel = lazy(() => import("@/components/crypto/channels/NewsChannel"));
@@ -78,9 +79,10 @@ const HomeMain = ({
       <span className="text-white font-semibold">{current.name.replace(/-/g, " ")}</span>
       <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
       <span className="text-muted-foreground text-sm hidden sm:block truncate">{current.topic}</span>
-      <div className="ml-auto flex items-center gap-3 text-muted-foreground">
+      <div className="ml-auto flex items-center gap-3 text-muted-foreground min-w-0">
+        <HeaderQuotes coins={coins} go={go} />
         {updated && (
-          <span className="hidden md:flex items-center gap-1.5 text-xs font-mono">
+          <span className="hidden 2xl:flex items-center gap-1.5 text-xs font-mono flex-shrink-0">
             <span className={`w-1.5 h-1.5 rounded-full ${live ? "bg-up animate-pulse" : "bg-accent"}`} />
             {live ? "онлайн" : "кэш"} · {updated}
           </span>

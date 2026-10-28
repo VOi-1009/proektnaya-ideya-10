@@ -3,7 +3,6 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
-import Message from "../Message";
 import LatestArticles from "../LatestArticles";
 import HomeBlocks from "../HomeBlocks";
 import TopNewsBlock from "../TopNewsBlock";
@@ -12,8 +11,6 @@ import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
-
-const HERO_QUOTES = ["bitcoin", "ethereum", "brent", "gold", "usd-rub", "eur-rub"];
 
 interface Props {
   coins: Coin[];
@@ -32,7 +29,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
   const { data: fg } = useFearGreed();
-  const heroQuotes = HERO_QUOTES.map((id) => coins.find((c) => c.id === id)).filter((c): c is Coin => !!c);
 
   const cryptos = coins.filter((c) => !c.kind);
   const totalCap = cryptos.reduce((s, c) => s + c.market_cap, 0);
@@ -80,91 +76,67 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </div>
           </div>
           <div className="p-2 sm:p-3 border-t lg:border-t-0 lg:border-l border-border">
-            <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Главные котировки</div>
+            <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Сводка по рынку на сегодня</div>
             <div className="grid grid-cols-2 gap-2">
-              {heroQuotes.map((c) => {
-                const up = c.price_change_percentage_24h >= 0;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => go("market", c.id)}
-                    className="text-left bg-rail/60 hover:bg-hover rounded-lg px-3 py-1.5 transition-colors min-w-0"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-white text-sm font-coin font-medium truncate">{COIN_META[c.id]?.ru ?? c.name}</span>
-                      <span className={`text-xs font-mono tabular ${up ? "text-up" : "text-down"}`}>{fmtPct(c.price_change_percentage_24h)}</span>
+              <div className={cardCls("border-primary")}>
+                <div className={labelCls}>Капитализация крипто</div>
+                <div className={valueCls}>{fmtBig(totalCap)}</div>
+              </div>
+              <div className={cardCls("border-accent")}>
+                <div className={labelCls}>Доминация BTC</div>
+                <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
+              </div>
+              {best && (
+                <button onClick={() => go("market", best.id)} className={cardCls("border-up", true)}>
+                  <div className={labelCls}>Сильнее рынка</div>
+                  <div className={valueCls}>
+                    {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
+                  </div>
+                </button>
+              )}
+              {worst && (
+                <button onClick={() => go("market", worst.id)} className={cardCls("border-down", true)}>
+                  <div className={labelCls}>Аутсайдер</div>
+                  <div className={valueCls}>
+                    {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
+                  </div>
+                </button>
+              )}
+              <div
+                className={cardCls(fg ? fgBorder(fg.value) : "border-input")}
+                title={`Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория${fg?.prev != null ? `. Вчера: ${fg.prev}` : ""}`}
+              >
+                <div className={labelCls}>Страх и жадность</div>
+                {fg ? (
+                  <>
+                    <div className="flex items-baseline gap-1.5 mt-0.5 w-full min-w-0">
+                      <span className={`font-mono tabular text-sm leading-tight ${fgColor(fg.value)}`}>{fg.value}</span>
+                      <span className="text-white text-[10px] truncate">{fg.label}</span>
                     </div>
-                    <div className="font-mono text-white/90 tabular text-sm truncate">{fmtPrice(c.current_price, c.id)}</div>
-                  </button>
-                );
-              })}
+                    <div className="relative h-1 rounded-full mt-1 w-full bg-gradient-to-r from-down via-accent to-up">
+                      <span
+                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white border border-background"
+                        style={{ left: `${fg.value}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className={valueCls}>—</div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <Message author="Traderka Бот" time="Сегодня в 09:00" icon="CandlestickChart" bot delay={80}>
-        <p className="mb-2">
-          <strong className="text-white">Сводка по рынку на сегодня</strong>
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
-          <div className={cardCls("border-primary")}>
-            <div className={labelCls}>Капитализация крипто</div>
-            <div className={valueCls}>{fmtBig(totalCap)}</div>
-          </div>
-          <div className={cardCls("border-accent")}>
-            <div className={labelCls}>Доминация BTC</div>
-            <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
-          </div>
-          {best && (
-            <button onClick={() => go("market", best.id)} className={cardCls("border-up", true)}>
-              <div className={labelCls}>Сильнее рынка</div>
-              <div className={valueCls}>
-                {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
-              </div>
-            </button>
-          )}
-          {worst && (
-            <button onClick={() => go("market", worst.id)} className={cardCls("border-down", true)}>
-              <div className={labelCls}>Аутсайдер</div>
-              <div className={valueCls}>
-                {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
-              </div>
-            </button>
-          )}
-          <div
-            className={cardCls(fg ? fgBorder(fg.value) : "border-input")}
-            title={`Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория${fg?.prev != null ? `. Вчера: ${fg.prev}` : ""}`}
-          >
-            <div className={labelCls}>Страх и жадность</div>
-            {fg ? (
-              <>
-                <div className="flex items-baseline gap-1.5 mt-0.5 w-full min-w-0">
-                  <span className={`font-mono tabular text-sm leading-tight ${fgColor(fg.value)}`}>{fg.value}</span>
-                  <span className="text-white text-[10px] truncate">{fg.label}</span>
-                </div>
-                <div className="relative h-1 rounded-full mt-1 w-full bg-gradient-to-r from-down via-accent to-up">
-                  <span
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white border border-background"
-                    style={{ left: `${fg.value}%` }}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className={valueCls}>—</div>
+            <MarketMetricsRow cols="grid-cols-2" />
+            {btc && (
+              <p className="mt-3 text-muted-foreground text-sm">
+                Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
+                <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
+                  Открыть график →
+                </button>
+              </p>
             )}
           </div>
         </div>
-        <MarketMetricsRow />
-        {btc && (
-          <p className="mt-3 text-muted-foreground text-sm">
-            Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
-            <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
-              Открыть график →
-            </button>
-          </p>
-        )}
-      </Message>
+      </div>
 
       <OnlineMarquee />
 
