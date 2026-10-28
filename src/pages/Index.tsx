@@ -81,16 +81,6 @@ const Index = () => {
       {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 
       <div className="flex min-h-[calc(100vh-96px)]">
-        <div className="hidden lg:flex w-[72px] bg-rail flex-col items-center py-3 gap-2 flex-shrink-0">
-          <button
-            onClick={() => go("welcome")}
-            className="w-12 h-12 bg-primary text-primary-foreground rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center"
-            title="TRADERKA.RU"
-          >
-            <span className="font-display font-black text-2xl leading-none text-white">Т</span>
-          </button>
-        </div>
-
         <div className="flex-1 flex flex-col lg:flex-row min-w-0">
           <HomeSidebar
             channel={channel}
