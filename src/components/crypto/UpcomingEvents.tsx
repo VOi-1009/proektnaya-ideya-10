@@ -11,7 +11,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
   const { data, isLoading, isError } = useEconCalendar();
   const now = data ? Date.now() : 0;
   const today = new Date(now + 3 * 3600_000).toISOString().slice(0, 10);
-  const items = (data ?? []).filter((e) => e.ts >= now - 3600_000).slice(0, 6);
+  const items = (data ?? []).filter((e) => e.ts >= now - 3600_000).slice(0, 5);
 
   return (
     <div className="p-3 sm:p-4 flex flex-col h-full">
@@ -25,7 +25,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
       </div>
       {isLoading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className="h-9 bg-rail" />
           ))}
         </div>
@@ -34,9 +34,9 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
       ) : !items.length ? (
         <p className="text-muted-foreground text-sm py-6 text-center">Важных событий до конца недели нет</p>
       ) : (
-        <ul className="space-y-1">
+        <ul>
           {items.map((e, i) => (
-            <li key={`${e.ts}-${i}`} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-hover/60 transition-colors">
+            <li key={`${e.ts}-${i}`} className="flex items-start gap-3 rounded-lg px-2 py-1 hover:bg-hover/60 transition-colors">
               <div className="w-14 flex-shrink-0 text-center">
                 <div className="font-mono tabular text-white text-sm leading-tight">{e.time}</div>
                 <div className={`text-[10px] ${e.day === today ? "text-primary" : "text-muted-foreground"}`}>{dayLabel(e.day, today)}</div>

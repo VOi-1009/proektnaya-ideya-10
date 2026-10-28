@@ -42,7 +42,7 @@ const HeroSiteNews = () => {
       ) : items.length === 0 ? (
         <p className="text-muted-foreground text-sm py-6 text-center">Скоро здесь появятся новости проекта</p>
       ) : (
-        <ul className="space-y-1">
+        <ul>
           {items.map((n) => {
             const ts = new Date(n.createdAt).getTime();
             const day = dayOf(ts);
@@ -50,7 +50,7 @@ const HeroSiteNews = () => {
               <li key={n.id}>
                 <div
                   onClick={() => setOpened(n)}
-                  className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-hover/60 transition-colors group cursor-pointer"
+                  className="flex items-start gap-3 rounded-lg px-2 py-1 hover:bg-hover/60 transition-colors group cursor-pointer"
                 >
                   <div className="w-14 flex-shrink-0 text-center">
                     <div className="font-mono tabular text-white text-sm leading-tight">{timeOf(ts)}</div>
