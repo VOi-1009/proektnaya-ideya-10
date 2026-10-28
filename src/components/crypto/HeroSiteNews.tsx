@@ -58,7 +58,7 @@ const HeroSiteNews = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{n.title}</div>
-                    <div className="mt-1 text-[10px] text-muted-foreground">TRADERKA.RU</div>
+                    {n.body && <div className="mt-1 text-[10px] text-muted-foreground truncate">{n.body.split("\n").find((l) => l.trim())}</div>}
                   </div>
                 </div>
               </li>
