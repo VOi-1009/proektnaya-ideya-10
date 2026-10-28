@@ -23,11 +23,11 @@ interface Row {
 }
 
 const RowView = ({ r }: { r: Row }) => {
-  const cls = "flex items-center justify-between gap-3 px-2 py-1.5 rounded transition-colors";
+  const cls = "flex flex-col items-start gap-0.5 px-2 py-1.5 rounded transition-colors";
   const inner = (
     <>
-      <span className="text-muted-foreground text-sm truncate">{r.label}</span>
-      <span className="font-mono tabular text-white text-sm flex-shrink-0">{r.value}</span>
+      <span className="text-muted-foreground text-xs leading-tight">{r.label}</span>
+      <span className="font-mono tabular text-white text-sm">{r.value}</span>
     </>
   );
   if (r.href)

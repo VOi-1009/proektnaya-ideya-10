@@ -88,7 +88,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[20fr_60fr_20fr] gap-3 animate-scale-in">
-        <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-2">
+        <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-3">
           <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Сводка по рынку на сегодня</div>
           <MarketSummaryList coins={coins} go={go} />
           {btc && (
@@ -108,7 +108,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             <AltseasonCard />
           </div>
         </div>
-        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3" />
+        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-2" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
