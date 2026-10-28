@@ -9,6 +9,7 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
+import UpcomingEvents from "../UpcomingEvents";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
@@ -146,7 +147,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
         <TopNewsBlock onAll={() => go("news")} />
-        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
+        <div className="border-t lg:border-t-0 lg:border-l border-border">
+          <UpcomingEvents onAll={() => go("calendar")} />
+        </div>
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
       </div>
 
