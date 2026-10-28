@@ -67,7 +67,7 @@ const HomeMain = ({
   setMobileSidebarOpen,
 }: Props) => (
   <main className="flex-1 flex flex-col min-w-0 grain">
-    <div className="h-12 border-b border-border flex items-center px-4 gap-2 shadow-sm bg-background/80 backdrop-blur">
+    <div className="h-12 flex items-center px-4 gap-2 bg-background/80 backdrop-blur">
       <Button
         variant="ghost"
         className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto mr-1"
