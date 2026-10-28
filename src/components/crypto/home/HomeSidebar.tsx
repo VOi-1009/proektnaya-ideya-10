@@ -108,7 +108,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
-                  <span className="text-[14px] truncate">{r.title}</span>
+                  <span className="text-[14px] truncate">{r.title.replace(/-/g, " ")}</span>
                 </button>
               ))}
             </div>
