@@ -11,6 +11,7 @@ import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
 import QuoteBlock from "../QuoteBlock";
 import FearGreedGauge from "../FearGreedGauge";
+import AltseasonGauge from "../AltseasonGauge";
 import FearGreedCard from "../FearGreedCard";
 import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
@@ -140,8 +141,13 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </p>
           )}
         </div>
-        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1">
-          <FearGreedGauge />
+        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
+          <div className="flex-1">
+            <FearGreedGauge />
+          </div>
+          <div className="flex-1">
+            <AltseasonGauge />
+          </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3" />
       </div>
