@@ -118,8 +118,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         )}
       </Message>
 
-      <div className="grid grid-cols-1 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
-        <div className="flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
+        <div className="contents">
           <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 via-card to-card">
             <div className="text-primary font-mono text-xs mb-1 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
@@ -142,9 +142,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </Button>
             </div>
           </div>
-          <div className="p-2 sm:p-3 border-t border-border flex-1">
+          <div className="p-2 sm:p-3 border-t lg:border-t-0 lg:border-l border-border">
             <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Главные котировки</div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {heroQuotes.map((c) => {
                 const up = c.price_change_percentage_24h >= 0;
                 return (
