@@ -3,5 +3,5 @@ export const cardCls = (border: string, interactive = false) =>
     interactive ? "hover:bg-hover transition-colors" : ""
   }`;
 
-export const labelCls = "text-muted-foreground text-[10px] leading-tight line-clamp-2 w-full";
+export const labelCls = "text-muted-foreground text-[11px] leading-tight line-clamp-2 w-full";
 export const valueCls = "font-mono text-white tabular text-sm leading-tight mt-0.5 truncate w-full";
