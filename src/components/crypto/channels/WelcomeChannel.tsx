@@ -101,27 +101,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
         <div className="contents">
           <div className="flex flex-col bg-gradient-to-br from-primary/20 via-card to-card">
-            <div className="p-3 sm:p-4">
-              <div className="text-primary font-mono text-xs mb-1 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> РЫНОК ОТКРЫТ 24/7
-              </div>
-              <h2 className="font-display text-xl sm:text-3xl text-white leading-tight">Новости рынков и мира.</h2>
-              <p className="text-muted-foreground text-sm mt-1 max-w-xl">
-                Ваш надежный источник информации и площадка для общения. Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
-              </p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <Button onClick={() => go("market")} className="font-semibold">
-                  <Icon name="CandlestickChart" size={16} className="mr-2" />
-                  Котировки
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => go("portfolio")}
-                  className="bg-transparent border-input text-foreground hover:bg-hover hover:text-white"
-                >
-                  Мой портфель
-                </Button>
-              </div>
+            <div>
+              <TopNewsBlock onAll={() => go("news")} />
             </div>
             <div className="flex-1 flex flex-col border-t border-transparent">
               <div className="flex-1 min-h-[60px]" />
@@ -139,7 +120,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
-        <TopNewsBlock onAll={() => go("news")} />
+        <div className="min-h-[240px]" />
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]">
           <HeroSiteNews />
