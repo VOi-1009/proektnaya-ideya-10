@@ -100,43 +100,46 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         </div>
       </div>
 
-      <div className="p-2 sm:p-3 rounded-xl border border-border bg-card animate-scale-in">
-        <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Сводка по рынку на сегодня</div>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
-          <div className={cardCls("border-primary")}>
-            <div className={labelCls}>Капитализация крипто</div>
-            <div className={valueCls}>{fmtBig(totalCap)}</div>
+      <div className="grid grid-cols-1 lg:grid-cols-[72fr_25fr] gap-3 animate-scale-in">
+        <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0">
+          <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Сводка по рынку на сегодня</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+            <div className={cardCls("border-primary")}>
+              <div className={labelCls}>Капитализация крипто</div>
+              <div className={valueCls}>{fmtBig(totalCap)}</div>
+            </div>
+            <div className={cardCls("border-accent")}>
+              <div className={labelCls}>Доминация BTC</div>
+              <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
+            </div>
+            {best && (
+              <button onClick={() => go("market", best.id)} className={cardCls("border-up", true)}>
+                <div className={labelCls}>Сильнее рынка</div>
+                <div className={valueCls}>
+                  {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
+                </div>
+              </button>
+            )}
+            {worst && (
+              <button onClick={() => go("market", worst.id)} className={cardCls("border-down", true)}>
+                <div className={labelCls}>Аутсайдер</div>
+                <div className={valueCls}>
+                  {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
+                </div>
+              </button>
+            )}
           </div>
-          <div className={cardCls("border-accent")}>
-            <div className={labelCls}>Доминация BTC</div>
-            <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
-          </div>
-          {best && (
-            <button onClick={() => go("market", best.id)} className={cardCls("border-up", true)}>
-              <div className={labelCls}>Сильнее рынка</div>
-              <div className={valueCls}>
-                {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
-              </div>
-            </button>
-          )}
-          {worst && (
-            <button onClick={() => go("market", worst.id)} className={cardCls("border-down", true)}>
-              <div className={labelCls}>Аутсайдер</div>
-              <div className={valueCls}>
-                {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
-              </div>
-            </button>
+          <MarketMetricsRow />
+          {btc && (
+            <p className="mt-3 text-muted-foreground text-sm">
+              Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
+              <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
+                Открыть график →
+              </button>
+            </p>
           )}
         </div>
-        <MarketMetricsRow />
-        {btc && (
-          <p className="mt-3 text-muted-foreground text-sm">
-            Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
-            <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
-              Открыть график →
-            </button>
-          </p>
-        )}
+        <div className="rounded-xl border border-border bg-card min-h-[120px]" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
