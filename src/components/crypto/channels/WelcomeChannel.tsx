@@ -53,7 +53,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 lg:grid-cols-[45fr_55fr] rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
+      <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
         <div className="contents">
           <div className="flex flex-col bg-gradient-to-br from-primary/20 via-card to-card">
             <div className="p-3 sm:p-4">
