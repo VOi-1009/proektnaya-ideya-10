@@ -26,7 +26,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
       className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
     >
       <div className="h-12 px-4 border-b border-border flex items-center justify-between shadow-sm">
-        <h2 className="text-white font-semibold text-sm">TRADERKA.RU</h2>
+        <h2 className="text-white font-semibold text-sm"></h2>
         <Button
           variant="ghost"
           className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
