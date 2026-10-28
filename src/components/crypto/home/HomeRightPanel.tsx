@@ -2,7 +2,6 @@ import Icon from "@/components/ui/icon";
 import { useNavigate } from "@/lib/router-compat";
 import { COIN_META, Coin, fmtPct, fmtPrice } from "@/lib/crypto";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
-import SidePolls from "@/components/crypto/SidePolls";
 import ProfileMiniCard from "./ProfileMiniCard";
 import { GoFn, PINNED } from "./homeConfig";
 
@@ -63,7 +62,6 @@ const HomeRightPanel = ({ sideCoins, go, favsCount }: Props) => {
         </div>
       </div>
       <SideBlocks />
-      <SidePolls />
     </aside>
   );
 };

@@ -2,6 +2,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
+import SidePolls from "@/components/crypto/SidePolls";
 import DonateButton from "@/components/crypto/DonateButton";
 import { chatColor, useChatRooms } from "@/lib/chat";
 import { CHANNELS, GoFn } from "./homeConfig";
@@ -114,6 +115,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             </div>
           </div>
         )}
+        <SidePolls />
       </div>
     </aside>
   );
