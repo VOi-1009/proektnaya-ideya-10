@@ -8,7 +8,7 @@ const fmtUsd = (v?: number | null) =>
 
 const LIQ_URL = "https://coinmarketcap.com/ru/charts/liquidations/";
 
-const MarketMetricsRow = ({ cols = "grid-cols-2 md:grid-cols-2 xl:grid-cols-4" }: { cols?: string }) => {
+const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
   const { data } = useCmcMetrics();
   const t = data?.treasuries;
   const l = data?.liquidations;
