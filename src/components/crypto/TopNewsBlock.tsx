@@ -22,8 +22,8 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
           ))}
         </div>
       ) : data?.length ? (
-        <ol className="space-y-1">
-          {data.map((n, i) => (
+        <ul className="space-y-1">
+          {data.map((n) => (
             <li key={n.id}>
               <a
                 href={n.link}
@@ -31,7 +31,6 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
                 rel="noreferrer"
                 className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-hover/60 transition-colors group"
               >
-                <span className="font-display text-primary text-lg leading-none w-5 flex-shrink-0 pt-0.5">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{n.title}</div>
                   <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
@@ -47,7 +46,7 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
               </a>
             </li>
           ))}
-        </ol>
+        </ul>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
           <Icon name="MessagesSquare" size={28} className="text-muted-foreground mb-2" />
