@@ -49,7 +49,7 @@ export const useOnline = (token: string | null) =>
   useQuery({
     queryKey: ["online", token],
     queryFn: () => usersRequest<{ online: OnlineUser[]; total: number }>(token),
-    refetchInterval: 60_000,
+    refetchInterval: 3 * 60_000,
     refetchIntervalInBackground: false,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
   });

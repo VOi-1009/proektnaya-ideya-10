@@ -130,8 +130,9 @@ export function useMarkets() {
         return { coins: [...fallbackCoins().filter((c) => !c.kind), ...(await commodities)], live: false };
       }
     },
-    refetchInterval: 60_000,
-    staleTime: 30_000,
+    refetchInterval: 3 * 60_000,
+    refetchIntervalInBackground: false,
+    staleTime: 2 * 60_000,
   });
 }
 

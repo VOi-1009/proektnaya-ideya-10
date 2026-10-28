@@ -62,7 +62,7 @@ export const useActiveTime = () => {
         headers: { "Content-Type": "application/json", "X-Auth-Token": token },
         body: JSON.stringify({ beat: true }),
       }).catch(() => undefined);
-    }, 60000);
+    }, 5 * 60_000);
     return () => clearInterval(id);
   }, [token]);
 };

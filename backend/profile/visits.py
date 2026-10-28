@@ -48,8 +48,8 @@ def handle_visits(event: dict) -> dict:
             if json.loads(event.get("body") or "{}").get("beat"):
                 if uid:
                     cur.execute(
-                        f"UPDATE {SCHEMA}.users SET active_minutes = active_minutes + 1, last_beat_at = NOW() "
-                        f"WHERE id = {uid} AND (last_beat_at IS NULL OR last_beat_at < NOW() - INTERVAL '50 seconds')"
+                        f"UPDATE {SCHEMA}.users SET active_minutes = active_minutes + 5, last_beat_at = NOW() "
+                        f"WHERE id = {uid} AND (last_beat_at IS NULL OR last_beat_at < NOW() - INTERVAL '4 minutes')"
                     )
                 return resp(200, {"ok": True})
             if BOT_RE.search(headers.get("user-agent", "")):
