@@ -200,6 +200,7 @@ COMMODITIES = {
     "gold": {"ticker": "GC=F", "symbol": "xau", "name": "Gold"},
     "usd-rub": {"ticker": "RUB=X", "symbol": "usd", "name": "USD/RUB", "quote": "RUB"},
     "eur-rub": {"ticker": "EURRUB=X", "symbol": "eur", "name": "EUR/RUB", "quote": "RUB"},
+    "usdt-rub": {"ticker": "USDT-RUB", "symbol": "usdt", "name": "USDT/RUB", "quote": "RUB"},
 }
 QUOTE_TTL = 300
 _quotes: dict = {"at": 0.0, "data": None}

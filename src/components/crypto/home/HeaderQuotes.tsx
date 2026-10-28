@@ -1,7 +1,7 @@
 import { Coin, COIN_META, fmtPct, fmtPrice } from "@/lib/crypto";
 import { GoFn } from "./homeConfig";
 
-const HERO_QUOTES = ["bitcoin", "ethereum", "brent", "gold", "usd-rub", "eur-rub"];
+const HERO_QUOTES = ["bitcoin", "usdt-rub"];
 
 interface Props {
   coins: Coin[];
