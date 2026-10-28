@@ -7,12 +7,10 @@ interface Props {
   coins: Coin[];
   selected: string;
   onSelect: (id: string) => void;
-  favs: string[];
-  toggleFav: (id: string) => void;
   live: boolean;
 }
 
-const MarketChannel = ({ coins, selected, onSelect, favs, toggleFav, live }: Props) => {
+const MarketChannel = ({ coins, selected, onSelect, live }: Props) => {
   const coin = coins.find((c) => c.id === selected) ?? coins[0];
   return (
     <div className="space-y-4">
@@ -24,7 +22,7 @@ const MarketChannel = ({ coins, selected, onSelect, favs, toggleFav, live }: Pro
         </p>
       </Message>
       {coin && <PriceChart key={coin.id} coin={coin} />}
-      <QuotesTable coins={coins} selected={selected} onSelect={onSelect} favs={favs} toggleFav={toggleFav} />
+      <QuotesTable coins={coins} selected={selected} onSelect={onSelect} />
     </div>
   );
 };

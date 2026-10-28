@@ -42,8 +42,6 @@ interface Props {
   alertsApi: PriceAlertsApi;
   selected: string;
   setSelected: (id: string) => void;
-  favs: string[];
-  toggleFav: (id: string) => void;
   articleId: number | null;
   setArticleId: (id: number | null) => void;
   setMobileSidebarOpen: (v: boolean) => void;
@@ -62,8 +60,6 @@ const HomeMain = ({
   alertsApi,
   selected,
   setSelected,
-  favs,
-  toggleFav,
   articleId,
   setArticleId,
   setMobileSidebarOpen,
@@ -127,8 +123,6 @@ const HomeMain = ({
             coins={coins}
             selected={selected}
             onSelect={setSelected}
-            favs={favs}
-            toggleFav={toggleFav}
             live={live}
           />
         ) : channel === "calendar" ? (

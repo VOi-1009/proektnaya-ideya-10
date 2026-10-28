@@ -9,8 +9,6 @@ interface Props {
   coins: Coin[];
   selected: string;
   onSelect: (id: string) => void;
-  favs: string[];
-  toggleFav: (id: string) => void;
 }
 
 const COMMODITY_ICON: Record<string, string> = { brent: "Droplet", gold: "Gem" };
@@ -40,15 +38,13 @@ const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
 
 export { CoinLogo };
 
-const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
+const QuotesTable = ({ coins, selected, onSelect }: Props) => {
   const [sort, setSort] = useState<SortKey>("market_cap");
   const [dir, setDir] = useState<1 | -1>(-1);
-  const [onlyFav, setOnlyFav] = useState(false);
   const [q, setQ] = useState("");
 
   const rows = useMemo(() => {
     let list = [...coins];
-    if (onlyFav) list = list.filter((c) => favs.includes(c.id));
     if (q.trim()) {
       const s = q.trim().toLowerCase();
       list = list.filter(
@@ -60,7 +56,7 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
       );
     }
     return list.sort((a, b) => ((a[sort] ?? 0) - (b[sort] ?? 0)) * dir);
-  }, [coins, sort, dir, onlyFav, favs, q]);
+  }, [coins, sort, dir, q]);
 
   const head = (key: SortKey, label: string, cls = "") => (
     <th className={`px-3 py-2 font-medium text-right ${cls}`}>
@@ -92,21 +88,11 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
             className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground"
           />
         </div>
-        <button
-          onClick={() => setOnlyFav(!onlyFav)}
-          className={`text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
-            onlyFav ? "bg-accent text-accent-foreground" : "bg-rail text-muted-foreground hover:text-white"
-          }`}
-        >
-          <Icon name="Star" size={12} />
-          Избранное · {favs.length}
-        </button>
       </div>
       <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full text-sm min-w-[640px]">
           <thead className="text-muted-foreground text-[10px] uppercase tracking-wider">
             <tr>
-              <th className="px-3 py-2 text-left font-medium w-8"></th>
               <th className="px-3 py-2 text-left font-medium">Монета</th>
               {head("current_price", "Цена")}
               {head("price_change_percentage_24h", "24ч")}
@@ -119,7 +105,6 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
             {rows.map((c) => {
               const up24 = c.price_change_percentage_24h >= 0;
               const up7 = (c.price_change_percentage_7d_in_currency ?? 0) >= 0;
-              const fav = favs.includes(c.id);
               return (
                 <tr
                   key={c.id}
@@ -128,18 +113,6 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
                     selected === c.id ? "bg-primary/10" : "hover:bg-hover/60"
                   }`}
                 >
-                  <td className="px-3 py-2.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFav(c.id);
-                      }}
-                      aria-label="В избранное"
-                      className={fav ? "text-accent" : "text-muted-foreground hover:text-white"}
-                    >
-                      <Icon name="Star" size={14} fill={fav ? "currentColor" : "none"} />
-                    </button>
-                  </td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <CoinLogo coin={c} />
@@ -169,8 +142,8 @@ const QuotesTable = ({ coins, selected, onSelect, favs, toggleFav }: Props) => {
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">
-                  Ничего не нашлось. Попробуйте другой тикер или отметьте монеты звёздочкой.
+                <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
+                  Ничего не нашлось. Попробуйте другой тикер.
                 </td>
               </tr>
             )}

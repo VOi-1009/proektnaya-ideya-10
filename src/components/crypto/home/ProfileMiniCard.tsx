@@ -11,10 +11,6 @@ import SupporterBadge from "@/components/crypto/SupporterBadge";
 import { Achievement, META } from "@/components/crypto/Achievements";
 import { SPECIAL_META } from "@/components/crypto/SpecialAchievements";
 
-interface Props {
-  favsCount: number;
-}
-
 interface Mini {
   id: string;
   title: string;
@@ -23,7 +19,7 @@ interface Mini {
   done: boolean;
 }
 
-const ProfileMiniCard = ({ favsCount }: Props) => {
+const ProfileMiniCard = () => {
   const { user, token, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
   const { data: profile } = useQuery({
@@ -69,7 +65,7 @@ const ProfileMiniCard = ({ favsCount }: Props) => {
           {user && <FounderBadge no={user.founder} compact />}
         </div>
         <div className="text-muted-foreground text-xs truncate hover:text-primary">
-          {user ? "Личный кабинет →" : `Избранных: ${favsCount}`}
+          {user ? "Личный кабинет →" : "Войдите в аккаунт"}
         </div>
       </button>
       {user ? (

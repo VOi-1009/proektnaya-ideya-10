@@ -16,12 +16,3 @@ export const CHANNELS = [
 ];
 
 export const PINNED = ["bitcoin", "brent", "usd-rub", "eur-rub"];
-
-export const loadFavs = (): string[] => {
-  try {
-    const v = JSON.parse(localStorage.getItem("svecha-favs") ?? "null");
-    return Array.isArray(v) ? v : ["ethereum", "gold"];
-  } catch {
-    return ["ethereum", "gold"];
-  }
-};

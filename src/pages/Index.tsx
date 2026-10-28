@@ -9,7 +9,7 @@ import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
 import HomeRightPanel from "@/components/crypto/home/HomeRightPanel";
-import { CHANNELS, PINNED, loadFavs } from "@/components/crypto/home/homeConfig";
+import { CHANNELS, PINNED } from "@/components/crypto/home/homeConfig";
 
 const Index = () => {
   const { data, isLoading, dataUpdatedAt } = useMarkets();
@@ -17,8 +17,6 @@ const Index = () => {
   const [channel, setChannel] = useState("welcome");
   const [selected, setSelected] = useState("bitcoin");
   const [articleId, setArticleId] = useState<number | null>(null);
-  const [favs, setFavs] = useState<string[]>(["ethereum", "gold"]);
-  const [favsLoaded, setFavsLoaded] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { data: chatRooms } = useChatRooms();
   const { data: radarList } = useRadars();
@@ -32,8 +30,6 @@ const Index = () => {
   useEffect(() => {
     setSeen(getSeen("crypto"));
     setSeenWorld(getSeen("world"));
-    setFavs(loadFavs());
-    setFavsLoaded(true);
   }, []);
   useEffect(() => {
     setNow(Date.now());
@@ -48,12 +44,6 @@ const Index = () => {
   const unreadWorld = (worldNews?.items ?? []).filter((n) => n.ts > unreadWorldFrom).length;
   const unreadOf = (id: string) => (id === "news" && channel !== "news" ? unread : id === "world" && channel !== "world" ? unreadWorld : 0);
 
-  useEffect(() => {
-    if (favsLoaded) localStorage.setItem("svecha-favs", JSON.stringify(favs));
-  }, [favs, favsLoaded]);
-
-  const toggleFav = (id: string) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
-
   const go = (ch: string, coinId?: string) => {
     setChannel(ch);
     setArticleId(null);
@@ -65,11 +55,7 @@ const Index = () => {
   const chatChannels = (chatRooms ?? []).map((r) => ({ id: `chat-${r.id}`, name: r.name, topic: r.topic }));
   const radarChannels = (radarList ?? []).map((r) => ({ id: `radar-${r.id}`, name: r.title, topic: r.kind === "liq_heatmap" ? `${r.description || "Радар"} · ${r.symbol}` : r.description || "Радар" }));
   const current = [...CHANNELS, ...chatChannels, ...radarChannels].find((c) => c.id === channel) ?? CHANNELS[0];
-  const favCoins = coins.filter((c) => favs.includes(c.id));
-  const sideCoins = [
-    ...PINNED.map((id) => coins.find((c) => c.id === id)).filter((c): c is (typeof coins)[number] => !!c),
-    ...favCoins.filter((c) => !PINNED.includes(c.id)),
-  ];
+  const sideCoins = PINNED.map((id) => coins.find((c) => c.id === id)).filter((c): c is (typeof coins)[number] => !!c);
   const updated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
 
   return (
@@ -101,13 +87,11 @@ const Index = () => {
             alertsApi={alertsApi}
             selected={selected}
             setSelected={setSelected}
-            favs={favs}
-            toggleFav={toggleFav}
             articleId={articleId}
             setArticleId={setArticleId}
             setMobileSidebarOpen={setMobileSidebarOpen}
           />
-          <HomeRightPanel favsCount={favs.length} />
+          <HomeRightPanel />
         </div>
       </div>
     </div>
