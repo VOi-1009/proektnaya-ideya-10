@@ -1,3 +1,4 @@
+import { Link } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,9 +31,9 @@ const LatestArticles = ({ onOpen, onAll }: Props) => {
         {isLoading
           ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-56 bg-card" />)
           : data!.map((a) => (
-              <button
+              <Link
                 key={a.id}
-                onClick={() => onOpen(a.id)}
+                to={`/articles/${a.id}`}
                 className="text-left bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors group"
               >
                 {a.cover ? (
@@ -51,7 +52,7 @@ const LatestArticles = ({ onOpen, onAll }: Props) => {
                     {a.title}
                   </div>
                 </div>
-              </button>
+              </Link>
             ))}
       </div>
     </section>

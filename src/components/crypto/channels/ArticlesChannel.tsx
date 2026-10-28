@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,9 +106,9 @@ const ArticlesChannel = ({ openId, setOpenId }: Props) => {
       {data && data.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data.map((a, i) => (
-            <button
+            <Link
               key={a.id}
-              onClick={() => setOpenId(a.id)}
+              to={`/articles/${a.id}`}
               className="text-left bg-card border border-border rounded-xl overflow-hidden hover:border-primary/60 transition-colors animate-fade-in group"
               style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
             >
@@ -127,7 +127,7 @@ const ArticlesChannel = ({ openId, setOpenId }: Props) => {
                 <h3 className="text-white font-semibold text-base leading-snug mb-1.5 group-hover:text-primary transition-colors">{a.title}</h3>
                 {a.summary && <p className="text-muted-foreground text-sm line-clamp-2">{a.summary}</p>}
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       )}

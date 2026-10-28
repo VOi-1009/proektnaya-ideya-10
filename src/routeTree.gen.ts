@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ArticlesIdRouteImport } from './routes/articles.$id'
 import { Route as AuthYandexCallbackRouteImport } from './routes/auth.yandex.callback'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +37,16 @@ const RatingRoute = RatingRouteImport.update({
   path: '/rating',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArticlesIdRoute = ArticlesIdRouteImport.update({
+  id: '/articles/$id',
+  path: '/articles/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthYandexCallbackRoute = AuthYandexCallbackRouteImport.update({
   id: '/auth/yandex/callback',
   path: '/auth/yandex/callback',
@@ -46,6 +58,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/articles/$id': typeof ArticlesIdRoute
   '/auth/yandex/callback': typeof AuthYandexCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +67,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/articles/$id': typeof ArticlesIdRoute
   '/auth/yandex/callback': typeof AuthYandexCallbackRoute
 }
 export interface FileRoutesById {
@@ -61,19 +77,37 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/articles/$id': typeof ArticlesIdRoute
   '/auth/yandex/callback': typeof AuthYandexCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/profile' | '/rating' | '/auth/yandex/callback'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/profile'
+    | '/rating'
+    | '/sitemap.xml'
+    | '/articles/$id'
+    | '/auth/yandex/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/profile' | '/rating' | '/auth/yandex/callback'
+  to:
+    | '/'
+    | '/admin'
+    | '/profile'
+    | '/rating'
+    | '/sitemap.xml'
+    | '/articles/$id'
+    | '/auth/yandex/callback'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/profile'
     | '/rating'
+    | '/sitemap.xml'
+    | '/articles/$id'
     | '/auth/yandex/callback'
   fileRoutesById: FileRoutesById
 }
@@ -82,6 +116,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ProfileRoute: typeof ProfileRoute
   RatingRoute: typeof RatingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ArticlesIdRoute: typeof ArticlesIdRoute
   AuthYandexCallbackRoute: typeof AuthYandexCallbackRoute
 }
 
@@ -115,6 +151,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RatingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/articles/$id': {
+      id: '/articles/$id'
+      path: '/articles/$id'
+      fullPath: '/articles/$id'
+      preLoaderRoute: typeof ArticlesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/yandex/callback': {
       id: '/auth/yandex/callback'
       path: '/auth/yandex/callback'
@@ -130,6 +180,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   ProfileRoute: ProfileRoute,
   RatingRoute: RatingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ArticlesIdRoute: ArticlesIdRoute,
   AuthYandexCallbackRoute: AuthYandexCallbackRoute,
 }
 export const routeTree = rootRouteImport
