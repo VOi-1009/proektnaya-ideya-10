@@ -20,9 +20,9 @@ const QuoteBlock = () => {
 
   return (
     <div className="flex-1 min-h-[60px] flex items-center gap-3 px-3 sm:px-4 py-2">
-      <Icon name="Quote" size={18} className="text-primary flex-shrink-0" />
+      <Icon name="Info" size={18} className="text-primary flex-shrink-0" />
       <div key={q.id} className="min-w-0 animate-fade-in">
-        <p className="text-white text-sm italic leading-snug line-clamp-3">{q.quote}</p>
+        <p className="text-white text-sm not-italic leading-snug line-clamp-3">{q.quote}</p>
         {source && <div className="text-muted-foreground text-[10px] mt-1 truncate">{source}</div>}
       </div>
     </div>

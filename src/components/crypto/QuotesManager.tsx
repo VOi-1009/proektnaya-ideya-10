@@ -136,7 +136,7 @@ const QuotesManager = ({ token }: { token: string | null }) => {
           {list.map((q) => (
             <div key={q.id} className="bg-card border border-border rounded-lg p-3 flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm italic whitespace-pre-line line-clamp-3">«{q.quote}»</p>
+                <p className="text-white text-sm not-italic whitespace-pre-line line-clamp-3">«{q.quote}»</p>
                 <div className="text-muted-foreground text-xs mt-1 flex items-center gap-2 flex-wrap">
                   <span>{[q.author, q.book].filter(Boolean).join(" — ") || "Без источника"}</span>
                   {!q.published && <span className="text-[9px] uppercase bg-rail text-muted-foreground rounded px-1.5 py-0.5">скрыта</span>}
