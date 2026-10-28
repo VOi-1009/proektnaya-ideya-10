@@ -42,16 +42,16 @@ const ProfileMiniCard = ({ part = "main" }: { part?: "main" | "achievements" }) 
   if (part === "achievements") {
     if (!user || minis.length === 0) return null;
     return (
-      <div className="flex flex-wrap gap-1.5 max-w-[260px] p-2 bg-rail rounded-lg" aria-label="Достижения">
+      <div className="flex flex-nowrap items-center gap-1 px-2 py-1.5 bg-rail rounded-lg flex-shrink-0" aria-label="Достижения">
         {minis.map((m) => (
           <span
             key={m.id}
             title={`${m.title}${m.done ? "" : " — ещё не получено"}`}
-            className={`w-6 h-6 rounded-full flex items-center justify-center ${
+            className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
               m.done ? `bg-gradient-to-br ${m.color} text-black` : "bg-card text-muted-foreground/50"
             }`}
           >
-            <Icon name={m.icon} size={12} fallback="Award" />
+            <Icon name={m.icon} size={10} fallback="Award" />
           </span>
         ))}
       </div>
