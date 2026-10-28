@@ -2,7 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
+import { Coin, COIN_META, fmtBig, fmtPct } from "@/lib/crypto";
 import LatestArticles from "../LatestArticles";
 import HomeBlocks from "../HomeBlocks";
 import TopNewsBlock from "../TopNewsBlock";
@@ -83,14 +83,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             )}
           </div>
           <MarketMetricsRow />
-          {btc && (
-            <p className="mt-3 text-muted-foreground text-sm">
-              Bitcoin торгуется по <span className="font-mono text-white">{fmtPrice(btc.current_price)}</span>.{" "}
-              <button onClick={() => go("market", "bitcoin")} className="text-primary hover:underline">
-                Открыть график →
-              </button>
-            </p>
-          )}
+          <QuoteBlock split />
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
           <div className="flex-1">

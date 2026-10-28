@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuotes } from "@/lib/quotes";
 
-const QuoteBlock = () => {
+const QuoteBlock = ({ split = false }: { split?: boolean }) => {
   const { data } = useQuotes();
   const [idx, setIdx] = useState(0);
   const count = data?.length ?? 0;
@@ -16,6 +16,15 @@ const QuoteBlock = () => {
   const q = count ? data![idx % count] : null;
   if (!q) return null;
   const source = [q.author, q.book].filter(Boolean).join(" — ");
+
+  if (split) {
+    return (
+      <div key={q.id} className="mt-3 flex items-center gap-4 rounded-lg bg-hover px-4 py-3 animate-fade-in">
+        <p className="flex-1 min-w-0 text-left font-display text-white text-sm leading-snug line-clamp-5">{q.quote}</p>
+        {source && <div className="w-[30%] max-w-[170px] flex-shrink-0 text-right text-muted-foreground text-xs leading-snug">{source}</div>}
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 min-h-[60px] flex items-center gap-3 px-3 sm:px-4 py-2">
