@@ -16,7 +16,7 @@ const AltseasonCard = () => {
       <div className={`${labelCls} text-center`}>Индекс альтсезона</div>
       {av !== null ? (
         <>
-          <div className="flex items-baseline justify-center gap-1.5 mt-0.5 w-full min-w-0">
+          <div className="flex flex-col items-center text-center mt-0.5 w-full min-w-0">
             <span className="font-mono tabular text-sm leading-tight text-violet-300">{av}</span>
             <span className="text-white text-[10px] truncate">{altLabel(av)}</span>
           </div>

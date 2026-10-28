@@ -48,9 +48,9 @@ const GaugeDial = ({ title, value, label, valueCls = "text-white", segments, too
         <text x="186" y="116" fill="currentColor" className="text-muted-foreground" fontSize="9" textAnchor="middle">100</text>
       </svg>
       {value !== null ? (
-        <div className="flex items-baseline gap-2 -mt-1">
+        <div className="flex flex-col items-center text-center -mt-1">
           <span className={`font-mono tabular text-2xl leading-none ${valueCls}`}>{value}</span>
-          {label && <span className="text-white text-xs">{label}</span>}
+          {label && <span className="text-white text-xs mt-1">{label}</span>}
         </div>
       ) : (
         <div className="text-muted-foreground text-sm">—</div>
