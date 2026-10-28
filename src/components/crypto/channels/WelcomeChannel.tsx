@@ -10,7 +10,6 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
-import HeroSiteNews from "../HeroSiteNews";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
@@ -119,7 +118,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         )}
       </Message>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px] rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
+      <div className="grid grid-cols-1 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
         <div className="flex flex-col">
           <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 via-card to-card">
             <div className="text-primary font-mono text-xs mb-1 flex items-center gap-2">
@@ -164,9 +163,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               })}
             </div>
           </div>
-        </div>
-        <div className="border-t lg:border-t-0 lg:border-l border-border">
-          <HeroSiteNews />
         </div>
       </div>
 
