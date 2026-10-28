@@ -189,9 +189,10 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
       {header}
-      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-5">
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:py-10">
+        <div className={editing === null ? "flex flex-col lg:flex-row gap-5 lg:gap-6 lg:items-start" : ""}>
         {editing === null && (
-          <div className="flex gap-1 bg-card border border-border rounded-lg p-1 w-fit max-w-full overflow-x-auto">
+          <div className="flex lg:flex-col gap-1 bg-card border border-border rounded-lg p-1 max-w-full overflow-x-auto lg:overflow-visible lg:w-56 lg:flex-shrink-0 lg:sticky lg:top-4">
             {(
               [
                 ["visits", "Посетители", "Activity"],
@@ -212,7 +213,7 @@ const Admin = () => {
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`px-4 py-2 rounded-md text-sm inline-flex items-center gap-2 transition-colors ${
+                className={`px-4 py-2 rounded-md text-sm inline-flex items-center gap-2 transition-colors whitespace-nowrap lg:w-full ${
                   tab === id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
                 }`}
               >
@@ -222,6 +223,7 @@ const Admin = () => {
             ))}
           </div>
         )}
+        <div className="flex-1 min-w-0 space-y-5">
         {editing === null && tab === "blocks" ? (
           <BlocksManager key="main" token={token} placement="main" />
         ) : editing === null && tab === "side" ? (
@@ -399,6 +401,8 @@ const Admin = () => {
             </div>
           </form>
         )}
+        </div>
+        </div>
       </main>
 
       <AlertDialog open={!!toDelete} onOpenChange={(v) => !v && setToDelete(null)}>
