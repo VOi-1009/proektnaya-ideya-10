@@ -1,19 +1,21 @@
+import Icon from "@/components/ui/icon";
 import { Coin, COIN_META, fmtPct, fmtPrice } from "@/lib/crypto";
 import { GoFn } from "./homeConfig";
 
-const HERO_QUOTES = ["bitcoin", "usdt-rub"];
-
 interface Props {
-  coins: Coin[];
+  sideCoins: Coin[];
   go: GoFn;
 }
 
-const HeaderQuotes = ({ coins, go }: Props) => {
-  const list = HERO_QUOTES.map((id) => coins.find((c) => c.id === id)).filter((c): c is Coin => !!c);
+const HeaderQuotes = ({ sideCoins, go }: Props) => {
+  const list = sideCoins;
   if (!list.length) return null;
 
   return (
     <div className="hidden md:flex items-center gap-3 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <span className="flex items-center gap-1 text-orange-400 text-[10px] font-semibold uppercase tracking-wider flex-shrink-0">
+        <Icon name="Star" size={12} /> Мой список
+      </span>
       {list.map((c) => {
         const up = c.price_change_percentage_24h >= 0;
         return (

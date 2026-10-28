@@ -93,6 +93,7 @@ const Index = () => {
             current={current}
             go={go}
             coins={coins}
+            sideCoins={sideCoins}
             live={!!data?.live}
             isLoading={isLoading}
             updated={updated}
@@ -106,7 +107,7 @@ const Index = () => {
             setArticleId={setArticleId}
             setMobileSidebarOpen={setMobileSidebarOpen}
           />
-          <HomeRightPanel sideCoins={sideCoins} go={go} favsCount={favs.length} />
+          <HomeRightPanel favsCount={favs.length} />
         </div>
       </div>
     </div>
