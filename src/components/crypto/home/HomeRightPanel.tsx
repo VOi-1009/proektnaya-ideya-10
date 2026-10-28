@@ -1,5 +1,4 @@
 import Icon from "@/components/ui/icon";
-import { useNavigate } from "@/lib/router-compat";
 import { COIN_META, Coin, fmtPct, fmtPrice } from "@/lib/crypto";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import HeroSiteNews from "@/components/crypto/HeroSiteNews";
@@ -13,19 +12,9 @@ interface Props {
 }
 
 const HomeRightPanel = ({ sideCoins, go, favsCount }: Props) => {
-  const navigate = useNavigate();
-
   return (
     <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
       <ProfileMiniCard favsCount={favsCount} />
-      <button
-        onClick={() => navigate("/rating")}
-        className="w-full flex items-center gap-2 px-2 py-2 rounded bg-rail hover:bg-hover text-sm text-foreground"
-      >
-        <Icon name="Trophy" size={16} className="text-primary" />
-        Рейтинг участников
-        <Icon name="ChevronRight" size={14} className="ml-auto text-muted-foreground" />
-      </button>
       <div>
         <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
           <Icon name="Star" size={12} /> Мой список
