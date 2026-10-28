@@ -1,5 +1,5 @@
 import { altLabel, useCmcMetrics } from "@/lib/cmcMetrics";
-import { cardCls, labelCls, valueCls } from "./summaryCard";
+import { labelCls, valueCls } from "./summaryCard";
 
 const AltseasonCard = () => {
   const { data } = useCmcMetrics();
@@ -10,13 +10,13 @@ const AltseasonCard = () => {
       href="https://coinmarketcap.com/ru/charts/altcoin-season-index/"
       target="_blank"
       rel="noreferrer"
-      className={cardCls("border-violet-400", true)}
+      className="rounded-lg px-3 py-2 border-t-4 border-violet-400 bg-transparent flex flex-col justify-center items-center text-center min-w-0 overflow-hidden hover:brightness-110 transition-all"
       title={`Индекс альтсезона: 0 — сезон биткоина, 100 — сезон альткоинов${a?.yesterday != null ? `. Вчера: ${a.yesterday}` : ""}`}
     >
-      <div className={labelCls}>Индекс альтсезона</div>
+      <div className={`${labelCls} text-center`}>Индекс альтсезона</div>
       {av !== null ? (
         <>
-          <div className="flex items-baseline gap-1.5 mt-0.5 w-full min-w-0">
+          <div className="flex items-baseline justify-center gap-1.5 mt-0.5 w-full min-w-0">
             <span className="font-mono tabular text-sm leading-tight text-violet-300">{av}</span>
             <span className="text-white text-[10px] truncate">{altLabel(av)}</span>
           </div>
@@ -28,7 +28,7 @@ const AltseasonCard = () => {
           </div>
         </>
       ) : (
-        <div className={valueCls}>—</div>
+        <div className={`${valueCls} text-center`}>—</div>
       )}
     </a>
   );
