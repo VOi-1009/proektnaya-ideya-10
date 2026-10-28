@@ -24,7 +24,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
     <aside
       className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
     >
-      <div className="h-12 px-4 border-b border-border flex items-center justify-between shadow-sm">
+      <div className="h-12 px-4 flex items-center justify-between">
         <h2 className="text-white font-semibold text-sm"></h2>
         <Button
           variant="ghost"
