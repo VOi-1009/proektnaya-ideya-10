@@ -11,7 +11,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
   const { data, isLoading, isError } = useEconCalendar();
   const now = data ? Date.now() : 0;
   const today = new Date(now + 3 * 3600_000).toISOString().slice(0, 10);
-  const items = (data ?? []).filter((e) => e.ts >= now - 3600_000).slice(0, 5);
+  const items = (data ?? []).filter((e) => e.ts >= now - 3600_000).slice(0, 6);
 
   return (
     <div className="p-3 sm:p-4 flex flex-col h-full">
@@ -25,7 +25,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
       </div>
       {isLoading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-9 bg-rail" />
           ))}
         </div>
