@@ -19,7 +19,7 @@ const QuoteBlock = ({ split = false }: { split?: boolean }) => {
 
   if (split) {
     return (
-      <div key={q.id} className="mt-3 flex items-center gap-4 rounded-lg bg-hover px-4 py-3 animate-fade-in">
+      <div key={q.id} className="mt-3 flex items-center gap-4 rounded-lg bg-transparent px-4 py-3 animate-fade-in">
         <p className="flex-1 min-w-0 text-left font-display text-white text-sm leading-snug line-clamp-5">{q.quote}</p>
         {source && <div className="w-[30%] max-w-[170px] flex-shrink-0 text-right text-muted-foreground text-xs leading-snug">{source}</div>}
       </div>
