@@ -52,12 +52,6 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
                   <div className="text-white text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{n.title}</div>
                   <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                     <span>{n.source}</span>
-                    <span className="inline-flex items-center gap-1 text-up font-mono">
-                      <Icon name="ThumbsUp" size={11} /> {n.likes}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-down font-mono">
-                      <Icon name="ThumbsDown" size={11} /> {n.dislikes}
-                    </span>
                   </div>
                 </div>
               </a>
