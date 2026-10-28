@@ -1,7 +1,6 @@
 import Icon from "@/components/ui/icon";
 import { COIN_META, Coin, fmtPct, fmtPrice } from "@/lib/crypto";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
-import HeroSiteNews from "@/components/crypto/HeroSiteNews";
 import ProfileMiniCard from "./ProfileMiniCard";
 import { GoFn, PINNED } from "./homeConfig";
 
@@ -50,9 +49,6 @@ const HomeRightPanel = ({ sideCoins, go, favsCount }: Props) => {
             <p className="text-xs text-muted-foreground px-2">Отметьте монеты звёздочкой в #котировки</p>
           )}
         </div>
-      </div>
-      <div className="rounded-lg border border-border bg-rail/40 overflow-hidden">
-        <HeroSiteNews />
       </div>
       <SideBlocks />
     </aside>

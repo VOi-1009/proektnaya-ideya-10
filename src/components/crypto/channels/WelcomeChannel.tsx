@@ -10,6 +10,7 @@ import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
 import UpcomingEvents from "../UpcomingEvents";
+import HeroSiteNews from "../HeroSiteNews";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
@@ -150,7 +151,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <div className="border-t lg:border-t-0 lg:border-l border-border">
           <UpcomingEvents onAll={() => go("calendar")} />
         </div>
-        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
+        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]">
+          <HeroSiteNews />
+        </div>
       </div>
 
       <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
