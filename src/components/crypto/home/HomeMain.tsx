@@ -10,6 +10,7 @@ import { GoFn } from "./homeConfig";
 import HeaderQuotes from "./HeaderQuotes";
 
 const MarketChannel = lazy(() => import("@/components/crypto/channels/MarketChannel"));
+const CalendarChannel = lazy(() => import("@/components/crypto/channels/CalendarChannel"));
 const NewsChannel = lazy(() => import("@/components/crypto/channels/NewsChannel"));
 const ConverterChannel = lazy(() => import("@/components/crypto/channels/ConverterChannel"));
 const PortfolioChannel = lazy(() => import("@/components/crypto/channels/PortfolioChannel"));
@@ -128,6 +129,8 @@ const HomeMain = ({
             toggleFav={toggleFav}
             live={live}
           />
+        ) : channel === "calendar" ? (
+          <CalendarChannel />
         ) : channel === "news" ? (
           <NewsChannel key="crypto" kind="crypto" />
         ) : channel === "world" ? (
