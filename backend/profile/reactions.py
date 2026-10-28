@@ -66,6 +66,8 @@ def bots_react(cur, ids: list) -> None:
     rows = []
     for nid, pub in cur.fetchall():
         age_min = (now_ms - int(pub)) / 60000
+        if age_min > 7 * 24 * 60:
+            continue
         for b in bots:
             is_ai = b in ai_ids
             if is_ai and not ai["on"]:
