@@ -10,6 +10,7 @@ import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
 import QuoteBlock from "../QuoteBlock";
+import FearGreedGauge from "../FearGreedGauge";
 import FearGreedCard from "../FearGreedCard";
 import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
@@ -139,7 +140,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </p>
           )}
         </div>
-        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1" />
+        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1">
+          <FearGreedGauge />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
