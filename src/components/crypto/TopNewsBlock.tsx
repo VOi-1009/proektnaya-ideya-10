@@ -30,13 +30,13 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
       </div>
       {isLoading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-9 bg-rail" />
           ))}
         </div>
       ) : data?.length ? (
         <ul className="space-y-1">
-          {[...data].sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0)).map((n) => (
+          {[...data].sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0)).slice(0, 6).map((n) => (
             <li key={n.id}>
               <a
                 href={n.link}
