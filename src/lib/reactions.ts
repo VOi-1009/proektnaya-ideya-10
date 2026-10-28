@@ -72,6 +72,7 @@ export interface TopNews {
   likes: number;
   dislikes: number;
   total: number;
+  ts: number | null;
 }
 
 export const useTopNews = () =>

@@ -119,13 +119,13 @@ def handle_reactions(event: dict) -> dict:
             days = 7
             cur.execute(
                 f"SELECT n.id, n.title, n.link, n.source, n.kind, "
-                f"COUNT(*) FILTER (WHERE r.value = 1), COUNT(*) FILTER (WHERE r.value = -1), COUNT(*) "
+                f"COUNT(*) FILTER (WHERE r.value = 1), COUNT(*) FILTER (WHERE r.value = -1), COUNT(*), COALESCE(n.published_ms, (EXTRACT(EPOCH FROM n.created_at) * 1000)::bigint) "
                 f"FROM {SCHEMA}.news_reactions r JOIN {SCHEMA}.news_items n ON n.id = r.news_id "
                 f"WHERE r.created_at > NOW() - INTERVAL '{days} days' "
-                f"GROUP BY n.id, n.title, n.link, n.source, n.kind ORDER BY COUNT(*) DESC, MAX(r.created_at) DESC LIMIT 5"
+                f"GROUP BY n.id, n.title, n.link, n.source, n.kind, n.published_ms, n.created_at ORDER BY COUNT(*) DESC, MAX(r.created_at) DESC LIMIT 5"
             )
             top = [
-                {"id": r[0], "title": r[1], "link": r[2], "source": r[3], "kind": r[4], "likes": int(r[5]), "dislikes": int(r[6]), "total": int(r[7])}
+                {"id": r[0], "title": r[1], "link": r[2], "source": r[3], "kind": r[4], "likes": int(r[5]), "dislikes": int(r[6]), "total": int(r[7]), "ts": int(r[8]) if r[8] else None}
                 for r in cur.fetchall()
             ]
             return resp(200, {"top": top})

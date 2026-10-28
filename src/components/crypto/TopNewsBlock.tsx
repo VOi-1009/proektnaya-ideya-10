@@ -2,6 +2,19 @@ import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTopNews } from "@/lib/reactions";
 
+const MSK = 3 * 3600_000;
+
+const timeOf = (ts: number | null) => (ts ? new Date(ts + MSK).toISOString().slice(11, 16) : "");
+
+const dayOf = (ts: number | null) => {
+  if (!ts) return "";
+  const k = (t: number) => new Date(t + MSK).toISOString().slice(0, 10);
+  const d = k(ts);
+  if (d === k(Date.now())) return "Сегодня";
+  if (d === k(Date.now() - 86400_000)) return "Вчера";
+  return new Date(`${d}T12:00:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+};
+
 const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
   const { data, isLoading } = useTopNews();
 
@@ -31,6 +44,10 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
                 rel="noreferrer"
                 className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-hover/60 transition-colors group"
               >
+                <div className="w-14 flex-shrink-0 text-center">
+                  <div className="font-mono tabular text-white text-sm leading-tight">{timeOf(n.ts)}</div>
+                  <div className={`text-[10px] ${dayOf(n.ts) === "Сегодня" ? "text-primary" : "text-muted-foreground"}`}>{dayOf(n.ts)}</div>
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{n.title}</div>
                   <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
