@@ -19,7 +19,7 @@ interface Mini {
   done: boolean;
 }
 
-const ProfileMiniCard = () => {
+const ProfileMiniCard = ({ part = "main" }: { part?: "main" | "achievements" }) => {
   const { user, token, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
   const { data: profile } = useQuery({
@@ -39,9 +39,27 @@ const ProfileMiniCard = () => {
     ...(profile ? [{ id: "founder", title: "Основатель", icon: "Gem", color: "from-amber-200 via-yellow-400 to-amber-600", done: !!profile.founder }] : []),
   ];
 
+  if (part === "achievements") {
+    if (!user || minis.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1.5 p-2 bg-rail rounded-lg" aria-label="Достижения">
+        {minis.map((m) => (
+          <span
+            key={m.id}
+            title={`${m.title}${m.done ? "" : " — ещё не получено"}`}
+            className={`w-6 h-6 rounded-full flex items-center justify-center ${
+              m.done ? `bg-gradient-to-br ${m.color} text-black` : "bg-card text-muted-foreground/50"
+            }`}
+          >
+            <Icon name={m.icon} size={12} fallback="Award" />
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="p-2 bg-rail rounded-lg space-y-2">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3 min-w-0">
       <button
         onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
         className="relative"
@@ -56,7 +74,7 @@ const ProfileMiniCard = () => {
       </button>
       <button
         onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-        className="flex-1 min-w-0 text-left"
+        className="min-w-0 text-left"
       >
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</span>
@@ -86,22 +104,6 @@ const ProfileMiniCard = () => {
         <Button size="sm" className="h-8 px-3 font-semibold" onClick={() => setAuthOpen(true)}>
           Войти
         </Button>
-      )}
-      </div>
-      {user && minis.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-border/60" aria-label="Достижения">
-          {minis.map((m) => (
-            <span
-              key={m.id}
-              title={`${m.title}${m.done ? "" : " — ещё не получено"}`}
-              className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                m.done ? `bg-gradient-to-br ${m.color} text-black` : "bg-card text-muted-foreground/50"
-              }`}
-            >
-              <Icon name={m.icon} size={12} fallback="Award" />
-            </span>
-          ))}
-        </div>
       )}
     </div>
   );

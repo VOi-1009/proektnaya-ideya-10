@@ -1,3 +1,4 @@
+import ProfileMiniCard from "./ProfileMiniCard";
 import { GoFn } from "./homeConfig";
 
 interface Props {
@@ -17,7 +18,9 @@ const HomeNav = ({ go }: Props) => (
         </div>
       </button>
     </div>
-    <div className="border-l border-transparent px-4 sm:px-6 py-3" />
+    <div className="border-l border-transparent px-4 sm:px-6 py-3 flex items-center justify-end">
+      <ProfileMiniCard />
+    </div>
   </nav>
 );
 
