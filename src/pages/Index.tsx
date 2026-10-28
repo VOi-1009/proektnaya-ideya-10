@@ -17,7 +17,8 @@ const Index = () => {
   const [channel, setChannel] = useState("welcome");
   const [selected, setSelected] = useState("bitcoin");
   const [articleId, setArticleId] = useState<number | null>(null);
-  const [favs, setFavs] = useState<string[]>(loadFavs);
+  const [favs, setFavs] = useState<string[]>(["ethereum", "gold"]);
+  const [favsLoaded, setFavsLoaded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { data: chatRooms } = useChatRooms();
@@ -26,21 +27,31 @@ const Index = () => {
   const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
   const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
-  const [seen, setSeen] = useState(() => getSeen("crypto"));
-  const [seenWorld, setSeenWorld] = useState(() => getSeen("world"));
+  const [seen, setSeen] = useState(0);
+  const [seenWorld, setSeenWorld] = useState(0);
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setSeen(getSeen("crypto"));
+    setSeenWorld(getSeen("world"));
+    setFavs(loadFavs());
+    setFavsLoaded(true);
+  }, []);
+  useEffect(() => {
+    setNow(Date.now());
+  }, [news, worldNews]);
   useEffect(() => {
     if (channel === "news") setSeen(getSeen("crypto"));
     if (channel === "world") setSeenWorld(getSeen("world"));
   }, [channel, news, worldNews]);
-  const unreadFrom = Math.max(seen, Date.now() - 12 * 3600_000);
+  const unreadFrom = now ? Math.max(seen, now - 12 * 3600_000) : Infinity;
   const unread = (news?.items ?? []).filter((n) => n.ts > unreadFrom).length;
-  const unreadWorldFrom = Math.max(seenWorld, Date.now() - 12 * 3600_000);
+  const unreadWorldFrom = now ? Math.max(seenWorld, now - 12 * 3600_000) : Infinity;
   const unreadWorld = (worldNews?.items ?? []).filter((n) => n.ts > unreadWorldFrom).length;
   const unreadOf = (id: string) => (id === "news" && channel !== "news" ? unread : id === "world" && channel !== "world" ? unreadWorld : 0);
 
   useEffect(() => {
-    localStorage.setItem("svecha-favs", JSON.stringify(favs));
-  }, [favs]);
+    if (favsLoaded) localStorage.setItem("svecha-favs", JSON.stringify(favs));
+  }, [favs, favsLoaded]);
 
   const toggleFav = (id: string) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
 

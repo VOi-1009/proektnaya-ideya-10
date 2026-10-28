@@ -50,13 +50,19 @@ const beep = () => {
 export const notificationsSupported = () => typeof window !== "undefined" && "Notification" in window;
 
 export function usePriceAlerts(coins: Coin[], live: boolean) {
-  const [alerts, setAlerts] = useState<PriceAlert[]>(load);
+  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const alertsRef = useRef(alerts);
   alertsRef.current = alerts;
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(alerts));
-  }, [alerts]);
+    setAlerts(load());
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (loaded) localStorage.setItem(KEY, JSON.stringify(alerts));
+  }, [alerts, loaded]);
 
   useEffect(() => {
     if (!live || !coins.length) return;

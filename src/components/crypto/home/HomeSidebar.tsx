@@ -1,6 +1,6 @@
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import { chatColor, useChatRooms } from "@/lib/chat";
 import { CHANNELS, GoFn } from "./homeConfig";

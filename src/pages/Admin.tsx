@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -164,7 +164,7 @@ const Admin = () => {
     </nav>
   );
 
-  if (!ready) return <div className="min-h-screen bg-background" />;
+  if (!ready) return <div className="min-h-screen bg-background font-body">{header}</div>;
 
   if (!user || !user.isAdmin) {
     return (

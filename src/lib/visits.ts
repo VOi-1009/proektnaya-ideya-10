@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import { PROFILE_URL, useAuth } from "@/lib/auth";
 
 const VID_KEY = "traderka-vid";

@@ -38,16 +38,18 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
       setReady(true);
       return;
     }
+    setToken(token);
     fetch(AUTH_URL, { headers: { "X-Auth-Token": token } })
       .then(async (r) => {
         if (r.ok) setUser((await r.json()).user);

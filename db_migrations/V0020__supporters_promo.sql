@@ -1,6 +1,0 @@
-ALTER TABLE users ADD COLUMN IF NOT EXISTS supporter_no INTEGER;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS promo_code VARCHAR(20);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS is_creator BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS supported_at TIMESTAMP;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_promo_code ON users (promo_code) WHERE promo_code IS NOT NULL;
-UPDATE users SET promo_code = 'BAAGOLD', is_creator = TRUE, supported_at = NOW() WHERE id = 2;

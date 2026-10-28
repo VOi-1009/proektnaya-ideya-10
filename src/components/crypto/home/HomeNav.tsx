@@ -1,7 +1,7 @@
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import DonateButton from "@/components/crypto/DonateButton";
 import { CHANNELS, GoFn } from "./homeConfig";
 

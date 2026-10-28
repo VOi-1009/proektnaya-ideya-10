@@ -40,7 +40,8 @@ const parseNum = (s: string) => parseFloat(s.replace(/\s/g, "").replace(",", "."
 
 const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinId?: string) => void }) => {
   const { user, token, ready, setAuthOpen } = useAuth();
-  const [local, setLocal] = useState<Holding[]>(loadHoldings);
+  const [local, setLocal] = useState<Holding[]>([]);
+  const [localLoaded, setLocalLoaded] = useState(false);
   const [remote, setRemote] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -52,8 +53,13 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
   const holdings = user ? remote : local;
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(local));
-  }, [local]);
+    setLocal(loadHoldings());
+    setLocalLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (localLoaded) localStorage.setItem(KEY, JSON.stringify(local));
+  }, [local, localLoaded]);
 
   const api = async (method: string, opts: { body?: unknown; id?: string } = {}) => {
     const r = await fetch(PORTFOLIO_URL + (opts.id ? `?id=${opts.id}` : ""), {
