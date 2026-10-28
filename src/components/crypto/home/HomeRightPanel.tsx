@@ -16,7 +16,7 @@ const HomeRightPanel = ({ sideCoins, go, favsCount }: Props) => {
     <aside className="hidden xl:block w-64 bg-card p-3 flex-shrink-0 space-y-5">
       <ProfileMiniCard favsCount={favsCount} />
       <div>
-        <h3 className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
+        <h3 className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
           <Icon name="Star" size={12} /> Мой список
         </h3>
         <div className="space-y-0">
