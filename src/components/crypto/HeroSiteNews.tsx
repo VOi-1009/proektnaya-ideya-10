@@ -21,7 +21,7 @@ const HeroSiteNews = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useSiteNews();
   const [opened, setOpened] = useState<SiteNews | null>(null);
-  const items = (data ?? []).slice(0, 6);
+  const items = (data ?? []).slice(0, 5);
 
   return (
     <div className="p-3 sm:p-4 flex flex-col h-full">
@@ -35,7 +35,7 @@ const HeroSiteNews = () => {
       </div>
       {isLoading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className="h-9 bg-rail" />
           ))}
         </div>
