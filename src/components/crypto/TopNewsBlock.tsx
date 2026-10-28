@@ -36,7 +36,7 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
         </div>
       ) : data?.length ? (
         <ul className="space-y-1">
-          {data.map((n) => (
+          {[...data].sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0)).map((n) => (
             <li key={n.id}>
               <a
                 href={n.link}
