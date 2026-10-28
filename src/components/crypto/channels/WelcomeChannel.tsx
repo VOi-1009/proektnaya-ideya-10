@@ -83,7 +83,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             )}
           </div>
           <MarketMetricsRow />
-          <QuoteBlock split />
+          <QuoteBlock />
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
           <div className="flex-1">
@@ -124,7 +124,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             </div>
             <div className="flex-1 flex flex-col border-t border-transparent">
-              <QuoteBlock />
+              <div className="flex-1 min-h-[60px]" />
               <div className="flex-1 min-h-[60px] border-t border-transparent flex items-center overflow-hidden">
                 <div className="w-full">
                   <OnlineMarquee />
