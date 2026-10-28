@@ -35,14 +35,14 @@ const TopNewsBlock = ({ onAll }: { onAll: () => void }) => {
           ))}
         </div>
       ) : data?.length ? (
-        <ul className="space-y-1">
+        <ul>
           {[...data].sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0)).slice(0, 6).map((n) => (
             <li key={n.id}>
               <a
                 href={n.link}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-hover/60 transition-colors group"
+                className="flex items-start gap-3 rounded-lg px-2 py-1 hover:bg-hover/60 transition-colors group"
               >
                 <div className="w-14 flex-shrink-0 text-center">
                   <div className="font-mono tabular text-white text-sm leading-tight">{timeOf(n.ts)}</div>
