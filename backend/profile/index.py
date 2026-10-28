@@ -16,6 +16,7 @@ from reactions import handle_reactions
 from polls import handle_polls
 from radars import handle_radars
 from sitenews import handle_site_news
+from quotes import handle_quotes
 from chat import handle_chat
 from donate import handle_donate
 from aibot import handle_aibot
@@ -94,7 +95,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTraderKa (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTraderKa (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -114,6 +115,8 @@ def handler(event: dict, context) -> dict:
         return handle_radars(event)
     if resource == "sitenews":
         return handle_site_news(event)
+    if resource == "quotes":
+        return handle_quotes(event)
     if resource == "chat":
         return handle_chat(event)
     if resource == "donate":
