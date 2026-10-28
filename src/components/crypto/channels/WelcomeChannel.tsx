@@ -9,10 +9,11 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
+import FearGreedCard from "../FearGreedCard";
+import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
 import HeroSiteNews from "../HeroSiteNews";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
-import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
 interface Props {
   coins: Coin[];
@@ -30,7 +31,6 @@ const FEATURES = [
 const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
-  const { data: fg } = useFearGreed();
 
   const cryptos = coins.filter((c) => !c.kind);
   const totalCap = cryptos.reduce((s, c) => s + c.market_cap, 0);
@@ -55,7 +55,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
     <div className="space-y-3">
       <div className="p-2 sm:p-3 rounded-xl border border-border bg-card animate-scale-in">
         <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Сводка по рынку на сегодня</div>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
           <div className={cardCls("border-primary")}>
             <div className={labelCls}>Капитализация крипто</div>
             <div className={valueCls}>{fmtBig(totalCap)}</div>
@@ -80,28 +80,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             </button>
           )}
-          <div
-            className={cardCls(fg ? fgBorder(fg.value) : "border-input")}
-            title={`Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория${fg?.prev != null ? `. Вчера: ${fg.prev}` : ""}`}
-          >
-            <div className={labelCls}>Страх и жадность</div>
-            {fg ? (
-              <>
-                <div className="flex items-baseline gap-1.5 mt-0.5 w-full min-w-0">
-                  <span className={`font-mono tabular text-sm leading-tight ${fgColor(fg.value)}`}>{fg.value}</span>
-                  <span className="text-white text-[10px] truncate">{fg.label}</span>
-                </div>
-                <div className="relative h-1 rounded-full mt-1 w-full bg-gradient-to-r from-down via-accent to-up">
-                  <span
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white border border-background"
-                    style={{ left: `${fg.value}%` }}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className={valueCls}>—</div>
-            )}
-          </div>
         </div>
         <MarketMetricsRow />
         {btc && (
@@ -140,7 +118,10 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             </div>
             <div className="flex-1 flex flex-col border-t border-transparent">
-              <div className="flex-1 min-h-[60px]" />
+              <div className="flex-1 min-h-[60px] grid grid-cols-2 gap-2 p-3 items-center">
+                <FearGreedCard />
+                <AltseasonCard />
+              </div>
               <div className="flex-1 min-h-[60px] border-t border-transparent flex items-center overflow-hidden">
                 <div className="w-full">
                   <OnlineMarquee />
