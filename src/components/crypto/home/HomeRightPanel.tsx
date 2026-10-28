@@ -3,7 +3,6 @@ import { useNavigate } from "@/lib/router-compat";
 import { COIN_META, Coin, fmtPct, fmtPrice } from "@/lib/crypto";
 import { SideBlocks } from "@/components/crypto/HomeBlocks";
 import HeroSiteNews from "@/components/crypto/HeroSiteNews";
-import OnlineList from "@/components/crypto/OnlineList";
 import ProfileMiniCard from "./ProfileMiniCard";
 import { GoFn, PINNED } from "./homeConfig";
 
@@ -63,7 +62,6 @@ const HomeRightPanel = ({ sideCoins, go, favsCount }: Props) => {
           )}
         </div>
       </div>
-      <OnlineList />
       <div className="rounded-lg border border-border bg-rail/40 overflow-hidden">
         <HeroSiteNews />
       </div>

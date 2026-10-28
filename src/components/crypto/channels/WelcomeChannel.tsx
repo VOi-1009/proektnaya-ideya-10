@@ -9,6 +9,7 @@ import HomeBlocks from "../HomeBlocks";
 import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
+import OnlineMarquee from "../OnlineMarquee";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
@@ -164,6 +165,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           </div>
         </div>
       </div>
+
+      <OnlineMarquee />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
         <TopNewsBlock onAll={() => go("news")} />
