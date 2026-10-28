@@ -139,16 +139,16 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
                 </Button>
               </div>
             </div>
-            <div className="flex-1 flex flex-col border-t border-border">
+            <div className="flex-1 flex flex-col border-t border-transparent">
               <div className="flex-1 min-h-[60px]" />
-              <div className="flex-1 min-h-[60px] border-t border-border flex items-center overflow-hidden">
+              <div className="flex-1 min-h-[60px] border-t border-transparent flex items-center overflow-hidden">
                 <div className="w-full">
                   <OnlineMarquee />
                 </div>
               </div>
             </div>
           </div>
-          <div className="border-t lg:border-t-0 lg:border-l border-border">
+          <div className="border-t lg:border-t-0 lg:border-l border-transparent">
             <BtcLiveChart onOpen={() => go("market", "bitcoin")} />
           </div>
         </div>
