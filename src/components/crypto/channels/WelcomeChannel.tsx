@@ -13,6 +13,7 @@ import QuoteBlock from "../QuoteBlock";
 import FearGreedGauge from "../FearGreedGauge";
 import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
+import HeroSiteNews from "../HeroSiteNews";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 
 interface Props {
@@ -140,7 +141,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
         <TopNewsBlock onAll={() => go("news")} />
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
-        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
+        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]">
+          <HeroSiteNews />
+        </div>
       </div>
 
       <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
