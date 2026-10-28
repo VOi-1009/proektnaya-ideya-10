@@ -75,7 +75,7 @@ const HomeMain = ({
         <Icon name="Menu" size={20} />
       </Button>
       <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${channel === "ainews" ? "bg-white" : "bg-primary"}`} />
-      <span className="text-white font-semibold">{current.name}</span>
+      <span className="text-white font-semibold">{current.name.replace(/-/g, " ")}</span>
       <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
       <span className="text-muted-foreground text-sm hidden sm:block truncate">{current.topic}</span>
       <div className="ml-auto flex items-center gap-3 text-muted-foreground">

@@ -19,7 +19,6 @@ const Index = () => {
   const [articleId, setArticleId] = useState<number | null>(null);
   const [favs, setFavs] = useState<string[]>(["ethereum", "gold"]);
   const [favsLoaded, setFavsLoaded] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { data: chatRooms } = useChatRooms();
   const { data: radarList } = useRadars();
@@ -60,7 +59,6 @@ const Index = () => {
     setArticleId(null);
     if (coinId) setSelected(coinId);
     setMobileSidebarOpen(false);
-    setMobileMenuOpen(false);
     document.getElementById("chat-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -76,7 +74,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
-      <HomeNav channel={channel} go={go} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+      <HomeNav go={go} />
 
       {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 

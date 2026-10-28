@@ -2,6 +2,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
+import DonateButton from "@/components/crypto/DonateButton";
 import { chatColor, useChatRooms } from "@/lib/chat";
 import { CHANNELS, GoFn } from "./homeConfig";
 
@@ -37,7 +38,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
         <div>
           <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
             <Icon name="ChevronDown" size={12} />
-            <span>Текстовые каналы</span>
+            <span>Меню</span>
           </div>
           <div className="mt-0.5 space-y-0">
             {CHANNELS.map((c) => (
@@ -49,7 +50,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${c.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : "bg-primary"}`} />
-                <span className="text-[14px] truncate">{c.name}</span>
+                <span className="text-[14px] truncate">{c.name.replace(/-/g, " ")}</span>
                 {c.id === "alerts" && activeAlerts > 0 && (
                   <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
                 )}
@@ -67,6 +68,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
               <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
               <span className="text-[14px]">рейтинг</span>
             </button>
+            <DonateButton full className="mt-2 w-full" />
           </div>
         </div>
         <div>
