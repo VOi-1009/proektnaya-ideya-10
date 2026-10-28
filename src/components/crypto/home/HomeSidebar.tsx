@@ -25,7 +25,19 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
       className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
     >
       <div className="h-12 px-4 flex items-center justify-between">
-        <h2 className="text-white font-semibold text-sm"></h2>
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
+            <Icon name="Bell" size={18} />
+            {activeAlerts > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">
+                {activeAlerts}
+              </span>
+            )}
+          </button>
+          <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет" title="Поиск монет">
+            <Icon name="Search" size={18} />
+          </button>
+        </div>
         <Button
           variant="ghost"
           className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"

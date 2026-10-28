@@ -86,17 +86,6 @@ const HomeMain = ({
             {live ? "онлайн" : "кэш"} · {updated}
           </span>
         )}
-        <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
-          <Icon name="Bell" size={18} />
-          {activeAlerts > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">
-              {activeAlerts}
-            </span>
-          )}
-        </button>
-        <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет">
-          <Icon name="Search" size={18} />
-        </button>
       </div>
     </div>
 
