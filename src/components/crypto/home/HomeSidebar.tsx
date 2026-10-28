@@ -24,7 +24,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
     <aside
       className={`${mobileSidebarOpen ? "flex" : "hidden"} lg:flex w-full lg:w-60 bg-card flex-col flex-shrink-0`}
     >
-      <div className="h-12 px-4 flex items-center justify-between">
+      <div className="h-12 px-4 flex items-center justify-center relative">
         <div className="flex items-center gap-3 text-muted-foreground">
           <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
             <Icon name="Bell" size={18} />
@@ -40,7 +40,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
         </div>
         <Button
           variant="ghost"
-          className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
+          className="lg:hidden absolute right-3 text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto"
           onClick={() => setMobileSidebarOpen(false)}
         >
           <Icon name="X" size={16} />
