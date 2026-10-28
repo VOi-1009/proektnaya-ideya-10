@@ -100,8 +100,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[72fr_25fr] gap-3 animate-scale-in">
-        <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[25fr_72fr] gap-3 animate-scale-in">
+        <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-2">
           <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1.5">Сводка по рынку на сегодня</div>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
             <div className={cardCls("border-primary")}>
@@ -139,7 +139,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </p>
           )}
         </div>
-        <div className="rounded-xl border border-border bg-card min-h-[120px]" />
+        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
