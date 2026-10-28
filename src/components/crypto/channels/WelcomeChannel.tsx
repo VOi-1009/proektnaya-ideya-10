@@ -9,6 +9,7 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
+import QuoteBlock from "../QuoteBlock";
 import FearGreedCard from "../FearGreedCard";
 import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
@@ -64,6 +65,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               <p className="text-muted-foreground text-sm mt-1 max-w-xl">
                 Ваш надежный источник информации и площадка для общения. Котировки криптовалют, нефти, золота и валют, графики, новости и ваш портфель — на одной странице.
               </p>
+              <div className="mt-2 -mx-3 sm:-mx-4">
+                <QuoteBlock />
+              </div>
               <div className="flex flex-wrap gap-2 mt-3">
                 <Button onClick={() => go("market")} className="font-semibold">
                   <Icon name="CandlestickChart" size={16} className="mr-2" />
