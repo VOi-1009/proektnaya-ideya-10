@@ -9,6 +9,7 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
+import QuoteBlock from "../QuoteBlock";
 import UpcomingEvents from "../UpcomingEvents";
 import HeroSiteNews from "../HeroSiteNews";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
@@ -140,7 +141,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             </div>
             <div className="flex-1 flex flex-col border-t border-border">
-              <div className="flex-1 min-h-[60px]" />
+              <QuoteBlock />
               <div className="flex-1 min-h-[60px] border-t border-border flex items-center overflow-hidden">
                 <div className="w-full">
                   <OnlineMarquee />
