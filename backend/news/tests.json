@@ -53,6 +53,12 @@
       "method": "GET",
       "path": "/?resource=cmc",
       "expectedStatus": 200
+    },
+    {
+      "name": "Календарь",
+      "method": "GET",
+      "path": "/?resource=calendar",
+      "expectedStatus": 200
     }
   ]
 }

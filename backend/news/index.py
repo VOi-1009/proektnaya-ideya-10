@@ -11,6 +11,7 @@ from email.utils import parsedate_to_datetime
 from radar import heatmap_response
 from toptxs import toptxs_response
 from cmc import cmc_response
+from econ_calendar import calendar_response
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -305,7 +306,7 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}
@@ -322,6 +323,8 @@ def handler(event: dict, context) -> dict:
         return toptxs_response(json_resp)
     if resource == "cmc":
         return cmc_response(json_resp)
+    if resource == "calendar":
+        return calendar_response(json_resp)
 
     kind = qs.get("kind") if qs.get("kind") in FEEDS else "crypto"
     cache = _cache[kind]

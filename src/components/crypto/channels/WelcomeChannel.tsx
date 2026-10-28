@@ -9,6 +9,7 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import OnlineMarquee from "../OnlineMarquee";
+import EconCalendar from "../EconCalendar";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 import { fgBorder, fgColor, useFearGreed } from "@/lib/fearGreed";
 
@@ -51,6 +52,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
   return (
     <div className="space-y-3">
+      <EconCalendar />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
         <div className="contents">
           <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/20 via-card to-card">
