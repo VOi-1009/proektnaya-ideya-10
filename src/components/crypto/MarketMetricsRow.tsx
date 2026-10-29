@@ -39,20 +39,30 @@ const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
         </div>
       </a>
 
-      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-green-500", true)} title="Ликвидировано длинных позиций (лонгов) за 24 часа">
+      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={`${cardCls("border-green-500", true)} relative`} title="Ликвидировано длинных позиций (лонгов) за 24 часа">
         <div className={labelCls}>Лонг</div>
         <div className={valueCls}>
           {fmtUsd(l?.longs)}
           {longPct !== null && <span className="ml-1.5 text-[10px] text-green-400">{longPct}%</span>}
         </div>
+        {longPct !== null && (
+          <div className="absolute left-0 right-0 bottom-0 h-1 bg-white/10">
+            <div className="h-full bg-green-500" style={{ width: `${longPct}%` }} />
+          </div>
+        )}
       </a>
 
-      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-red-500", true)} title="Ликвидировано коротких позиций (шортов) за 24 часа">
+      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={`${cardCls("border-red-500", true)} relative`} title="Ликвидировано коротких позиций (шортов) за 24 часа">
         <div className={labelCls}>Шорт</div>
         <div className={valueCls}>
           {fmtUsd(l?.shorts)}
           {shortPct !== null && <span className="ml-1.5 text-[10px] text-red-400">{shortPct}%</span>}
         </div>
+        {shortPct !== null && (
+          <div className="absolute left-0 right-0 bottom-0 h-1 bg-white/10">
+            <div className="h-full bg-red-500" style={{ width: `${shortPct}%` }} />
+          </div>
+        )}
       </a>
     </div>
   );
