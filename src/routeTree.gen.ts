@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ConsentRouteImport } from './routes/consent'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -24,6 +26,16 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsentRoute = ConsentRouteImport.update({
+  id: '/consent',
+  path: '/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -50,6 +62,8 @@ const ArticlesIdRoute = ArticlesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/consent': typeof ConsentRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -58,6 +72,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/consent': typeof ConsentRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -67,6 +83,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/consent': typeof ConsentRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -75,13 +93,30 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/admin' | '/profile' | '/rating' | '/sitemap.xml' | '/articles/$id'
+    | '/'
+    | '/admin'
+    | '/consent'
+    | '/privacy'
+    | '/profile'
+    | '/rating'
+    | '/sitemap.xml'
+    | '/articles/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/profile' | '/rating' | '/sitemap.xml' | '/articles/$id'
+  to:
+    | '/'
+    | '/admin'
+    | '/consent'
+    | '/privacy'
+    | '/profile'
+    | '/rating'
+    | '/sitemap.xml'
+    | '/articles/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/consent'
+    | '/privacy'
     | '/profile'
     | '/rating'
     | '/sitemap.xml'
@@ -91,6 +126,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  ConsentRoute: typeof ConsentRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RatingRoute: typeof RatingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -111,6 +148,20 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consent': {
+      id: '/consent'
+      path: '/consent'
+      fullPath: '/consent'
+      preLoaderRoute: typeof ConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -147,6 +198,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  ConsentRoute: ConsentRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RatingRoute: RatingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

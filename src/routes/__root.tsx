@@ -12,34 +12,12 @@ import {AuthProvider} from "@/lib/auth";
 import {MemberCardProvider} from "@/lib/memberCard";
 import AuthDialog from "@/components/crypto/AuthDialog";
 import NotFound from "@/pages/NotFound";
+import CookieBanner from "@/components/legal/CookieBanner";
 
 const TITLE = "TRADERKA.RU — котировки, графики и криптоновости";
 const DESCRIPTION =
     "Курсы криптовалют онлайн, графики за любой период и свежие новости рынка для трейдеров — в одном удобном окне.";
 const OG_IMAGE = "https://cdn.poehali.dev/projects/***/files/og-image-1792240276264.jpg";
-
-const METRIKA = `(function (m, e, t, r, i, k, a) {
-    m[i] = m[i] || function () {
-        (m[i].a = m[i].a || []).push(arguments)
-    };
-    m[i].l = 1 * new Date();
-    for (var j = 0; j < document.scripts.length; j++) {
-        if (document.scripts[j].src === r) {
-            return;
-        }
-    }
-    k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
-})
-(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-
-ym(101026698, "init", {
-    trustedDomains: ["poehali.dev"],
-    clickmap: true,
-    trackLinks: true,
-    accurateTrackBounce: true,
-    webvisor: true,
-    trackHash: true
-});`;
 
 export const Route = createRootRoute({
     head: () => ({
@@ -73,7 +51,6 @@ export const Route = createRootRoute({
         scripts: [
             ...(import.meta.env.DEV ? [{children: HMR_CLIENT}] : []),
             ...PLATFORM_SCRIPTS,
-            {children: METRIKA},
         ],
     }),
     component: RootComponent,
@@ -97,6 +74,7 @@ function RootComponent() {
                             <Sonner/>
                             <AuthDialog/>
                             <VisitTracker/>
+                            <CookieBanner/>
                             <Outlet/>
                         </MemberCardProvider>
                     </TooltipProvider>
@@ -115,9 +93,6 @@ function RootDocument({children}: { children: ReactNode }) {
         <body>
         {children}
         <Scripts/>
-        <noscript>
-            <div><img src="https://mc.yandex.ru/watch/101026698" style={{position: "absolute", left: "-9999px"}} alt=""/></div>
-        </noscript>
         </body>
         </html>
     );

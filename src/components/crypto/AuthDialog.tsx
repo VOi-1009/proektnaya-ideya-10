@@ -15,11 +15,13 @@ const AuthDialog = () => {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agree, setAgree] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setErr("Укажите корректную почту");
     if (password.length < 6) return setErr("Пароль должен быть не короче 6 символов");
+    if (!agree) return setErr("Подтвердите согласие на обработку персональных данных");
     setErr("");
     setLoading(true);
     try {
@@ -76,8 +78,15 @@ const AuthDialog = () => {
               className={`${inputCls} mt-1`}
             />
           </div>
+          <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer leading-snug">
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[hsl(var(--primary))]" />
+            <span>
+              Я даю <a href="/consent" target="_blank" rel="noreferrer" className="text-primary hover:underline">согласие на обработку персональных данных</a> и принимаю{" "}
+              <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">политику обработки данных</a>
+            </span>
+          </label>
           {err && <div className="text-down text-sm">{err}</div>}
-          <Button type="submit" disabled={loading} className="w-full h-10 font-semibold">
+          <Button type="submit" disabled={loading || !agree} className="w-full h-10 font-semibold">
             {loading && <Icon name="Loader2" size={16} className="mr-2 animate-spin" />}
             {mode === "login" ? "Войти" : "Создать аккаунт"}
           </Button>
