@@ -108,10 +108,10 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             </div>
           </div>
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
+            <div className="flex-1 min-h-[100px]" />
             <div className="flex-1 min-h-[160px] p-2">
               <LiqBars symbol="BTCUSDT" range="30d" lev="all" mini />
             </div>
-            <div className="flex-1 min-h-[100px]" />
           </div>
         </div>
       </div>
