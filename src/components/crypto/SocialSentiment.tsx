@@ -27,7 +27,7 @@ const SocialSentiment = () => {
   if (isError || !s || s.value == null) return <div className="p-3 text-xs text-muted-foreground">Данные временно недоступны</div>;
 
   return (
-    <div className="h-full p-3 flex flex-col justify-center gap-1.5">
+    <div className="h-full p-3 flex flex-col justify-center gap-0.5">
       <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
         <Icon name="MessagesSquare" size={12} className="text-primary" /> Упоминания в соцсетях
         <Tooltip>
