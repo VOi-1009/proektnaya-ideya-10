@@ -26,7 +26,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   const totalVolume = cryptos.reduce((s, c) => s + c.total_volume, 0);
-  const growing = cryptos.filter((c) => c.price_change_percentage_24h >= 0).length;
+  const best7d = cryptos
+    .filter((c) => typeof c.price_change_percentage_7d_in_currency === "number")
+    .sort((a, b) => (b.price_change_percentage_7d_in_currency ?? 0) - (a.price_change_percentage_7d_in_currency ?? 0))[0];
 
   return (
     <div className="space-y-3">
@@ -61,12 +63,19 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               <div className={labelCls}>Объём торгов за 24ч</div>
               <div className={valueCls}>{fmtBig(totalVolume)}</div>
             </div>
-            <div className={cardCls(growing * 2 >= cryptos.length ? "border-up" : "border-down")}>
-              <div className={labelCls}>Растут за 24ч</div>
-              <div className={valueCls}>
-                {growing} из {cryptos.length}
+            {best7d ? (
+              <button onClick={() => go("market", best7d.id)} className={cardCls("border-up", true)}>
+                <div className={labelCls}>Лучший за 7 дней</div>
+                <div className={valueCls}>
+                  {COIN_META[best7d.id]?.short} <span className={(best7d.price_change_percentage_7d_in_currency ?? 0) >= 0 ? "text-up" : "text-down"}>{fmtPct(best7d.price_change_percentage_7d_in_currency)}</span>
+                </div>
+              </button>
+            ) : (
+              <div className={cardCls("border-up")}>
+                <div className={labelCls}>Лучший за 7 дней</div>
+                <div className={valueCls}>—</div>
               </div>
-            </div>
+            )}
           </div>
           <MarketMetricsRow />
         </div>
