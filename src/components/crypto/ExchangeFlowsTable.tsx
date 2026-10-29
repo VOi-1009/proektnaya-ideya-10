@@ -14,10 +14,10 @@ const COLUMNS: { key: SortKey; label: string }[] = [
 ];
 
 const fmtFlow = (v: number) => (v ? `${v > 0 ? "+" : "−"}${fmtUsd(Math.abs(v))}` : "—");
-const flowColor = (v: number) => (v > 0 ? "text-up" : v < 0 ? "text-down" : "text-muted-foreground");
+const flowColor = (v: number) => (v > 0 ? "text-lime-400" : v < 0 ? "text-down" : "text-muted-foreground");
 
 const Summary = ({ label, value }: { label: string; value: number }) => (
-  <div className="bg-rail/60 rounded-lg px-3 py-2 border-l-4" style={{ borderColor: value >= 0 ? "hsl(var(--up))" : "hsl(var(--down))" }}>
+  <div className="bg-rail/60 rounded-lg px-3 py-2 border-l-4" style={{ borderColor: value >= 0 ? "#a3e635" : "hsl(var(--down))" }}>
     <div className="text-[11px] text-muted-foreground">{label}</div>
     <div className={`font-mono text-sm tabular ${flowColor(value)}`}>{fmtFlow(value)}</div>
   </div>
