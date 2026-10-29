@@ -1,5 +1,6 @@
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fmtUsd, LiqLevel, useLiqMap } from "@/lib/radars";
 
 const fmtP = (p: number) => `$${Math.round(p).toLocaleString("ru-RU")}`;
@@ -38,6 +39,16 @@ const LiqInsights = ({ symbol = "BTCUSDT" }: { symbol?: string }) => {
       <div>
         <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5 mb-1.5">
           <Icon name="Magnet" size={12} className="text-primary" /> Largest Magnet Zone
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" aria-label="Что такое Largest Magnet Zone" className="text-primary animate-soft-blink hover:animate-none hover:opacity-100 normal-case">
+                <Icon name="Info" size={13} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[260px] text-xs font-normal normal-case tracking-normal leading-snug">
+              Largest Magnet Zone - это цена, при которой будет ликвидировано наибольшее количество позиций одновременно. Цена часто притягивается к ней.
+            </TooltipContent>
+          </Tooltip>
         </div>
         {data.magnet ? (
           <div className="space-y-1">

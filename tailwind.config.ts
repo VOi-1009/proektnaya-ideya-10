@@ -118,6 +118,10 @@ export default {
 					'0%': { transform: 'translateX(0)' },
 					'100%': { transform: 'translateX(-50%)' }
 				},
+				'soft-blink': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.35' }
+				},
 				flash: {
 					'0%': { backgroundColor: 'hsl(var(--primary) / 0.25)' },
 					'100%': { backgroundColor: 'transparent' }
@@ -129,6 +133,7 @@ export default {
 				'fade-in': 'fade-in 0.4s ease-out both',
 				'scale-in': 'scale-in 0.2s ease-out both',
 				marquee: 'marquee 60s linear infinite',
+				'soft-blink': 'soft-blink 2.4s ease-in-out infinite',
 				flash: 'flash 1.2s ease-out'
 			}
 		}
