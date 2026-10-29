@@ -15,6 +15,7 @@ const COMMODITY_ICON: Record<string, string> = { brent: "Droplet", gold: "Gem" }
 
 const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
   const meta = COIN_META[coin.id];
+  const [failed, setFailed] = useState(false);
   if (COMMODITY_ICON[coin.id])
     return (
       <div
@@ -24,8 +25,18 @@ const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
         <Icon name={COMMODITY_ICON[coin.id]} size={Math.round(size * 0.55)} />
       </div>
     );
-  if (coin.image)
-    return <img src={coin.image} alt={coin.name} width={size} height={size} className="rounded-full" loading="lazy" />;
+  if (!failed && !coin.kind)
+    return (
+      <img
+        src={`https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png`}
+        alt={coin.name}
+        width={size}
+        height={size}
+        className="rounded-full"
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+    );
   return (
     <div
       className="rounded-full flex items-center justify-center font-mono font-bold text-[9px] text-black"
