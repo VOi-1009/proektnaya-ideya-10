@@ -4,7 +4,7 @@ const Ticker = ({ coins, onPick }: { coins: Coin[]; onPick: (id: string) => void
   const row = [...coins, ...coins];
   return (
     <div className="relative overflow-hidden bg-rail border-b border-border">
-      <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+      <div className="flex w-max animate-marquee hover:[animation-play-state:paused]" style={{ animationDuration: `${Math.max(60, coins.length * 6)}s` }}>
         {row.map((c, i) => {
           const up = c.price_change_percentage_24h >= 0;
           return (
