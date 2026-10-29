@@ -23,10 +23,24 @@ const Summary = ({ label, value }: { label: string; value: number }) => (
   </div>
 );
 
+const Logo = ({ e }: { e: ExchangeFlow }) => {
+  const [err, setErr] = useState(false);
+  return e.id && !err ? (
+    <img src={`/exchanges/${e.id}.png`} alt="" width={24} height={24} className="w-6 h-6 rounded-full flex-shrink-0 bg-white/5" loading="lazy" onError={() => setErr(true)} />
+  ) : (
+    <span className="w-6 h-6 rounded-full flex-shrink-0 bg-rail text-white text-[9px] font-bold flex items-center justify-center">{e.name.slice(0, 2).toUpperCase()}</span>
+  );
+};
+
 const Row = ({ e, i }: { e: ExchangeFlow; i: number }) => (
   <tr className="border-b border-border last:border-0 hover:bg-hover/40 transition-colors">
     <td className="px-3 py-2.5 font-mono text-muted-foreground">{i + 1}</td>
-    <td className="px-3 py-2.5 text-white font-semibold whitespace-nowrap">{e.name}</td>
+    <td className="px-3 py-2.5 text-white font-semibold whitespace-nowrap">
+      <div className="flex items-center gap-2.5">
+        <Logo e={e} />
+        {e.name}
+      </div>
+    </td>
     <td className="px-3 py-2.5 text-right font-mono tabular text-white whitespace-nowrap">{e.assets ? fmtUsd(e.assets) : "—"}</td>
     <td className="px-3 py-2.5 text-right font-mono tabular text-white whitespace-nowrap">{e.oi ? fmtUsd(e.oi) : "—"}</td>
     {(["flow24h", "flow7d", "flow30d"] as const).map((k) => (
