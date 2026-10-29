@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
+import LangSwitch from "@/components/crypto/LangSwitch";
 import { chatColor, useChatRooms } from "@/lib/chat";
 import { CHANNELS, GoFn } from "./homeConfig";
 
@@ -37,6 +38,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет" title="Поиск монет">
             <Icon name="Search" size={18} />
           </button>
+          <LangSwitch />
         </div>
         <Button
           variant="ghost"
