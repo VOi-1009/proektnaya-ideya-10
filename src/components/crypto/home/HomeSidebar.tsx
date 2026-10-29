@@ -95,23 +95,19 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                 </button>
               );
             })}
-            {(chatRooms ?? []).length > 0 && (
-              <div className="mt-1 ml-3 pl-2 space-y-1">
-                {(chatRooms ?? []).map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => go(`chat-${r.id}`)}
-                    className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${
-                      channel === `chat-${r.id}` ? chatColor(r.color).active : chatColor(r.color).btn
-                    }`}
-                  >
-                    <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${chatColor(r.color).dot}`} />
-                    <span className="text-[14px] truncate">{r.name}</span>
-                    {r.access === "list" && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
-                  </button>
-                ))}
-              </div>
-            )}
+            {(chatRooms ?? []).map((r) => (
+              <button
+                key={r.id}
+                onClick={() => go(`chat-${r.id}`)}
+                className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                  channel === `chat-${r.id}` ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${chatColor(r.color).dot}`} />
+                <span className="text-[14px] truncate">{r.name}</span>
+                {r.access === "list" && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
+              </button>
+            ))}
           </div>
         </div>
         {radars && radars.length > 0 && (
