@@ -7,7 +7,7 @@ import MarketMetricsRow from "../MarketMetricsRow";
 import QuoteBlock from "../QuoteBlock";
 import OnlineMarquee from "../OnlineMarquee";
 import FearGreedGauge from "../FearGreedGauge";
-import AltseasonCard from "../AltseasonCard";
+import BtcTreasuryCard from "../BtcTreasuryCard";
 import UpcomingEvents from "../UpcomingEvents";
 import HeroSiteNews from "../HeroSiteNews";
 import LiqBars from "../LiqBars";
@@ -91,7 +91,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             <FearGreedGauge />
           </div>
           <div className="p-3">
-            <AltseasonCard />
+            <BtcTreasuryCard />
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3 overflow-hidden">

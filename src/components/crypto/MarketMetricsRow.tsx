@@ -1,4 +1,5 @@
 import { useCmcMetrics } from "@/lib/cmcMetrics";
+import AltseasonCard from "./AltseasonCard";
 import { cardCls, labelCls, valueCls } from "./summaryCard";
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("ru-RU");
@@ -10,7 +11,6 @@ const LIQ_URL = "https://coinmarketcap.com/ru/charts/liquidations/";
 
 const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
   const { data } = useCmcMetrics();
-  const t = data?.treasuries;
   const l = data?.liquidations;
   const share = (v?: number | null) => (l?.total && v != null ? Math.round((v / l.total) * 100) : null);
   const longPct = share(l?.longs);
@@ -18,22 +18,7 @@ const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
 
   return (
     <div className={`grid ${cols} gap-2 mt-2`}>
-      <a
-        href="https://coinmarketcap.com/ru/charts/bitcoin-treasuries/"
-        target="_blank"
-        rel="noreferrer"
-        className={cardCls("border-amber-400", true)}
-        title={
-          t
-            ? `Общее количество удерживаемых Bitcoin: ${fmtInt(t.total)} BTC у ${t.companies} компаний${
-                t.top ? `. Крупнейший держатель — ${t.top.name}: ${fmtInt(t.top.holdings)} BTC` : ""
-              }`
-            : "Общее количество удерживаемых Bitcoin"
-        }
-      >
-        <div className={labelCls}>Общее количество удерживаемых Bitcoin</div>
-        <div className={valueCls}>{t ? `${fmtInt(t.total)} BTC` : "—"}</div>
-      </a>
+      <AltseasonCard />
 
       <a
         href={LIQ_URL}
