@@ -13,6 +13,7 @@ import LiqBars from "../LiqBars";
 import EtfNetFlow from "../EtfNetFlow";
 import SocialSentiment from "../SocialSentiment";
 import PuellStatus from "../PuellStatus";
+import BtcHoldings from "../BtcHoldings";
 import LiqInsights from "../LiqInsights";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 
@@ -133,7 +134,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="flex-1 min-h-[80px]">
             <SocialSentiment />
           </div>
-          <div className="flex-1 min-h-[80px]" />
+          <div className="flex-1 min-h-[80px]">
+            <BtcHoldings />
+          </div>
         </div>
       </div>
 
