@@ -15,5 +15,6 @@ Allow: /
 Disallow: /admin
 Disallow: /profile
 Disallow: /auth
+Disallow: /consent
 
 Sitemap: https://traderka.ru/sitemap.xml

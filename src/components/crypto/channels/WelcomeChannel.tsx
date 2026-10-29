@@ -16,6 +16,7 @@ import SocialSentiment from "../SocialSentiment";
 import PuellStatus from "../PuellStatus";
 import BtcHoldings from "../BtcHoldings";
 import LiqInsights from "../LiqInsights";
+import { Link } from "@/lib/router-compat";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 
 interface Props {
@@ -148,7 +149,14 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
       <HomeBlocks />
 
-
+      <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <h2 className="font-display text-base sm:text-lg text-white mb-2">TRADERKA.RU — бесплатное крипто сообщество трейдеров</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Следите за курсами криптовалют онлайн, читайте свежие новости рынка и делитесь идеями в{" "}
+          <Link to="/community" className="text-primary hover:underline">соцсети для трейдеров</Link>: публикуйте посты, отмечайте монеты и бычий или медвежий настрой, подписывайтесь на авторов. За активность на сайте вы получаете очки, статусы, достижения и бонусы, а место среди участников видно в{" "}
+          <Link to="/rating" className="text-primary hover:underline">рейтинге</Link>. Читать и участвовать можно бесплатно: график биткоина, ликвидации, притоки и оттоки бирж, портфель и конвертер доступны в одном окне.
+        </p>
+      </section>
 
       <p className="text-xs text-muted-foreground/70 pb-2">
         Информация на сайте не является инвестиционной рекомендацией. Торговля криптовалютой связана с высоким риском.

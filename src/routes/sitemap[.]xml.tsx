@@ -19,6 +19,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           `  <url>\n    <loc>${loc}</loc>\n${lastmod ? `    <lastmod>${lastmod.slice(0, 10)}</lastmod>\n` : ""}    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n  </url>`;
         const items = [
           url(`${SITE}/`, "daily", "1.0"),
+          url(`${SITE}/community`, "hourly", "0.9"),
           url(`${SITE}/rating`, "daily", "0.8"),
           ...articles.map((a) => url(`${SITE}/articles/${a.id}`, "weekly", "0.7", a.updatedAt)),
         ];
