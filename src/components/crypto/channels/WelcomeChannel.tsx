@@ -28,7 +28,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 lg:grid-cols-[20fr_50fr_30fr] gap-3 animate-scale-in">
+      <div className="grid grid-cols-1 lg:grid-cols-[18fr_32fr_32fr_18fr] gap-3 animate-scale-in">
         <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-2">
           <div className="grid grid-cols-2 gap-2">
             <div className={cardCls("border-primary")}>
@@ -70,6 +70,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3 overflow-hidden">
           <UpcomingEvents onAll={() => go("calendar")} />
         </div>
+        <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-4" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
