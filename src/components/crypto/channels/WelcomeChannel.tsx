@@ -25,6 +25,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const sorted = [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
+  const totalVolume = cryptos.reduce((s, c) => s + c.total_volume, 0);
+  const growing = cryptos.filter((c) => c.price_change_percentage_24h >= 0).length;
 
   return (
     <div className="space-y-3">
@@ -55,6 +57,16 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
                 </div>
               </button>
             )}
+            <div className={cardCls("border-accent")}>
+              <div className={labelCls}>Объём торгов за 24ч</div>
+              <div className={valueCls}>{fmtBig(totalVolume)}</div>
+            </div>
+            <div className={cardCls(growing * 2 >= cryptos.length ? "border-up" : "border-down")}>
+              <div className={labelCls}>Растут за 24ч</div>
+              <div className={valueCls}>
+                {growing} из {cryptos.length}
+              </div>
+            </div>
           </div>
           <MarketMetricsRow />
         </div>
