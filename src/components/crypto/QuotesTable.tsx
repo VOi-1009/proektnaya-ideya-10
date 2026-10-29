@@ -28,7 +28,7 @@ const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
   if (!failed && !coin.kind)
     return (
       <img
-        src={`https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png`}
+        src={`/coins/${coin.id}.png`}
         alt={coin.name}
         width={size}
         height={size}
