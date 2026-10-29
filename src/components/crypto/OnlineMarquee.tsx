@@ -29,8 +29,7 @@ const OnlineMarquee = () => {
               title="Открыть карточку участника"
             >
               <span className="relative">
-                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} />
-                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-up ring-2 ring-background" />
+                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online />
               </span>
               <span className={`text-sm whitespace-nowrap ${nameCls(u.level, "text-foreground")}`}>
                 {u.name}

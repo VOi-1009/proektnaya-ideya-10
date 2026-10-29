@@ -66,11 +66,10 @@ const ProfileMiniCard = ({ part = "main" }: { part?: "main" | "achievements" }) 
         title={user ? "Личный кабинет" : "Войти"}
       >
         {user ? (
-          <UserAvatar name={user.name} email={user.email} avatar={user.avatar} />
+          <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online />
         ) : (
           <UserAvatar />
         )}
-        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-card rounded-full ${user ? "bg-up" : "bg-muted-foreground"}`} />
       </button>
       <button
         onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}

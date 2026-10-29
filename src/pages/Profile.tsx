@@ -187,7 +187,7 @@ const Profile = () => {
               <div className="h-28 sm:h-36 bg-gradient-to-r from-primary/40 via-[#A78BFA]/30 to-accent/30" />
               <div className="px-5 sm:px-8 pb-6 -mt-14 sm:-mt-16 flex flex-col lg:flex-row gap-6 lg:items-end">
                 <div className="relative self-start flex-shrink-0">
-                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} className="w-28 h-28 sm:w-32 sm:h-32 text-5xl ring-4 ring-card" />
+                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} level={s.level} online className="w-28 h-28 sm:w-32 sm:h-32 text-5xl" />
                   <button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}

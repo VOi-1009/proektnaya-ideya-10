@@ -10,6 +10,7 @@ import MemberIcon from "./MemberIcon";
 import StatusBadge from "./StatusBadge";
 import SupporterBadge from "./SupporterBadge";
 import { Switch } from "@/components/ui/switch";
+import { ago } from "./usersAdmin";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -75,7 +76,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
           <>
             <DialogHeader>
               <div className="flex items-center gap-4">
-                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} className="w-16 h-16 text-2xl" iconSize={28} />
+                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online={u.isBot ? !!u.online : ago(u.lastSeen) === "в сети"} className="w-16 h-16 text-2xl" iconSize={28} />
                 <div className="min-w-0 text-left">
                   <DialogTitle className={`text-xl truncate ${nameCls(u.level)}`}>{u.name}</DialogTitle>
                   <DialogDescription asChild>

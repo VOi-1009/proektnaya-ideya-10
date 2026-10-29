@@ -79,12 +79,10 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                     name={m.name}
                     level={m.level}
                     avatar={m.avatar}
-                    className="w-20 h-20 text-3xl ring-4 ring-card"
+                    online={m.online}
+                    className="w-20 h-20 text-3xl"
                     iconSize={34}
                   />
-                  {m.online && (
-                    <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 ring-2 ring-card" title="В сети" />
-                  )}
                 </div>
                 <div className="min-w-0 pb-1">
                   <DialogTitle className={`text-xl truncate ${nameCls(m.level)}`}>

@@ -1,6 +1,7 @@
 import Icon from "@/components/ui/icon";
 import { isPrivileged, levelInfo } from "@/lib/status";
 import UserAvatar from "./UserAvatar";
+import AvatarFrame from "./AvatarFrame";
 
 interface Props {
   name: string;
@@ -8,17 +9,22 @@ interface Props {
   avatar?: string;
   className?: string;
   iconSize?: number;
+  online?: boolean;
+  frame?: boolean;
 }
 
-const MemberIcon = ({ name, level, avatar, className = "w-5 h-5 text-[9px]", iconSize = 11 }: Props) => {
+const MemberIcon = ({ name, level, avatar, className = "w-5 h-5 text-[9px]", iconSize = 11, online, frame = true }: Props) => {
   const l = levelInfo(level);
+  const lv = frame ? level : undefined;
   if (isPrivileged(level))
     return (
-      <span className={`inline-flex items-center justify-center rounded-full flex-shrink-0 ${l.cls} ${className}`} title={l.title}>
-        <Icon name={l.icon} size={iconSize} />
-      </span>
+      <AvatarFrame level={lv} online={online}>
+        <span className={`inline-flex items-center justify-center rounded-full flex-shrink-0 ${l.cls} ${className}`} title={l.title}>
+          <Icon name={l.icon} size={iconSize} />
+        </span>
+      </AvatarFrame>
     );
-  return <UserAvatar name={name} avatar={avatar} className={className} />;
+  return <UserAvatar name={name} avatar={avatar} className={className} level={lv} online={online} />;
 };
 
 export default MemberIcon;
