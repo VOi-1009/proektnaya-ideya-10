@@ -9,7 +9,7 @@ from users import display_name
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
-DEFAULT = {"enabled": True, "buttonText": "Поддержать проект", "title": "", "text": "", "url": "", "details": ""}
+DEFAULT = {"enabled": True, "buttonText": "поддержать проект", "title": "", "text": "", "url": "", "details": ""}
 
 
 def resp(status: int, body: dict) -> dict:
