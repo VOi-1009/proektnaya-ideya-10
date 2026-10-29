@@ -20,6 +20,7 @@ def fetch() -> dict:
             "id": x.get("id"),
             "rank": x.get("exchangeRank"),
             "assets": num(x.get("totalAsset")),
+            "oi": num(x.get("openInterestUsd")),
             "flow24h": num(x.get("netFlow24hUsd")),
             "flow7d": num(x.get("netFlow7dUsd")),
             "flow30d": num(x.get("netFlow30dUsd")),

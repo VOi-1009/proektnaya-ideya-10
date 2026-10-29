@@ -161,6 +161,7 @@ export interface ExchangeFlow {
   id: number | null;
   rank: number | null;
   assets: number;
+  oi: number;
   flow24h: number;
   flow7d: number;
   flow30d: number;
