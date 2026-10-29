@@ -3,7 +3,7 @@ import { COIN_META } from "@/lib/crypto";
 import { nameCls } from "@/lib/status";
 import MemberIcon from "@/components/crypto/MemberIcon";
 import { useOpenMember } from "@/lib/memberCard";
-import { CommunityPost, REACTIONS, timeAgo } from "@/lib/community";
+import { CommunityPost, MOODS, REACTIONS, timeAgo } from "@/lib/community";
 
 interface Props {
   post: CommunityPost;
@@ -12,14 +12,13 @@ interface Props {
   onReact: (p: CommunityPost, emoji: string) => void;
   onFollow: (p: CommunityPost) => void;
   onRemove: (p: CommunityPost) => void;
-  onCoin: (id: string) => void;
 }
 
-const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onCoin }: Props) => {
+const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove }: Props) => {
   const openMember = useOpenMember();
   const own = me === p.user.id;
   return (
-    <article className="py-4 border-b border-border last:border-0 flex gap-3">
+    <article className="rounded-xl border border-border bg-card p-4 flex gap-3">
       <button onClick={() => openMember(p.user.id)} className="flex-shrink-0 self-start" aria-label="Открыть профиль">
         <MemberIcon name={p.user.name} level={p.user.level} avatar={p.user.avatar} className="w-10 h-10 text-base" iconSize={18} />
       </button>
@@ -31,8 +30,8 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onCoin }:
           <span className="text-muted-foreground text-xs">{p.user.title}</span>
           <span className="text-muted-foreground text-xs">· {timeAgo(p.createdAt)}</span>
           {p.sentiment && (
-            <span className={`text-[11px] rounded-full px-2 py-0.5 border ${p.sentiment === "bull" ? "border-metric-lime/60 text-metric-lime" : "border-down/60 text-down"}`}>
-              {p.sentiment === "bull" ? "🐂 Бычий" : "🐻 Медвежий"}
+            <span className={`inline-flex items-center gap-1 text-[11px] rounded-full px-2 py-0.5 font-semibold ${MOODS[p.sentiment].cls}`}>
+              <Icon name={MOODS[p.sentiment].icon} size={11} /> {MOODS[p.sentiment].label}
             </span>
           )}
           <div className="ml-auto flex items-center gap-1">
@@ -55,9 +54,9 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onCoin }:
         {p.coins.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {p.coins.map((c) => (
-              <button key={c} onClick={() => onCoin(c)} className="text-xs font-mono rounded-full px-2 py-0.5 bg-rail text-primary hover:bg-hover">
+              <span key={c} className="text-xs font-mono rounded-full px-2 py-0.5 bg-rail text-primary">
                 ${COIN_META[c]?.short ?? c}
-              </button>
+              </span>
             ))}
           </div>
         )}

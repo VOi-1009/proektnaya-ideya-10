@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "@/lib/router-compat";
+import { useNavigate } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { COIN_META } from "@/lib/crypto";
-import { CommunityPost, FeedResponse, communityRequest } from "@/lib/community";
+import { useMarkets } from "@/lib/crypto";
+import { usePriceAlerts } from "@/lib/alerts";
+import Ticker from "@/components/crypto/Ticker";
+import HomeNav from "@/components/crypto/home/HomeNav";
+import HomeSidebar from "@/components/crypto/home/HomeSidebar";
+import { CommunityPost, FeedResponse, MOODS, communityRequest } from "@/lib/community";
 import Composer from "@/components/community/Composer";
 import PostCard from "@/components/community/PostCard";
 
@@ -19,16 +23,26 @@ const TABS: { id: Tab; label: string }[] = [
 
 const Community = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
+  const navigate = useNavigate();
+  const { data } = useMarkets();
+  const coins = data?.coins ?? [];
+  const alertsApi = usePriceAlerts(coins, !!data?.live);
+  const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const [tab, setTab] = useState<Tab>("all");
   const [mood, setMood] = useState<"" | "bull" | "bear">("");
-  const [coin, setCoin] = useState("");
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [meta, setMeta] = useState({ canWrite: false, loggedIn: false, isAdmin: false, me: null as number | null, more: false });
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const query = (before?: number) =>
-    `&tab=${tab}${tab === "mood" && mood ? `&mood=${mood}` : ""}${coin ? `&coin=${coin}` : ""}${before ? `&before=${before}` : ""}`;
+  const go = (ch: string, coinId?: string) => {
+    setMobileSidebarOpen(false);
+    navigate(`/?c=${encodeURIComponent(ch)}${coinId ? `&coin=${encodeURIComponent(coinId)}` : ""}`);
+  };
+
+  const query = (before?: number) => `&tab=${tab}${tab === "mood" && mood ? `&mood=${mood}` : ""}${before ? `&before=${before}` : ""}`;
 
   const load = async () => {
     setLoading(true);
@@ -53,7 +67,7 @@ const Community = () => {
       return;
     }
     load();
-  }, [ready, token, tab, mood, coin]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, token, tab, mood]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const more = async () => {
     const last = posts[posts.length - 1];
@@ -92,109 +106,121 @@ const Community = () => {
     }
   };
 
+  const columns = [posts.filter((_, i) => i % 2 === 0), posts.filter((_, i) => i % 2 === 1)];
+
   return (
-    <div className="min-h-screen bg-background text-foreground font-body">
-      <nav className="bg-card border-b border-border px-4 sm:px-6 py-3 sticky top-0 z-30 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-display font-black text-xl leading-none">Т</div>
-          <span className="font-display text-lg text-white tracking-wide hidden sm:inline">
-            TRADERKA<span className="text-primary">.RU</span>
-          </span>
-        </Link>
-        <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">
-          <Link to="/">
-            <Icon name="ArrowLeft" size={16} className="mr-2" />
-            На сайт
-          </Link>
-        </Button>
-      </nav>
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
+      <HomeNav go={go} />
+      {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="font-display text-2xl text-white mb-4">Сообщество</h1>
-
-        <div className="flex items-center gap-1 border-b border-border mb-4 overflow-x-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-4 py-2.5 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors ${tab === t.id ? "border-primary text-white font-semibold" : "border-transparent text-muted-foreground hover:text-white"}`}
-            >
-              {t.label}
-            </button>
-          ))}
-          <select
-            value={coin}
-            onChange={(e) => setCoin(e.target.value)}
-            className="ml-auto bg-transparent text-xs text-muted-foreground outline-none cursor-pointer py-2"
-            aria-label="Фильтр по монете"
-          >
-            <option value="">Все монеты</option>
-            {Object.entries(COIN_META).map(([id, m]) => (
-              <option key={id} value={id} className="bg-card">
-                {m.short}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {tab === "mood" && (
-          <div className="flex gap-2 mb-3">
-            {[
-              { id: "" as const, label: "Все настроения" },
-              { id: "bull" as const, label: "🐂 Бычьи" },
-              { id: "bear" as const, label: "🐻 Медвежьи" },
-            ].map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setMood(m.id)}
-                className={`rounded-full px-3 py-1 text-xs border ${mood === m.id ? "border-primary text-white bg-primary/10" : "border-border text-muted-foreground hover:text-white"}`}
+      <div className="flex min-h-[calc(100vh-96px)]">
+        <div className="flex-1 flex flex-col lg:flex-row min-w-0">
+          <HomeSidebar
+            channel="community"
+            go={go}
+            activeAlerts={activeAlerts}
+            unreadOf={() => 0}
+            mobileSidebarOpen={mobileSidebarOpen}
+            setMobileSidebarOpen={setMobileSidebarOpen}
+          />
+          <main className="flex-1 flex flex-col min-w-0 grain">
+            <div className="h-12 flex items-center px-4 gap-2 bg-background/80 backdrop-blur">
+              <Button
+                variant="ghost"
+                className="lg:hidden text-muted-foreground hover:text-white hover:bg-hover p-1 h-auto mr-1"
+                onClick={() => setMobileSidebarOpen(true)}
+                aria-label="Каналы"
               >
-                {m.label}
-              </button>
-            ))}
-          </div>
-        )}
+                <Icon name="Menu" size={20} />
+              </Button>
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-primary" />
+              <span className="text-white font-semibold whitespace-nowrap">сообщество</span>
+              <div className="w-px h-6 bg-hover mx-2 hidden sm:block" />
+              <span className="text-muted-foreground text-sm hidden sm:block truncate">Мысли трейдеров, настрой рынка и обсуждение монет</span>
+            </div>
 
-        {ready && !user ? (
-          <div className="border-b border-border pb-4 mb-2 flex items-center justify-between gap-3">
-            <span className="text-muted-foreground text-sm">Войдите, чтобы писать, подписываться и ставить реакции</span>
-            <Button onClick={() => setAuthOpen(true)} className="rounded-full font-semibold">Войти</Button>
-          </div>
-        ) : meta.canWrite ? (
-          <Composer token={token} onPosted={(p) => tab === "all" && setPosts((l) => [p, ...l])} />
-        ) : user ? (
-          <div className="border-b border-border pb-4 mb-2 text-muted-foreground text-sm flex items-center gap-2">
-            <Icon name="Lock" size={14} /> Писать в сообществе можно со статуса «Студент». Читать и ставить реакции можно уже сейчас.
-          </div>
-        ) : null}
-
-        {loading ? (
-          <div className="space-y-4 py-4">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-24 w-full bg-card" />
-            ))}
-          </div>
-        ) : err ? (
-          <div className="py-10 text-center text-muted-foreground text-sm">{err}</div>
-        ) : posts.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground text-sm">
-            {tab === "follow" ? (user ? "Здесь появятся посты авторов, на которых вы подпишетесь" : "Войдите, чтобы видеть ленту подписок") : "Пока здесь пусто. Станьте первым!"}
-          </div>
-        ) : (
-          <>
-            {posts.map((p) => (
-              <PostCard key={p.id} post={p} me={meta.me} isAdmin={meta.isAdmin} onReact={react} onFollow={follow} onRemove={remove} onCoin={setCoin} />
-            ))}
-            {meta.more && (
-              <div className="text-center py-4">
-                <Button variant="ghost" onClick={more} className="text-muted-foreground hover:text-white">
-                  Показать ещё
-                </Button>
+            <div className="w-full max-w-5xl mx-auto px-4 py-4">
+              <div className="flex items-center gap-1 border-b border-border mb-4 overflow-x-auto">
+                {TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`px-4 py-2.5 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors ${tab === t.id ? "border-primary text-white font-semibold" : "border-transparent text-muted-foreground hover:text-white"}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
-            )}
-          </>
-        )}
-      </main>
+
+              {tab === "mood" && (
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setMood("")}
+                    className={`rounded-full px-3 py-1 text-xs border ${mood === "" ? "border-primary text-white bg-primary/10" : "border-border text-muted-foreground hover:text-white"}`}
+                  >
+                    Все настроения
+                  </button>
+                  {(["bull", "bear"] as const).map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => setMood(k)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs border ${mood === k ? `${MOODS[k].cls} border-transparent font-semibold` : "border-border text-muted-foreground hover:text-white"}`}
+                    >
+                      <Icon name={MOODS[k].icon} size={12} /> {MOODS[k].plural}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {ready && !user ? (
+                <div className="border-b border-border pb-4 mb-4 flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground text-sm">Войдите, чтобы писать, подписываться и ставить реакции</span>
+                  <Button onClick={() => setAuthOpen(true)} className="rounded-full font-semibold">Войти</Button>
+                </div>
+              ) : meta.canWrite ? (
+                <Composer token={token} onPosted={(p) => tab === "all" && setPosts((l) => [p, ...l])} />
+              ) : user ? (
+                <div className="border-b border-border pb-4 mb-4 text-muted-foreground text-sm flex items-center gap-2">
+                  <Icon name="Lock" size={14} /> Писать в сообществе можно со статуса «Студент». Читать и ставить реакции можно уже сейчас.
+                </div>
+              ) : null}
+
+              {loading ? (
+                <div className="grid md:grid-cols-2 gap-4 pt-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-32 w-full bg-card" />
+                  ))}
+                </div>
+              ) : err ? (
+                <div className="py-10 text-center text-muted-foreground text-sm">{err}</div>
+              ) : posts.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground text-sm">
+                  {tab === "follow" ? (user ? "Здесь появятся посты авторов, на которых вы подпишетесь" : "Войдите, чтобы видеть ленту подписок") : "Пока здесь пусто. Станьте первым!"}
+                </div>
+              ) : (
+                <>
+                  <div className="grid md:grid-cols-2 gap-4 items-start pt-2">
+                    {columns.map((col, ci) => (
+                      <div key={ci} className="space-y-4 min-w-0">
+                        {col.map((p) => (
+                          <PostCard key={p.id} post={p} me={meta.me} isAdmin={meta.isAdmin} onReact={react} onFollow={follow} onRemove={remove} />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  {meta.more && (
+                    <div className="text-center py-4">
+                      <Button variant="ghost" onClick={more} className="text-muted-foreground hover:text-white">
+                        Показать ещё
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 };

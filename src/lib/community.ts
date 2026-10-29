@@ -1,7 +1,16 @@
 import { PROFILE_URL } from "@/lib/auth";
+import { LEVELS } from "@/lib/status";
 
 export const REACTIONS = ["🚀", "🔥", "👍", "😂", "😮", "📉"];
 export const QUICK_EMOJI = ["😀", "😎", "🤔", "🙏", "💪", "💎", "🐂", "🐻", "💰", "📈", "📉", "🚀", "🔥", "😱", "🤝", "👀"];
+
+const bullLevel = LEVELS.find((l) => l.title === "Бык")!;
+const bearLevel = LEVELS.find((l) => l.title === "Медведь")!;
+
+export const MOODS = {
+  bull: { label: "Бычий", plural: "Бычьи", icon: bullLevel.icon, cls: bullLevel.cls, color: bullLevel.color },
+  bear: { label: "Медвежий", plural: "Медвежьи", icon: bearLevel.icon, cls: bearLevel.cls, color: bearLevel.color },
+};
 
 export interface CommunityPost {
   id: number;

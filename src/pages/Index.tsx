@@ -27,6 +27,16 @@ const Index = () => {
   const [seenWorld, setSeenWorld] = useState(0);
   const [now, setNow] = useState(0);
   useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const c = q.get("c");
+    if (c) {
+      setChannel(c);
+      const coin = q.get("coin");
+      if (coin) setSelected(coin);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
+  useEffect(() => {
     setSeen(getSeen("crypto"));
     setSeenWorld(getSeen("world"));
   }, []);

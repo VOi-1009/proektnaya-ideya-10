@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { COIN_META } from "@/lib/crypto";
-import { QUICK_EMOJI, CommunityPost, communityRequest } from "@/lib/community";
+import { MOODS, QUICK_EMOJI, CommunityPost, communityRequest } from "@/lib/community";
 
 interface Props {
   token: string | null;
@@ -122,12 +122,15 @@ const Composer = ({ token, onPosted }: Props) => {
             </div>
           )}
         </div>
-        <button onClick={() => setMood(mood === "bull" ? "" : "bull")} className={`${chip} ${mood === "bull" ? "border-metric-lime bg-metric-lime/15 text-white" : "border-border text-muted-foreground hover:text-white"}`}>
-          🐂 Бычий
-        </button>
-        <button onClick={() => setMood(mood === "bear" ? "" : "bear")} className={`${chip} ${mood === "bear" ? "border-down bg-down/15 text-white" : "border-border text-muted-foreground hover:text-white"}`}>
-          🐻 Медвежий
-        </button>
+        {(["bull", "bear"] as const).map((k) => (
+          <button
+            key={k}
+            onClick={() => setMood(mood === k ? "" : k)}
+            className={`${chip} ${mood === k ? `${MOODS[k].cls} border-transparent font-semibold` : "border-border text-muted-foreground hover:text-white"}`}
+          >
+            <Icon name={MOODS[k].icon} size={13} /> {MOODS[k].label}
+          </button>
+        ))}
         <span className="ml-auto text-xs text-muted-foreground font-mono">{text.length}/2000</span>
         <Button onClick={send} disabled={busy || (!text.trim() && !image)} className="rounded-full font-semibold px-5">
           {busy && <Icon name="Loader2" size={14} className="mr-2 animate-spin" />}
