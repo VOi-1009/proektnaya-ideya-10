@@ -7,6 +7,7 @@ export interface CmcMetrics {
   liquidations?: { total: number | null; change24h: number | null; longs: number | null; shorts: number | null };
   etf?: { points: { t: number; btc: number; eth: number; total: number }[]; total: number; totalBtc: number; totalEth: number };
   social?: { value: number | null; percent: number | null; yesterday: number | null; lastWeek: number | null; yearHigh: number | null; yearLow: number | null };
+  puell?: { value: number };
   updatedAt: number;
 }
 
@@ -26,3 +27,6 @@ export const useCmcMetrics = () =>
 export const altLabel = (v: number) => (v >= 75 ? "Сезон альткоинов" : v <= 25 ? "Сезон биткоина" : "Нейтрально");
 
 export const sentimentLabel = (v: number) => (v >= 3 ? "Очень позитивное" : v >= 0.5 ? "Позитивное" : v > -0.5 ? "Нейтральное" : v > -3 ? "Негативное" : "Очень негативное");
+
+export const puellStatus = (v: number) =>
+  v < 0.5 ? { label: "Недооценён", color: "#22c55e" } : v > 4 ? { label: "Переоценён", color: "#ef4444" } : { label: "Нейтральный", color: "#9ca3af" };

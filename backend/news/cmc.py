@@ -67,12 +67,17 @@ def social_sentiment() -> dict:
     }
 
 
+def puell() -> dict:
+    d = _get("/market-cycles/latest")["data"]
+    return {"value": float(d["puellMultiple"])}
+
+
 def cmc_response(json_resp) -> dict:
     now = time.time()
     if _cache["data"] and now - _cache["at"] < TTL:
         return json_resp(200, _cache["data"])
     data = dict(_cache["data"] or {})
-    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations), ("etf", etf_flows), ("social", social_sentiment)):
+    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations), ("etf", etf_flows), ("social", social_sentiment), ("puell", puell)):
         try:
             data[key] = fn()
         except Exception as e:
