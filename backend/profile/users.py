@@ -156,7 +156,7 @@ def handle_users(event: dict) -> dict:
             if qs.get("rating") == "1":
                 cur.execute(
                     f"SELECT t.id, t.name, t.email, t.pts, t.status_override, t.city, t.created_at, "
-                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url, t.founder_no, t.supporter_no, t.is_creator FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url, u.founder_no, u.supporter_no, u.is_creator "
+                    f"RANK() OVER (ORDER BY t.pts DESC), t.avatar_url, t.founder_no, t.supporter_no, t.is_creator, t.last_seen_at, t.is_bot, t.is_ai, t.active_minutes FROM (SELECT u.id, u.name, u.email, {pts} AS pts, u.status_override, u.city, u.created_at, u.avatar_url, u.founder_no, u.supporter_no, u.is_creator, u.last_seen_at, u.is_bot, u.is_ai, COALESCE(u.active_minutes, 0) AS active_minutes "
                     f"FROM {SCHEMA}.users u) t ORDER BY t.pts DESC, t.created_at ASC"
                 )
                 rows = cur.fetchall()
@@ -166,7 +166,8 @@ def handle_users(event: dict) -> dict:
                     st = level_for(int(r[3]), r[4])
                     return {"id": r[0], "name": display_name(r[1], r[2]), "points": int(r[3]), "level": st["level"],
                             "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or "", "founder": r[9],
-                            "supporter": r[10], "creator": bool(r[11])}
+                            "supporter": r[10], "creator": bool(r[11]), "minutes": int(r[15] or 0),
+                            "online": True if r[14] else bot_online(r[0]) if r[13] else bool(r[12] and (time.time() - r[12].timestamp()) < ONLINE_MINUTES * 60)}
 
                 top = [to_row(r, i + 1) for i, r in enumerate(rows[:50])]
                 mine = None

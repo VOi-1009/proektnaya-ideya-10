@@ -24,12 +24,21 @@ interface RatingRow {
   founder?: number | null;
   supporter?: number | null;
   creator?: boolean;
+  minutes?: number;
+  online?: boolean;
 }
 
 const MEDALS: Record<number, string> = {
   1: "bg-gradient-to-br from-amber-300 to-amber-500 text-black",
   2: "bg-gradient-to-br from-slate-200 to-slate-400 text-black",
   3: "bg-gradient-to-br from-orange-300 to-orange-600 text-black",
+};
+
+const fmtTime = (m: number) => {
+  if (m < 60) return `${m} мин`;
+  const h = Math.floor(m / 60);
+  const rest = m % 60;
+  return rest ? `${h} ч ${rest} мин` : `${h} ч`;
 };
 
 const Place = ({ n }: { n: number }) => (
@@ -57,6 +66,8 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
         name={r.name}
         level={r.level}
         avatar={r.avatar}
+        online={!!r.online}
+        dot="md"
         className="w-9 h-9 text-sm"
         iconSize={16}
       />
@@ -69,9 +80,14 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
           </span>
           {me && <span className="text-xs text-primary">вы</span>}
         </div>
-        {r.city && (
-          <div className="text-muted-foreground text-xs truncate">{r.city}</div>
-        )}
+        <div className="text-muted-foreground text-xs truncate flex items-center gap-x-2 flex-wrap">
+          <span className={r.online ? "text-white" : ""}>{r.online ? "в сети" : "не в сети"}</span>
+          <span className="inline-flex items-center gap-1">
+            <Icon name="Clock" size={11} />
+            {fmtTime(r.minutes ?? 0)}
+          </span>
+          {r.city && <span className="truncate">{r.city}</span>}
+        </div>
       </div>
       <SupporterBadge no={r.supporter} creator={r.creator} compact className="hidden sm:inline-flex" />
       <FounderBadge no={r.founder} compact className="hidden sm:inline-flex" />
