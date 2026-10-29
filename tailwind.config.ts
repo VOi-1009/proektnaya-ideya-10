@@ -38,6 +38,13 @@ export default {
 			colors: {
 				up: 'hsl(var(--up))',
 				down: 'hsl(var(--down))',
+				metric: {
+					gold: 'hsl(var(--metric-gold) / <alpha-value>)',
+					sky: 'hsl(var(--metric-sky) / <alpha-value>)',
+					violet: 'hsl(var(--metric-violet) / <alpha-value>)',
+					long: 'hsl(var(--metric-long) / <alpha-value>)',
+					short: 'hsl(var(--metric-short) / <alpha-value>)'
+				},
 				rail: 'hsl(var(--rail))',
 				hover: 'hsl(var(--hover))',
 				border: 'hsl(var(--border))',

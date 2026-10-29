@@ -11,7 +11,7 @@ const BtcTreasuryCard = () => {
       href="https://coinmarketcap.com/ru/charts/bitcoin-treasuries/"
       target="_blank"
       rel="noreferrer"
-      className={cardCls("border-amber-400", true)}
+      className={cardCls("border-metric-gold", true)}
       title={
         t
           ? `Общее количество удерживаемых Bitcoin: ${fmtInt(t.total)} BTC у ${t.companies} компаний${

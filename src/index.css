@@ -36,6 +36,11 @@
 
     --up: 24 95% 55%;
     --down: 345 80% 60%;
+    --metric-gold: 43 96% 56%;
+    --metric-sky: 199 92% 60%;
+    --metric-violet: 255 92% 76%;
+    --metric-long: 142 71% 45%;
+    --metric-short: 0 84% 60%;
     --rail: 225 8% 9%;
     --hover: 225 6% 23%;
 

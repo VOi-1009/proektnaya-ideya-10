@@ -24,7 +24,7 @@ const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
         href={LIQ_URL}
         target="_blank"
         rel="noreferrer"
-        className={cardCls("border-sky-400", true)}
+        className={cardCls("border-metric-sky", true)}
         title="Общий объём ликвидаций на фьючерсных биржах за последние 24 часа"
       >
         <div className={labelCls}>Общий объем ликвидаций (24h)</div>
@@ -39,19 +39,19 @@ const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
         </div>
       </a>
 
-      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-green-500", true)} title="Ликвидировано длинных позиций (лонгов) за 24 часа">
+      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-metric-long", true)} title="Ликвидировано длинных позиций (лонгов) за 24 часа">
         <div className={labelCls}>Лонг</div>
         <div className={valueCls}>
           {fmtUsd(l?.longs)}
-          {longPct !== null && <span className="ml-1.5 text-[10px] text-green-400">{longPct}%</span>}
+          {longPct !== null && <span className="ml-1.5 text-[10px] text-metric-long">{longPct}%</span>}
         </div>
       </a>
 
-      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-red-500", true)} title="Ликвидировано коротких позиций (шортов) за 24 часа">
+      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-metric-short", true)} title="Ликвидировано коротких позиций (шортов) за 24 часа">
         <div className={labelCls}>Шорт</div>
         <div className={valueCls}>
           {fmtUsd(l?.shorts)}
-          {shortPct !== null && <span className="ml-1.5 text-[10px] text-red-400">{shortPct}%</span>}
+          {shortPct !== null && <span className="ml-1.5 text-[10px] text-metric-short">{shortPct}%</span>}
         </div>
       </a>
     </div>

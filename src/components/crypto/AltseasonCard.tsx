@@ -10,7 +10,7 @@ const AltseasonCard = () => {
       href="https://coinmarketcap.com/ru/charts/altcoin-season-index/"
       target="_blank"
       rel="noreferrer"
-      className={`${cardCls("border-violet-400", true)} relative`}
+      className={`${cardCls("border-metric-violet", true)} relative`}
       title={`Индекс альтсезона: 0 — сезон биткоина, 100 — сезон альткоинов${a?.yesterday != null ? `. Вчера: ${a.yesterday}` : ""}`}
     >
       <div className={labelCls}>Индекс альтсезона</div>
@@ -18,7 +18,7 @@ const AltseasonCard = () => {
         {av !== null ? (
           <>
             {av}
-            <span className="ml-1.5 text-[10px] text-violet-300">{altLabel(av)}</span>
+            <span className="ml-1.5 text-[10px] text-metric-violet">{altLabel(av)}</span>
           </>
         ) : (
           "—"
