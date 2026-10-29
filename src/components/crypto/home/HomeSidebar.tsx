@@ -62,11 +62,11 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             {items.map((it) => {
               const label = it.label || BASE_ITEMS.find((b) => b.id === it.id)?.name || it.id;
               if (it.id === "donate") return <DonateButton key={it.id} menu label={it.label} />;
-              if (it.id === "rating") {
+              if (it.id === "rating" || it.id === "community") {
                 return (
                   <button
                     key={it.id}
-                    onClick={() => navigate("/rating")}
+                    onClick={() => navigate(it.id === "rating" ? "/rating" : "/community")}
                     className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
                   >
                     <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />

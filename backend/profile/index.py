@@ -24,6 +24,7 @@ from aibot import handle_aibot
 from plans import handle_plans
 from forum import handle_forum
 from visits import handle_visits
+from community import handle_community
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {
@@ -158,6 +159,8 @@ def handler(event: dict, context) -> dict:
         return handle_plans(event)
     if resource == "visits":
         return handle_visits(event)
+    if resource == "community":
+        return handle_community(event)
     if resource == "forum":
         return handle_forum(event)
 

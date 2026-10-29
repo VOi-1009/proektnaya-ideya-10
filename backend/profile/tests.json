@@ -424,6 +424,28 @@
         "items": []
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Лента сообщества",
+      "method": "GET",
+      "path": "/?resource=community",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Пост сообщества без входа",
+      "method": "POST",
+      "path": "/?resource=community",
+      "body": {
+        "action": "post",
+        "body": "тест"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Лента подписок без входа",
+      "method": "GET",
+      "path": "/?resource=community&tab=follow",
+      "expectedStatus": 401
     }
   ]
 }

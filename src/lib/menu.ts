@@ -17,6 +17,7 @@ export interface MenuSettings {
 
 export const EXTRA_ITEMS = [
   { id: "rating", name: "рейтинг" },
+  { id: "community", name: "сообщество" },
   { id: "donate", name: "поддержать проект" },
 ];
 
