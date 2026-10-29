@@ -14,4 +14,4 @@ export const CHANNELS = [
   { id: "converter", name: "конвертер", topic: "Пересчёт монет, валют и рубля по текущему курсу", icon: "Hash" },
 ];
 
-export const PINNED = ["bitcoin", "brent", "usd-rub", "eur-rub"];
+export const PINNED = ["bitcoin", "brent", "gold", "usd-rub", "eur-rub"];
