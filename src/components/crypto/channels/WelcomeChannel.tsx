@@ -75,7 +75,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
+      <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
         <div className="contents">
           <div className="flex flex-col">
             <div className="p-3 sm:p-4">
@@ -112,6 +112,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="border-t lg:border-t-0 lg:border-l border-transparent">
             <BtcLiveChart onOpen={() => go("market", "bitcoin")} />
           </div>
+          <div className="border-t lg:border-t-0 lg:border-l border-transparent min-h-[200px]" />
         </div>
       </div>
 
