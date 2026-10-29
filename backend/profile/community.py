@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import re
+import time
 import uuid
 
 import boto3
@@ -9,7 +10,7 @@ import psycopg2
 
 from aibot import load_settings, moderate
 from plans import viewer
-from users import display_name
+from users import ONLINE_MINUTES, bot_online, display_name
 from status import level_for, points_sql
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
@@ -74,6 +75,54 @@ def load_posts(cur, where: str, me, limit: int = PAGE) -> list:
     return out
 
 
+def load_author(cur, aid: int, me) -> dict:
+    cur.execute(
+        f"SELECT u.id, u.name, u.email, u.avatar_url, u.bio, u.city, u.headline, u.experience, u.interests, u.contacts, "
+        f"u.created_at, u.last_seen_at, u.is_bot, u.is_ai, u.status_override, {points_sql(SCHEMA)}, u.founder_no, u.supporter_no, u.is_creator "
+        f"FROM {SCHEMA}.users u WHERE u.id = {int(aid)}"
+    )
+    r = cur.fetchone()
+    if not r:
+        return {"error": "Автор не найден"}
+    pts = int(r[15])
+    st = level_for(pts, r[14])
+    cur.execute(f"SELECT COUNT(*) + 1 FROM {SCHEMA}.users u WHERE {points_sql(SCHEMA)} > {pts}")
+    place = int(cur.fetchone()[0])
+    cur.execute(
+        f"SELECT COUNT(*), COUNT(*) FILTER (WHERE sentiment = 'bull'), COUNT(*) FILTER (WHERE sentiment = 'bear') "
+        f"FROM {SCHEMA}.community_posts WHERE user_id = {int(aid)} AND NOT hidden"
+    )
+    posts, bulls, bears = (int(x) for x in cur.fetchone())
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.community_follows WHERE author_id = {int(aid)}")
+    followers = int(cur.fetchone()[0])
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.community_follows WHERE follower_id = {int(aid)}")
+    following = int(cur.fetchone()[0])
+    cur.execute(
+        f"SELECT COUNT(*) FROM {SCHEMA}.community_reactions x JOIN {SCHEMA}.community_posts p ON p.id = x.post_id "
+        f"WHERE p.user_id = {int(aid)} AND NOT p.hidden"
+    )
+    reactions = int(cur.fetchone()[0])
+    is_following = False
+    if me:
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.community_follows WHERE follower_id = {me} AND author_id = {int(aid)}")
+        is_following = bool(cur.fetchone())
+    try:
+        contacts = json.loads(r[9] or "{}")
+    except ValueError:
+        contacts = {}
+    has_contacts = bool(contacts)
+    online = True if r[13] else bot_online(r[0]) if r[12] else bool(r[11] and (time.time() - r[11].timestamp()) < ONLINE_MINUTES * 60)
+    return {"author": {
+        "id": r[0], "name": display_name(r[1], r[2]), "avatar": r[3] or "", "bio": r[4] or "", "city": r[5] or "",
+        "headline": r[6] or "", "experience": r[7] or "", "interests": r[8] or "",
+        "contacts": contacts if me else {}, "contactsHidden": bool(not me and has_contacts),
+        "createdAt": r[10].isoformat(), "online": online, "level": st["level"], "title": st["title"], "points": pts, "place": place,
+        "founder": r[16], "supporter": r[17], "creator": bool(r[18]),
+        "posts": posts, "bulls": bulls, "bears": bears, "followers": followers, "following": following, "reactions": reactions,
+        "isFollowing": is_following, "isMe": bool(me and me == r[0]),
+    }}
+
+
 def handle_community(event: dict) -> dict:
     method = event.get("httpMethod", "GET")
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
@@ -87,6 +136,9 @@ def handle_community(event: dict) -> dict:
         v = viewer(cur, token)
         me, is_admin = v["id"], v["admin"]
         can_write = bool(me) and (is_admin or v["level"] >= MIN_LEVEL)
+
+        if method == "GET" and str(qs.get("profile", "")).isdigit():
+            return resp(200, load_author(cur, int(qs["profile"]), me))
 
         if method == "GET":
             conds = ["TRUE"]

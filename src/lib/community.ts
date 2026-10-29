@@ -25,6 +25,36 @@ export interface CommunityPost {
   following: boolean;
 }
 
+export interface AuthorProfile {
+  id: number;
+  name: string;
+  avatar: string;
+  bio: string;
+  city: string;
+  headline: string;
+  experience: string;
+  interests: string;
+  contacts: Record<string, string>;
+  contactsHidden: boolean;
+  createdAt: string;
+  online: boolean;
+  level: number;
+  title: string;
+  points: number;
+  place: number;
+  founder?: number | null;
+  supporter?: number | null;
+  creator?: boolean;
+  posts: number;
+  bulls: number;
+  bears: number;
+  followers: number;
+  following: number;
+  reactions: number;
+  isFollowing: boolean;
+  isMe: boolean;
+}
+
 export interface FeedResponse {
   posts: CommunityPost[];
   canWrite: boolean;

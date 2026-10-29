@@ -2,7 +2,6 @@ import Icon from "@/components/ui/icon";
 import { COIN_META } from "@/lib/crypto";
 import { nameCls } from "@/lib/status";
 import MemberIcon from "@/components/crypto/MemberIcon";
-import { useOpenMember } from "@/lib/memberCard";
 import { CommunityPost, MOODS, REACTIONS, timeAgo } from "@/lib/community";
 
 interface Props {
@@ -12,19 +11,19 @@ interface Props {
   onReact: (p: CommunityPost, emoji: string) => void;
   onFollow: (p: CommunityPost) => void;
   onRemove: (p: CommunityPost) => void;
+  onAuthor: (id: number) => void;
 }
 
-const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove }: Props) => {
-  const openMember = useOpenMember();
+const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor }: Props) => {
   const own = me === p.user.id;
   return (
     <article className="rounded-xl border border-border bg-card p-4 flex gap-3">
-      <button onClick={() => openMember(p.user.id)} className="flex-shrink-0 self-start" aria-label="Открыть профиль">
+      <button onClick={() => onAuthor(p.user.id)} className="flex-shrink-0 self-start" aria-label="Страница автора">
         <MemberIcon name={p.user.name} level={p.user.level} avatar={p.user.avatar} className="w-10 h-10 text-base" iconSize={18} />
       </button>
       <div className="flex-1 min-w-0">
         <header className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => openMember(p.user.id)} className={`text-sm font-semibold hover:underline truncate ${nameCls(p.user.level)}`}>
+          <button onClick={() => onAuthor(p.user.id)} className={`text-sm font-semibold hover:underline truncate ${nameCls(p.user.level)}`}>
             {p.user.name}
           </button>
           <span className="text-muted-foreground text-xs">{p.user.title}</span>

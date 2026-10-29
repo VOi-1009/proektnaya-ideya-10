@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@/lib/router-compat";
+import { useOpenMember } from "@/lib/memberCard";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,9 +12,10 @@ import { usePriceAlerts } from "@/lib/alerts";
 import Ticker from "@/components/crypto/Ticker";
 import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
-import { CommunityPost, FeedResponse, MOODS, communityRequest } from "@/lib/community";
+import { AuthorProfile, CommunityPost, FeedResponse, MOODS, communityRequest } from "@/lib/community";
 import Composer from "@/components/community/Composer";
 import PostCard from "@/components/community/PostCard";
+import AuthorPanel from "@/components/community/AuthorPanel";
 
 type Tab = "all" | "follow" | "mood";
 const TABS: { id: Tab; label: string }[] = [
@@ -29,6 +32,17 @@ const Community = () => {
   const alertsApi = usePriceAlerts(coins, !!data?.live);
   const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const qc = useQueryClient();
+  const openMember = useOpenMember();
+  const [authorId, setAuthorId] = useState<number | null>(null);
+  const [filterOn, setFilterOn] = useState(false);
+  const activeAuthor = authorId ?? user?.id ?? null;
+  const { data: authorData, isLoading: authorLoading } = useQuery({
+    queryKey: ["community-author", activeAuthor, token],
+    enabled: ready && activeAuthor !== null,
+    queryFn: () => communityRequest<{ author?: AuthorProfile; error?: string }>(token, `&profile=${activeAuthor}`).then((d) => d.author ?? null),
+    staleTime: 30_000,
+  });
 
   const [tab, setTab] = useState<Tab>("all");
   const [mood, setMood] = useState<"" | "bull" | "bear">("");
@@ -42,7 +56,8 @@ const Community = () => {
     navigate(`/?c=${encodeURIComponent(ch)}${coinId ? `&coin=${encodeURIComponent(coinId)}` : ""}`);
   };
 
-  const query = (before?: number) => `&tab=${tab}${tab === "mood" && mood ? `&mood=${mood}` : ""}${before ? `&before=${before}` : ""}`;
+  const query = (before?: number) =>
+    `&tab=${tab}${tab === "mood" && mood ? `&mood=${mood}` : ""}${filterOn && activeAuthor ? `&author=${activeAuthor}` : ""}${before ? `&before=${before}` : ""}`;
 
   const load = async () => {
     setLoading(true);
@@ -67,7 +82,7 @@ const Community = () => {
       return;
     }
     load();
-  }, [ready, token, tab, mood]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, token, tab, mood, filterOn, activeAuthor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const more = async () => {
     const last = posts[posts.length - 1];
@@ -88,13 +103,21 @@ const Community = () => {
     }
   };
 
-  const follow = async (p: CommunityPost) => {
+  const followAuthor = async (id: number) => {
     try {
-      const d = await communityRequest<{ following: boolean }>(token, "", { action: "follow", authorId: p.user.id });
-      setPosts((list) => list.map((x) => (x.user.id === p.user.id ? { ...x, following: d.following } : x)));
+      const d = await communityRequest<{ following: boolean }>(token, "", { action: "follow", authorId: id });
+      setPosts((list) => list.map((x) => (x.user.id === id ? { ...x, following: d.following } : x)));
+      qc.invalidateQueries({ queryKey: ["community-author"] });
     } catch (e) {
       fail(e);
     }
+  };
+
+  const follow = (p: CommunityPost) => followAuthor(p.user.id);
+
+  const pickAuthor = (id: number) => {
+    setAuthorId(id);
+    setFilterOn(false);
   };
 
   const remove = async (p: CommunityPost) => {
@@ -122,6 +145,16 @@ const Community = () => {
             unreadOf={() => 0}
             mobileSidebarOpen={mobileSidebarOpen}
             setMobileSidebarOpen={setMobileSidebarOpen}
+          />
+          <AuthorPanel
+            author={authorData ?? undefined}
+            loading={authorLoading && activeAuthor !== null}
+            loggedIn={!!user}
+            filterOn={filterOn}
+            onFilter={() => setFilterOn((v) => !v)}
+            onFollow={() => activeAuthor && followAuthor(activeAuthor)}
+            onCard={() => activeAuthor && openMember(activeAuthor)}
+            onLogin={() => setAuthOpen(true)}
           />
           <main className="flex-1 flex flex-col min-w-0 grain">
             <div className="h-12 flex items-center px-4 gap-2 bg-background/80 backdrop-blur">
@@ -152,6 +185,15 @@ const Community = () => {
                 ))}
               </div>
 
+              {filterOn && authorData && (
+                <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
+                  Только посты автора <span className="text-white font-semibold">{authorData.name}</span>
+                  <button onClick={() => setFilterOn(false)} className="rounded-full border border-border px-2 py-0.5 hover:text-white">
+                    Показать все
+                  </button>
+                </div>
+              )}
+
               {tab === "mood" && (
                 <div className="flex gap-2 mb-4">
                   <button
@@ -178,7 +220,10 @@ const Community = () => {
                   <Button onClick={() => setAuthOpen(true)} className="rounded-full font-semibold">Войти</Button>
                 </div>
               ) : meta.canWrite ? (
-                <Composer token={token} onPosted={(p) => tab === "all" && setPosts((l) => [p, ...l])} />
+                <Composer token={token} onPosted={(p) => {
+                  if (tab === "all" && (!filterOn || activeAuthor === meta.me)) setPosts((l) => [p, ...l]);
+                  qc.invalidateQueries({ queryKey: ["community-author"] });
+                }} />
               ) : user ? (
                 <div className="border-b border-border pb-4 mb-4 text-muted-foreground text-sm flex items-center gap-2">
                   <Icon name="Lock" size={14} /> Писать в сообществе можно со статуса «Студент». Читать и ставить реакции можно уже сейчас.
@@ -203,7 +248,7 @@ const Community = () => {
                     {columns.map((col, ci) => (
                       <div key={ci} className="space-y-4 min-w-0">
                         {col.map((p) => (
-                          <PostCard key={p.id} post={p} me={meta.me} isAdmin={meta.isAdmin} onReact={react} onFollow={follow} onRemove={remove} />
+                          <PostCard key={p.id} post={p} me={meta.me} isAdmin={meta.isAdmin} onReact={react} onFollow={follow} onRemove={remove} onAuthor={pickAuthor} />
                         ))}
                       </div>
                     ))}
