@@ -80,7 +80,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <TopNewsBlock onAll={() => go("news")} />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
             <div className="flex-1 min-h-[100px]" />
-            <div className="flex-1 min-h-[100px] border-t border-border" />
+            <div className="flex-1 min-h-[100px] border-t border-border">
+              <HeroSiteNews />
+            </div>
           </div>
           <div className="border-t lg:border-t-0 lg:border-l border-transparent min-h-[200px]" />
         </div>
@@ -89,9 +91,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
         <div className="min-h-[240px]" />
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
-        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]">
-          <HeroSiteNews />
-        </div>
+        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
       </div>
 
       <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
