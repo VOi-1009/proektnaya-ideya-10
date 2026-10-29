@@ -11,7 +11,12 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
   const { data, isLoading, isError } = useEconCalendar();
   const now = data ? Date.now() : 0;
   const today = new Date(now + 3 * 3600_000).toISOString().slice(0, 10);
-  const items = (data ?? []).filter((e) => e.ts >= now - 3600_000).slice(0, 6);
+  const upcoming = (data ?? []).filter((e) => e.ts >= now - 3600_000);
+  const high = upcoming.filter((e) => e.impact !== "Medium");
+  const medium = upcoming.filter((e) => e.impact === "Medium");
+  const items = [...high.slice(0, 6), ...medium.slice(0, Math.max(0, 6 - high.length))]
+    .sort((a, b) => a.ts - b.ts)
+    .slice(0, 6);
 
   return (
     <div className="p-3 flex flex-col h-full">

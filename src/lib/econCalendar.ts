@@ -10,6 +10,7 @@ export interface CalendarEvent {
   title: string;
   forecast: string;
   previous: string;
+  impact?: string;
 }
 
 export const useEconCalendar = () =>

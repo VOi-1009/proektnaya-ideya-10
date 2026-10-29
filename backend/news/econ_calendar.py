@@ -89,7 +89,7 @@ def fetch() -> list:
                 raise
     out = []
     for e in raw:
-        if e.get("impact") != "High":
+        if e.get("impact") not in ("High", "Medium"):
             continue
         ts = datetime.fromisoformat(e["date"]).astimezone(timezone.utc)
         msk = ts + timedelta(hours=3)
@@ -102,6 +102,7 @@ def fetch() -> list:
             "title": ru_title(str(e.get("title", ""))),
             "forecast": e.get("forecast") or "",
             "previous": e.get("previous") or "",
+            "impact": e.get("impact"),
         })
     out.sort(key=lambda x: x["ts"])
     return out
