@@ -1,0 +1,1 @@
+UPDATE articles SET cover_url = '/articles/indicators-cover.webp' WHERE category_id = (SELECT id FROM article_categories WHERE name = 'Индикаторы');
