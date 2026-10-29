@@ -8,7 +8,6 @@ import { useRadars } from "@/lib/radars";
 import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
-import HomeRightPanel from "@/components/crypto/home/HomeRightPanel";
 import { CHANNELS, PINNED } from "@/components/crypto/home/homeConfig";
 
 const Index = () => {
@@ -91,7 +90,6 @@ const Index = () => {
             setArticleId={setArticleId}
             setMobileSidebarOpen={setMobileSidebarOpen}
           />
-          <HomeRightPanel />
         </div>
       </div>
     </div>
