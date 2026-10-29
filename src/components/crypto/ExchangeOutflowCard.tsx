@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ExchangeFlow, fmtUsd, useExchangeFlows } from "@/lib/radars";
+import { ExchangeFlow, fmtUsd, useExchangeFlows, useRadars } from "@/lib/radars";
 import { cardCls, labelCls } from "./summaryCard";
 
 const Logo = ({ e }: { e: ExchangeFlow }) => {
@@ -22,20 +22,28 @@ const Logo = ({ e }: { e: ExchangeFlow }) => {
   );
 };
 
-const ExchangeOutflowCard = () => {
+const ExchangeOutflowCard = ({ go }: { go: (channel: string) => void }) => {
   const { data } = useExchangeFlows(true);
+  const { data: radars } = useRadars();
+  const radar = (radars ?? []).find((r) => r.kind === "ex_flows");
   const top = useMemo(() => {
     const byAssets = (data?.items ?? []).filter((e) => e.assets > 0).sort((a, b) => b.assets - a.assets).slice(0, 20);
     return byAssets.filter((e) => e.flow24h < 0).sort((a, b) => a.flow24h - b.flow24h).slice(0, 3);
   }, [data]);
 
   return (
-    <div className={`${cardCls("border-metric-gold")} items-center`} title="Биржи с самым большим оттоком активов за 24 часа">
+    <button
+      type="button"
+      disabled={!radar}
+      onClick={() => radar && go(`radar-${radar.id}`)}
+      className={`${cardCls("border-metric-gold", !!radar)} items-center w-full ${radar ? "cursor-pointer" : ""}`}
+      title={radar ? "Открыть радар «Притоки и оттоки на биржах»" : "Биржи с самым большим оттоком активов за 24 часа"}
+    >
       <div className={`${labelCls} text-center line-clamp-1`}>Больше всего оттока за 24ч</div>
       <div className="flex items-center justify-center gap-2 mt-1 w-full">
         {top.length ? top.map((e) => <Logo key={e.slug || e.name} e={e} />) : <span className="text-muted-foreground text-sm">—</span>}
       </div>
-    </div>
+    </button>
   );
 };
 

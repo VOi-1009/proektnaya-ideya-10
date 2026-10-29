@@ -91,7 +91,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             <FearGreedGauge />
           </div>
           <div className="p-3">
-            <ExchangeOutflowCard />
+            <ExchangeOutflowCard go={go} />
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3 overflow-hidden">
