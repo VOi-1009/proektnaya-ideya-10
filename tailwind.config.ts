@@ -43,7 +43,10 @@ export default {
 					sky: 'hsl(var(--metric-sky) / <alpha-value>)',
 					violet: 'hsl(var(--metric-violet) / <alpha-value>)',
 					long: 'hsl(var(--metric-long) / <alpha-value>)',
-					short: 'hsl(var(--metric-short) / <alpha-value>)'
+					short: 'hsl(var(--metric-short) / <alpha-value>)',
+					lime: 'hsl(var(--metric-lime) / <alpha-value>)',
+					indigo: 'hsl(var(--metric-indigo) / <alpha-value>)',
+					magenta: 'hsl(var(--metric-magenta) / <alpha-value>)'
 				},
 				rail: 'hsl(var(--rail))',
 				hover: 'hsl(var(--hover))',

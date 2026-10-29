@@ -42,16 +42,16 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <div className="grid grid-cols-1 lg:grid-cols-[18fr_32fr_32fr_18fr] gap-3 animate-scale-in">
         <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-2 flex flex-col justify-center">
           <div className="grid grid-cols-2 gap-2">
-            <div className={cardCls("border-primary")}>
+            <div className={cardCls("border-metric-gold")}>
               <div className={labelCls}>Капитализация крипто</div>
               <div className={valueCls}>{fmtBig(totalCap)}</div>
             </div>
-            <div className={cardCls("border-accent")}>
+            <div className={cardCls("border-metric-indigo")}>
               <div className={labelCls}>Доминация BTC</div>
               <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
             </div>
             {best && (
-              <button onClick={() => go("market", best.id)} className={cardCls("border-up", true)}>
+              <button onClick={() => go("market", best.id)} className={cardCls("border-metric-lime", true)}>
                 <div className={labelCls}>Сильнее рынка</div>
                 <div className={valueCls}>
                   {COIN_META[best.id]?.short} <span className={best.price_change_percentage_24h >= 0 ? "text-up" : "text-down"}>{fmtPct(best.price_change_percentage_24h)}</span>
@@ -59,26 +59,26 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </button>
             )}
             {worst && (
-              <button onClick={() => go("market", worst.id)} className={cardCls("border-down", true)}>
+              <button onClick={() => go("market", worst.id)} className={cardCls("border-metric-magenta", true)}>
                 <div className={labelCls}>Аутсайдер</div>
                 <div className={valueCls}>
                   {COIN_META[worst.id]?.short} <span className="text-down">{fmtPct(worst.price_change_percentage_24h)}</span>
                 </div>
               </button>
             )}
-            <div className={cardCls("border-accent")}>
+            <div className={cardCls("border-metric-sky")}>
               <div className={labelCls}>Объём торгов за 24ч</div>
               <div className={valueCls}>{fmtBig(totalVolume)}</div>
             </div>
             {best7d ? (
-              <button onClick={() => go("market", best7d.id)} className={cardCls("border-up", true)}>
+              <button onClick={() => go("market", best7d.id)} className={cardCls("border-metric-violet", true)}>
                 <div className={labelCls}>Лучший за 7 дней</div>
                 <div className={valueCls}>
                   {COIN_META[best7d.id]?.short} <span className={(best7d.price_change_percentage_7d_in_currency ?? 0) >= 0 ? "text-up" : "text-down"}>{fmtPct(best7d.price_change_percentage_7d_in_currency)}</span>
                 </div>
               </button>
             ) : (
-              <div className={cardCls("border-up")}>
+              <div className={cardCls("border-metric-violet")}>
                 <div className={labelCls}>Лучший за 7 дней</div>
                 <div className={valueCls}>—</div>
               </div>
