@@ -119,6 +119,12 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
+        <div className="min-h-[240px]" />
+        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
+        <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
+      </div>
+
       <LatestArticles onOpen={openArticle} onAll={() => go("articles")} />
 
       <HomeBlocks />
