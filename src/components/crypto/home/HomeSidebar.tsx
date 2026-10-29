@@ -83,27 +83,23 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
               <span className="text-[14px]">рейтинг</span>
             </button>
             <DonateButton menu />
-          </div>
-        </div>
-        <div>
-          <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-            <Icon name="ChevronDown" size={12} />
-            <span>Чат</span>
-          </div>
-          <div className="mt-0.5 space-y-1 px-1">
-            {(chatRooms ?? []).map((r) => (
-              <button
-                key={r.id}
-                onClick={() => go(`chat-${r.id}`)}
-                className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${
-                  channel === `chat-${r.id}` ? chatColor(r.color).active : chatColor(r.color).btn
-                }`}
-              >
-                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${chatColor(r.color).dot}`} />
-                <span className="text-[14px] truncate">{r.name}</span>
-                {r.access === "list" && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
-              </button>
-            ))}
+            {(chatRooms ?? []).length > 0 && (
+              <div className="mt-1 ml-3 pl-2 border-l border-border space-y-1">
+                {(chatRooms ?? []).map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => go(`chat-${r.id}`)}
+                    className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${
+                      channel === `chat-${r.id}` ? chatColor(r.color).active : chatColor(r.color).btn
+                    }`}
+                  >
+                    <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${chatColor(r.color).dot}`} />
+                    <span className="text-[14px] truncate">{r.name}</span>
+                    {r.access === "list" && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {radars && radars.length > 0 && (
