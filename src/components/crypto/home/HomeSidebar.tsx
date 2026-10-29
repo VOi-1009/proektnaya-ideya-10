@@ -82,7 +82,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                     channel === it.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : "bg-primary"}`} />
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : it.id === "portfolio" ? "bg-[#A78BFA]" : "bg-primary"}`} />
                   <span className="text-[14px] truncate">{label}</span>
                   {it.id === "alerts" && activeAlerts > 0 && (
                     <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
