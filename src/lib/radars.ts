@@ -99,12 +99,14 @@ export interface LiqMap {
   updatedAt: number;
 }
 
-export const useLiqMap = (symbol: string, range: string, enabled: boolean) =>
+export type LevGroup = "all" | "high" | "low";
+
+export const useLiqMap = (symbol: string, range: string, lev: LevGroup, enabled: boolean) =>
   useQuery({
-    queryKey: ["liqmap", symbol, range],
+    queryKey: ["liqmap", symbol, range, lev],
     enabled,
     queryFn: async () => {
-      const r = await fetch(`${func2url.news}?resource=liqmap&symbol=${symbol}&range=${range}`);
+      const r = await fetch(`${func2url.news}?resource=liqmap&symbol=${symbol}&range=${range}&lev=${lev}`);
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.bars) throw new Error(d.error ?? "Карта временно недоступна");
       return d as LiqMap;

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fmtUsd, Heatmap, useHeatmap } from "@/lib/radars";
+import { fmtUsd, Heatmap, LevGroup, useHeatmap } from "@/lib/radars";
 import LiqBars from "./LiqBars";
 
 const RANGES = [
+  ["12h", "12 часов"],
   ["1d", "24 часа"],
   ["3d", "3 дня"],
   ["7d", "Неделя"],
@@ -140,6 +141,7 @@ const draw = (cv: HTMLCanvasElement, d: Heatmap, hover: { x: number; y: number }
 
 const LiqHeatmap = ({ symbol }: { symbol: string }) => {
   const [range, setRange] = useState<string>("3d");
+  const [lev, setLev] = useState<LevGroup>("all");
   const [view, setView] = useState<"bars" | "heat">("bars");
   const { data, isLoading, isError, refetch, isFetching } = useHeatmap(symbol, range, view === "heat");
   const ref = useRef<HTMLCanvasElement>(null);
@@ -198,6 +200,21 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
             </button>
           ))}
         </div>
+        {view === "bars" && (
+          <div className="flex gap-1 bg-rail rounded-lg p-1">
+            {([["all", "Все плечи"], ["high", "25x и выше"], ["low", "10x и ниже"]] as const).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setLev(id)}
+                className={`px-3 py-1 rounded-md text-xs transition-colors ${
+                  lev === id ? "bg-hover text-white font-semibold" : "text-muted-foreground hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         {view === "heat" && data && (
           <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1.5">
             {isFetching && <Icon name="Loader2" size={12} className="animate-spin" />}
@@ -207,7 +224,7 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
       </div>
 
       {view === "bars" ? (
-        <LiqBars symbol={symbol} range={range} />
+        <LiqBars symbol={symbol} range={range} lev={lev} />
       ) : (
         <>
       <div className="relative rounded-lg overflow-hidden border border-border">

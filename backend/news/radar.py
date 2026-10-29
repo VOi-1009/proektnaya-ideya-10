@@ -4,12 +4,19 @@ import time
 import urllib.request
 
 RANGES = {
+    "12h": {"binance": "5m", "bybit": "5min", "kline_bybit": "5", "limit": 144},
     "1d": {"binance": "5m", "bybit": "5min", "kline_bybit": "5", "limit": 288},
     "3d": {"binance": "15m", "bybit": "15min", "kline_bybit": "15", "limit": 288},
     "7d": {"binance": "1h", "bybit": "1h", "kline_bybit": "60", "limit": 168},
     "30d": {"binance": "4h", "bybit": "4h", "kline_bybit": "240", "limit": 180},
 }
 LEVERAGE = [(5, 0.08), (10, 0.25), (25, 0.30), (50, 0.22), (100, 0.15)]
+LEV_WINDOW = {"all": 0.22, "high": 0.06, "low": 0.22}
+LEV_GROUPS = {
+    "all": LEVERAGE,
+    "high": [x for x in LEVERAGE if x[0] >= 25],
+    "low": [x for x in LEVERAGE if x[0] <= 10],
+}
 ROWS = 140
 TTL = 60
 SYMBOL_RE = re.compile(r"^[A-Z0-9]{3,20}$")
@@ -47,8 +54,9 @@ def from_bybit(symbol: str, cfg: dict) -> tuple:
     return candles, oi_map, "Bybit"
 
 
-def build(symbol: str, rng: str, binance_only: bool = False) -> dict:
+def build(symbol: str, rng: str, binance_only: bool = False, levs: list = None, window: float = 0.0) -> dict:
     cfg = RANGES[rng]
+    levs = levs or LEVERAGE
     if binance_only:
         candles, oi_map, source = from_binance(symbol, cfg)
     else:
@@ -65,6 +73,10 @@ def build(symbol: str, rng: str, binance_only: bool = False) -> dict:
     span = hi - lo
     p_min = max(lo - span * 0.6, lo * 0.85)
     p_max = min(hi + span * 0.6, hi * 1.15)
+    if window:
+        ref = candles[-1][4]
+        p_min = min(lo, ref * (1 - window))
+        p_max = max(hi, ref * (1 + window))
     step = (p_max - p_min) / ROWS
 
     def row(price: float) -> int:
@@ -82,7 +94,7 @@ def build(symbol: str, rng: str, binance_only: bool = False) -> dict:
             d = cur_oi - prev_oi
             if d > 0:
                 entry = (o + h + l + c) / 4
-                for lev, w in LEVERAGE:
+                for lev, w in levs:
                     part = d * w / 2
                     rl = row(entry * (1 - 1 / lev))
                     rs = row(entry * (1 + 1 / lev))
@@ -180,13 +192,16 @@ def liqmap_response(qs: dict, json_resp) -> dict:
         return json_resp(400, {"error": "Некорректный тикер"})
     if rng not in RANGES:
         rng = "3d"
-    key = f"map:{symbol}:{rng}"
+    lev = str(qs.get("lev", "all"))
+    if lev not in LEV_GROUPS:
+        lev = "all"
+    key = f"map:{symbol}:{rng}:{lev}"
     now = time.time()
     cached = _cache.get(key)
     if cached and now - cached[0] < TTL:
         return json_resp(200, cached[1], 60)
     try:
-        d = build(symbol, rng, binance_only=True)
+        d = build(symbol, rng, binance_only=True, levs=LEV_GROUPS[lev], window=LEV_WINDOW[lev])
     except Exception as e:  # noqa: BLE001
         print("liqmap error:", type(e).__name__, e)
         if cached:
@@ -215,6 +230,7 @@ def liqmap_response(qs: dict, json_resp) -> dict:
         "symbol": symbol,
         "range": rng,
         "source": "Binance",
+        "lev": lev,
         "price": price,
         "bars": bars,
         "totalLong": round(sum(b["long"] for b in bars)),

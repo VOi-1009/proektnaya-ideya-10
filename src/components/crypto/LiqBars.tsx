@@ -1,14 +1,14 @@
 import { Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fmtUsd, useLiqMap } from "@/lib/radars";
+import { fmtUsd, LevGroup, useLiqMap } from "@/lib/radars";
 
 const LONG = "#22c55e";
 const SHORT = "#ef4444";
 
 const fmtP = (p: number) => `$${Math.round(p).toLocaleString("ru-RU")}`;
 
-const LiqBars = ({ symbol, range }: { symbol: string; range: string }) => {
-  const { data, isLoading, isError, refetch } = useLiqMap(symbol, range, true);
+const LiqBars = ({ symbol, range, lev }: { symbol: string; range: string; lev: LevGroup }) => {
+  const { data, isLoading, isError, refetch } = useLiqMap(symbol, range, lev, true);
 
   if (isLoading) return <Skeleton className="w-full h-[380px] sm:h-[460px] bg-rail" />;
   if (isError || !data)
