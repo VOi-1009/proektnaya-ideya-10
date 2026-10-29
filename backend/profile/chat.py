@@ -170,13 +170,13 @@ def handle_chat(event: dict) -> dict:
                 return resp(200, {"ok": True})
             return resp(400, {"error": "Неизвестное действие"})
 
+        if not me:
+            return resp(401, {"error": "Войдите в аккаунт, чтобы открыть чат"})
         cur.execute(f"SELECT id, name, topic, color, access, min_level, sort, archived FROM {SCHEMA}.chat_rooms WHERE id = '{esc(room_id)}'")
         rr = cur.fetchone()
         if not rr or rr[7]:
             return resp(400, {"error": "Неизвестный чат"})
         room = {"id": rr[0], "name": rr[1], "topic": rr[2], "color": rr[3], "access": rr[4], "minLevel": int(rr[5]), "sort": int(rr[6]), "members": []}
-        if not me:
-            return resp(401, {"error": "Войдите в аккаунт, чтобы открыть чат"})
         if room["access"] == "list":
             cur.execute(f"SELECT 1 FROM {SCHEMA}.chat_room_members WHERE room_id = '{room['id']}' AND user_id = {me}")
             room["members"] = [me] if cur.fetchone() else []
