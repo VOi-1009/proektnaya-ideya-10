@@ -7,13 +7,13 @@ const SHORT = "#ef4444";
 
 const fmtP = (p: number) => `$${Math.round(p).toLocaleString("ru-RU")}`;
 
-const LiqBars = ({ symbol, range, lev }: { symbol: string; range: string; lev: LevGroup }) => {
+const LiqBars = ({ symbol, range, lev, mini = false }: { symbol: string; range: string; lev: LevGroup; mini?: boolean }) => {
   const { data, isLoading, isError, refetch } = useLiqMap(symbol, range, lev, true);
 
-  if (isLoading) return <Skeleton className="w-full h-[380px] sm:h-[460px] bg-rail" />;
+  if (isLoading) return <Skeleton className={mini ? "w-full h-full min-h-[160px] bg-rail" : "w-full h-[380px] sm:h-[460px] bg-rail"} />;
   if (isError || !data)
     return (
-      <div className="h-[380px] flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+      <div className={`${mini ? "h-full min-h-[160px]" : "h-[380px]"} flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground`}>
         Данные Binance временно недоступны
         <button onClick={() => refetch()} className="text-primary hover:underline">
           Повторить
@@ -23,6 +23,29 @@ const LiqBars = ({ symbol, range, lev }: { symbol: string; range: string; lev: L
 
   const bars = data.bars.filter((b) => b.long || b.short || b.cumLong || b.cumShort);
   const total = data.totalLong + data.totalShort || 1;
+
+  if (mini)
+    return (
+      <div className="h-full min-h-[160px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={bars} margin={{ top: 6, right: 4, left: 4, bottom: 0 }} barCategoryGap={0}>
+            <XAxis dataKey="price" type="number" domain={["dataMin", "dataMax"]} tickFormatter={fmtP} tick={{ fill: "#9ca3af", fontSize: 10 }} tickCount={4} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="bar" hide />
+            <YAxis yAxisId="cum" orientation="right" hide />
+            <Tooltip
+              contentStyle={{ background: "#1b1b22", border: "1px solid #333", borderRadius: 8, fontSize: 11 }}
+              labelFormatter={(v) => fmtP(Number(v))}
+              formatter={(v: number, n: string) => [fmtUsd(v), n]}
+            />
+            <Bar yAxisId="bar" dataKey="long" name="Лонги" fill={LONG} isAnimationActive={false} />
+            <Bar yAxisId="bar" dataKey="short" name="Шорты" fill={SHORT} isAnimationActive={false} />
+            <Line yAxisId="cum" dataKey="cumLong" name="Накопление лонгов" stroke={LONG} dot={false} strokeWidth={1.5} isAnimationActive={false} connectNulls />
+            <Line yAxisId="cum" dataKey="cumShort" name="Накопление шортов" stroke={SHORT} dot={false} strokeWidth={1.5} isAnimationActive={false} connectNulls />
+            <ReferenceLine yAxisId="bar" x={data.price} stroke="#facc15" strokeDasharray="4 3" />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    );
 
   return (
     <div className="space-y-3">
