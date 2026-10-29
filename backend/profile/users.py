@@ -46,6 +46,37 @@ def bot_online(uid: int, now: float = None) -> bool:
     return h % 100 < BOT_ONLINE_SHARE
 
 
+BOT_TICK = 300
+BOT_TICK_CAP = 30
+
+
+def accrue_bot_minutes(cur) -> None:
+    now = int(time.time())
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('bot_minutes', '{now}', NOW()) ON CONFLICT (key) DO NOTHING"
+    )
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = 'bot_minutes'")
+    r = cur.fetchone()
+    last = int(r[0]) if r and str(r[0]).isdigit() else now
+    if now - last < BOT_TICK:
+        return
+    cur.execute(
+        f"UPDATE {SCHEMA}.site_settings SET value = '{now}', updated_at = NOW() WHERE key = 'bot_minutes' AND value = '{last}' RETURNING 1"
+    )
+    if not cur.fetchone():
+        return
+    minutes = min((now - last) // 60, BOT_TICK_CAP)
+    if minutes <= 0:
+        return
+    cur.execute(f"SELECT id, is_ai FROM {SCHEMA}.users WHERE is_bot")
+    ids = [int(r[0]) for r in cur.fetchall() if r[1] or bot_online(int(r[0]))]
+    if ids:
+        cur.execute(
+            f"UPDATE {SCHEMA}.users SET active_minutes = COALESCE(active_minutes, 0) + {minutes} "
+            f"WHERE id IN ({','.join(str(i) for i in ids)})"
+        )
+
+
 def tier_of(cur, uid: int) -> int:
     cur.execute(f"SELECT tier FROM {SCHEMA}.subscriptions WHERE user_id = {int(uid)} AND expires_at > NOW()")
     r = cur.fetchone()
@@ -75,6 +106,7 @@ def handle_users(event: dict) -> dict:
     conn.autocommit = True
     cur = conn.cursor()
     try:
+        accrue_bot_minutes(cur)
         me, is_admin = None, False
         if token:
             cur.execute(
