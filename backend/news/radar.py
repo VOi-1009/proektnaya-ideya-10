@@ -226,7 +226,29 @@ def liqmap_response(qs: dict, json_resp) -> dict:
     for b in sorted((b for b in bars if b["price"] >= price), key=lambda b: b["price"]):
         acc += b["short"]
         b["cumShort"] = round(acc)
+    def level(b: dict, usd: int) -> dict:
+        return {"price": b["price"], "usd": usd, "pct": round((b["price"] - price) / price * 100, 2)}
+
+    peak = max((b["long"] + b["short"] for b in bars), default=0)
+    magnet = None
+    key_above = None
+    key_below = None
+    if peak > 0:
+        top = max(bars, key=lambda b: b["long"] + b["short"])
+        magnet = level(top, top["long"] + top["short"])
+        thr = peak * 0.4
+        up = [b for b in bars if b["price"] >= price and b["short"] >= thr]
+        down = [b for b in bars if b["price"] < price and b["long"] >= thr]
+        if up:
+            b = min(up, key=lambda x: x["price"])
+            key_above = level(b, b["short"])
+        if down:
+            b = max(down, key=lambda x: x["price"])
+            key_below = level(b, b["long"])
     data = {
+        "keyAbove": key_above,
+        "keyBelow": key_below,
+        "magnet": magnet,
         "symbol": symbol,
         "range": rng,
         "source": "Binance",

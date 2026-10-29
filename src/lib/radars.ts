@@ -88,7 +88,16 @@ export interface LiqBar {
   cumShort?: number;
 }
 
+export interface LiqLevel {
+  price: number;
+  usd: number;
+  pct: number;
+}
+
 export interface LiqMap {
+  keyAbove: LiqLevel | null;
+  keyBelow: LiqLevel | null;
+  magnet: LiqLevel | null;
   symbol: string;
   range: string;
   source: string;
