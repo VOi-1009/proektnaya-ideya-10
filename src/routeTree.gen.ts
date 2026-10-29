@@ -15,7 +15,6 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ArticlesIdRouteImport } from './routes/articles.$id'
-import { Route as AuthYandexCallbackRouteImport } from './routes/auth.yandex.callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,11 +46,6 @@ const ArticlesIdRoute = ArticlesIdRouteImport.update({
   path: '/articles/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthYandexCallbackRoute = AuthYandexCallbackRouteImport.update({
-  id: '/auth/yandex/callback',
-  path: '/auth/yandex/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,7 +54,6 @@ export interface FileRoutesByFullPath {
   '/rating': typeof RatingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/articles/$id': typeof ArticlesIdRoute
-  '/auth/yandex/callback': typeof AuthYandexCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +62,6 @@ export interface FileRoutesByTo {
   '/rating': typeof RatingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/articles/$id': typeof ArticlesIdRoute
-  '/auth/yandex/callback': typeof AuthYandexCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,27 +71,13 @@ export interface FileRoutesById {
   '/rating': typeof RatingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/articles/$id': typeof ArticlesIdRoute
-  '/auth/yandex/callback': typeof AuthYandexCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/admin'
-    | '/profile'
-    | '/rating'
-    | '/sitemap.xml'
-    | '/articles/$id'
-    | '/auth/yandex/callback'
+    '/' | '/admin' | '/profile' | '/rating' | '/sitemap.xml' | '/articles/$id'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/admin'
-    | '/profile'
-    | '/rating'
-    | '/sitemap.xml'
-    | '/articles/$id'
-    | '/auth/yandex/callback'
+  to: '/' | '/admin' | '/profile' | '/rating' | '/sitemap.xml' | '/articles/$id'
   id:
     | '__root__'
     | '/'
@@ -108,7 +86,6 @@ export interface FileRouteTypes {
     | '/rating'
     | '/sitemap.xml'
     | '/articles/$id'
-    | '/auth/yandex/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +95,6 @@ export interface RootRouteChildren {
   RatingRoute: typeof RatingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ArticlesIdRoute: typeof ArticlesIdRoute
-  AuthYandexCallbackRoute: typeof AuthYandexCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,13 +141,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArticlesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/yandex/callback': {
-      id: '/auth/yandex/callback'
-      path: '/auth/yandex/callback'
-      fullPath: '/auth/yandex/callback'
-      preLoaderRoute: typeof AuthYandexCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -182,7 +151,6 @@ const rootRouteChildren: RootRouteChildren = {
   RatingRoute: RatingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ArticlesIdRoute: ArticlesIdRoute,
-  AuthYandexCallbackRoute: AuthYandexCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

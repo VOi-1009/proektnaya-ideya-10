@@ -194,7 +194,7 @@ const Profile = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="font-display text-2xl text-white truncate">{profile.name || "Без имени"}</h1>
-                <div className="text-muted-foreground text-sm truncate">{profile.email || "Вход через Яндекс ID"}</div>
+                <div className="text-muted-foreground text-sm truncate">{profile.email}</div>
                 <div className="flex flex-wrap items-center gap-2 mt-3">
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${LEVELS[s.level - 1].cls}`}>
                     <Icon name={LEVELS[s.level - 1].icon} size={14} />
