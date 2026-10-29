@@ -173,7 +173,7 @@ const Community = () => {
             </div>
 
             <div className="w-full max-w-5xl mx-auto px-4 py-4">
-              <div className="flex items-center gap-1 border-b border-border mb-4 overflow-x-auto">
+              <div className="flex flex-wrap items-center gap-x-1 border-b border-border mb-4">
                 {TABS.map((t) => (
                   <button
                     key={t.id}
