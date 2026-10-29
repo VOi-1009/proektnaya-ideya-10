@@ -22,13 +22,6 @@ interface Props {
   openArticle: (id: number) => void;
 }
 
-const FEATURES = [
-  { icon: "Activity", title: "Комьюнити", desc: "Создавайте группы, общайтесь с экспертами и единомышленниками в безопасной среде." },
-  { icon: "CandlestickChart", title: "Развитие", desc: "Учитесь, анализируйте рыночные тренды и расширяйте кругозор." },
-  { icon: "Newspaper", title: "Достоверность", desc: "Только проверенные источники новостей и точные данные по котировкам." },
-  { icon: "Star", title: "Доступность", desc: "Работаем стабильно, без необходимости использования VPN." },
-];
-
 const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
@@ -151,33 +144,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <HomeBlocks />
 
 
-
-      <div className="bg-card border border-border rounded-lg p-4 sm:p-5 animate-fade-in" style={{ animationDelay: "300ms" }}>
-        <h3 className="font-display text-lg sm:text-xl text-white mb-4">Что умеет TRADERKA.RU</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="flex items-start gap-3 p-2 rounded hover:bg-hover/60 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-primary/15 text-primary flex items-center justify-center flex-shrink-0">
-                <Icon name={f.icon} size={18} />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">{f.title}</div>
-                <div className="text-muted-foreground text-sm">{f.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 mt-4">
-          <Button onClick={() => go("market")} className="font-semibold">
-            <Icon name="CandlestickChart" size={16} className="mr-2" />
-            Смотреть котировки
-          </Button>
-          <Button onClick={() => go("news")} variant="outline" className="bg-transparent border-input text-foreground hover:bg-hover hover:text-white">
-            <Icon name="Newspaper" size={16} className="mr-2" />
-            Читать новости
-          </Button>
-        </div>
-      </div>
 
       <div id="subscribe" className="bg-gradient-to-br from-primary/15 to-card border border-primary/30 rounded-lg p-4 sm:p-5">
         <div className="flex items-center gap-2 text-primary text-xs font-mono mb-2">
