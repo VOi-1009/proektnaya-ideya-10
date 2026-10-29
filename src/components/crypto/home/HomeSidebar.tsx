@@ -84,7 +84,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             </button>
             <DonateButton menu />
             {(chatRooms ?? []).length > 0 && (
-              <div className="mt-1 ml-3 pl-2 border-l border-border space-y-1">
+              <div className="mt-1 ml-3 pl-2 space-y-1">
                 {(chatRooms ?? []).map((r) => (
                   <button
                     key={r.id}
