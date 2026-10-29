@@ -19,6 +19,7 @@ from sitenews import handle_site_news
 from quotes import handle_quotes
 from chat import handle_chat
 from donate import handle_donate
+from menu import handle_menu
 from aibot import handle_aibot
 from plans import handle_plans
 from forum import handle_forum
@@ -95,7 +96,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTraderKa (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTraderKa (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits), настройки левого меню (?resource=menu)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -119,6 +120,8 @@ def handler(event: dict, context) -> dict:
         return handle_quotes(event)
     if resource == "chat":
         return handle_chat(event)
+    if resource == "menu":
+        return handle_menu(event)
     if resource == "donate":
         return handle_donate(event)
     if resource == "aibot":

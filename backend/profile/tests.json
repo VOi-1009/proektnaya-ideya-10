@@ -409,6 +409,21 @@
       "method": "GET",
       "path": "/?resource=visits",
       "expectedStatus": 403
+    },
+    {
+      "name": "Меню слева",
+      "method": "GET",
+      "path": "/?resource=menu",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Сохранение меню без прав",
+      "method": "POST",
+      "path": "/?resource=menu",
+      "body": {
+        "items": []
+      },
+      "expectedStatus": 403
     }
   ]
 }

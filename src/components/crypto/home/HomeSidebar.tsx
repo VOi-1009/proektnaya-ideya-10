@@ -5,7 +5,8 @@ import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
 import { chatColor, useChatRooms } from "@/lib/chat";
-import { CHANNELS, GoFn } from "./homeConfig";
+import { GoFn } from "./homeConfig";
+import { BASE_ITEMS, DEFAULT_MENU_TITLE, DEFAULT_RADARS_TITLE, mergeMenu, useMenuSettings } from "@/lib/menu";
 
 interface Props {
   channel: string;
@@ -20,6 +21,9 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
   const navigate = useNavigate();
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
+  const { data: menuCfg } = useMenuSettings();
+  const items = mergeMenu(menuCfg).filter((i) => !i.hidden);
+  const radarsFirst = !!menuCfg?.radarsFirst;
 
   return (
     <aside
@@ -48,41 +52,49 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <Icon name="X" size={16} />
         </Button>
       </div>
-      <div className="flex-1 p-2 space-y-2">
-        <div>
+      <div className="flex-1 p-2 flex flex-col gap-2">
+        <div className={radarsFirst ? "order-2" : "order-1"}>
           <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
             <Icon name="ChevronDown" size={12} />
-            <span>Меню</span>
+            <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
           </div>
           <div className="mt-0.5 space-y-0">
-            {CHANNELS.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => go(c.id)}
-                className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                  channel === c.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${c.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : "bg-primary"}`} />
-                <span className="text-[14px] truncate">{c.name.replace(/-/g, " ")}</span>
-                {c.id === "alerts" && activeAlerts > 0 && (
-                  <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
-                )}
-                {unreadOf(c.id) > 0 && (
-                  <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
-                    {unreadOf(c.id) > 30 ? "30+" : unreadOf(c.id)}
-                  </span>
-                )}
-              </button>
-            ))}
-            <button
-              onClick={() => navigate("/rating")}
-              className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
-            >
-              <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
-              <span className="text-[14px]">рейтинг</span>
-            </button>
-            <DonateButton menu />
+            {items.map((it) => {
+              const label = it.label || BASE_ITEMS.find((b) => b.id === it.id)?.name || it.id;
+              if (it.id === "donate") return <DonateButton key={it.id} menu label={it.label} />;
+              if (it.id === "rating") {
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => navigate("/rating")}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
+                    <span className="text-[14px]">{label}</span>
+                  </button>
+                );
+              }
+              return (
+                <button
+                  key={it.id}
+                  onClick={() => go(it.id)}
+                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                    channel === it.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : "bg-primary"}`} />
+                  <span className="text-[14px] truncate">{label}</span>
+                  {it.id === "alerts" && activeAlerts > 0 && (
+                    <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
+                  )}
+                  {unreadOf(it.id) > 0 && (
+                    <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
+                      {unreadOf(it.id) > 30 ? "30+" : unreadOf(it.id)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
             {(chatRooms ?? []).length > 0 && (
               <div className="mt-1 ml-3 pl-2 space-y-1">
                 {(chatRooms ?? []).map((r) => (
@@ -103,10 +115,10 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           </div>
         </div>
         {radars && radars.length > 0 && (
-          <div>
+          <div className={radarsFirst ? "order-1" : "order-2"}>
             <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
               <Icon name="ChevronDown" size={12} />
-              <span>Радары</span>
+              <span>{menuCfg?.radarsTitle || DEFAULT_RADARS_TITLE}</span>
             </div>
             <div className="mt-0.5 space-y-0">
               {radars.map((r) => (
