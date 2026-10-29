@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import func2url from "../../backend/func2url.json";
 
 export interface CmcMetrics {
-  treasuries?: { total: number; companies: number; top: { name: string; holdings: number } | null };
+  treasuries?: { total: number; supply?: number | null; companies: number; top: { name: string; holdings: number } | null };
   altseason?: { value: number | null; yesterday: number | null; lastWeek: number | null; lastMonth: number | null };
   liquidations?: { total: number | null; change24h: number | null; longs: number | null; shorts: number | null };
   etf?: { points: { t: number; btc: number; eth: number; total: number }[]; total: number; totalBtc: number; totalEth: number };

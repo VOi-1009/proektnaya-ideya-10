@@ -28,8 +28,11 @@ const BtcHoldings = () => {
         </Tooltip>
       </div>
       <div className="flex items-baseline justify-between gap-2 text-sm">
-        <span className="text-muted-foreground text-xs">Всего</span>
-        <span className="font-mono tabular text-white">{fmtInt(t.total)} BTC</span>
+        <span className="text-muted-foreground text-xs">Всего · доля от всего BTC</span>
+        <span className="font-mono tabular text-white">
+          {fmtInt(t.total)} BTC
+          {t.supply ? <span className="ml-1.5 text-[11px] text-primary">{((t.total / t.supply) * 100).toFixed(2).replace(".", ",")}%</span> : null}
+        </span>
       </div>
       {t.top && (
         <div className="flex items-baseline justify-between gap-2 text-sm">

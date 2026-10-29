@@ -19,8 +19,14 @@ def treasuries() -> dict:
     rows = [x for x in d.get("data", []) if x.get("coin") == "BTC"]
     total = sum(float(x.get("holdings") or 0) for x in rows)
     top = max(rows, key=lambda x: float(x.get("holdings") or 0)) if rows else None
+    supply = None
+    try:
+        supply = float(_get("/cryptocurrency/detail?id=1")["data"]["statistics"]["circulatingSupply"])
+    except Exception as e:
+        print("cmc supply error:", e)
     return {
         "total": round(total),
+        "supply": round(supply) if supply else None,
         "companies": len(rows),
         "top": {"name": top["companyName"], "holdings": round(float(top["holdings"]))} if top else None,
     }
