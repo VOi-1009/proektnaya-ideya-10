@@ -1,7 +1,5 @@
-import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
 import { Coin, COIN_META, fmtBig, fmtPct } from "@/lib/crypto";
 import LatestArticles from "../LatestArticles";
 import HomeBlocks from "../HomeBlocks";
@@ -23,9 +21,6 @@ interface Props {
 }
 
 const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
-  const [email, setEmail] = useState("");
-  const [err, setErr] = useState("");
-
   const cryptos = coins.filter((c) => !c.kind);
   const totalCap = cryptos.reduce((s, c) => s + c.market_cap, 0);
   const btc = cryptos.find((c) => c.id === "bitcoin");
@@ -33,17 +28,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
   const sorted = [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const v = email.trim();
-    if (!v) return setErr("Укажите почту или ник в MAX");
-    if (!/^@[a-zA-Z0-9_]{4,}$/.test(v) && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))
-      return setErr("Похоже на опечатку: нужен e-mail или @ник");
-    setErr("");
-    setEmail("");
-    toast({ title: "Вы в списке!", description: "Утренний дайджест рынка придёт завтра в 9:00 МСК." });
-  };
 
   return (
     <div className="space-y-3">
@@ -144,29 +128,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <HomeBlocks />
 
 
-
-      <div id="subscribe" className="bg-gradient-to-br from-primary/15 to-card border border-primary/30 rounded-lg p-4 sm:p-5">
-        <div className="flex items-center gap-2 text-primary text-xs font-mono mb-2">
-          <Icon name="Bell" size={14} /> ДАЙДЖЕСТ
-        </div>
-        <h3 className="font-display text-lg sm:text-xl text-white mb-1">Утренняя сводка рынка</h3>
-        <p className="text-muted-foreground text-sm mb-4">Каждый день в 9:00 — главные движения и новости за ночь. Пять минут чтения.</p>
-        <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2 max-w-lg" noValidate>
-          <input
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (err) setErr("");
-            }}
-            placeholder="почта или @ник в MAX"
-            className={`flex-1 bg-rail rounded px-3 py-2 text-sm outline-none border placeholder:text-muted-foreground ${
-              err ? "border-down" : "border-transparent focus:border-primary"
-            }`}
-          />
-          <Button type="submit" className="font-semibold">Подписаться</Button>
-        </form>
-        {err && <div className="text-down text-xs mt-2">{err}</div>}
-      </div>
 
       <p className="text-xs text-muted-foreground/70 pb-2">
         Информация на сайте не является инвестиционной рекомендацией. Торговля криптовалютой связана с высоким риском.
