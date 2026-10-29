@@ -139,11 +139,11 @@ def handle_users(event: dict) -> dict:
                 cur.execute(f"SELECT headline, experience, interests, contacts FROM {SCHEMA}.users WHERE id = {int(r[0])}")
                 x = cur.fetchone()
                 try:
-                    cts = json.loads(x[3] or "{}")
+                    cts = json.loads(x[3] or "{}") if me else {}
                 except ValueError:
                     cts = {}
                 return resp(200, {"member": {
-                    "headline": x[0] or "", "experience": x[1] or "", "interests": x[2] or "", "contacts": cts,
+                    "headline": x[0] or "", "experience": x[1] or "", "interests": x[2] or "", "contacts": cts, "contactsHidden": bool(not me and x[3] and x[3] != "{}"),
                     "id": r[0], "name": display_name(r[1], r[2]), "avatar": r[9] or "",
                     "level": st["level"], "title": st["title"], "points": int(r[3]),
                     "city": r[8] or "", "bio": r[11] or "", "favoriteCoin": r[12] or "",

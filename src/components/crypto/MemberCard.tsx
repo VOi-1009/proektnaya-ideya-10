@@ -41,6 +41,7 @@ interface Member {
   experience?: string;
   interests?: string;
   contacts?: Record<string, string>;
+  contactsHidden?: boolean;
 }
 
 const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void }) => {
@@ -113,6 +114,11 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                 </div>
               )}
               <ContactLinks contacts={m.contacts} />
+              {m.contactsHidden && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Icon name="Lock" size={12} /> Контакты видны только вошедшим пользователям
+                </p>
+              )}
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-rail/60 rounded-lg px-3 py-2">
