@@ -59,6 +59,12 @@
       "method": "GET",
       "path": "/?resource=calendar",
       "expectedStatus": 200
+    },
+    {
+      "name": "Карта ликвидаций Binance (столбцы)",
+      "method": "GET",
+      "path": "/?resource=liqmap&symbol=BTCUSDT&range=1d",
+      "expectedStatus": 200
     }
   ]
 }

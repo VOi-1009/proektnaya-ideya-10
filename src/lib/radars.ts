@@ -80,6 +80,39 @@ export const useHeatmap = (symbol: string, range: string, enabled: boolean) =>
     staleTime: 50_000,
   });
 
+export interface LiqBar {
+  price: number;
+  long: number;
+  short: number;
+  cumLong?: number;
+  cumShort?: number;
+}
+
+export interface LiqMap {
+  symbol: string;
+  range: string;
+  source: string;
+  price: number;
+  bars: LiqBar[];
+  totalLong: number;
+  totalShort: number;
+  updatedAt: number;
+}
+
+export const useLiqMap = (symbol: string, range: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ["liqmap", symbol, range],
+    enabled,
+    queryFn: async () => {
+      const r = await fetch(`${func2url.news}?resource=liqmap&symbol=${symbol}&range=${range}`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.bars) throw new Error(d.error ?? "Карта временно недоступна");
+      return d as LiqMap;
+    },
+    refetchInterval: 60_000,
+    staleTime: 50_000,
+  });
+
 export const fmtUsd = (v: number) =>
   v >= 1e12 ? `$${(v / 1e12).toFixed(2)} трлн` : v >= 1e9 ? `$${(v / 1e9).toFixed(2)} млрд` : v >= 1e6 ? `$${(v / 1e6).toFixed(1)} млн` : `$${Math.round(v / 1e3)} тыс`;
 

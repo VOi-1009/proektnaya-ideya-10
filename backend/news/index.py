@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 
-from radar import heatmap_response
+from radar import heatmap_response, liqmap_response
 from toptxs import toptxs_response
 from cmc import cmc_response
 from econ_calendar import calendar_response
@@ -319,6 +319,8 @@ def handler(event: dict, context) -> dict:
         return chart_response(qs)
     if resource == "heatmap":
         return heatmap_response(qs, json_resp)
+    if resource == "liqmap":
+        return liqmap_response(qs, json_resp)
     if resource == "toptxs":
         return toptxs_response(json_resp)
     if resource == "cmc":

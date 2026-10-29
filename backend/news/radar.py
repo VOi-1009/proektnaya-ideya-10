@@ -47,13 +47,16 @@ def from_bybit(symbol: str, cfg: dict) -> tuple:
     return candles, oi_map, "Bybit"
 
 
-def build(symbol: str, rng: str) -> dict:
+def build(symbol: str, rng: str, binance_only: bool = False) -> dict:
     cfg = RANGES[rng]
-    try:
+    if binance_only:
         candles, oi_map, source = from_binance(symbol, cfg)
-    except Exception as e:  # noqa: BLE001
-        print("binance radar error:", type(e).__name__, e)
-        candles, oi_map, source = from_bybit(symbol, cfg)
+    else:
+        try:
+            candles, oi_map, source = from_binance(symbol, cfg)
+        except Exception as e:  # noqa: BLE001
+            print("binance radar error:", type(e).__name__, e)
+            candles, oi_map, source = from_bybit(symbol, cfg)
     if len(candles) < 10:
         raise ValueError("Мало данных")
 
@@ -136,7 +139,14 @@ def build(symbol: str, rng: str) -> dict:
         "liquidatedLong": round(liquidated_long),
         "liquidatedShort": round(liquidated_short),
         "updatedAt": int(time.time() * 1000),
+        "_longs": longs,
+        "_shorts": shorts,
+        "_step": step,
     }
+
+
+def public(data: dict) -> dict:
+    return {k: v for k, v in data.items() if not k.startswith("_")}
 
 
 def heatmap_response(qs: dict, json_resp) -> dict:
@@ -150,13 +160,66 @@ def heatmap_response(qs: dict, json_resp) -> dict:
     now = time.time()
     cached = _cache.get(key)
     if cached and now - cached[0] < TTL:
-        return json_resp(200, cached[1], 60)
+        return json_resp(200, public(cached[1]), 60)
     try:
         data = build(symbol, rng)
     except Exception as e:  # noqa: BLE001
         print("radar error:", type(e).__name__, e)
         if cached:
-            return json_resp(200, cached[1], 30)
+            return json_resp(200, public(cached[1]), 30)
         return json_resp(502, {"error": "Данные бирж временно недоступны"})
+    _cache[key] = (now, data)
+    return json_resp(200, public(data), 60)
+
+
+
+def liqmap_response(qs: dict, json_resp) -> dict:
+    symbol = str(qs.get("symbol", "BTCUSDT")).upper()
+    rng = str(qs.get("range", "3d"))
+    if not SYMBOL_RE.match(symbol):
+        return json_resp(400, {"error": "Некорректный тикер"})
+    if rng not in RANGES:
+        rng = "3d"
+    key = f"map:{symbol}:{rng}"
+    now = time.time()
+    cached = _cache.get(key)
+    if cached and now - cached[0] < TTL:
+        return json_resp(200, cached[1], 60)
+    try:
+        d = build(symbol, rng, binance_only=True)
+    except Exception as e:  # noqa: BLE001
+        print("liqmap error:", type(e).__name__, e)
+        if cached:
+            return json_resp(200, cached[1], 30)
+        return json_resp(502, {"error": "Данные Binance временно недоступны"})
+    longs, shorts, step = d["_longs"], d["_shorts"], d["_step"]
+    price = d["price"]
+    bars = []
+    for i in range(ROWS):
+        p = d["priceMin"] + (i + 0.5) * step
+        lv, sv = longs[i], shorts[i]
+        if p < price:
+            sv = 0.0
+        else:
+            lv = 0.0
+        bars.append({"price": round(p, 2), "long": round(lv), "short": round(sv)})
+    acc = 0.0
+    for b in sorted((b for b in bars if b["price"] < price), key=lambda b: -b["price"]):
+        acc += b["long"]
+        b["cumLong"] = round(acc)
+    acc = 0.0
+    for b in sorted((b for b in bars if b["price"] >= price), key=lambda b: b["price"]):
+        acc += b["short"]
+        b["cumShort"] = round(acc)
+    data = {
+        "symbol": symbol,
+        "range": rng,
+        "source": "Binance",
+        "price": price,
+        "bars": bars,
+        "totalLong": round(sum(b["long"] for b in bars)),
+        "totalShort": round(sum(b["short"] for b in bars)),
+        "updatedAt": d["updatedAt"],
+    }
     _cache[key] = (now, data)
     return json_resp(200, data, 60)

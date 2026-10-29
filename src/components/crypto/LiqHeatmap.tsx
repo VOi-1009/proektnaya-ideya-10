@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fmtUsd, Heatmap, useHeatmap } from "@/lib/radars";
+import LiqBars from "./LiqBars";
 
 const RANGES = [
   ["1d", "24 часа"],
@@ -139,7 +140,8 @@ const draw = (cv: HTMLCanvasElement, d: Heatmap, hover: { x: number; y: number }
 
 const LiqHeatmap = ({ symbol }: { symbol: string }) => {
   const [range, setRange] = useState<string>("3d");
-  const { data, isLoading, isError, refetch, isFetching } = useHeatmap(symbol, range, true);
+  const [view, setView] = useState<"bars" | "heat">("bars");
+  const { data, isLoading, isError, refetch, isFetching } = useHeatmap(symbol, range, view === "heat");
   const ref = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
 
@@ -171,6 +173,19 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex gap-1 bg-rail rounded-lg p-1">
+          {([["bars", "Столбцы"], ["heat", "Тепловая"]] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setView(id)}
+              className={`px-3 py-1 rounded-md text-xs transition-colors ${
+                view === id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 bg-rail rounded-lg p-1">
           {RANGES.map(([id, label]) => (
             <button
               key={id}
@@ -183,7 +198,7 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
             </button>
           ))}
         </div>
-        {data && (
+        {view === "heat" && data && (
           <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1.5">
             {isFetching && <Icon name="Loader2" size={12} className="animate-spin" />}
             {data.source} · обновлено {new Date(data.updatedAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
@@ -191,6 +206,10 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
         )}
       </div>
 
+      {view === "bars" ? (
+        <LiqBars symbol={symbol} range={range} />
+      ) : (
+        <>
       <div className="relative rounded-lg overflow-hidden border border-border">
         {isLoading && <Skeleton className="w-full h-[380px] sm:h-[460px] bg-rail" />}
         {isError && (
@@ -277,6 +296,8 @@ const LiqHeatmap = ({ symbol }: { symbol: string }) => {
         5×–100×. Яркие полосы — зоны, куда цену часто «притягивает». Скопления, которые цена уже прошла, гаснут. Это не
         инвестиционная рекомендация.
       </p>
+        </>
+      )}
     </div>
   );
 };
