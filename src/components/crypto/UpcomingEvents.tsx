@@ -32,7 +32,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
       ) : isError ? (
         <p className="text-muted-foreground text-sm py-6 text-center">Календарь временно недоступен</p>
       ) : !items.length ? (
-        <p className="text-muted-foreground text-sm py-6 text-center">Важных событий до конца недели нет</p>
+        <p className="text-muted-foreground text-sm py-6 text-center">Ближайших важных событий нет</p>
       ) : (
         <ul>
           {items.map((e, i) => (

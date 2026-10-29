@@ -3,7 +3,10 @@ import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
-URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+URLS = [
+    "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+    "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
+]
 TTL = 1800
 _cache: dict = {"at": 0.0, "items": None}
 
@@ -74,9 +77,16 @@ def ru_title(t: str) -> str:
 
 
 def fetch() -> list:
-    req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=4) as r:
-        raw = json.loads(r.read())
+    raw = []
+    for i, url in enumerate(URLS):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=3) as r:
+                raw += json.loads(r.read())
+        except Exception as e:
+            print("calendar fetch error:", url, e)
+            if i == 0:
+                raise
     out = []
     for e in raw:
         if e.get("impact") != "High":
