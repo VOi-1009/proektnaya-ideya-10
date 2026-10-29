@@ -9,12 +9,10 @@ import { PROFILE_URL, useAuth } from "@/lib/auth";
 import { COIN_META } from "@/lib/crypto";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import { LEVELS } from "@/lib/status";
-import Achievements, { Achievement } from "@/components/crypto/Achievements";
-import SpecialAchievements from "@/components/crypto/SpecialAchievements";
-import RareAchievements from "@/components/crypto/RareAchievements";
+import { Achievement } from "@/components/crypto/Achievements";
+import ProfileRewards from "@/components/crypto/ProfileRewards";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
-import PromoBlock from "@/components/crypto/PromoBlock";
 import ContactLinks from "@/components/crypto/ContactLinks";
 import { CONTACT_FIELDS, EXPERIENCE } from "@/lib/contacts";
 
@@ -367,7 +365,8 @@ const Profile = () => {
                 </div>
               </form>
 
-              <section className="bg-card border border-border rounded-2xl p-5 sm:p-6 self-start">
+              <div className="space-y-5 self-start">
+              <section className="bg-card border border-border rounded-2xl p-5 sm:p-6 ">
                 <h2 className="font-display text-lg text-white mb-4">Ваша активность</h2>
                 <div className="space-y-3 text-sm">
                   {[
@@ -410,33 +409,9 @@ const Profile = () => {
                   );
                 })()}
               </section>
-            </div>
-
-            <PromoBlock promo={profile.promo} supporter={profile.supporter} creator={profile.creator} />
-            {profile.achievements && <Achievements items={profile.achievements} streak={profile.stats.streak ?? 0} />}
-            <RareAchievements founder={profile.founder} taken={profile.foundersTaken} />
-            {profile.special && <SpecialAchievements items={profile.special} />}
-
-            <section className="bg-card border border-border rounded-xl p-5 sm:p-6">
-              <h2 className="font-display text-lg text-white mb-4">Статусы</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-                {LEVELS.map((l, i) => {
-                  const current = s.level === i + 1;
-                  const reached = l.need === null ? current : s.level > i;
-                  return (
-                    <div
-                      key={l.title}
-                      className={`rounded-lg p-3 border ${current ? "border-primary bg-primary/10" : "border-border"} ${reached ? "" : "opacity-50"}`}
-                    >
-                      <Icon name={reached ? l.icon : "Lock"} size={20} className={reached ? "text-primary" : "text-muted-foreground"} />
-                      <div className="text-white font-semibold text-sm mt-2">{l.title}</div>
-                      <div className="text-muted-foreground text-xs font-mono">{l.need === null ? "по решению админа" : `от ${l.need} очков`}</div>
-                      <div className="text-muted-foreground text-xs mt-1">{l.desc}</div>
-                    </div>
-                  );
-                })}
+              <ProfileRewards level={s.level} achievements={profile.achievements} special={profile.special} founder={profile.founder} foundersTaken={profile.foundersTaken} promo={profile.promo} streak={profile.stats.streak ?? 0} />
               </div>
-            </section>
+            </div>
           </>
         ) : null}
       </main>
