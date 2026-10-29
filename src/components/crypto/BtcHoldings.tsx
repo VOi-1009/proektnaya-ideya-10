@@ -31,10 +31,6 @@ const BtcHoldings = () => {
         <span className="text-muted-foreground text-xs">Всего</span>
         <span className="font-mono tabular text-white">{fmtInt(t.total)} BTC</span>
       </div>
-      <div className="flex items-baseline justify-between gap-2 text-sm">
-        <span className="text-muted-foreground text-xs">Компаний</span>
-        <span className="font-mono tabular text-white">{fmtInt(t.companies)}</span>
-      </div>
       {t.top && (
         <div className="flex items-baseline justify-between gap-2 text-sm">
           <span className="text-muted-foreground text-xs">Крупнейший: {t.top.name}</span>
