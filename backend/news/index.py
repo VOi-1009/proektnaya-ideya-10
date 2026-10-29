@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 
 from radar import heatmap_response, liqmap_response
-from markets import markets_response, coinchart_response
 from toptxs import toptxs_response
 from cmc import cmc_response
 from econ_calendar import calendar_response
@@ -307,7 +306,7 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar), котировки монет Binance + CoinGecko (?resource=markets), график монеты (?resource=coinchart&id=&days=)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}
@@ -318,10 +317,6 @@ def handler(event: dict, context) -> dict:
         return commodities_response()
     if resource == "chart":
         return chart_response(qs)
-    if resource == "markets":
-        return markets_response(json_resp)
-    if resource == "coinchart":
-        return coinchart_response(qs, json_resp)
     if resource == "heatmap":
         return heatmap_response(qs, json_resp)
     if resource == "liqmap":

@@ -65,18 +65,6 @@
       "method": "GET",
       "path": "/?resource=liqmap&symbol=BTCUSDT&range=1d",
       "expectedStatus": 200
-    },
-    {
-      "name": "Котировки монет",
-      "method": "GET",
-      "path": "/?resource=markets",
-      "expectedStatus": 200
-    },
-    {
-      "name": "График монеты",
-      "method": "GET",
-      "path": "/?resource=coinchart&id=bitcoin&days=7",
-      "expectedStatus": 200
     }
   ]
 }
