@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ExchangeFlow, fmtUsd, useExchangeFlows, useRadars } from "@/lib/radars";
-import { cardCls, labelCls } from "./summaryCard";
+import { labelCls } from "./summaryCard";
 
 const Logo = ({ e }: { e: ExchangeFlow }) => {
   const [err, setErr] = useState(false);
@@ -36,11 +36,11 @@ const ExchangeOutflowCard = ({ go }: { go: (channel: string) => void }) => {
       type="button"
       disabled={!radar}
       onClick={() => radar && go(`radar-${radar.id}`)}
-      className={`${cardCls("border-metric-gold", !!radar)} items-center w-full ${radar ? "cursor-pointer" : ""}`}
+      className={`bg-transparent rounded-lg px-3 py-1.5 h-[56px] border-l-4 border-metric-gold flex flex-col justify-between items-center min-w-0 w-full overflow-hidden ${radar ? "cursor-pointer" : ""}`}
       title={radar ? "Открыть радар «Притоки и оттоки на биржах»" : "Биржи с самым большим оттоком активов за 24 часа"}
     >
       <div className={`${labelCls} text-center line-clamp-1`}>Больше всего оттока за 24ч</div>
-      <div className="flex items-center justify-center gap-2 mt-1 w-full">
+      <div className="flex items-center justify-center gap-2 w-full">
         {top.length ? top.map((e) => <Logo key={e.slug || e.name} e={e} />) : <span className="text-muted-foreground text-sm">—</span>}
       </div>
     </button>
