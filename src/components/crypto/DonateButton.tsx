@@ -24,7 +24,7 @@ const DonateButton = ({ className = "", full = false, menu = false, label }: { c
           onClick={() => setOpen(true)}
           className="w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors text-muted-foreground hover:text-foreground hover:bg-hover/60"
         >
-          <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
+          <span className="w-2 h-2 rounded-full bg-[#22C55E] flex-shrink-0 mx-1" />
           <span className="text-[14px]">{label || data.buttonText}</span>
         </button>
       ) : (
