@@ -54,12 +54,25 @@ def etf_flows() -> dict:
     }
 
 
+def social_sentiment() -> dict:
+    d = _get("/socials/overview")["data"]["socialSentiment"]
+    num = lambda k: float(d[k]) if d.get(k) is not None else None
+    return {
+        "value": num("value"),
+        "percent": num("percent"),
+        "yesterday": num("valueYesterday"),
+        "lastWeek": num("valueLastWeek"),
+        "yearHigh": num("valueYearlyHigh"),
+        "yearLow": num("valueYearlyLow"),
+    }
+
+
 def cmc_response(json_resp) -> dict:
     now = time.time()
     if _cache["data"] and now - _cache["at"] < TTL:
         return json_resp(200, _cache["data"])
     data = dict(_cache["data"] or {})
-    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations), ("etf", etf_flows)):
+    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations), ("etf", etf_flows), ("social", social_sentiment)):
         try:
             data[key] = fn()
         except Exception as e:

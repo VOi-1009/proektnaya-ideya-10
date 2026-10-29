@@ -11,6 +11,7 @@ import UpcomingEvents from "../UpcomingEvents";
 import HeroSiteNews from "../HeroSiteNews";
 import LiqBars from "../LiqBars";
 import EtfNetFlow from "../EtfNetFlow";
+import SocialSentiment from "../SocialSentiment";
 import LiqInsights from "../LiqInsights";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 
@@ -125,7 +126,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <EtfNetFlow />
         </div>
         <div className="flex flex-col">
-          <div className="flex-1 min-h-[80px]" />
+          <div className="flex-1 min-h-[80px]">
+            <SocialSentiment />
+          </div>
           <div className="flex-1 min-h-[80px]" />
           <div className="flex-1 min-h-[80px]" />
         </div>
