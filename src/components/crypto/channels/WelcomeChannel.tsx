@@ -77,14 +77,14 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border animate-scale-in bg-card">
         <div className="contents">
-          <div className="min-h-[200px]" />
+          <TopNewsBlock onAll={() => go("news")} />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent min-h-[200px]" />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent min-h-[200px]" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
-        <TopNewsBlock onAll={() => go("news")} />
+        <div className="min-h-[240px]" />
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]" />
         <div className="border-t lg:border-t-0 lg:border-l border-border min-h-[240px]">
           <HeroSiteNews />
