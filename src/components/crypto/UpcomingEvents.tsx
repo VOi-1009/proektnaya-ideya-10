@@ -14,7 +14,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
   const items = (data ?? []).filter((e) => e.ts >= now - 3600_000).slice(0, 6);
 
   return (
-    <div className="p-3 sm:p-4 flex flex-col h-full">
+    <div className="p-3 flex flex-col h-full">
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
           <Icon name="CalendarClock" size={12} className="text-primary" /> Экономический календарь
@@ -36,14 +36,14 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
       ) : (
         <ul>
           {items.map((e, i) => (
-            <li key={`${e.ts}-${i}`} className="flex items-start gap-3 rounded-lg px-2 py-1 hover:bg-hover/60 transition-colors">
+            <li key={`${e.ts}-${i}`} className="flex items-start gap-3 rounded-lg px-2 py-0.5 hover:bg-hover/60 transition-colors">
               <div className="w-14 flex-shrink-0 text-center">
                 <div className="font-mono tabular text-white text-sm leading-tight">{e.time}</div>
                 <div className={`text-[10px] ${e.day === today ? "text-primary" : "text-muted-foreground"}`}>{dayLabel(e.day, today)}</div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-white text-sm leading-snug line-clamp-2">{e.title}</div>
-                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                <div className="text-white text-[13px] leading-tight truncate">{e.title}</div>
+                <div className="flex items-center gap-2 text-[10px] leading-tight text-muted-foreground">
                   <span className="font-mono text-primary">{e.currency}</span>
                   <span>{e.country}</span>
                   {e.forecast && <span>прогноз {e.forecast}</span>}
