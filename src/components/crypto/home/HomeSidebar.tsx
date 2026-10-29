@@ -62,11 +62,32 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             {items.map((it) => {
               const label = it.label || BASE_ITEMS.find((b) => b.id === it.id)?.name || it.id;
               if (it.id === "donate") return <DonateButton key={it.id} menu label={it.label} />;
-              if (it.id === "rating" || it.id === "community") {
+              if (it.id === "community") {
+                const active = channel === it.id;
                 return (
                   <button
                     key={it.id}
-                    onClick={() => navigate(it.id === "rating" ? "/rating" : "/community")}
+                    onClick={() => navigate("/community")}
+                    className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${
+                      active
+                        ? "bg-metric-sky/20 border-metric-sky/60 text-white"
+                        : "bg-metric-sky/10 border-metric-sky/30 text-metric-sky hover:bg-metric-sky/20 hover:text-white"
+                    }`}
+                  >
+                    <Icon name="MessagesSquare" size={16} className="flex-shrink-0 mx-0.5 text-metric-sky" />
+                    <span className="text-[14px] font-semibold">{label}</span>
+                    <span className="ml-auto relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-metric-sky opacity-70 animate-ping" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-metric-sky" />
+                    </span>
+                  </button>
+                );
+              }
+              if (it.id === "rating") {
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => navigate("/rating")}
                     className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
                       channel === it.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                     }`}
