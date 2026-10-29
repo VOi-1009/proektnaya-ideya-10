@@ -34,7 +34,7 @@ const OnlineList = () => {
                 className="flex items-center gap-2 px-2 py-1 rounded hover:bg-hover/60 cursor-pointer"
                 title="Открыть карточку участника"
               >
-                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online />
+                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online dot="sm" />
                 <span className={`text-sm truncate flex-1 ${nameCls(u.level, "text-foreground")}`}>
                   {u.name}
                   {me && <span className="text-muted-foreground font-normal"> (вы)</span>}

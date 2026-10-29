@@ -80,6 +80,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                     level={m.level}
                     avatar={m.avatar}
                     online={m.online}
+                    dot="lg"
                     className="w-20 h-20 text-3xl"
                     iconSize={34}
                   />

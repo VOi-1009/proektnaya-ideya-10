@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/auth";
-import { levelInfo, nameCls } from "@/lib/status";
+import { nameCls } from "@/lib/status";
 import { useOnline } from "@/lib/users";
 import { useOpenMember } from "@/lib/memberCard";
 import MemberIcon from "./MemberIcon";
@@ -20,7 +20,6 @@ const OnlineMarquee = () => {
     <div className="relative overflow-hidden py-1 [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]">
       <div className="flex w-max animate-marquee hover:[animation-play-state:paused]" style={{ animationDuration: `${duration}s` }}>
         {row.map((u, i) => {
-          const l = levelInfo(u.level);
           return (
             <button
               key={`${u.id}-${i}`}
@@ -29,13 +28,13 @@ const OnlineMarquee = () => {
               title="Открыть карточку участника"
             >
               <span className="relative">
-                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online />
+                <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online dot="sm" />
               </span>
               <span className={`text-sm whitespace-nowrap ${nameCls(u.level, "text-foreground")}`}>
                 {u.name}
                 {user?.id === u.id && <span className="text-muted-foreground font-normal"> (вы)</span>}
               </span>
-              {u.isAi ? <BotBadge ai compact /> : <span className={`text-[9px] whitespace-nowrap ${l.text}`}>{l.title}</span>}
+              {u.isAi && <BotBadge ai compact />}
             </button>
           );
         })}

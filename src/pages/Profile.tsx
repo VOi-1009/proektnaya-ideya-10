@@ -167,6 +167,7 @@ const Profile = () => {
   }
 
   const s = profile?.status;
+  const canEditAvatar = !!profile && !!s && (s.level < 7 || profile.id === 2);
   const progress = s ? (s.next ? ((s.points - s.current) / (s.next - s.current)) * 100 : 100) : 0;
   const since = profile ? new Date(profile.createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "";
 
@@ -187,7 +188,8 @@ const Profile = () => {
               <div className="h-28 sm:h-36 bg-gradient-to-r from-primary/40 via-[#A78BFA]/30 to-accent/30" />
               <div className="px-5 sm:px-8 pb-6 -mt-14 sm:-mt-16 flex flex-col lg:flex-row gap-6 lg:items-end">
                 <div className="relative self-start flex-shrink-0">
-                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} level={s.level} online className="w-28 h-28 sm:w-32 sm:h-32 text-5xl" />
+                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} level={s.level} online dot="lg" className="w-28 h-28 sm:w-32 sm:h-32 text-5xl" />
+                  {canEditAvatar && (
                   <button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
@@ -196,6 +198,7 @@ const Profile = () => {
                   >
                     <Icon name={uploading ? "Loader2" : "Camera"} size={16} className={uploading ? "animate-spin" : ""} />
                   </button>
+                  )}
                   <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -227,7 +230,7 @@ const Profile = () => {
                     <FounderBadge no={profile.founder} />
                   </div>
                   <ContactLinks contacts={profile.contacts} className="mt-4" />
-                  {profile.avatar && (
+                  {profile.avatar && canEditAvatar && (
                     <button onClick={removeAvatar} className="text-xs text-muted-foreground hover:text-down mt-3">
                       Удалить аватар
                     </button>

@@ -66,7 +66,7 @@ const ProfileMiniCard = ({ part = "main" }: { part?: "main" | "achievements" }) 
         title={user ? "Личный кабинет" : "Войти"}
       >
         {user ? (
-          <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online />
+          <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" />
         ) : (
           <UserAvatar />
         )}

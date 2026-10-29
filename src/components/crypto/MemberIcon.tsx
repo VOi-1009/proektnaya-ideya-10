@@ -10,21 +10,22 @@ interface Props {
   className?: string;
   iconSize?: number;
   online?: boolean;
+  dot?: "sm" | "md" | "lg";
   frame?: boolean;
 }
 
-const MemberIcon = ({ name, level, avatar, className = "w-5 h-5 text-[9px]", iconSize = 11, online, frame = true }: Props) => {
+const MemberIcon = ({ name, level, avatar, className = "w-5 h-5 text-[9px]", iconSize = 11, online, dot, frame = true }: Props) => {
   const l = levelInfo(level);
   const lv = frame ? level : undefined;
-  if (isPrivileged(level))
+  if (isPrivileged(level) && !avatar)
     return (
-      <AvatarFrame level={lv} online={online}>
+      <AvatarFrame level={lv} online={online} dot={dot}>
         <span className={`inline-flex items-center justify-center rounded-full flex-shrink-0 ${l.cls} ${className}`} title={l.title}>
           <Icon name={l.icon} size={iconSize} />
         </span>
       </AvatarFrame>
     );
-  return <UserAvatar name={name} avatar={avatar} className={className} level={lv} online={online} />;
+  return <UserAvatar name={name} avatar={avatar} className={className} level={lv} online={online} dot={dot} />;
 };
 
 export default MemberIcon;

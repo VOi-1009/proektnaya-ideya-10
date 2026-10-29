@@ -38,7 +38,7 @@ const UserRow = ({ u, myId, busyId, setBot, setCardId, setLevel, setToDelete }: 
         className="flex-1 min-w-0 flex items-center gap-3 text-left group"
         title={u.isBot ? "Открыть карточку бота" : "Открыть карточку пользователя"}
       >
-        <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online={online} className="w-10 h-10 text-base" iconSize={18} />
+        <MemberIcon name={u.name} level={u.level} avatar={u.avatar} online={online} dot="md" className="w-10 h-10 text-base" iconSize={18} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             {u.isAi ? <BotBadge ai compact /> : u.isBot && <Icon name="Bot" size={14} className="text-muted-foreground flex-shrink-0" />}

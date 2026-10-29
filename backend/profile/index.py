@@ -208,6 +208,12 @@ def handler(event: dict, context) -> dict:
             )
             return resp(200, {"profile": load_profile(cur, user_id)})
 
+        if action in ("avatar", "remove-avatar") and user_id != 2:
+            cur.execute(f"SELECT status_override FROM {SCHEMA}.users WHERE id = {user_id}")
+            ov = cur.fetchone()[0]
+            if ov is not None and int(ov) >= 7:
+                return resp(403, {"error": "Для вашего статуса аватар не меняется"})
+
         if action == "avatar":
             ctype = str(body.get("contentType", ""))
             if ctype not in IMAGE_TYPES:
