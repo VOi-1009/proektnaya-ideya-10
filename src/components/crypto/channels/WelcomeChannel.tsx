@@ -66,19 +66,19 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
                 </div>
               </button>
             )}
-            <div className={cardCls("border-metric-sky")}>
+            <div className={cardCls("border-metric-teal")}>
               <div className={labelCls}>Объём торгов за 24ч</div>
               <div className={valueCls}>{fmtBig(totalVolume)}</div>
             </div>
             {best7d ? (
-              <button onClick={() => go("market", best7d.id)} className={cardCls("border-metric-violet", true)}>
+              <button onClick={() => go("market", best7d.id)} className={cardCls("border-metric-pink", true)}>
                 <div className={labelCls}>Лучший за 7 дней</div>
                 <div className={valueCls}>
                   {COIN_META[best7d.id]?.short} <span className={(best7d.price_change_percentage_7d_in_currency ?? 0) >= 0 ? "text-up" : "text-down"}>{fmtPct(best7d.price_change_percentage_7d_in_currency)}</span>
                 </div>
               </button>
             ) : (
-              <div className={cardCls("border-metric-violet")}>
+              <div className={cardCls("border-metric-pink")}>
                 <div className={labelCls}>Лучший за 7 дней</div>
                 <div className={valueCls}>—</div>
               </div>

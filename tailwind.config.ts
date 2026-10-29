@@ -46,7 +46,9 @@ export default {
 					short: 'hsl(var(--metric-short) / <alpha-value>)',
 					lime: 'hsl(var(--metric-lime) / <alpha-value>)',
 					indigo: 'hsl(var(--metric-indigo) / <alpha-value>)',
-					magenta: 'hsl(var(--metric-magenta) / <alpha-value>)'
+					magenta: 'hsl(var(--metric-magenta) / <alpha-value>)',
+					pink: 'hsl(var(--metric-pink) / <alpha-value>)',
+					teal: 'hsl(var(--metric-teal) / <alpha-value>)'
 				},
 				rail: 'hsl(var(--rail))',
 				hover: 'hsl(var(--hover))',
