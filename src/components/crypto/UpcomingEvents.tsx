@@ -14,9 +14,9 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
   const upcoming = (data ?? []).filter((e) => e.ts >= now - 3600_000);
   const high = upcoming.filter((e) => e.impact !== "Medium");
   const medium = upcoming.filter((e) => e.impact === "Medium");
-  const items = [...high.slice(0, 6), ...medium.slice(0, Math.max(0, 6 - high.length))]
+  const items = [...high.slice(0, 7), ...medium.slice(0, Math.max(0, 7 - high.length))]
     .sort((a, b) => a.ts - b.ts)
-    .slice(0, 6);
+    .slice(0, 7);
 
   return (
     <div className="p-3 flex flex-col h-full">
@@ -30,7 +30,7 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
       </div>
       {isLoading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <Skeleton key={i} className="h-9 bg-rail" />
           ))}
         </div>
