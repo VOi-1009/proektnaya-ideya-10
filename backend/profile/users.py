@@ -136,7 +136,14 @@ def handle_users(event: dict) -> dict:
                 place = int(cur.fetchone()[0])
                 st = level_for(int(r[3]), r[4])
                 online = True if r[18] else bot_online(r[0]) if r[7] else bool(r[5] and (time.time() - r[5].timestamp()) < ONLINE_MINUTES * 60)
+                cur.execute(f"SELECT headline, experience, interests, contacts FROM {SCHEMA}.users WHERE id = {int(r[0])}")
+                x = cur.fetchone()
+                try:
+                    cts = json.loads(x[3] or "{}")
+                except ValueError:
+                    cts = {}
                 return resp(200, {"member": {
+                    "headline": x[0] or "", "experience": x[1] or "", "interests": x[2] or "", "contacts": cts,
                     "id": r[0], "name": display_name(r[1], r[2]), "avatar": r[9] or "",
                     "level": st["level"], "title": st["title"], "points": int(r[3]),
                     "city": r[8] or "", "bio": r[11] or "", "favoriteCoin": r[12] or "",

@@ -13,6 +13,8 @@ import StatusBadge from "./StatusBadge";
 import FounderBadge from "./FounderBadge";
 import BotBadge from "./BotBadge";
 import SupporterBadge from "./SupporterBadge";
+import ContactLinks from "./ContactLinks";
+import { experienceLabel } from "@/lib/contacts";
 import RareAchievements from "./RareAchievements";
 
 interface Member {
@@ -35,6 +37,10 @@ interface Member {
   isBot?: boolean;
   isAi?: boolean;
   tier?: number;
+  headline?: string;
+  experience?: string;
+  interests?: string;
+  contacts?: Record<string, string>;
 }
 
 const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void }) => {
@@ -99,7 +105,15 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                 </div>
               </div>
 
-              {m.bio && <p className="text-sm text-foreground bg-rail/60 rounded-lg px-3 py-2">{m.bio}</p>}
+              {m.headline && <p className="text-sm text-white font-semibold">{m.headline}</p>}
+              {m.bio && <p className="text-sm text-foreground bg-rail/60 rounded-lg px-3 py-2 whitespace-pre-line">{m.bio}</p>}
+              {(m.experience || m.interests) && (
+                <div className="text-xs text-muted-foreground space-y-1">
+                  {m.experience && <div>Опыт в трейдинге: <span className="text-white">{experienceLabel(m.experience)}</span></div>}
+                  {m.interests && <div>Интересы: <span className="text-white">{m.interests}</span></div>}
+                </div>
+              )}
+              <ContactLinks contacts={m.contacts} />
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-rail/60 rounded-lg px-3 py-2">

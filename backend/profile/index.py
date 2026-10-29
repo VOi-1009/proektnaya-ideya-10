@@ -43,11 +43,34 @@ def esc(v: str) -> str:
     return v.replace("'", "''")
 
 
+CONTACT_KEYS = ["telegram", "whatsapp", "vk", "youtube", "instagram", "x", "tiktok", "site", "publicEmail", "phone"]
+EXPERIENCES = {"", "novice", "1y", "3y", "5y", "10y"}
+
+
+def parse_contacts(raw) -> dict:
+    try:
+        d = json.loads(raw or "{}")
+    except ValueError:
+        d = {}
+    return {k: str(d.get(k, ""))[:200] for k in CONTACT_KEYS if d.get(k)}
+
+
+def clean_contacts(src) -> dict:
+    out = {}
+    if not isinstance(src, dict):
+        return out
+    for k in CONTACT_KEYS:
+        v = re.sub(r"[\r\n<>]", "", str(src.get(k, ""))).strip()[:200]
+        if v:
+            out[k] = v
+    return out
+
+
 def load_profile(cur, user_id: int) -> dict:
     cur.execute(
         f"SELECT u.id, u.email, u.name, u.avatar_url, u.bio, u.city, u.favorite_coin, u.created_at, "
         f"(SELECT COUNT(*) FROM {SCHEMA}.user_visits v WHERE v.user_id = u.id), "
-        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override, u.founder_no, u.supporter_no, u.is_creator, u.promo_code, COALESCE(u.active_minutes, 0) "
+        f"(SELECT COUNT(*) FROM {SCHEMA}.holdings h WHERE h.user_id = u.id), u.status_override, u.founder_no, u.supporter_no, u.is_creator, u.promo_code, COALESCE(u.active_minutes, 0), u.headline, u.experience, u.interests, u.contacts "
         f"FROM {SCHEMA}.users u WHERE u.id = {int(user_id)}"
     )
     r = cur.fetchone()
@@ -68,6 +91,7 @@ def load_profile(cur, user_id: int) -> dict:
         f"WHERE t.day = t.top - (t.rn - 1)::int AND t.top >= CURRENT_DATE - 1"
     )
     streak = int(cur.fetchone()[0])
+    contacts = parse_contacts(r[19])
     filled = sum(1 for v in (r[2], r[3], r[4], r[5], r[6]) if v)
     points = days * 10 + min(coins, 20) * 5 + filled * 6 + (int(r[15]) // 10) * 2
     return {
@@ -78,6 +102,10 @@ def load_profile(cur, user_id: int) -> dict:
         "bio": r[4] or "",
         "city": r[5] or "",
         "favoriteCoin": r[6] or "",
+        "headline": r[16] or "",
+        "experience": r[17] or "",
+        "interests": r[18] or "",
+        "contacts": contacts,
         "createdAt": r[7].isoformat(),
         "stats": {"days": days, "coins": coins, "filled": filled, "fields": 5, "streak": streak, "bestStreak": best_streak, "minutes": int(r[15])},
         "achievements": [
@@ -162,14 +190,21 @@ def handler(event: dict, context) -> dict:
 
         if action == "update":
             name = str(body.get("name", "")).strip()[:60]
-            bio = str(body.get("bio", "")).strip()[:300]
+            bio = str(body.get("bio", "")).strip()[:1000]
+            headline = re.sub(r"\s+", " ", str(body.get("headline", ""))).strip()[:120]
+            interests = re.sub(r"\s+", " ", str(body.get("interests", ""))).strip()[:300]
+            exp = str(body.get("experience", "")).strip()
+            if exp not in EXPERIENCES:
+                exp = ""
+            contacts = json.dumps(clean_contacts(body.get("contacts")), ensure_ascii=False)
             city = str(body.get("city", "")).strip()[:100]
             coin = str(body.get("favoriteCoin", "")).strip().lower()
             if not COIN_RE.match(coin):
                 return resp(400, {"error": "Некорректная монета"})
             cur.execute(
                 f"UPDATE {SCHEMA}.users SET name = '{esc(name)}', bio = '{esc(bio)}', city = '{esc(city)}', "
-                f"favorite_coin = '{esc(coin)}', updated_at = NOW() WHERE id = {user_id}"
+                f"favorite_coin = '{esc(coin)}', headline = '{esc(headline)}', interests = '{esc(interests)}', "
+                f"experience = '{esc(exp)}', contacts = '{esc(contacts)}', updated_at = NOW() WHERE id = {user_id}"
             )
             return resp(200, {"profile": load_profile(cur, user_id)})
 

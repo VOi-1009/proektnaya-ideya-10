@@ -15,6 +15,8 @@ import RareAchievements from "@/components/crypto/RareAchievements";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
 import PromoBlock from "@/components/crypto/PromoBlock";
+import ContactLinks from "@/components/crypto/ContactLinks";
+import { CONTACT_FIELDS, EXPERIENCE } from "@/lib/contacts";
 
 interface ProfileData {
   id: number;
@@ -33,6 +35,10 @@ interface ProfileData {
   supporter?: number | null;
   creator?: boolean;
   promo?: string;
+  headline?: string;
+  experience?: string;
+  interests?: string;
+  contacts?: Record<string, string>;
   status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null; manual?: boolean };
 }
 
@@ -52,7 +58,7 @@ const Profile = () => {
   const { user, token, ready, setAuthOpen, patchUser, logout } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [form, setForm] = useState({ name: "", bio: "", city: "", favoriteCoin: "" });
+  const [form, setForm] = useState({ name: "", bio: "", city: "", favoriteCoin: "", headline: "", experience: "", interests: "", contacts: {} as Record<string, string> });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
@@ -60,7 +66,7 @@ const Profile = () => {
 
   const apply = (p: ProfileData) => {
     setProfile(p);
-    setForm({ name: p.name, bio: p.bio, city: p.city, favoriteCoin: p.favoriteCoin });
+    setForm({ name: p.name, bio: p.bio, city: p.city, favoriteCoin: p.favoriteCoin, headline: p.headline ?? "", experience: p.experience ?? "", interests: p.interests ?? "", contacts: p.contacts ?? {} });
     patchUser({ name: p.name, avatar: p.avatar, level: p.status.level, statusTitle: p.status.title });
   };
 
@@ -169,7 +175,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
       {header}
-      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-5">
+      <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-5">
         {err && <div className="bg-down/10 text-down border border-down/30 rounded-lg p-4 text-sm">{err}</div>}
 
         {!profile && !err ? (
@@ -179,92 +185,160 @@ const Profile = () => {
           </div>
         ) : profile && s ? (
           <>
-            <section className="bg-card border border-border rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row gap-5 sm:items-center animate-fade-in">
-              <div className="relative self-start">
-                <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} className="w-24 h-24 text-4xl" />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
-                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center border-4 border-card hover:brightness-110"
-                  aria-label="Сменить аватар"
-                >
-                  <Icon name={uploading ? "Loader2" : "Camera"} size={16} className={uploading ? "animate-spin" : ""} />
-                </button>
-                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="font-display text-2xl text-white truncate">{profile.name || "Без имени"}</h1>
-                <div className="text-muted-foreground text-sm truncate">{profile.email}</div>
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${LEVELS[s.level - 1].cls}`}>
-                    <Icon name={LEVELS[s.level - 1].icon} size={14} />
-                    {s.title}
-                  </span>
-                  <SupporterBadge no={profile.supporter} creator={profile.creator} />
-                  <FounderBadge no={profile.founder} />
-                  <span className="text-muted-foreground text-xs">с нами с {since}</span>
-                </div>
-                {profile.avatar && (
-                  <button onClick={removeAvatar} className="text-xs text-muted-foreground hover:text-down mt-2">
-                    Удалить аватар
+            <section className="relative overflow-hidden bg-card border border-border rounded-2xl animate-fade-in">
+              <div className="h-28 sm:h-36 bg-gradient-to-r from-primary/40 via-[#A78BFA]/30 to-accent/30" />
+              <div className="px-5 sm:px-8 pb-6 -mt-14 sm:-mt-16 flex flex-col lg:flex-row gap-6 lg:items-end">
+                <div className="relative self-start flex-shrink-0">
+                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} className="w-28 h-28 sm:w-32 sm:h-32 text-5xl ring-4 ring-card" />
+                  <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center border-4 border-card hover:brightness-110"
+                    aria-label="Сменить аватар"
+                  >
+                    <Icon name={uploading ? "Loader2" : "Camera"} size={16} className={uploading ? "animate-spin" : ""} />
                   </button>
-                )}
-              </div>
-              <div className="sm:w-64 bg-rail rounded-lg p-4">
-                <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                  <span>Очки активности</span>
-                  <span className="font-mono text-white">{s.points}</span>
+                  <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
                 </div>
-                <Progress value={progress} className="h-2 bg-hover" />
-                <div className="text-xs text-muted-foreground mt-2">
-                  {s.next ? (
-                    <>
-                      До статуса «{s.nextTitle}» — <span className="text-white font-mono">{s.next - s.points}</span>
-                    </>
-                  ) : (
-                    "Максимальный статус"
+                <div className="flex-1 min-w-0">
+                  <h1 className="font-display text-2xl sm:text-3xl text-white truncate">{profile.name || "Без имени"}</h1>
+                  {profile.headline && <div className="text-foreground mt-1">{profile.headline}</div>}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground text-sm mt-1">
+                    {profile.email && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Icon name="Mail" size={13} />
+                        {profile.email}
+                      </span>
+                    )}
+                    {profile.city && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Icon name="MapPin" size={13} />
+                        {profile.city}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icon name="CalendarDays" size={13} />с нами с {since}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${LEVELS[s.level - 1].cls}`}>
+                      <Icon name={LEVELS[s.level - 1].icon} size={14} />
+                      {s.title}
+                    </span>
+                    <SupporterBadge no={profile.supporter} creator={profile.creator} />
+                    <FounderBadge no={profile.founder} />
+                  </div>
+                  <ContactLinks contacts={profile.contacts} className="mt-4" />
+                  {profile.avatar && (
+                    <button onClick={removeAvatar} className="text-xs text-muted-foreground hover:text-down mt-3">
+                      Удалить аватар
+                    </button>
                   )}
+                </div>
+                <div className="lg:w-72 bg-rail rounded-xl p-4 flex-shrink-0">
+                  <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                    <span>Очки активности</span>
+                    <span className="font-mono text-white">{s.points}</span>
+                  </div>
+                  <Progress value={progress} className="h-2 bg-hover" />
+                  <div className="text-xs text-muted-foreground mt-2">
+                    {s.next ? (
+                      <>
+                        До статуса «{s.nextTitle}» — <span className="text-white font-mono">{s.next - s.points}</span>
+                      </>
+                    ) : (
+                      "Максимальный статус"
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              <form onSubmit={save} className="lg:col-span-2 bg-card border border-border rounded-xl p-5 sm:p-6 space-y-4">
-                <h2 className="font-display text-lg text-white">Личная информация</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className="block">
-                    <span className="text-xs text-muted-foreground mb-1 block">Имя или ник</span>
-                    <input className={inputCls} maxLength={60} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Как к вам обращаться" />
-                  </label>
-                  <label className="block">
-                    <span className="text-xs text-muted-foreground mb-1 block">Город</span>
-                    <input className={inputCls} maxLength={100} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Например, Москва" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <form onSubmit={save} className="lg:col-span-2 xl:col-span-3 bg-card border border-border rounded-2xl p-5 sm:p-6 space-y-6">
+                <div>
+                  <h2 className="font-display text-lg text-white mb-4 flex items-center gap-2">
+                    <Icon name="UserRound" size={18} className="text-primary" />
+                    Личная информация
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <label className="block">
+                      <span className="text-xs text-muted-foreground mb-1 block">Имя или ник</span>
+                      <input className={inputCls} maxLength={60} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Как к вам обращаться" />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-muted-foreground mb-1 block">Город</span>
+                      <input className={inputCls} maxLength={100} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Например, Москва" />
+                    </label>
+                    <label className="block md:col-span-2 xl:col-span-1">
+                      <span className="text-xs text-muted-foreground mb-1 block">Девиз или род занятий</span>
+                      <input className={inputCls} maxLength={120} value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} placeholder="Например, свинг-трейдер, инвестор в BTC" />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-muted-foreground mb-1 block">Опыт в трейдинге</span>
+                      <select className={inputCls} value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })}>
+                        {EXPERIENCE.map((x) => (
+                          <option key={x.value} value={x.value}>
+                            {x.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-muted-foreground mb-1 block">Любимая монета</span>
+                      <select className={inputCls} value={form.favoriteCoin} onChange={(e) => setForm({ ...form, favoriteCoin: e.target.value })}>
+                        <option value="">Не выбрана</option>
+                        {Object.entries(COIN_META).map(([id, m]) => (
+                          <option key={id} value={id}>
+                            {m.ru} ({m.short})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-muted-foreground mb-1 block">Интересы</span>
+                      <input className={inputCls} maxLength={300} value={form.interests} onChange={(e) => setForm({ ...form, interests: e.target.value })} placeholder="DeFi, NFT, технический анализ" />
+                    </label>
+                  </div>
+                  <label className="block mt-4">
+                    <span className="text-xs text-muted-foreground mb-1 flex justify-between">
+                      <span>О себе</span>
+                      <span>{form.bio.length}/1000</span>
+                    </span>
+                    <textarea
+                      className={`${inputCls} h-32 py-2 resize-none`}
+                      maxLength={1000}
+                      value={form.bio}
+                      onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                      placeholder="Опыт в трейдинге, стратегия, цели, интересы"
+                    />
                   </label>
                 </div>
-                <label className="block">
-                  <span className="text-xs text-muted-foreground mb-1 block">Любимая монета</span>
-                  <select className={inputCls} value={form.favoriteCoin} onChange={(e) => setForm({ ...form, favoriteCoin: e.target.value })}>
-                    <option value="">Не выбрана</option>
-                    {Object.entries(COIN_META).map(([id, m]) => (
-                      <option key={id} value={id}>
-                        {m.ru} ({m.short})
-                      </option>
+
+                <div>
+                  <h2 className="font-display text-lg text-white mb-1 flex items-center gap-2">
+                    <Icon name="Link" size={18} className="text-primary" />
+                    Контакты и ссылки
+                  </h2>
+                  <p className="text-xs text-muted-foreground mb-4">Видны всем в вашей карточке. Заполняйте только то, чем готовы делиться.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {CONTACT_FIELDS.map((f) => (
+                      <label key={f.key} className="block">
+                        <span className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
+                          <Icon name={f.icon} fallback="Link" size={12} className="text-primary" />
+                          {f.label}
+                        </span>
+                        <input
+                          className={inputCls}
+                          maxLength={200}
+                          value={form.contacts[f.key] ?? ""}
+                          onChange={(e) => setForm({ ...form, contacts: { ...form.contacts, [f.key]: e.target.value } })}
+                          placeholder={f.placeholder}
+                        />
+                      </label>
                     ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-xs text-muted-foreground mb-1 flex justify-between">
-                    <span>О себе</span>
-                    <span>{form.bio.length}/300</span>
-                  </span>
-                  <textarea
-                    className={`${inputCls} h-24 py-2 resize-none`}
-                    maxLength={300}
-                    value={form.bio}
-                    onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                    placeholder="Опыт в трейдинге, стратегия, интересы"
-                  />
-                </label>
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {user?.isAdmin && (
                     <Button type="button" variant="outline" asChild className="bg-transparent border-primary/50 text-primary hover:bg-primary/10 hover:text-primary">
@@ -293,7 +367,7 @@ const Profile = () => {
                 </div>
               </form>
 
-              <section className="bg-card border border-border rounded-xl p-5 sm:p-6">
+              <section className="bg-card border border-border rounded-2xl p-5 sm:p-6 self-start">
                 <h2 className="font-display text-lg text-white mb-4">Ваша активность</h2>
                 <div className="space-y-3 text-sm">
                   {[
