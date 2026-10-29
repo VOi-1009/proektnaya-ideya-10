@@ -39,12 +39,27 @@ def liquidations() -> dict:
     return {"total": num("total"), "change24h": num("totalChange24h"), "longs": num("longs"), "shorts": num("shorts")}
 
 
+def etf_flows() -> dict:
+    d = _get("/etf/overview/netflow/chart?category=all&range=30d")["data"]
+    num = lambda v: float(v) if v is not None else 0.0
+    points = [
+        {"t": int(p["timestamp"]), "btc": num(p.get("btcValue")), "eth": num(p.get("ethValue")), "total": num(p.get("value"))}
+        for p in d.get("points", [])
+    ]
+    return {
+        "points": points,
+        "total": num(d.get("total")),
+        "totalBtc": num(d.get("totalBtcValue")),
+        "totalEth": num(d.get("totalEthValue")),
+    }
+
+
 def cmc_response(json_resp) -> dict:
     now = time.time()
     if _cache["data"] and now - _cache["at"] < TTL:
         return json_resp(200, _cache["data"])
     data = dict(_cache["data"] or {})
-    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations)):
+    for key, fn in (("treasuries", treasuries), ("altseason", altseason), ("liquidations", liquidations), ("etf", etf_flows)):
         try:
             data[key] = fn()
         except Exception as e:

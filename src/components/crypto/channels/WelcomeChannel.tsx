@@ -10,6 +10,7 @@ import AltseasonCard from "../AltseasonCard";
 import UpcomingEvents from "../UpcomingEvents";
 import HeroSiteNews from "../HeroSiteNews";
 import LiqBars from "../LiqBars";
+import EtfNetFlow from "../EtfNetFlow";
 import LiqInsights from "../LiqInsights";
 import { cardCls, labelCls, valueCls } from "../summaryCard";
 
@@ -120,7 +121,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[60fr_40fr] rounded-xl overflow-hidden border border-border bg-card animate-fade-in">
-        <div className="min-h-[240px]" />
+        <div className="min-h-[240px]">
+          <EtfNetFlow />
+        </div>
         <div className="flex flex-col">
           <div className="flex-1 min-h-[80px]" />
           <div className="flex-1 min-h-[80px]" />
