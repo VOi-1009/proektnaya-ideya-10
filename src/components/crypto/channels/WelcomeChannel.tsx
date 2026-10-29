@@ -126,11 +126,11 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <EtfNetFlow />
         </div>
         <div className="flex flex-col">
+          <div className="flex-1 min-h-[80px]" />
+          <div className="flex-1 min-h-[80px]" />
           <div className="flex-1 min-h-[80px]">
             <SocialSentiment />
           </div>
-          <div className="flex-1 min-h-[80px]" />
-          <div className="flex-1 min-h-[80px]" />
         </div>
       </div>
 
