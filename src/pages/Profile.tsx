@@ -324,7 +324,7 @@ const Profile = () => {
                     <Icon name="Link" size={18} className="text-primary" />
                     Контакты и ссылки
                   </h2>
-                  <p className="text-xs text-muted-foreground mb-4">Видны всем в вашей карточке. Заполняйте только то, чем готовы делиться.</p>
+                  <p className="text-xs text-muted-foreground mb-4">Только ссылки на соцсети и сайты, видны вошедшим пользователям.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {CONTACT_FIELDS.map((f) => (
                       <label key={f.key} className="block">

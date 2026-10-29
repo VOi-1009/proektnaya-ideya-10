@@ -10,7 +10,7 @@ import psycopg2
 
 from aibot import load_settings, moderate
 from plans import viewer
-from users import ONLINE_MINUTES, bot_online, display_name
+from users import ONLINE_MINUTES, SOCIAL_KEYS, bot_online, display_name
 from status import level_for, points_sql
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
@@ -107,7 +107,7 @@ def load_author(cur, aid: int, me) -> dict:
         cur.execute(f"SELECT 1 FROM {SCHEMA}.community_follows WHERE follower_id = {me} AND author_id = {int(aid)}")
         is_following = bool(cur.fetchone())
     try:
-        contacts = json.loads(r[9] or "{}")
+        contacts = {k: v for k, v in json.loads(r[9] or "{}").items() if k in SOCIAL_KEYS}
     except ValueError:
         contacts = {}
     has_contacts = bool(contacts)

@@ -46,6 +46,7 @@ def bot_online(uid: int, now: float = None) -> bool:
     return h % 100 < BOT_ONLINE_SHARE
 
 
+SOCIAL_KEYS = ["telegram", "whatsapp", "vk", "youtube", "instagram", "x", "tiktok", "site"]
 BOT_TICK = 300
 BOT_TICK_CAP = 30
 
@@ -171,7 +172,7 @@ def handle_users(event: dict) -> dict:
                 cur.execute(f"SELECT headline, experience, interests, contacts FROM {SCHEMA}.users WHERE id = {int(r[0])}")
                 x = cur.fetchone()
                 try:
-                    cts = json.loads(x[3] or "{}") if me else {}
+                    cts = {k: v for k, v in json.loads(x[3] or "{}").items() if k in SOCIAL_KEYS} if me else {}
                 except ValueError:
                     cts = {}
                 return resp(200, {"member": {

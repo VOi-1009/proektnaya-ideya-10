@@ -14,8 +14,6 @@ export const CONTACT_FIELDS: ContactField[] = [
   { key: "x", label: "X (Twitter)", icon: "Twitter", placeholder: "@username" },
   { key: "tiktok", label: "TikTok", icon: "Music2", placeholder: "@username" },
   { key: "site", label: "Сайт", icon: "Globe", placeholder: "https://example.com" },
-  { key: "publicEmail", label: "Почта для связи", icon: "Mail", placeholder: "name@example.com" },
-  { key: "phone", label: "Телефон", icon: "Phone", placeholder: "+7 900 000-00-00" },
 ];
 
 export const EXPERIENCE: { value: string; label: string }[] = [
@@ -43,8 +41,6 @@ export const contactHref = (key: string, raw: string): string | null => {
   else if (key === "tiktok") url = `https://tiktok.com/@${handle(v)}`;
   else if (key === "vk") url = /^https?:\/\//i.test(v) || v.includes(".") ? web(v) : `https://vk.com/${v}`;
   else if (key === "youtube" || key === "site") url = web(v);
-  else if (key === "publicEmail") url = `mailto:${v}`;
-  else if (key === "phone") url = `tel:${v.replace(/[^\d+]/g, "")}`;
   else return null;
-  return /^(https?:|mailto:|tel:)/i.test(url) ? url : null;
+  return /^https?:/i.test(url) ? url : null;
 };

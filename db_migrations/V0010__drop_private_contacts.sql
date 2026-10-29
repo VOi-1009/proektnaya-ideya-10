@@ -1,0 +1,1 @@
+UPDATE users SET contacts = ((contacts::jsonb) - 'phone' - 'publicEmail')::text WHERE contacts <> '{}' AND contacts IS NOT NULL;

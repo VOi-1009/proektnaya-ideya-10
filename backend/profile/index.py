@@ -44,7 +44,7 @@ def esc(v: str) -> str:
     return v.replace("'", "''")
 
 
-CONTACT_KEYS = ["telegram", "whatsapp", "vk", "youtube", "instagram", "x", "tiktok", "site", "publicEmail", "phone"]
+CONTACT_KEYS = ["telegram", "whatsapp", "vk", "youtube", "instagram", "x", "tiktok", "site"]
 EXPERIENCES = {"", "novice", "1y", "3y", "5y", "10y"}
 
 
