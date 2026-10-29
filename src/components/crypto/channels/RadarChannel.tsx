@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRadars } from "@/lib/radars";
 import LiqHeatmap from "../LiqHeatmap";
+import ExchangeFlowsTable from "../ExchangeFlowsTable";
 import TopTxsTable from "../TopTxsTable";
 import RadarPage from "../RadarPage";
 
@@ -26,6 +27,8 @@ const RadarChannel = ({ id }: { id: number }) => {
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
         {radar.kind === "liq_heatmap" ? (
           <LiqHeatmap symbol={radar.symbol} />
+        ) : radar.kind === "ex_flows" ? (
+          <ExchangeFlowsTable />
         ) : radar.kind === "top_txs" ? (
           <TopTxsTable color={radar.color} />
         ) : radar.kind === "page" ? (

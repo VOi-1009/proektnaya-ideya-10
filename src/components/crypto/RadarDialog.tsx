@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Radar } from "@/lib/radars";
 import LiqHeatmap from "./LiqHeatmap";
+import ExchangeFlowsTable from "./ExchangeFlowsTable";
 import TopTxsTable from "./TopTxsTable";
 import RadarPage from "./RadarPage";
 
@@ -21,6 +22,8 @@ const RadarDialog = ({ radar, onClose }: { radar: Radar | null; onClose: () => v
           </DialogHeader>
           {radar.kind === "liq_heatmap" ? (
             <LiqHeatmap symbol={radar.symbol} />
+          ) : radar.kind === "ex_flows" ? (
+            <ExchangeFlowsTable />
           ) : radar.kind === "top_txs" ? (
             <TopTxsTable color={radar.color} />
           ) : radar.kind === "page" ? (

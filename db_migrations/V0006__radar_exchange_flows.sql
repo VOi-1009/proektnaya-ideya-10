@@ -1,0 +1,1 @@
+UPDATE radars SET kind = 'ex_flows', page_title = '', page_html = '' WHERE id = 9;

@@ -65,6 +65,12 @@
       "method": "GET",
       "path": "/?resource=liqmap&symbol=BTCUSDT&range=1d",
       "expectedStatus": 200
+    },
+    {
+      "name": "Притоки и оттоки бирж",
+      "method": "GET",
+      "path": "/?resource=exflows",
+      "expectedStatus": 200
     }
   ]
 }

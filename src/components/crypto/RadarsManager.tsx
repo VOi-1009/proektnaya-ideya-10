@@ -125,6 +125,8 @@ const RadarsManager = ({ token }: { token: string | null }) => {
               </label>
             ) : form.kind === "page" ? (
               <div className="text-xs text-muted-foreground self-end pb-2">Страница откроется прямо на сайте — заполните её ниже</div>
+            ) : form.kind === "ex_flows" ? (
+              <div className="text-xs text-muted-foreground self-end pb-2">Данные CoinMarketCap, обновляются каждые 5 минут</div>
             ) : form.kind === "top_txs" ? (
               <div className="text-xs text-muted-foreground self-end pb-2">Данные TradingView, обновляются каждые 5 минут</div>
             ) : (
