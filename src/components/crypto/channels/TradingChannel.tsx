@@ -124,8 +124,8 @@ const TradingChannel = ({ coins }: Props) => {
           <div className="text-sm text-muted-foreground">Курс сейчас: <span className="text-white">{livePrice ? fmtPrice(livePrice, coinId) : "—"}</span></div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button variant={side === "long" ? "default" : "outline"} onClick={() => setSide("long")} className={side === "long" ? "bg-[#16C784] hover:bg-[#16C784]/90 text-black" : ""}>Лонг (рост)</Button>
-            <Button variant={side === "short" ? "default" : "outline"} onClick={() => setSide("short")} className={side === "short" ? "bg-[#EA3943] hover:bg-[#EA3943]/90 text-white" : ""}>Шорт (падение)</Button>
+            <Button variant={side === "long" ? "default" : "outline"} onClick={() => setSide("long")} className={side === "long" ? "bg-[#16C784] hover:bg-[#16C784]/90 text-black" : ""}>Лонг</Button>
+            <Button variant={side === "short" ? "default" : "outline"} onClick={() => setSide("short")} className={side === "short" ? "bg-[#EA3943] hover:bg-[#EA3943]/90 text-white" : ""}>Шорт</Button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
