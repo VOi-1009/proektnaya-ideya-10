@@ -20,11 +20,9 @@ const Index = () => {
   const { data: chatRooms } = useChatRooms();
   const { data: radarList } = useRadars();
   const { data: news } = useNews("crypto");
-  const { data: worldNews } = useNews("world");
   const alertsApi = usePriceAlerts(coins, !!data?.live);
   const activeAlerts = alertsApi.alerts.filter((a) => !a.triggeredAt).length;
   const [seen, setSeen] = useState(0);
-  const [seenWorld, setSeenWorld] = useState(0);
   const [now, setNow] = useState(0);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
@@ -38,20 +36,16 @@ const Index = () => {
   }, []);
   useEffect(() => {
     setSeen(getSeen("crypto"));
-    setSeenWorld(getSeen("world"));
   }, []);
   useEffect(() => {
     setNow(Date.now());
-  }, [news, worldNews]);
+  }, [news]);
   useEffect(() => {
     if (channel === "news") setSeen(getSeen("crypto"));
-    if (channel === "world") setSeenWorld(getSeen("world"));
-  }, [channel, news, worldNews]);
+  }, [channel, news]);
   const unreadFrom = now ? Math.max(seen, now - 12 * 3600_000) : Infinity;
   const unread = (news?.items ?? []).filter((n) => n.ts > unreadFrom).length;
-  const unreadWorldFrom = now ? Math.max(seenWorld, now - 12 * 3600_000) : Infinity;
-  const unreadWorld = (worldNews?.items ?? []).filter((n) => n.ts > unreadWorldFrom).length;
-  const unreadOf = (id: string) => (id === "news" && channel !== "news" ? unread : id === "world" && channel !== "world" ? unreadWorld : 0);
+  const unreadOf = (id: string) => (id === "news" && channel !== "news" ? unread : 0);
 
   const go = (ch: string, coinId?: string) => {
     setChannel(ch);
