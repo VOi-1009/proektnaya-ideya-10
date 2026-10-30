@@ -13,6 +13,7 @@ const MarketChannel = lazy(() => import("@/components/crypto/channels/MarketChan
 const CalendarChannel = lazy(() => import("@/components/crypto/channels/CalendarChannel"));
 const NewsChannel = lazy(() => import("@/components/crypto/channels/NewsChannel"));
 const ConverterChannel = lazy(() => import("@/components/crypto/channels/ConverterChannel"));
+const TradingChannel = lazy(() => import("@/components/crypto/channels/TradingChannel"));
 const PortfolioChannel = lazy(() => import("@/components/crypto/channels/PortfolioChannel"));
 const ArticlesChannel = lazy(() => import("@/components/crypto/channels/ArticlesChannel"));
 const AlertsChannel = lazy(() => import("@/components/crypto/channels/AlertsChannel"));
@@ -132,6 +133,8 @@ const HomeMain = ({
           <RadarChannel id={Number(channel.slice(6))} />
         ) : channel.startsWith("chat-") ? (
           <ChatChannel room={channel.slice(5) as ChatRoom} />
+        ) : channel === "trading" ? (
+          <TradingChannel coins={coins} />
         ) : channel === "portfolio" ? (
           <PortfolioChannel coins={coins} go={go} />
         ) : (
