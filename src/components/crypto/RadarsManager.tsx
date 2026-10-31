@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { Radar, RADAR_COLORS, RADAR_KINDS, RadarKind, radarsRequest } from "@/lib/radars";
 import RadarDialog from "./RadarDialog";
-import ToolsSettings from "./ToolsSettings";
 import RichEditor from "./RichEditor";
 
 const inputCls =
@@ -76,7 +75,7 @@ const RadarsManager = ({ token }: { token: string | null }) => {
         <div>
           <h1 className="font-display text-2xl text-white">Радары</h1>
           <p className="text-muted-foreground text-sm max-w-2xl">
-            Подразделы блока «Инструменты» в левом меню. У каждого — свой цвет точки. По клику открывается окно с картой или ссылкой.
+            Радары появляются в левом меню. По клику открывается окно с картой или ссылкой. Порядок, иконку и цвет в меню меняйте во вкладке «Меню слева».
           </p>
         </div>
         {!form && (
@@ -86,8 +85,6 @@ const RadarsManager = ({ token }: { token: string | null }) => {
           </Button>
         )}
       </div>
-
-      {!form && <ToolsSettings token={token} />}
 
       {form && (
         <div className="bg-card border border-primary/50 rounded-lg p-4 space-y-4 animate-fade-in">

@@ -4,9 +4,9 @@ import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
-import { chatColor, useChatRooms } from "@/lib/chat";
+import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
-import { BASE_ITEMS, TOOL_IDS, DEFAULT_MENU_TITLE, DEFAULT_RADARS_TITLE, mergeMenu, useMenuSettings } from "@/lib/menu";
+import { DEFAULT_MENU_TITLE, MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
 
 interface Props {
   channel: string;
@@ -22,10 +22,15 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
-  const allItems = mergeMenu(menuCfg).filter((i) => !i.hidden);
-  const items = allItems.filter((i) => !TOOL_IDS.includes(i.id));
-  const movedItems = allItems.filter((i) => TOOL_IDS.includes(i.id));
-  const radarsFirst = !!menuCfg?.radarsFirst;
+  const items = mergeMenu(menuCfg, radars, chatRooms).filter((i) => !i.hidden);
+
+  const open = (it: MenuEntry) => {
+    if (it.id === "community") return navigate("/community");
+    if (it.id === "rating") return navigate("/rating");
+    go(it.id);
+  };
+
+  const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 
   return (
     <aside
@@ -54,148 +59,77 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <Icon name="X" size={16} />
         </Button>
       </div>
-      <div className="flex-1 p-2 flex flex-col gap-2">
-        <div className={radarsFirst ? "order-2" : "order-1"}>
-          <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-            <Icon name="ChevronDown" size={12} />
-            <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
-          </div>
-          <div className="mt-0.5 space-y-0">
-            {items.map((it) => {
-              const label = it.label || BASE_ITEMS.find((b) => b.id === it.id)?.name || it.id;
-              if (it.id === "donate") return <DonateButton key={it.id} menu label={it.label} />;
-              if (it.id === "community") {
-                const active = channel === it.id;
-                return (
-                  <button
-                    key={it.id}
-                    onClick={() => navigate("/community")}
-                    className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${
-                      active
-                        ? "bg-[hsl(var(--down)/0.2)] border-[hsl(var(--down)/0.6)] text-white"
-                        : "bg-[hsl(var(--down)/0.1)] border-[hsl(var(--down)/0.3)] text-down hover:bg-[hsl(var(--down)/0.2)] hover:text-white"
-                    }`}
-                  >
-                    <Icon name="MessagesSquare" size={16} className="flex-shrink-0 mx-0.5 text-down" />
-                    <span className="text-[14px] font-semibold">{label}</span>
-                    <span className="ml-auto relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-down opacity-70 animate-ping" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-down" />
-                    </span>
-                  </button>
-                );
-              }
-              if (it.id === "trading") {
-                const active = channel === it.id;
-                return (
-                  <button
-                    key={it.id}
-                    onClick={() => go(it.id)}
-                    className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${
-                      active
-                        ? "bg-[#22C55E]/20 border-[#22C55E]/60 text-white"
-                        : "bg-[#22C55E]/10 border-[#22C55E]/30 text-[#22C55E] hover:bg-[#22C55E]/20 hover:text-white"
-                    }`}
-                  >
-                    <span className="w-4 h-4 mx-0.5 flex-shrink-0 rounded bg-primary flex items-center justify-center text-white font-display font-black text-[10px] leading-none">
-                      Т
-                    </span>
-                    <span className="text-[14px] font-semibold truncate">{label}</span>
-                    <span className="ml-auto relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-70 animate-ping" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
-                    </span>
-                  </button>
-                );
-              }
-              if (it.id === "rating") {
-                return (
-                  <button
-                    key={it.id}
-                    onClick={() => navigate("/rating")}
-                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                      channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                    }`}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
-                    <span className="text-[14px]">{label}</span>
-                  </button>
-                );
-              }
+      <div className="flex-1 p-2">
+        <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+          <Icon name="ChevronDown" size={12} />
+          <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
+        </div>
+        <div className="mt-0.5 space-y-0">
+          {items.map((it) => {
+            const label = it.label || it.name;
+            const color = it.color || it.defColor;
+            const icon = it.icon || it.defIcon;
+            const active = channel === it.id;
+            const mark = icon ? (
+              <Icon name={icon} size={16} fallback="Circle" className="flex-shrink-0 mx-0.5" style={{ color }} />
+            ) : (
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0 mx-1"
+                style={{ background: color, boxShadow: it.id === "ainews" ? "0 0 6px rgba(255,255,255,0.7)" : undefined }}
+              />
+            );
+
+            if (it.id === "donate") return <DonateButton key={it.id} menu label={it.label} color={color} icon={icon} />;
+
+            if (it.id === "community" || it.id === "trading") {
               return (
                 <button
                   key={it.id}
-                  onClick={() => go(it.id)}
-                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                    channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                  }`}
+                  onClick={() => open(it)}
+                  className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${active ? "text-white" : "hover:text-white"}`}
+                  style={{
+                    color: active ? undefined : color,
+                    background: tint(color, active ? 20 : 10),
+                    borderColor: tint(color, active ? 60 : 30),
+                  }}
                 >
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : it.id === "portfolio" ? "bg-[#A78BFA]" : "bg-primary"}`} />
-                  <span className="text-[14px] truncate">{label}</span>
-                  {it.id === "alerts" && activeAlerts > 0 && (
-                    <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>
-                  )}
-                  {unreadOf(it.id) > 0 && (
-                    <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
-                      {unreadOf(it.id) > 30 ? "30+" : unreadOf(it.id)}
+                  {it.id === "trading" && !icon ? (
+                    <span className="w-4 h-4 mx-0.5 flex-shrink-0 rounded bg-primary flex items-center justify-center text-white font-display font-black text-[10px] leading-none">
+                      Т
                     </span>
+                  ) : (
+                    <Icon name={icon || "Circle"} size={16} fallback="Circle" className="flex-shrink-0 mx-0.5" style={{ color }} />
                   )}
+                  <span className="text-[14px] font-semibold truncate">{label}</span>
+                  <span className="ml-auto relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full opacity-70 animate-ping" style={{ background: color }} />
+                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
+                  </span>
                 </button>
               );
-            })}
-            {(chatRooms ?? []).map((r) => (
+            }
+
+            return (
               <button
-                key={r.id}
-                onClick={() => go(`chat-${r.id}`)}
+                key={it.id}
+                onClick={() => open(it)}
                 className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                  channel === `chat-${r.id}` ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                  active ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${chatColor(r.color).dot}`} />
-                <span className="text-[14px] truncate">{r.name}</span>
-                {r.access === "list" && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
+                {mark}
+                <span className="text-[14px] truncate">{label}</span>
+                {it.id === "alerts" && activeAlerts > 0 && <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>}
+                {unreadOf(it.id) > 0 && (
+                  <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
+                    {unreadOf(it.id) > 30 ? "30+" : unreadOf(it.id)}
+                  </span>
+                )}
+                {it.locked && <Icon name="Lock" size={12} className="ml-auto opacity-70" />}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-        {((radars && radars.length > 0) || movedItems.length > 0) && (
-          <div className={radarsFirst ? "order-1" : "order-2"}>
-            <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-              <Icon name="ChevronDown" size={12} />
-              <span>{menuCfg?.radarsTitle || DEFAULT_RADARS_TITLE}</span>
-            </div>
-            <div className="mt-0.5 space-y-0">
-              {movedItems.map((it) => {
-                const label = it.label || BASE_ITEMS.find((b) => b.id === it.id)?.name || it.id;
-                return (
-                  <button
-                    key={it.id}
-                    onClick={() => go(it.id)}
-                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                      channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "portfolio" ? "bg-[#A78BFA]" : "bg-primary"}`} />
-                    <span className="text-[14px] truncate">{label}</span>
-                    {it.id === "alerts" && activeAlerts > 0 && <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>}
-                  </button>
-                );
-              })}
-              {(radars ?? []).map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => go(`radar-${r.id}`)}
-                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                    channel === `radar-${r.id}` ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
-                  <span className="text-[14px] truncate">{r.title.replace(/-/g, " ")}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </aside>
   );

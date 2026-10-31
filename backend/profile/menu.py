@@ -6,7 +6,8 @@ import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
-DEFAULT = {"items": [], "menuTitle": "", "radarsTitle": "", "radarsFirst": False}
+DEFAULT = {"items": [], "menuTitle": ""}
+HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 def resp(status: int, body: dict) -> dict:
@@ -46,16 +47,23 @@ def handle_menu(event: dict) -> dict:
 
         body = json.loads(event.get("body") or "{}")
         items = []
-        for it in (body.get("items") or [])[:60]:
+        for it in (body.get("items") or [])[:120]:
             iid = re.sub(r"[^a-zA-Z0-9_-]", "", str(it.get("id", "")))[:40]
             if not iid:
                 continue
-            items.append({"id": iid, "label": str(it.get("label", "")).strip()[:60], "hidden": bool(it.get("hidden", False))})
+            icon = re.sub(r"[^a-zA-Z0-9]", "", str(it.get("icon", "")))[:40]
+            color = str(it.get("color", "")).strip()
+            items.append({
+                "id": iid,
+                "label": str(it.get("label", "")).strip()[:60],
+                "hidden": bool(it.get("hidden", False)),
+                "icon": icon,
+                "color": color if HEX.match(color) else "",
+            })
         data = {
             "items": items,
             "menuTitle": str(body.get("menuTitle", "")).strip()[:40],
-            "radarsTitle": str(body.get("radarsTitle", "")).strip()[:40],
-            "radarsFirst": bool(body.get("radarsFirst", False)),
+            "v": 2,
         }
         val = esc(json.dumps(data, ensure_ascii=False))
         cur.execute(
