@@ -199,7 +199,7 @@ def handle_users(event: dict) -> dict:
                     st = level_for(int(r[3]), r[4])
                     return {"id": r[0], "name": display_name(r[1], r[2]), "points": int(r[3]), "level": st["level"],
                             "title": st["title"], "city": r[5] or "", "place": place, "avatar": r[8] or "", "founder": r[9],
-                            "supporter": r[10], "creator": bool(r[11]), "minutes": int(r[15] or 0),
+                            "supporter": r[10], "creator": bool(r[11]), "minutes": int(r[15] or 0), "createdAt": r[6].isoformat() if r[6] else None,
                             "online": True if r[14] else bot_online(r[0]) if r[13] else bool(r[12] and (time.time() - r[12].timestamp()) < ONLINE_MINUTES * 60)}
 
                 top = [to_row(r, i + 1) for i, r in enumerate(rows[:50])]

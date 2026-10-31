@@ -25,6 +25,7 @@ interface RatingRow {
   supporter?: number | null;
   creator?: boolean;
   minutes?: number;
+  createdAt?: string | null;
   online?: boolean;
 }
 
@@ -86,6 +87,12 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
             <Icon name="Clock" size={11} />
             {fmtTime(r.minutes ?? 0)}
           </span>
+          {r.createdAt && (
+            <span className="inline-flex items-center gap-1">
+              <Icon name="CalendarDays" size={11} />
+              с {new Date(r.createdAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" })}
+            </span>
+          )}
           {r.city && <span className="truncate">{r.city}</span>}
         </div>
       </div>
