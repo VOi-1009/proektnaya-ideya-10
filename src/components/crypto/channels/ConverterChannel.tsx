@@ -127,28 +127,28 @@ const Converter = ({ coins }: { coins: Coin[] }) => {
 
 const ConverterChannel = ({ coins }: { coins: Coin[] }) => (
   <div className="columns-1 lg:columns-2 gap-3">
-    <ToolCard title="Конвертер" icon="ArrowLeftRight">
+    <ToolCard title="Конвертер" icon="ArrowLeftRight" tone={0}>
       <Converter coins={coins} />
     </ToolCard>
-    <ToolCard title="Пивоты" icon="Layers">
+    <ToolCard title="Пивоты" icon="Layers" tone={1}>
       <PivotCalc />
     </ToolCard>
-    <ToolCard title="Размер позиции" icon="Scale">
+    <ToolCard title="Размер позиции" icon="Scale" tone={2}>
       <PositionSizeCalc coins={coins} />
     </ToolCard>
-    <ToolCard title="Фибоначчи" icon="Spline">
+    <ToolCard title="Фибоначчи" icon="Spline" tone={3}>
       <FibCalc />
     </ToolCard>
-    <ToolCard title="Прибыль / убыток" icon="Calculator">
+    <ToolCard title="Прибыль / убыток" icon="Calculator" tone={4}>
       <PnlCalc coins={coins} />
     </ToolCard>
-    <ToolCard title="Усреднение" icon="Combine">
+    <ToolCard title="Усреднение" icon="Combine" tone={5}>
       <AverageCalc />
     </ToolCard>
-    <ToolCard title="Ликвидация" icon="Skull">
+    <ToolCard title="Ликвидация" icon="Skull" tone={6}>
       <LiqCalc coins={coins} />
     </ToolCard>
-    <ToolCard title="Риск / прибыль" icon="Target">
+    <ToolCard title="Риск / прибыль" icon="Target" tone={7}>
       <RiskRewardCalc coins={coins} />
     </ToolCard>
   </div>

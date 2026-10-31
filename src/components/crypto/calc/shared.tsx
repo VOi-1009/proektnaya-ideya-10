@@ -32,15 +32,38 @@ export const NumInput = ({ value, onChange, placeholder }: { value: string; onCh
 
 export const Panel = ({ children }: { children: ReactNode }) => <div className="space-y-2">{children}</div>;
 
-export const ToolCard = ({ title, icon, children }: { title: string; icon: string; children: ReactNode }) => (
-  <section className="bg-card border border-border rounded-lg p-3 mb-3 break-inside-avoid">
-    <h3 className="flex items-center gap-1.5 text-sm font-semibold text-white mb-2">
-      <Icon name={icon} size={15} fallback="Calculator" className="text-primary" />
-      {title}
-    </h3>
-    {children}
-  </section>
-);
+export const TOOL_GRADIENTS = [
+  ["--primary", "--metric-gold"],
+  ["--metric-sky", "--metric-indigo"],
+  ["--metric-violet", "--metric-magenta"],
+  ["--metric-teal", "--metric-long"],
+  ["--metric-pink", "--primary"],
+  ["--metric-gold", "--metric-lime"],
+  ["--metric-short", "--metric-magenta"],
+  ["--metric-indigo", "--metric-teal"],
+] as const;
+
+export const ToolCard = ({ title, icon, children, tone = 0 }: { title: string; icon: string; children: ReactNode; tone?: number }) => {
+  const [from, to] = TOOL_GRADIENTS[tone % TOOL_GRADIENTS.length];
+  const grad = `linear-gradient(90deg, hsl(var(${from})), hsl(var(${to})))`;
+  return (
+    <section className="bg-card border border-border rounded-lg p-3 mb-3 break-inside-avoid relative overflow-hidden">
+      <span className="absolute inset-x-0 top-0 h-px opacity-70" style={{ background: grad }} />
+      <h3 className="flex items-center gap-1.5 text-sm font-semibold mb-2">
+        <span
+          className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-black"
+          style={{ background: grad }}
+        >
+          <Icon name={icon} size={14} fallback="Calculator" />
+        </span>
+        <span className="bg-clip-text text-transparent" style={{ backgroundImage: grad }}>
+          {title}
+        </span>
+      </h3>
+      {children}
+    </section>
+  );
+};
 
 export const Result = ({ label, value, cls = "text-white", sub }: { label: string; value: string; cls?: string; sub?: string }) => (
   <div className="bg-rail rounded px-2.5 py-1.5 min-w-0">
