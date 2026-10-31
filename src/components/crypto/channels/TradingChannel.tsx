@@ -72,8 +72,9 @@ const TradingChannel = ({ coins }: Props) => {
     refetchInterval: 20_000,
   });
   const { data: leaders } = useQuery<{ leaders: Leader[] }>({
-    queryKey: ["trading-leaders"],
+    queryKey: ["trading-leaders", token],
     queryFn: () => call("GET", "?action=leaderboard"),
+    enabled: !!token,
     refetchInterval: 60_000,
   });
 
@@ -167,9 +168,8 @@ const TradingChannel = ({ coins }: Props) => {
       <div className="rounded-xl border border-border bg-card p-6 text-center space-y-3">
         <Icon name="LineChart" size={32} className="mx-auto text-primary" />
         <h2 className="font-display text-lg text-white">Тренировочная биржа</h2>
-        <p className="text-sm text-muted-foreground">Торгуйте на игровую монету TKA (1 TKA = 1 USDT) по реальным курсам и соревнуйтесь с другими трейдерами. Для этого нужно войти.</p>
+        <p className="text-sm text-muted-foreground">Торгуйте на игровую монету TKA (1 TKA = 1 USDT) по реальным курсам и соревнуйтесь с другими трейдерами. Биржа доступна только зарегистрированным пользователям.</p>
         <Button onClick={() => setAuthOpen(true)}>Войти или зарегистрироваться</Button>
-        <Board leaders={leaders?.leaders ?? []} me={undefined} />
       </div>
     );
   }
@@ -417,10 +417,12 @@ const Row = ({ children }: { children: React.ReactNode }) => <div className="fle
 interface PubTrade { id: number; coinId: string; side: "long" | "short"; leverage: number; entry: number; price: number; pct: number; open: boolean; at: string }
 
 const LeaderTrades = ({ userId, onRepeat, busy }: { userId: number; onRepeat?: (t: PubTrade) => void; busy?: boolean }) => {
+  const { token } = useAuth();
   const { data, isLoading } = useQuery<{ trades: PubTrade[] }>({
-    queryKey: ["trading-trades", userId],
+    queryKey: ["trading-trades", userId, !!token],
+    enabled: !!token,
     queryFn: async () => {
-      const r = await fetch(`${URL}?action=trades&userId=${userId}`);
+      const r = await fetch(`${URL}?action=trades&userId=${userId}`, { headers: { "X-Auth-Token": token ?? "" } });
       if (!r.ok) throw new Error("bad");
       return r.json();
     },

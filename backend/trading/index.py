@@ -341,19 +341,27 @@ def handler(event, context):
     conn.autocommit = True
     cur = conn.cursor()
     try:
-        if method == "GET" and action == "candles":
-            res = candles(qs.get("coinId", ""), qs.get("interval", "1h"))
-            if not res:
-                return resp(503, {"error": "Свечи сейчас недоступны"})
-            return resp(200, {"source": res["source"], "candles": res["candles"]})
-        px = prices()
         if action == "tick":
+            px = prices()
             secret = os.environ.get("TRADING_CRON_SECRET", "")
             if not secret or qs.get("key", "") != secret:
                 return resp(403, {"error": "Доступ запрещён"})
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             return resp(200, {"checked": tick(cur, px)})
+        if not token:
+            return resp(401, {"error": "Биржа доступна только зарегистрированным пользователям. Войдите или зарегистрируйтесь"})
+        cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
+        row = cur.fetchone()
+        if not row:
+            return resp(401, {"error": "Сессия истекла, войдите заново"})
+        uid = int(row[0])
+        if method == "GET" and action == "candles":
+            res = candles(qs.get("coinId", ""), qs.get("interval", "1h"))
+            if not res:
+                return resp(503, {"error": "Свечи сейчас недоступны"})
+            return resp(200, {"source": res["source"], "candles": res["candles"]})
+        px = prices()
         if method == "GET" and action == "trades":
             uid_q = str(qs.get("userId", ""))
             if not uid_q.isdigit():
@@ -366,13 +374,6 @@ def handler(event, context):
             return resp(200, {"stats": public_stats(cur, int(uid_q), px)})
         if method == "GET" and action == "leaderboard":
             return resp(200, {"leaders": leaderboard(cur, px)})
-        if not token:
-            return resp(401, {"error": "Войдите, чтобы торговать на тренировочной бирже"})
-        cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
-        row = cur.fetchone()
-        if not row:
-            return resp(401, {"error": "Сессия истекла, войдите заново"})
-        uid = int(row[0])
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))

@@ -1,9 +1,46 @@
 {
   "tests": [
-    {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
-    {"name": "Без токена", "method": "GET", "path": "/", "expectedStatus": 401},
-    {"name": "Неизвестная монета", "method": "GET", "path": "/?action=candles&coinId=nope&interval=1h", "expectedStatus": 503},
-    {"name": "Проверка без ключа", "method": "GET", "path": "/?action=tick", "expectedStatus": 403},
-    {"name": "Рейтинг открыт", "method": "GET", "path": "/?action=leaderboard", "expectedStatus": 200}
+    {
+      "name": "CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Без токена",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Неизвестная монета без входа",
+      "method": "GET",
+      "path": "/?action=candles&coinId=nope&interval=1h",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Проверка без ключа",
+      "method": "GET",
+      "path": "/?action=tick",
+      "expectedStatus": 403
+    },
+    {
+      "name": "Рейтинг без входа закрыт",
+      "method": "GET",
+      "path": "/?action=leaderboard",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Свечи без входа закрыты",
+      "method": "GET",
+      "path": "/?action=candles&coinId=bitcoin&interval=1h",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Сделки без входа закрыты",
+      "method": "GET",
+      "path": "/?action=trades&userId=2",
+      "expectedStatus": 401
+    }
   ]
 }

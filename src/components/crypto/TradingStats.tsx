@@ -22,13 +22,13 @@ interface Props { token?: string | null; userId?: number }
 const TradingStats = ({ token, userId }: Props) => {
   const compact = userId !== undefined;
   const { data, isLoading } = useQuery<{ stats: Stats | null }>({
-    queryKey: ["trading-stats", compact ? userId : token],
+    queryKey: ["trading-stats", compact ? userId : token, !!token],
     queryFn: async () => {
       const r = await fetch(compact ? `${func2url.trading}?action=profile&userId=${userId}` : func2url.trading, { headers: { "X-Auth-Token": token ?? "" } });
       if (!r.ok) throw new Error("bad");
       return r.json();
     },
-    enabled: compact || !!token,
+    enabled: !!token,
     staleTime: 30_000,
   });
   const s = data?.stats ?? undefined;

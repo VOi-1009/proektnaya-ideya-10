@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, Cell, ComposedChart, Line as RLine, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmtPrice, useChart } from "@/lib/crypto";
+import { useAuth } from "@/lib/auth";
 import func2url from "../../../backend/func2url.json";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -18,8 +19,8 @@ const INTERVALS = [
 const fmtVol = (v: number) => (v >= 1e9 ? `${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}K` : v.toFixed(0));
 const FIRST_VIEW = 120;
 
-const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> => {
-  const r = await fetch(`${func2url.trading}?action=candles&coinId=${coinId}&interval=${interval}`);
+const loadKlines = async (coinId: string, interval: string, token: string | null): Promise<Candle[]> => {
+  const r = await fetch(`${func2url.trading}?action=candles&coinId=${coinId}&interval=${interval}`, { headers: { "X-Auth-Token": token ?? "" } });
   if (!r.ok) throw new Error("klines unavailable");
   const data = (await r.json()) as { candles: number[][] };
   return data.candles.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v, range: [l, h] as [number, number] }));
@@ -136,6 +137,7 @@ const CandleShape = (props: ShapeProps) => {
 interface Props { coinId: string; price: number; lines?: Line[]; liqPrice?: number; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean }
 
 const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, quickDisabled, closeInfo, closeProfit, onCloseAll, closeDisabled }: Props) => {
+  const { token } = useAuth();
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
   const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
@@ -150,10 +152,10 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   const MIN = 10;
   const { data: line } = useChart(coinId, days, price);
   const { data, isLoading } = useQuery<Candle[]>({
-    queryKey: ["klines", coinId, interval, line?.length ?? 0],
+    queryKey: ["klines", coinId, interval, line?.length ?? 0, !!token],
     queryFn: async () => {
       try {
-        return await loadKlines(coinId, interval);
+        return await loadKlines(coinId, interval, token);
       } catch {
         return fromPoints(line ?? []);
       }

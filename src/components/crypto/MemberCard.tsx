@@ -155,7 +155,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
               </div>
 
               {m.founder && <RareAchievements founder={m.founder} compact />}
-              <TradingStats userId={m.id} />
+              {user && <TradingStats token={token} userId={m.id} />}
               <SpecialAchievements items={m.special} compact />
             </div>
           )}
