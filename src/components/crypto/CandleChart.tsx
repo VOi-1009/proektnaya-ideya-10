@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, Cell, ComposedChart, Line as RLine, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmtPrice, useChart } from "@/lib/crypto";
+import func2url from "../../../backend/func2url.json";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const INTERVALS = [
@@ -14,34 +15,14 @@ const INTERVALS = [
   { v: "1d", label: "1д", ms: 86_400_000 },
 ];
 
-const SYMBOLS: Record<string, string> = {
-  bitcoin: "BTC", ethereum: "ETH", binancecoin: "BNB", ripple: "XRP", solana: "SOL", dogecoin: "DOGE",
-  hyperliquid: "HYPE", zcash: "ZEC", tron: "TRX", cardano: "ADA", chainlink: "LINK", stellar: "XLM",
-  "avalanche-2": "AVAX", sui: "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", litecoin: "LTC",
-};
-const HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"];
 const fmtVol = (v: number) => (v >= 1e9 ? `${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}K` : v.toFixed(0));
 const FIRST_VIEW = 120;
 
 const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> => {
-  const sym = SYMBOLS[coinId];
-  if (!sym) throw new Error("no symbol");
-  for (const host of HOSTS) {
-    try {
-      const r = await fetch(`${host}/api/v3/klines?symbol=${sym}USDT&interval=${interval}&limit=500`);
-      if (!r.ok) continue;
-      const rows = (await r.json()) as string[][];
-      if (Array.isArray(rows) && rows.length > 5) {
-        return rows.map((k) => {
-          const o = +k[1], h = +k[2], l = +k[3], c = +k[4], v = +k[5];
-          return { t: k[0] as unknown as number, o, h, l, c, v, range: [l, h] as [number, number] };
-        });
-      }
-    } catch {
-      continue;
-    }
-  }
-  throw new Error("klines unavailable");
+  const r = await fetch(`${func2url.trading}?action=candles&coinId=${coinId}&interval=${interval}`);
+  if (!r.ok) throw new Error("klines unavailable");
+  const data = (await r.json()) as { candles: number[][] };
+  return data.candles.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v, range: [l, h] as [number, number] }));
 };
 
 interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number; macd?: number; sig?: number; hist?: number }

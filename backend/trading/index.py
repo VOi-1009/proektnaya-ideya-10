@@ -18,6 +18,62 @@ CORS = {
     "Access-Control-Max-Age": "86400",
 }
 _cache = {"at": 0.0, "data": {}}
+_kcache = {}
+SYM = {"bitcoin": "BTC", "ethereum": "ETH", "binancecoin": "BNB", "ripple": "XRP", "solana": "SOL", "dogecoin": "DOGE", "hyperliquid": "HYPE", "zcash": "ZEC", "tron": "TRX", "cardano": "ADA", "chainlink": "LINK", "stellar": "XLM", "avalanche-2": "AVAX", "sui": "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", "litecoin": "LTC"}
+OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "1h": "1H", "4h": "4H", "1d": "1D"}
+BYBIT_IV = {"1m": "1", "5m": "5", "15m": "15", "1h": "60", "4h": "240", "1d": "D"}
+KCACHE_TTL = 20
+
+
+def http_json(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=3) as r:
+        return json.loads(r.read())
+
+
+def k_okx(sym, iv):
+    d = http_json(f"https://www.okx.com/api/v5/market/candles?instId={sym}-USDT&bar={OKX_BAR[iv]}&limit=300")
+    rows = d.get("data") or []
+    return [[int(r[0]), float(r[1]), float(r[2]), float(r[3]), float(r[4]), float(r[5])] for r in reversed(rows)]
+
+
+def k_bybit(sym, iv):
+    d = http_json(f"https://api.bybit.com/v5/market/kline?category=spot&symbol={sym}USDT&interval={BYBIT_IV[iv]}&limit=500")
+    rows = (d.get("result") or {}).get("list") or []
+    return [[int(r[0]), float(r[1]), float(r[2]), float(r[3]), float(r[4]), float(r[5])] for r in reversed(rows)]
+
+
+def k_binance(sym, iv):
+    for host in ("https://data-api.binance.vision", "https://api.binance.com"):
+        try:
+            rows = http_json(f"{host}/api/v3/klines?symbol={sym}USDT&interval={iv}&limit=500")
+            if rows:
+                return [[int(r[0]), float(r[1]), float(r[2]), float(r[3]), float(r[4]), float(r[5])] for r in rows]
+        except Exception as e:
+            print("binance error:", e)
+    return []
+
+
+def candles(coin, iv):
+    sym = SYM.get(coin)
+    if not sym or iv not in OKX_BAR:
+        return None
+    key = f"{coin}:{iv}"
+    hit = _kcache.get(key)
+    now = time.time()
+    if hit and now - hit["at"] < KCACHE_TTL:
+        return hit
+    for name, fn in (("okx", k_okx), ("bybit", k_bybit), ("binance", k_binance)):
+        try:
+            rows = fn(sym, iv)
+            if len(rows) > 5:
+                out = {"at": now, "source": name, "candles": rows}
+                _kcache[key] = out
+                return out
+        except Exception as e:
+            print(name, "error:", e)
+    return hit
+
 
 
 def resp(status, body):
@@ -130,6 +186,11 @@ def handler(event, context):
     conn.autocommit = True
     cur = conn.cursor()
     try:
+        if method == "GET" and action == "candles":
+            res = candles(qs.get("coinId", ""), qs.get("interval", "1h"))
+            if not res:
+                return resp(503, {"error": "Свечи сейчас недоступны"})
+            return resp(200, {"source": res["source"], "candles": res["candles"]})
         px = prices()
         if method == "GET" and action == "leaderboard":
             return resp(200, {"leaders": leaderboard(cur, px)})
