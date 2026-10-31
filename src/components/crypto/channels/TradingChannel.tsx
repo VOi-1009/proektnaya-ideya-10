@@ -11,6 +11,7 @@ import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import GuestCard from "../trading/GuestCard";
 import TradeForm from "../trading/TradeForm";
 import ExchangeCard from "../trading/ExchangeCard";
+import FundCard from "../trading/FundCard";
 import TradeTabs from "../trading/TradeTabs";
 import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
@@ -67,6 +68,7 @@ const TradingChannel = ({ coins }: Props) => {
       qc.setQueryData(["trading", token], data);
       qc.invalidateQueries({ queryKey: ["trading-leaders"] });
       qc.invalidateQueries({ queryKey: ["tka-wallet"] });
+      qc.invalidateQueries({ queryKey: ["tka-fund"] });
       toast({ title: ok });
     } catch (e) {
       toast({ title: (e as Error).message, variant: "destructive" });
@@ -191,6 +193,7 @@ const TradingChannel = ({ coins }: Props) => {
         </div>
         <div className="space-y-4 min-w-0">
         <ExchangeCard st={st} busy={busy} send={send} token={token} />
+        <FundCard token={token} />
         <TradeForm
           coins={coins}
           coinId={coinId}

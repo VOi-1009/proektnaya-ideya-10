@@ -11,6 +11,7 @@ START = 1000.0
 MAX_LEV = 100
 MIN_MARGIN = 1.0
 MIN_EXCHANGE = 1.0
+FEE_RATE = 0.0005
 COINS = ["bitcoin", "ethereum", "binancecoin", "ripple", "solana", "dogecoin", "hyperliquid", "zcash", "tron", "cardano", "chainlink", "stellar", "avalanche-2", "sui", "shiba-inu", "the-open-network", "hedera-hashgraph", "litecoin"]
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -122,6 +123,23 @@ def usdt_deposits(cur, uid):
     return float(cur.fetchone()[0])
 
 
+def usdt_gross(cur, uid):
+    cur.execute(f"SELECT COALESCE(SUM(amount) FILTER (WHERE amount > 0), 0) FROM {SCHEMA}.usdt_ledger WHERE user_id = {uid}")
+    return float(cur.fetchone()[0])
+
+
+def fund_state(cur, uid):
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM {SCHEMA}.fund_ledger")
+    total, cnt = cur.fetchone()
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE user_id = {uid}")
+    mine = float(cur.fetchone()[0])
+    cur.execute(f"SELECT COUNT(DISTINCT user_id) FROM {SCHEMA}.fund_ledger")
+    donors = int(cur.fetchone()[0])
+    cur.execute(f"SELECT amount, note, created_at FROM {SCHEMA}.fund_ledger ORDER BY id DESC LIMIT 8")
+    last = [{"amount": float(r[0]), "note": r[1], "at": r[2].isoformat()} for r in cur.fetchall()]
+    return {"total": float(total), "count": int(cnt), "donors": donors, "mine": mine, "rate": FEE_RATE, "last": last}
+
+
 DAILY_REWARDS = [10, 15, 20, 25, 30, 40, 50]
 TODAY = "(NOW() AT TIME ZONE 'Europe/Moscow')::date"
 
@@ -220,7 +238,7 @@ def tick(cur, px):
 
 def build_stats(cur, user_id, equity, reset_at):
     base = usdt_deposits(cur, user_id)
-    if base <= 0:
+    if usdt_gross(cur, user_id) <= 0:
         base = equity
     cur.execute(f"SELECT pnl, margin, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' AND closed_at >= '{reset_at.isoformat()}' ORDER BY closed_at, id")
     tr = [(float(a or 0), float(b or 0), c) for a, b, c in cur.fetchall()]
@@ -304,7 +322,7 @@ def state(cur, user_id, px):
     history = [{"id": r[0], "coinId": r[1], "side": r[2], "leverage": r[3], "margin": float(r[4]), "entry": float(r[5]), "close": float(r[6]), "pnl": float(r[7]), "reason": r[8], "closedAt": r[9].isoformat()} for r in cur.fetchall()]
     equity = balance + locked + unreal
     stats = build_stats(cur, user_id, equity, reset_at)
-    return {"stats": stats, "balance": balance, "equity": equity, "locked": locked, "unrealized": unreal, "resets": resets, "start": (usdt_deposits(cur, user_id) or equity), "tka": tka_balance(cur, user_id), "positions": positions, "orders": orders, "history": history, "prices": px}
+    return {"stats": stats, "balance": balance, "equity": equity, "locked": locked, "unrealized": unreal, "resets": resets, "start": (usdt_deposits(cur, user_id) if usdt_deposits(cur, user_id) > 0 else (usdt_gross(cur, user_id) or equity)), "tka": tka_balance(cur, user_id), "positions": positions, "orders": orders, "history": history, "prices": px}
 
 
 def leaderboard(cur, px):
@@ -324,14 +342,16 @@ def leaderboard(cur, px):
         if uid in users:
             users[uid]["trades"] = c
     bases = {}
-    cur.execute(f"SELECT user_id, SUM(amount) FROM {SCHEMA}.usdt_ledger GROUP BY user_id")
-    for uid_, amt in cur.fetchall():
+    gross = {}
+    cur.execute(f"SELECT user_id, SUM(amount), COALESCE(SUM(amount) FILTER (WHERE amount > 0), 0) FROM {SCHEMA}.usdt_ledger GROUP BY user_id")
+    for uid_, amt, g in cur.fetchall():
         bases[uid_] = float(amt)
+        gross[uid_] = float(g)
     for uid_, r in users.items():
-        b = bases.get(uid_) or 0.0
-        r["pnl"] = r["equity"] - b if b > 0 else 0.0
-        r["profitPct"] = (r["equity"] - b) / b * 100 if b > 0 else 0.0
-    rows = sorted((r for uid_, r in users.items() if bases.get(uid_, 0) > 0), key=lambda x: -x["pnl"])[:20]
+        g = gross.get(uid_, 0.0)
+        r["pnl"] = r["equity"] - bases.get(uid_, 0.0) if g > 0 else 0.0
+        r["profitPct"] = r["pnl"] / g * 100 if g > 0 else 0.0
+    rows = sorted((r for uid_, r in users.items() if gross.get(uid_, 0) > 0), key=lambda x: -x["pnl"])[:20]
     return rows
 
 
@@ -384,6 +404,8 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "fund":
+            return resp(200, fund_state(cur, uid))
         if method == "GET" and action == "wallet":
             ensure_account(cur, uid)
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
@@ -418,22 +440,33 @@ def handler(event, context):
             out = daily_state(cur, uid)
             out["got"] = reward
             return resp(200, out)
-        if act == "exchange":
+        if act in ("exchange", "withdraw"):
             try:
                 amount = round(float(body.get("amount", 0)), 2)
             except (TypeError, ValueError):
                 return resp(400, {"error": "Укажите сумму обмена"})
             if amount < MIN_EXCHANGE:
-                return resp(400, {"error": f"Минимальная сумма обмена {int(MIN_EXCHANGE)} TKA"})
-            cur.execute(
-                f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) "
-                f"SELECT {uid}, -{amount}, 'exchange', 'Обмен на виртуальные USDT' "
-                f"WHERE (SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.tka_ledger WHERE user_id = {uid}) >= {amount} RETURNING id"
-            )
-            if not cur.fetchone():
-                return resp(400, {"error": "Недостаточно TKA на кошельке"})
-            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {amount} WHERE user_id = {uid}")
-            cur.execute(f"INSERT INTO {SCHEMA}.usdt_ledger (user_id, amount, kind, note) VALUES ({uid}, {amount}, 'exchange', 'Обмен TKA на виртуальные USDT')")
+                return resp(400, {"error": f"Минимальная сумма обмена {int(MIN_EXCHANGE)}"})
+            fee = round(amount * FEE_RATE, 4)
+            net = round(amount - fee, 4)
+            if act == "exchange":
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) "
+                    f"SELECT {uid}, -{amount}, 'exchange', 'Обмен на виртуальные USDT' "
+                    f"WHERE (SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.tka_ledger WHERE user_id = {uid}) >= {amount} RETURNING id"
+                )
+                if not cur.fetchone():
+                    return resp(400, {"error": "Недостаточно TKA на кошельке"})
+                cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {net} WHERE user_id = {uid}")
+                cur.execute(f"INSERT INTO {SCHEMA}.usdt_ledger (user_id, amount, kind, note) VALUES ({uid}, {net}, 'exchange', 'Обмен TKA на виртуальные USDT')")
+                cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {fee}, 'fee', 'Комиссия обмена TKA в USDT')")
+            else:
+                cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {amount} WHERE user_id = {uid} AND balance >= {amount} RETURNING user_id")
+                if not cur.fetchone():
+                    return resp(400, {"error": "Недостаточно свободных USDT. Деньги в сделках и ордерах обменять нельзя"})
+                cur.execute(f"INSERT INTO {SCHEMA}.usdt_ledger (user_id, amount, kind, note) VALUES ({uid}, -{amount}, 'withdraw', 'Обмен виртуальных USDT на TKA')")
+                cur.execute(f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) VALUES ({uid}, {net}, 'exchange', 'Обмен виртуальных USDT на TKA')")
+                cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {fee}, 'fee', 'Комиссия обмена USDT в TKA')")
         elif act in ("open", "limit"):
             coin = str(body.get("coinId", ""))
             side = body.get("side")

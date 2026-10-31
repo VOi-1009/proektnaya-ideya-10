@@ -8,10 +8,12 @@ import { useAuth } from "@/lib/auth";
 import { TRADING_URL, Wallet } from "@/lib/tka";
 import { Send, State } from "./shared";
 
-const fmt = (v: number) => v.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const FEE = 0.0005;
+const fmt = (v: number, d = 2) => v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
 
 const ExchangeCard = ({ st, busy, send, token }: { st: State | undefined; busy: boolean; send: Send; token: string | null }) => {
   const { user } = useAuth();
+  const [dir, setDir] = useState<"in" | "out">("in");
   const [amount, setAmount] = useState("");
   const { data: wallet } = useQuery<Wallet>({
     queryKey: ["tka-wallet", token],
@@ -25,8 +27,17 @@ const ExchangeCard = ({ st, busy, send, token }: { st: State | undefined; busy: 
   });
 
   const tkaFree = wallet?.total ?? 0;
+  const usdtFree = st?.balance ?? 0;
+  const max = dir === "in" ? tkaFree : usdtFree;
   const value = Number(amount) || 0;
-  const can = !!user && !busy && value >= 1 && value <= tkaFree + 1e-9;
+  const fee = value * FEE;
+  const get = value - fee;
+  const can = !!user && !busy && value >= 1 && value <= max + 1e-9;
+  const give = dir === "in" ? "TKA" : "USDT (виртуальные)";
+  const take = dir === "in" ? "USDT (виртуальные)" : "TKA";
+
+  const tab = (active: boolean) =>
+    `flex-1 h-7 rounded-md text-xs font-semibold transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-rail/60 text-muted-foreground hover:text-white"}`;
 
   return (
     <section className="rounded-xl border border-border bg-card p-3 space-y-2">
@@ -42,25 +53,43 @@ const ExchangeCard = ({ st, busy, send, token }: { st: State | undefined; busy: 
         </div>
         <div className="rounded-lg bg-rail/50 px-2 py-1.5 min-w-0">
           <div className="text-muted-foreground">USDT для игры</div>
-          <div className="font-mono text-white truncate">{st ? fmt(st.balance) : "—"}</div>
+          <div className="font-mono text-white truncate">{st ? fmt(usdtFree) : "—"}</div>
         </div>
       </div>
 
       <div className="flex gap-1.5">
-        <Input type="number" min={1} className="h-8 text-sm flex-1 min-w-0" placeholder="Сколько TKA обменять" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" disabled={!wallet || tkaFree < 1} onClick={() => setAmount(String(Math.floor(tkaFree * 100) / 100))}>
+        <button type="button" className={tab(dir === "in")} onClick={() => { setDir("in"); setAmount(""); }}>TKA → USDT</button>
+        <button type="button" className={tab(dir === "out")} onClick={() => { setDir("out"); setAmount(""); }}>USDT → TKA</button>
+      </div>
+
+      <div className="flex gap-1.5">
+        <Input type="number" min={1} className="h-8 text-sm flex-1 min-w-0" placeholder={`Отдаёте, ${give}`} value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" disabled={max < 1} onClick={() => setAmount(String(Math.floor(max * 100) / 100))}>
           Всё
         </Button>
       </div>
 
+      {value > 0 && (
+        <div className="rounded-lg bg-rail/50 px-2 py-1.5 text-[11px] space-y-0.5">
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Комиссия 0,05% (в фонд)</span><span className="font-mono text-white">{fmt(fee, 4)}</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Вы получите, {take}</span><span className="font-mono text-white">{fmt(get, 4)}</span></div>
+        </div>
+      )}
+
       <Button
         className="w-full h-9 font-semibold"
         disabled={!can}
-        onClick={() => send({ action: "exchange", amount: value }, `Получено ${fmt(value)} USDT (виртуальных)`).then(() => setAmount(""))}
+        onClick={() =>
+          send(
+            { action: dir === "in" ? "exchange" : "withdraw", amount: value },
+            `Получено ${fmt(get)} ${dir === "in" ? "USDT (виртуальных)" : "TKA"}`,
+          ).then(() => setAmount(""))
+        }
       >
-        Обменять на USDT (виртуальные)
+        {dir === "in" ? "Обменять на USDT (виртуальные)" : "Обменять на TKA"}
       </Button>
-      {user && wallet && tkaFree < 1 && <p className="text-[10px] text-muted-foreground">Нужны TKA: забирайте ежедневный бонус и получайте награды за достижения.</p>}
+      {dir === "out" && <p className="text-[10px] text-muted-foreground">Обменять можно только свободные USDT: деньги в сделках и ордерах не участвуют.</p>}
+      {dir === "in" && user && wallet && tkaFree < 1 && <p className="text-[10px] text-muted-foreground">Нужны TKA: забирайте ежедневный бонус и получайте награды за достижения.</p>}
     </section>
   );
 };
