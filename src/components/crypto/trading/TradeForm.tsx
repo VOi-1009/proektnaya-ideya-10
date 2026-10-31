@@ -153,11 +153,6 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
           >
             {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
           </Button>
-          {st && st.balance + st.locked < st.start / 2 && (
-            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Пополнить баланс до 1 000 USDT (виртуальных)? Все открытые позиции и ордера будут закрыты.") && send({ action: "reset" }, "Баланс пополнен до 1 000 USDT (виртуальных)")}>
-              Пополнить баланс до 1 000 USDT (виртуальных)
-            </Button>
-          )}
         </section>
   );
 };

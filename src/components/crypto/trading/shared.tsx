@@ -7,7 +7,7 @@ export interface Position { id: number; coinId: string; side: "long" | "short"; 
 export interface Order { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; limit: number; sl: number | null; tp: number | null }
 export interface Trade { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; close: number; pnl: number; reason: string; closedAt: string }
 export interface Stats { trades: number; winRate: number; avgPnl: number; avgPct: number; best: number; bestPct: number; worst: number; worstPct: number; totalPnl: number; curve: { t: string; v: number }[] }
-export interface State { stats?: Stats; balance: number; equity: number; locked: number; unrealized: number; resets: number; start: number; positions: Position[]; orders: Order[]; history: Trade[]; prices: Record<string, number> }
+export interface State { stats?: Stats; balance: number; equity: number; locked: number; unrealized: number; resets: number; start: number; tka?: number; positions: Position[]; orders: Order[]; history: Trade[]; prices: Record<string, number> }
 export interface Leader { pnl?: number; userId: number; name: string; avatar: string; equity: number; profitPct: number; trades: number }
 export interface PubTrade { id: number; coinId: string; side: "long" | "short"; leverage: number; entry: number; price: number; pct: number; open: boolean; at: string }
 

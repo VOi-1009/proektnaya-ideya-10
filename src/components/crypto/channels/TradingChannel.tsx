@@ -10,6 +10,7 @@ import CandleChart from "../CandleChart";
 import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import GuestCard from "../trading/GuestCard";
 import TradeForm from "../trading/TradeForm";
+import ExchangeCard from "../trading/ExchangeCard";
 import TradeTabs from "../trading/TradeTabs";
 import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
@@ -188,6 +189,8 @@ const TradingChannel = ({ coins }: Props) => {
           m={m}
         />
         </div>
+        <div className="space-y-4 min-w-0">
+        <ExchangeCard st={st} busy={busy} send={send} token={token} />
         <TradeForm
           coins={coins}
           coinId={coinId}
@@ -214,6 +217,7 @@ const TradingChannel = ({ coins }: Props) => {
           submit={submit}
           send={send}
         />
+        </div>
 
       </div>
       <p className="text-xs text-muted-foreground/70">Учебный режим: все деньги виртуальные, курсы реальные и обновляются раз в несколько секунд. Это не инвестиционная рекомендация.</p>

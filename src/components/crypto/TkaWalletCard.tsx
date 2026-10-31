@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { tka, useWallet } from "@/lib/tka";
 import TkaIcon from "./TkaIcon";
 
-const KIND: Record<string, string> = { daily: "Ежедневный бонус", bonus: "Бонус", reward: "Награда", refill: "Пополнение", gift: "Подарок" };
+const KIND: Record<string, string> = { daily: "Ежедневный бонус", bonus: "Бонус", reward: "Награда", refill: "Пополнение", gift: "Подарок", exchange: "Обмен", team: "Команда" };
 
 const TkaWalletCard = ({ token }: { token: string | null }) => {
   const { data, isLoading } = useWallet(token);
@@ -21,7 +21,7 @@ const TkaWalletCard = ({ token }: { token: string | null }) => {
           <div>
             <div className="font-display text-3xl text-white leading-none">{tka(data.total)}</div>
             <div className="text-xs text-muted-foreground mt-1.5">
-              свободно <span className="text-white font-mono">{tka(data.free)}</span> · в сделках <span className="text-white font-mono">{tka(data.locked)}</span>
+              на бирже <span className="text-white font-mono">{(data.usdt?.total ?? 0).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT</span> (виртуальные)
             </div>
           </div>
           <div>

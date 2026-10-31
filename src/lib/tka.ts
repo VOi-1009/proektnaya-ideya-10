@@ -11,6 +11,7 @@ export interface Wallet {
   locked: number;
   total: number;
   ledger: { amount: number; kind: string; note: string; at: string }[];
+  usdt?: { free: number; locked: number; total: number };
 }
 
 export const useWallet = (token: string | null) =>
