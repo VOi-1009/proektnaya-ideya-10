@@ -1,62 +1,16 @@
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { PROFILE_URL, useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { useNavigate } from "@/lib/router-compat";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
-import { Achievement, META } from "@/components/crypto/Achievements";
-import { SPECIAL_META } from "@/components/crypto/SpecialAchievements";
 
-interface Mini {
-  id: string;
-  title: string;
-  icon: string;
-  color: string;
-  done: boolean;
-}
-
-const ProfileMiniCard = ({ part = "main" }: { part?: "main" | "achievements" }) => {
-  const { user, token, logout, setAuthOpen } = useAuth();
+const ProfileMiniCard = () => {
+  const { user, logout, setAuthOpen } = useAuth();
   const navigate = useNavigate();
-  const { data: profile } = useQuery({
-    queryKey: ["profile-mini", token],
-    enabled: !!user && !!token,
-    staleTime: 5 * 60_000,
-    queryFn: async () => {
-      const r = await fetch(PROFILE_URL, { headers: { "X-Auth-Token": token ?? "" } });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? "Ошибка");
-      return d.profile as { achievements?: Achievement[]; special?: Achievement[]; founder?: number | null };
-    },
-  });
-  const minis: Mini[] = [
-    ...(profile?.achievements ?? []).filter((a) => META[a.id]).map((a) => ({ id: a.id, title: META[a.id].title, icon: META[a.id].icon, color: META[a.id].color, done: a.done })),
-    ...(profile?.special ?? []).filter((a) => SPECIAL_META[a.id]).map((a) => ({ id: a.id, title: SPECIAL_META[a.id].title, icon: SPECIAL_META[a.id].icon, color: SPECIAL_META[a.id].color, done: a.done })),
-    ...(profile ? [{ id: "founder", title: "Основатель", icon: "Gem", color: "from-amber-200 via-yellow-400 to-amber-600", done: !!profile.founder }] : []),
-  ];
-
-  if (part === "achievements") {
-    if (!user || minis.length === 0) return null;
-    return (
-      <div className="flex flex-nowrap items-center gap-1 px-2 py-1.5 bg-rail rounded-lg flex-shrink-0" aria-label="Достижения">
-        {minis.map((m) => (
-          <span
-            key={m.id}
-            title={`${m.title}${m.done ? "" : " — ещё не получено"}`}
-            className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-              m.done ? `bg-gradient-to-br ${m.color} text-black` : "bg-card text-muted-foreground/50"
-            }`}
-          >
-            <Icon name={m.icon} size={10} fallback="Award" />
-          </span>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center gap-3 min-w-0">
