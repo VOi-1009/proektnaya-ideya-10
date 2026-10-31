@@ -70,15 +70,15 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                     onClick={() => navigate("/community")}
                     className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${
                       active
-                        ? "bg-metric-sky/20 border-metric-sky/60 text-white"
-                        : "bg-metric-sky/10 border-metric-sky/30 text-metric-sky hover:bg-metric-sky/20 hover:text-white"
+                        ? "bg-[hsl(var(--down)/0.2)] border-[hsl(var(--down)/0.6)] text-white"
+                        : "bg-[hsl(var(--down)/0.1)] border-[hsl(var(--down)/0.3)] text-down hover:bg-[hsl(var(--down)/0.2)] hover:text-white"
                     }`}
                   >
-                    <Icon name="MessagesSquare" size={16} className="flex-shrink-0 mx-0.5 text-metric-sky" />
+                    <Icon name="MessagesSquare" size={16} className="flex-shrink-0 mx-0.5 text-down" />
                     <span className="text-[14px] font-semibold">{label}</span>
                     <span className="ml-auto relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-metric-sky opacity-70 animate-ping" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-metric-sky" />
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-down opacity-70 animate-ping" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-down" />
                     </span>
                   </button>
                 );
