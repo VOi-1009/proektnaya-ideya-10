@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
-import UserAvatar from "@/components/crypto/UserAvatar";
-import { useAuth } from "@/lib/auth";
+import LangSwitch from "@/components/crypto/LangSwitch";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { DEFAULT_MENU_TITLE, MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
@@ -20,7 +19,6 @@ interface Props {
 
 const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, setMobileSidebarOpen }: Props) => {
   const navigate = useNavigate();
-  const { user, setAuthOpen } = useAuth();
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
@@ -50,17 +48,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет" title="Поиск монет">
             <Icon name="Search" size={18} />
           </button>
-          <button
-            onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-            title={user ? "Личный кабинет" : "Войти"}
-            aria-label={user ? "Личный кабинет" : "Войти"}
-          >
-            {user ? (
-              <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" />
-            ) : (
-              <UserAvatar />
-            )}
-          </button>
+          <LangSwitch />
         </div>
         <Button
           variant="ghost"
@@ -142,11 +130,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           })}
         </div>
       </div>
-      <div className="flex-1 mx-4 mt-3 mb-2 flex flex-col gap-2">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="flex-1 min-h-[72px] border-t border-primary p-2" />
-        ))}
-      </div>
+      <div className="flex-1 min-h-[160px] mx-4 mt-3 border-t border-primary p-2 flex flex-col gap-2" />
     </aside>
   );
 };
