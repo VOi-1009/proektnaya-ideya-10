@@ -101,25 +101,40 @@ def pnl_of(side, entry, size, price):
     return (price - entry) * size if side == "long" else (entry - price) * size
 
 
+def sql_num(v):
+    return "NULL" if v is None else repr(float(v))
+
+
 def process(cur, user_id, px):
-    cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending'")
-    for oid, coin, side, lev, margin, lim in cur.fetchall():
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, sl, tp FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending'")
+    for oid, coin, side, lev, margin, lim, osl, otp in cur.fetchall():
         p = px.get(coin)
         if not p:
             continue
         lim = float(lim)
         if (side == "long" and p <= lim) or (side == "short" and p >= lim):
             size = float(margin) * lev / lim
-            cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price) VALUES ({user_id}, '{coin}', '{side}', {lev}, {float(margin)}, {size}, {lim})")
+            cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) VALUES ({user_id}, '{coin}', '{side}', {lev}, {float(margin)}, {size}, {lim}, {sql_num(osl)}, {sql_num(otp)})")
             cur.execute(f"UPDATE {SCHEMA}.paper_orders SET status = 'filled', done_at = NOW() WHERE id = {oid}")
-    cur.execute(f"SELECT id, coin_id, side, margin, size, entry_price FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open'")
-    for pid, coin, side, margin, size, entry in cur.fetchall():
+    cur.execute(f"SELECT id, coin_id, side, margin, size, entry_price, sl, tp FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open'")
+    for pid, coin, side, margin, size, entry, sl, tp in cur.fetchall():
         p = px.get(coin)
         if not p:
             continue
-        pnl = pnl_of(side, float(entry), float(size), p)
-        if pnl <= -float(margin) * 0.95:
-            cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = {p}, pnl = {-float(margin)}, close_reason = 'liquidation', closed_at = NOW() WHERE id = {pid}")
+        margin, size, entry = float(margin), float(size), float(entry)
+        pnl = pnl_of(side, entry, size, p)
+        if pnl <= -margin * 0.95:
+            cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = {p}, pnl = {-margin}, close_reason = 'liquidation', closed_at = NOW() WHERE id = {pid}")
+            continue
+        hit = None
+        if sl is not None and ((side == "long" and p <= float(sl)) or (side == "short" and p >= float(sl))):
+            hit = ("stop", float(sl))
+        elif tp is not None and ((side == "long" and p >= float(tp)) or (side == "short" and p <= float(tp))):
+            hit = ("take", float(tp))
+        if hit:
+            res = max(pnl_of(side, entry, size, hit[1]), -margin)
+            cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = {hit[1]}, pnl = {res}, close_reason = '{hit[0]}', closed_at = NOW() WHERE id = {pid}")
+            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {margin + res} WHERE user_id = {user_id}")
 
 
 def state(cur, user_id, px):
@@ -128,23 +143,23 @@ def state(cur, user_id, px):
     cur.execute(f"SELECT balance, resets FROM {SCHEMA}.paper_accounts WHERE user_id = {user_id}")
     balance, resets = cur.fetchone()
     balance = float(balance)
-    cur.execute(f"SELECT id, coin_id, side, leverage, margin, size, entry_price, opened_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open' ORDER BY id DESC")
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, size, entry_price, opened_at, sl, tp FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open' ORDER BY id DESC")
     positions = []
     locked = 0.0
     unreal = 0.0
-    for pid, coin, side, lev, margin, size, entry, at in cur.fetchall():
+    for pid, coin, side, lev, margin, size, entry, at, sl, tp in cur.fetchall():
         margin, size, entry = float(margin), float(size), float(entry)
         p = px.get(coin, entry)
         pnl = pnl_of(side, entry, size, p)
         locked += margin
         unreal += pnl
         liq = entry * (1 - 0.95 / lev) if side == "long" else entry * (1 + 0.95 / lev)
-        positions.append({"id": pid, "coinId": coin, "side": side, "leverage": lev, "margin": margin, "size": size, "entry": entry, "price": p, "pnl": pnl, "liq": liq, "openedAt": at.isoformat()})
-    cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, created_at FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending' ORDER BY id DESC")
+        positions.append({"id": pid, "coinId": coin, "side": side, "leverage": lev, "margin": margin, "size": size, "entry": entry, "price": p, "pnl": pnl, "liq": liq, "sl": float(sl) if sl is not None else None, "tp": float(tp) if tp is not None else None, "openedAt": at.isoformat()})
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, created_at, sl, tp FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending' ORDER BY id DESC")
     orders = []
-    for oid, coin, side, lev, margin, lim, at in cur.fetchall():
+    for oid, coin, side, lev, margin, lim, at, sl, tp in cur.fetchall():
         locked += float(margin)
-        orders.append({"id": oid, "coinId": coin, "side": side, "leverage": lev, "margin": float(margin), "limit": float(lim), "createdAt": at.isoformat()})
+        orders.append({"id": oid, "coinId": coin, "side": side, "leverage": lev, "margin": float(margin), "limit": float(lim), "sl": float(sl) if sl is not None else None, "tp": float(tp) if tp is not None else None, "createdAt": at.isoformat()})
     cur.execute(f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, close_reason, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' ORDER BY closed_at DESC LIMIT 50")
     history = [{"id": r[0], "coinId": r[1], "side": r[2], "leverage": r[3], "margin": float(r[4]), "entry": float(r[5]), "close": float(r[6]), "pnl": float(r[7]), "reason": r[8], "closedAt": r[9].isoformat()} for r in cur.fetchall()]
     equity = balance + locked + unreal
@@ -221,6 +236,22 @@ def handler(event, context):
                 return resp(400, {"error": f"Плечо от 1 до {MAX_LEV}"})
             if margin < MIN_MARGIN:
                 return resp(400, {"error": f"Минимальная сумма сделки {int(MIN_MARGIN)} $"})
+            sl = tp = None
+            try:
+                if body.get("sl") not in (None, "", 0):
+                    sl = float(body["sl"])
+                if body.get("tp") not in (None, "", 0):
+                    tp = float(body["tp"])
+            except (TypeError, ValueError):
+                return resp(400, {"error": "Неверный стоп-лосс или тейк-профит"})
+            ref = px.get(coin) if act == "open" else float(body.get("limit") or 0)
+            if ref:
+                if side == "long" and ((sl is not None and sl >= ref) or (tp is not None and tp <= ref)):
+                    return resp(400, {"error": "Для лонга стоп-лосс должен быть ниже цены входа, а тейк-профит выше"})
+                if side == "short" and ((sl is not None and sl <= ref) or (tp is not None and tp >= ref)):
+                    return resp(400, {"error": "Для шорта стоп-лосс должен быть выше цены входа, а тейк-профит ниже"})
+            if (sl is not None and sl <= 0) or (tp is not None and tp <= 0):
+                return resp(400, {"error": "Уровни должны быть больше нуля"})
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
             if margin > float(cur.fetchone()[0]) + 1e-9:
                 return resp(400, {"error": "Недостаточно средств на счёте"})
@@ -229,7 +260,7 @@ def handler(event, context):
                 if not p:
                     return resp(503, {"error": "Курс сейчас недоступен, попробуйте через минуту"})
                 size = margin * lev / p
-                cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {size}, {p})")
+                cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {size}, {p}, {sql_num(sl)}, {sql_num(tp)})")
             else:
                 try:
                     lim = float(body.get("limit", 0))
@@ -237,7 +268,7 @@ def handler(event, context):
                     lim = 0
                 if lim <= 0:
                     return resp(400, {"error": "Укажите цену ордера"})
-                cur.execute(f"INSERT INTO {SCHEMA}.paper_orders (user_id, coin_id, side, leverage, margin, limit_price) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {lim})")
+                cur.execute(f"INSERT INTO {SCHEMA}.paper_orders (user_id, coin_id, side, leverage, margin, limit_price, sl, tp) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {lim}, {sql_num(sl)}, {sql_num(tp)})")
             cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {margin} WHERE user_id = {uid}")
             process(cur, uid, px)
         elif act == "close":

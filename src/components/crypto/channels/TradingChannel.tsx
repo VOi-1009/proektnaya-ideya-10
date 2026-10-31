@@ -13,8 +13,8 @@ import func2url from "../../../../backend/func2url.json";
 const URL = func2url.trading;
 const LEVERAGE = [1, 2, 3, 5, 10, 20];
 
-interface Position { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; size: number; entry: number; price: number; pnl: number; liq: number }
-interface Order { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; limit: number }
+interface Position { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; size: number; entry: number; price: number; pnl: number; liq: number; sl: number | null; tp: number | null }
+interface Order { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; limit: number; sl: number | null; tp: number | null }
 interface Trade { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; close: number; pnl: number; reason: string; closedAt: string }
 interface State { balance: number; equity: number; locked: number; unrealized: number; resets: number; start: number; positions: Position[]; orders: Order[]; history: Trade[]; prices: Record<string, number> }
 interface Leader { userId: number; name: string; avatar: string; equity: number; profitPct: number; trades: number }
@@ -22,7 +22,7 @@ interface Leader { userId: number; name: string; avatar: string; equity: number;
 const usd = (v: number, sign = false) => `${sign && v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 const tone = (v: number) => (v >= 0 ? "text-[#16C784]" : "text-[#EA3943]");
 const name = (id: string) => COIN_META[id]?.ru ?? id;
-const reasonText: Record<string, string> = { manual: "Закрыта вручную", liquidation: "Ликвидация", reset: "Сброс счёта" };
+const reasonText: Record<string, string> = { stop: "Стоп-лосс", take: "Тейк-профит", manual: "Закрыта вручную", liquidation: "Ликвидация", reset: "Сброс счёта" };
 
 interface Props { coins: Coin[] }
 
@@ -35,6 +35,8 @@ const TradingChannel = ({ coins }: Props) => {
   const [margin, setMargin] = useState("1000");
   const [mode, setMode] = useState<"market" | "limit">("market");
   const [limit, setLimit] = useState("");
+  const [sl, setSl] = useState("");
+  const [tp, setTp] = useState("");
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"positions" | "orders" | "history" | "leaders">("positions");
 
@@ -83,7 +85,7 @@ const TradingChannel = ({ coins }: Props) => {
 
   const submit = () =>
     send(
-      { action: mode === "market" ? "open" : "limit", coinId, side, leverage, margin: Number(margin), limit: Number(limit) },
+      { action: mode === "market" ? "open" : "limit", coinId, side, leverage, margin: Number(margin), limit: Number(limit), sl: Number(sl) || null, tp: Number(tp) || null },
       mode === "market" ? "Позиция открыта" : "Лимитный ордер выставлен",
     );
 
@@ -161,6 +163,18 @@ const TradingChannel = ({ coins }: Props) => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-muted-foreground">Стоп-лосс, $</label>
+              <Input type="number" placeholder="не задан" value={sl} onChange={(e) => setSl(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Тейк-профит, $</label>
+              <Input type="number" placeholder="не задан" value={tp} onChange={(e) => setTp(e.target.value)} />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground -mt-1">{side === "long" ? "Для лонга: стоп ниже цены входа, тейк выше." : "Для шорта: стоп выше цены входа, тейк ниже."}</p>
+
           <div className="text-xs text-muted-foreground">Объём позиции: <span className="text-white">{usd(volume)}</span>{leverage > 1 && " · при сильном движении против вас позиция будет ликвидирована"}</div>
 
           <Button className="w-full" disabled={busy || !user || m < 10} onClick={submit}>
@@ -179,10 +193,14 @@ const TradingChannel = ({ coins }: Props) => {
             price={livePrice}
             quickDisabled={busy || !user || m < 10}
             quickInfo={`${usd(m)} · x${leverage}`}
-            onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m }, "Позиция открыта")}
+            onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}
             lines={[
               ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.entry, label: `${p.side === "long" ? "Лонг" : "Шорт"} x${p.leverage}`, color: p.side === "long" ? "#16C784" : "#EA3943" })) ?? []),
               ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
+              ...(st?.positions.filter((p) => p.coinId === coinId && p.sl).map((p) => ({ price: p.sl as number, label: "Стоп-лосс", color: "#EA3943" })) ?? []),
+              ...(st?.positions.filter((p) => p.coinId === coinId && p.tp).map((p) => ({ price: p.tp as number, label: "Тейк-профит", color: "#22C55E" })) ?? []),
+              ...(Number(sl) > 0 ? [{ price: Number(sl), label: "Стоп (черновик)", color: "#EA3943" }] : []),
+              ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
             ]}
           />
         </section>
@@ -201,7 +219,7 @@ const TradingChannel = ({ coins }: Props) => {
                 <Row key={p.id}>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm text-white">{name(p.coinId)} <span className={p.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{p.side === "long" ? "Лонг" : "Шорт"} x{p.leverage}</span></div>
-                    <div className="text-xs text-muted-foreground">Вход {fmtPrice(p.entry, p.coinId)} · сейчас {fmtPrice(p.price, p.coinId)} · ликвидация {fmtPrice(p.liq, p.coinId)}</div>
+                    <div className="text-xs text-muted-foreground">Вход {fmtPrice(p.entry, p.coinId)} · сейчас {fmtPrice(p.price, p.coinId)} · ликвидация {fmtPrice(p.liq, p.coinId)}{p.sl ? ` · стоп ${fmtPrice(p.sl, p.coinId)}` : ""}{p.tp ? ` · тейк ${fmtPrice(p.tp, p.coinId)}` : ""}</div>
                   </div>
                   <div className="text-right">
                     <div className={`text-sm ${tone(p.pnl)}`}>{usd(p.pnl, true)}</div>
@@ -219,7 +237,7 @@ const TradingChannel = ({ coins }: Props) => {
                 <Row key={o.id}>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm text-white">{name(o.coinId)} <span className={o.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{o.side === "long" ? "Лонг" : "Шорт"} x{o.leverage}</span></div>
-                    <div className="text-xs text-muted-foreground">Исполнится по {fmtPrice(o.limit, o.coinId)} · сумма {usd(o.margin)}</div>
+                    <div className="text-xs text-muted-foreground">Исполнится по {fmtPrice(o.limit, o.coinId)} · сумма {usd(o.margin)}{o.sl ? ` · стоп ${fmtPrice(o.sl, o.coinId)}` : ""}{o.tp ? ` · тейк ${fmtPrice(o.tp, o.coinId)}` : ""}</div>
                   </div>
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => send({ action: "cancel", id: o.id }, "Ордер отменён")}>Отменить</Button>
                 </Row>
