@@ -64,6 +64,7 @@ const RulesChannel = () => (
         <li className="flex gap-2"><Icon name="Clock" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 2 очка за каждые 10 минут, проведённые на сайте.</li>
         <li className="flex gap-2"><Icon name="Coins" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 5 очков за каждую монету в портфеле (до 20 монет).</li>
         <li className="flex gap-2"><Icon name="UserRound" size={15} className="text-primary mt-0.5 flex-shrink-0" /> 6 очков за каждое заполненное поле профиля: имя, фото, о себе, город, любимая монета.</li>
+        <li className="flex gap-2"><Icon name="LineChart" size={15} className="text-primary mt-0.5 flex-shrink-0" /> Очки за достижения тренировочной биржи: первая сделка — 30, первая ликвидация — 20, серия из 5 плюсов — 100, профит +50% — 100.</li>
         <li className="flex gap-2"><Icon name="Gift" size={15} className="text-primary mt-0.5 flex-shrink-0" /> Бонусные очки иногда дарит администрация.</li>
       </ul>
     </Section>

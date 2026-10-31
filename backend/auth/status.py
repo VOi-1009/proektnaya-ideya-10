@@ -18,7 +18,8 @@ def points_sql(schema: str, alias: str = "u") -> str:
         f"+ ((COALESCE({a}.name, '') <> '')::int + ({a}.avatar_url IS NOT NULL)::int + (COALESCE({a}.bio, '') <> '')::int "
         f"+ (COALESCE({a}.city, '') <> '')::int + (COALESCE({a}.favorite_coin, '') <> '')::int) * 6 "
         f"+ (COALESCE({a}.active_minutes, 0) / 10) * 2 "
-        f"+ COALESCE({a}.bonus_points, 0))"
+        f"+ COALESCE({a}.bonus_points, 0) "
+        f"+ COALESCE((SELECT SUM(w.points) FROM {schema}.paper_awards w WHERE w.user_id = {a}.id), 0))"
     )
 
 

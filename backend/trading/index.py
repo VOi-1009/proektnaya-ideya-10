@@ -137,17 +137,44 @@ def process(cur, user_id, px):
             cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {margin + res} WHERE user_id = {user_id}")
 
 
+AWARDS = {"trade_first": 30, "trade_liq": 20, "trade_streak": 100, "trade_profit": 100}
+
+
+def grant_awards(cur, uid):
+    cur.execute(f"SELECT code FROM {SCHEMA}.paper_awards WHERE user_id = {uid}")
+    have = {r[0] for r in cur.fetchall()}
+    if len(have) >= len(AWARDS):
+        return
+    cur.execute(f"SELECT COUNT(*), COUNT(*) FILTER (WHERE close_reason = 'liquidation') FROM {SCHEMA}.paper_positions WHERE user_id = {uid}")
+    total, liq = cur.fetchone()
+    cur.execute(f"SELECT pnl, margin FROM {SCHEMA}.paper_positions WHERE user_id = {uid} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' ORDER BY closed_at, id")
+    streak = best = 0
+    pct = 0.0
+    for pnl, margin in cur.fetchall():
+        pnl, margin = float(pnl or 0), float(margin or 0)
+        streak = streak + 1 if pnl > 0 else 0
+        best = max(best, streak)
+        if margin > 0:
+            pct = max(pct, pnl / margin * 100)
+    got = {"trade_first": total >= 1, "trade_liq": liq >= 1, "trade_streak": best >= 5, "trade_profit": pct >= 50}
+    for code, ok in got.items():
+        if ok and code not in have:
+            cur.execute(f"INSERT INTO {SCHEMA}.paper_awards (user_id, code, points) VALUES ({uid}, '{code}', {AWARDS[code]}) ON CONFLICT DO NOTHING")
+
+
 def tick(cur, px):
     cur.execute(f"SELECT DISTINCT user_id FROM {SCHEMA}.paper_orders WHERE status = 'pending' UNION SELECT DISTINCT user_id FROM {SCHEMA}.paper_positions WHERE status = 'open'")
     ids = [r[0] for r in cur.fetchall()]
     for u in ids:
         process(cur, int(u), px)
+        grant_awards(cur, int(u))
     return len(ids)
 
 
 def state(cur, user_id, px):
     cur.execute(f"INSERT INTO {SCHEMA}.paper_accounts (user_id) VALUES ({user_id}) ON CONFLICT (user_id) DO NOTHING")
     process(cur, user_id, px)
+    grant_awards(cur, user_id)
     cur.execute(f"SELECT balance, resets FROM {SCHEMA}.paper_accounts WHERE user_id = {user_id}")
     balance, resets = cur.fetchone()
     balance = float(balance)
