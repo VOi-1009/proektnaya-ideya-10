@@ -182,33 +182,30 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 animate-fade-in">
-        <div className="bg-card border border-border rounded-lg p-3 border-l-4 border-l-primary">
-          <div className="text-muted-foreground text-xs">Стоимость портфеля</div>
-          <div className="font-mono text-xl text-white tabular mt-1">{fmtUsd(total)}</div>
-          <div className={`font-mono text-xs tabular mt-1 ${upCls(day)}`}>
-            {fmtUsd(day, true)} ({fmtPct(dayPct)}) за 24ч
-          </div>
-        </div>
-        <div className="bg-card border border-border rounded-lg p-3 border-l-4 border-l-accent">
-          <div className="text-muted-foreground text-xs">Вложено</div>
-          <div className="font-mono text-xl text-white tabular mt-1">{fmtUsd(invested)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Позиций: {holdings.length}</div>
-        </div>
-        <div className={`bg-card border border-border rounded-lg p-3 border-l-4 ${pnl >= 0 ? "border-l-up" : "border-l-down"}`}>
-          <div className="text-muted-foreground text-xs">{pnl >= 0 ? "Прибыль" : "Убыток"}</div>
-          <div className={`font-mono text-xl tabular mt-1 ${upCls(pnl)}`}>{fmtUsd(pnl, true)}</div>
-          <div className={`font-mono text-xs tabular mt-1 ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
-        </div>
-      </div>
-
       <div className={`grid grid-cols-1 gap-3 items-stretch ${total > 0 ? "lg:grid-cols-[4fr_1fr]" : ""}`}>
         <div className="min-w-0">
           <PortfolioChart holdings={holdings} coins={coins} />
         </div>
       {total > 0 && (
         <div className="bg-card border border-border rounded-lg p-3 min-w-0">
-          <div className="text-muted-foreground text-xs mb-1">Распределение активов</div>
+          <div className="space-y-2.5 mb-3">
+            <div>
+              <div className="text-muted-foreground text-xs">Стоимость портфеля</div>
+              <div className="font-mono text-xl text-white tabular leading-tight">{fmtUsd(total)}</div>
+              <div className={`font-mono text-xs tabular ${upCls(day)}`}>{fmtUsd(day, true)} ({fmtPct(dayPct)}) за 24ч</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground text-xs">Вложено</div>
+              <div className="font-mono text-base text-white tabular leading-tight">{fmtUsd(invested)}</div>
+              <div className="text-xs text-muted-foreground">Позиций: {holdings.length}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground text-xs">{pnl >= 0 ? "Прибыль" : "Убыток"}</div>
+              <div className={`font-mono text-base tabular leading-tight ${upCls(pnl)}`}>{fmtUsd(pnl, true)}</div>
+              <div className={`font-mono text-xs tabular ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
+            </div>
+          </div>
+          <div className="text-muted-foreground text-xs mb-1 pt-2 border-t border-border">Распределение активов</div>
           <PortfolioDonut3D
             compact
             items={Object.entries(
