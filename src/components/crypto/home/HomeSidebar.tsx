@@ -58,7 +58,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <Icon name="X" size={16} />
         </Button>
       </div>
-      <div className="flex-1 p-2">
+      <div className="p-2">
         <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
           <Icon name="ChevronDown" size={12} />
           <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
@@ -130,6 +130,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           })}
         </div>
       </div>
+      <div className="flex-1 min-h-[160px] border-t border-border p-2 flex flex-col gap-2" />
     </aside>
   );
 };
