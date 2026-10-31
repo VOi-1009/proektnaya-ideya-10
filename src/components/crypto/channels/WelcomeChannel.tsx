@@ -93,9 +93,12 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
-          <div className="flex-1 grid grid-cols-2">
+          <div className="flex-[2] grid grid-cols-2">
             <FearGreedGauge compact />
             <AltseasonGauge compact />
+          </div>
+          <div className="flex-1 min-h-[60px] px-3 py-2 flex items-center justify-center overflow-hidden">
+            <ProfileMiniCard />
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3 overflow-hidden">
@@ -112,7 +115,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
             <div className="flex-1 min-h-[100px] px-3 py-2 flex flex-col items-start justify-center gap-2 overflow-hidden">
               <TkaBadge go={go} />
-              <ProfileMiniCard />
             </div>
             <div className="flex-1 min-h-[260px]">
               <LiqHistory />
