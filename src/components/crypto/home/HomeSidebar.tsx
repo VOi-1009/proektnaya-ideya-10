@@ -83,6 +83,29 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                   </button>
                 );
               }
+              if (it.id === "trading") {
+                const active = channel === it.id;
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => go(it.id)}
+                    className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${
+                      active
+                        ? "bg-[#22C55E]/20 border-[#22C55E]/60 text-white"
+                        : "bg-[#22C55E]/10 border-[#22C55E]/30 text-[#22C55E] hover:bg-[#22C55E]/20 hover:text-white"
+                    }`}
+                  >
+                    <span className="w-4 h-4 mx-0.5 flex-shrink-0 rounded bg-primary flex items-center justify-center text-white font-display font-black text-[10px] leading-none">
+                      Т
+                    </span>
+                    <span className="text-[14px] font-semibold truncate">{label}</span>
+                    <span className="ml-auto relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-70 animate-ping" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
+                    </span>
+                  </button>
+                );
+              }
               if (it.id === "rating") {
                 return (
                   <button
