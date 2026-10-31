@@ -1,0 +1,1 @@
+UPDATE t_p98937530_proektnaya_ideya_10.users SET status_override = 14 WHERE id = 2 AND email = 'baagold@yandex.ru';

@@ -40,6 +40,26 @@ export const LEVELS: StatusLevel[] = [
     text: "text-[#22C55E] font-semibold",
     color: "#22C55E",
   },
+  {
+    title: "Модератор",
+    need: null,
+    icon: "ShieldCheck",
+    desc: "Следит за порядком на сайте — присваивает только администрация",
+    cls: "bg-[#0EA5E9] text-white shadow-[0_0_10px_rgba(14,165,233,0.55)]",
+    name: "text-[#0EA5E9] font-semibold",
+    text: "text-[#0EA5E9] font-semibold",
+    color: "#0EA5E9",
+  },
+  {
+    title: "Администрация",
+    need: null,
+    icon: "BadgeCheck",
+    desc: "Главный статус на сайте — присваивается только владельцем",
+    cls: "bg-[#FACC15] text-black shadow-[0_0_12px_rgba(250,204,21,0.65)]",
+    name: "text-[#FACC15] font-bold",
+    text: "text-[#FACC15] font-bold",
+    color: "#FACC15",
+  },
 ];
 
 export const nameCls = (level?: number, fallback = "text-white") => levelInfo(level).name ?? fallback;
