@@ -60,7 +60,6 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
       </div>
       <div className="p-2">
         <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-          <Icon name="ChevronDown" size={12} />
           <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
         </div>
         <div className="mt-0.5 space-y-0">
