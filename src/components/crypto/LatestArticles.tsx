@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fmtDate, useArticles } from "@/lib/articles";
+import HeroSiteNews from "@/components/crypto/HeroSiteNews";
 
 interface Props {
   onOpen: (id: number) => void;
@@ -28,9 +29,12 @@ const LatestArticles = ({ onOpen, onAll }: Props) => {
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="sm:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
+          <HeroSiteNews />
+        </div>
         {isLoading
-          ? [1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-56 bg-card" />)
-          : data!.map((a) => (
+          ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-56 bg-card" />)
+          : data!.slice(2).map((a) => (
               <Link
                 key={a.id}
                 to={`/articles/${a.id}`}

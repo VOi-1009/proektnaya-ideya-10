@@ -4,7 +4,6 @@ import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
-import HeroSiteNews from "@/components/crypto/HeroSiteNews";
 import SidePolls from "@/components/crypto/SidePolls";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
@@ -60,9 +59,6 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
         >
           <Icon name="X" size={16} />
         </Button>
-      </div>
-      <div className="border-b border-border">
-        <HeroSiteNews />
       </div>
       <div className="flex-1 p-2">
         <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
