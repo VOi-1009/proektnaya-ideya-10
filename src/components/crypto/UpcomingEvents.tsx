@@ -17,6 +17,9 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
   const items = [...high.slice(0, 7), ...medium.slice(0, Math.max(0, 7 - high.length))]
     .sort((a, b) => a.ts - b.ts)
     .slice(0, 7);
+  const past = (data ?? []).slice(-7);
+  const showPast = !items.length && past.length > 0;
+  const list = showPast ? past : items;
 
   return (
     <div className="p-3 flex flex-col h-full">
@@ -36,12 +39,13 @@ const UpcomingEvents = ({ onAll }: { onAll: () => void }) => {
         </div>
       ) : isError ? (
         <p className="text-muted-foreground text-sm py-6 text-center">Календарь временно недоступен</p>
-      ) : !items.length ? (
+      ) : !list.length ? (
         <p className="text-muted-foreground text-sm py-6 text-center">Ближайших важных событий нет</p>
       ) : (
         <ul>
-          {items.map((e, i) => (
-            <li key={`${e.ts}-${i}`} className="flex items-start gap-3 rounded-lg px-2 py-0.5 hover:bg-hover/60 transition-colors">
+          {showPast && <li className="px-2 pb-1 text-[10px] text-muted-foreground">Новые события появятся с началом недели. Последние завершённые:</li>}
+          {list.map((e, i) => (
+            <li key={`${e.ts}-${i}`} className={`flex items-start gap-3 rounded-lg px-2 py-0.5 hover:bg-hover/60 transition-colors ${showPast ? "opacity-60" : ""}`}>
               <div className="w-14 flex-shrink-0 text-center">
                 <div className="font-mono tabular text-white text-sm leading-tight">{e.time}</div>
                 <div className={`text-[10px] ${e.day === today ? "text-primary" : "text-muted-foreground"}`}>{dayLabel(e.day, today)}</div>

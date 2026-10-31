@@ -22,6 +22,7 @@ export const useEconCalendar = () =>
       if (!r.ok || !Array.isArray(d.items)) throw new Error(d.error ?? "Календарь временно недоступен");
       return d.items as CalendarEvent[];
     },
-    staleTime: 30 * 60_000,
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60_000,
+    refetchInterval: 10 * 60_000,
+    refetchOnWindowFocus: true,
   });

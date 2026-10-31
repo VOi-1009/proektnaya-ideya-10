@@ -7,7 +7,7 @@ URLS = [
     "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
     "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
 ]
-TTL = 1800
+TTL = 600
 _cache: dict = {"at": 0.0, "items": None}
 
 COUNTRY = {
@@ -118,4 +118,4 @@ def calendar_response(json_resp) -> dict:
             print("calendar error:", e)
             if _cache["items"] is None:
                 return json_resp(502, {"error": "Календарь временно недоступен"}, 60)
-    return json_resp(200, {"items": _cache["items"]}, 600)
+    return json_resp(200, {"items": _cache["items"]}, 300)
