@@ -3,6 +3,26 @@ import Icon from "@/components/ui/icon";
 import { Coin, COIN_META, fmtPrice, fmtRub, isFx } from "@/lib/crypto";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Message from "../Message";
+import PivotCalc from "../calc/PivotCalc";
+import FibCalc from "../calc/FibCalc";
+import PositionSizeCalc from "../calc/PositionSizeCalc";
+import PnlCalc from "../calc/PnlCalc";
+import AverageCalc from "../calc/AverageCalc";
+import LiqCalc from "../calc/LiqCalc";
+import RiskRewardCalc from "../calc/RiskRewardCalc";
+
+const TOOLS = [
+  { id: "convert", label: "Конвертер", icon: "ArrowLeftRight", hint: "Пересчёт монет и валют" },
+  { id: "pivot", label: "Пивоты", icon: "Layers", hint: "Уровни поддержки и сопротивления" },
+  { id: "fib", label: "Фибоначчи", icon: "Spline", hint: "Коррекция и цели" },
+  { id: "size", label: "Размер позиции", icon: "Scale", hint: "Сколько купить при заданном риске" },
+  { id: "pnl", label: "Прибыль / убыток", icon: "Calculator", hint: "Результат сделки с плечом и комиссией" },
+  { id: "avg", label: "Усреднение", icon: "Combine", hint: "Средняя цена по нескольким покупкам" },
+  { id: "liq", label: "Ликвидация", icon: "Skull", hint: "Цена, при которой позиция сгорит" },
+  { id: "rr", label: "Риск / прибыль", icon: "Target", hint: "Соотношение стопа и тейка" },
+] as const;
+
+type ToolId = (typeof TOOLS)[number]["id"];
 
 const FIAT: Record<string, { label: string; name: string }> = {
   rub: { label: "RUB", name: "Российский рубль" },
@@ -11,6 +31,7 @@ const FIAT: Record<string, { label: string; name: string }> = {
 };
 
 const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
+  const [tool, setTool] = useState<ToolId>("convert");
   const [from, setFrom] = useState("bitcoin");
   const [to, setTo] = useState("rub");
   const [amount, setAmount] = useState("1");
@@ -60,8 +81,45 @@ const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
     </Select>
   );
 
+  const active = TOOLS.find((t) => t.id === tool)!;
+
+  const switcher = (
+    <div className="flex flex-wrap gap-1.5">
+      {TOOLS.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => setTool(t.id)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs border transition-colors ${
+            tool === t.id ? "bg-primary text-primary-foreground border-primary font-semibold" : "bg-card border-border text-muted-foreground hover:text-white hover:bg-hover/60"
+          }`}
+        >
+          <Icon name={t.icon} size={14} fallback="Calculator" />
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (tool !== "convert") {
+    return (
+      <div className="space-y-3">
+        {switcher}
+        <p className="text-muted-foreground text-sm">{active.hint}.</p>
+        {tool === "pivot" && <PivotCalc />}
+        {tool === "fib" && <FibCalc />}
+        {tool === "size" && <PositionSizeCalc />}
+        {tool === "pnl" && <PnlCalc />}
+        {tool === "avg" && <AverageCalc />}
+        {tool === "liq" && <LiqCalc />}
+        {tool === "rr" && <RiskRewardCalc />}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {switcher}
       <Message author="Traderka Бот" time="Сегодня" icon="ArrowLeftRight" bot>
         <p className="text-muted-foreground mb-3">
           Пересчёт между монетами, золотом, нефтью, рублём, долларом и евро по текущему курсу.
