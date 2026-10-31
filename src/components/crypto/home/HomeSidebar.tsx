@@ -38,7 +38,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
     >
       <div className="h-12 px-4 flex items-center justify-center relative">
         <div className="flex items-center gap-3 text-muted-foreground">
-          <button onClick={() => go("alerts")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
+          <button onClick={() => go("portfolio")} className="hover:text-white relative" aria-label="Ценовые уведомления" title="Ценовые уведомления">
             <Icon name="Bell" size={18} />
             {activeAlerts > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full min-w-[14px] h-[14px] px-0.5 flex items-center justify-center">

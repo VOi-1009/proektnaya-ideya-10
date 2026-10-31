@@ -70,7 +70,7 @@ const CHAT_HEX: Record<string, string> = {
 const blank = { label: "", hidden: false, icon: "", color: "" };
 
 const defaultEntries = (radars?: Radar[], chats?: ChatRoomInfo[]): MenuEntry[] => {
-  const base = BASE_ITEMS.map<MenuEntry>((b) => ({
+  const base = BASE_ITEMS.filter((b) => b.id !== "alerts").map<MenuEntry>((b) => ({
     ...blank,
     id: b.id,
     kind: TOOL_IDS.includes(b.id) ? "tool" : "base",

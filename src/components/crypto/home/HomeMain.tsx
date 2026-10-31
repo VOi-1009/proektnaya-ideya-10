@@ -136,7 +136,7 @@ const HomeMain = ({
         ) : channel === "trading" ? (
           <TradingChannel coins={coins} />
         ) : channel === "portfolio" ? (
-          <PortfolioChannel coins={coins} go={go} />
+          <PortfolioChannel coins={coins} go={go} live={live} alertsApi={alertsApi} />
         ) : (
           <ConverterChannel coins={coins} />
         )}

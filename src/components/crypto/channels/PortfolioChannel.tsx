@@ -8,6 +8,8 @@ import { PORTFOLIO_URL, useAuth } from "@/lib/auth";
 import Message from "../Message";
 import PortfolioChart from "../PortfolioChart";
 import PortfolioDonut3D from "../PortfolioDonut3D";
+import AlertsChannel from "./AlertsChannel";
+import { PriceAlertsApi } from "@/lib/alerts";
 import { CoinLogo } from "../QuotesTable";
 
 interface Holding {
@@ -39,7 +41,7 @@ const fmtAmount = (v: number) => v.toLocaleString("ru-RU", { maximumFractionDigi
 
 const parseNum = (s: string) => parseFloat(s.replace(/\s/g, "").replace(",", "."));
 
-const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinId?: string) => void }) => {
+const PortfolioChannel = ({ coins, go, live, alertsApi }: { coins: Coin[]; go: (ch: string, coinId?: string) => void; live: boolean; alertsApi: PriceAlertsApi }) => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const [local, setLocal] = useState<Holding[]>([]);
   const [localLoaded, setLocalLoaded] = useState(false);
@@ -184,6 +186,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
 
       <div className="grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-3 items-stretch">
         <div className="min-w-0 space-y-3">
+          <AlertsChannel coins={coins} live={live} api={alertsApi} go={go} />
           <PortfolioChart holdings={holdings} coins={coins} />
       <Message author="Traderka Бот" time="Сегодня" icon="Wallet" bot>
         <p className="text-muted-foreground mb-3">
