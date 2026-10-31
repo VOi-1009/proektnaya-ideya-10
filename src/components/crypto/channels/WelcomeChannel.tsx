@@ -5,7 +5,6 @@ import TopNewsBlock from "../TopNewsBlock";
 import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import QuoteBlock from "../QuoteBlock";
-import OnlineMarquee from "../OnlineMarquee";
 import FearGreedGauge from "../FearGreedGauge";
 import ExchangeOutflowCard from "../ExchangeOutflowCard";
 import UpcomingEvents from "../UpcomingEvents";
@@ -109,9 +108,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
             <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center">
               <QuoteBlock />
-              <div className="w-full mt-1">
-                <OnlineMarquee />
-              </div>
             </div>
             <div className="flex-1 min-h-[100px] border-t border-border">
               <HeroSiteNews />
