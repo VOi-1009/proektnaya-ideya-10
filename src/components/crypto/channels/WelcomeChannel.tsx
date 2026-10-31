@@ -90,7 +90,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             <FearGreedGauge compact />
             <AltseasonGauge compact />
           </div>
-          <div className="p-3 flex justify-center">
+          <div className="px-3 pt-1 pb-4 -mt-3 flex flex-col items-center gap-1.5">
+            <span className="text-muted-foreground text-xs text-center">Перейти на трейнинг-биржу</span>
             <button
               onClick={() => go("trading")}
               className="flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-6 py-3 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
