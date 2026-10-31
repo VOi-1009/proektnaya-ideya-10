@@ -171,7 +171,7 @@ const Profile = () => {
   const lvIdx = s ? s.level - 1 : 0;
   const from = LEVELS[lvIdx < LEVELS.length - 1 ? lvIdx : lvIdx - 1].color;
   const to = LEVELS[lvIdx < LEVELS.length - 1 ? lvIdx + 1 : lvIdx].color;
-  const canEditAvatar = !!profile && !!s && (s.level < 7 || profile.id === 2);
+  const canEditAvatar = !!profile && !!s && (s.level < 11 || profile.id === 2);
   const progress = s ? (s.next ? ((s.points - s.current) / (s.next - s.current)) * 100 : 100) : 0;
   const since = profile ? new Date(profile.createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "";
 

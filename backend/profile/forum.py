@@ -284,11 +284,11 @@ def handle_forum(event: dict) -> dict:
                 "sort": str(num("sort", 0, 9999, 0)),
                 "guests_read": "TRUE" if body.get("guestsRead") else "FALSE",
                 "read_plan": str(num("readPlan", 0, 9, 2)),
-                "read_level": str(num("readLevel", 1, 8, 1)),
+                "read_level": str(num("readLevel", 1, 12, 1)),
                 "topic_plan": str(num("topicPlan", 0, 9, 2)),
-                "topic_level": str(num("topicLevel", 1, 8, 1)),
+                "topic_level": str(num("topicLevel", 1, 12, 1)),
                 "reply_plan": str(num("replyPlan", 0, 9, 2)),
-                "reply_level": str(num("replyLevel", 1, 8, 1)),
+                "reply_level": str(num("replyLevel", 1, 12, 1)),
                 "allow_users": f"'{','.join(str(i) for i in ids_of(','.join(str(x) for x in (body.get('allowUsers') or []))))}'",
             }
             if sid:

@@ -58,4 +58,4 @@ export const forumRequest = async <T,>(token: string | null, query = "", body?: 
   return data as T;
 };
 
-export const LEVEL_NAMES = ["", "Новичок", "Студент", "Наблюдатель", "Трейдер", "Аналитик", "Кит", "Медведь", "Бык"];
+export const LEVEL_NAMES = ["", "Новичок", "Студент", "Наблюдатель", "Скальпер", "Свингер", "Стратег", "Рыночный волк", "Трейдер", "Аналитик", "Кит", "Медведь", "Бык"];

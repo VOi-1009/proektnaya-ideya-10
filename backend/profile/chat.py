@@ -133,7 +133,7 @@ def handle_chat(event: dict) -> dict:
                     return resp(400, {"error": "Введите название чата"})
                 if color not in COLORS or access not in ACCESS:
                     return resp(400, {"error": "Неверные настройки чата"})
-                min_level = min(max(int(body.get("minLevel", 3) or 3), 1), 8)
+                min_level = min(max(int(body.get("minLevel", 3) or 3), 1), 12)
                 sort = min(max(int(body.get("sort", 10) or 0), 0), 9999)
                 members = sorted({int(i) for i in (body.get("members") or []) if str(i).isdigit()})[:500]
                 if rid:

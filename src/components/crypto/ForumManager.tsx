@@ -35,16 +35,16 @@ const Perm = ({ label, plan, level, onChange }: { label: string; plan: number; l
     <span className="text-sm text-white">{label}</span>
     <select
       className={inputCls}
-      value={plan === 9 ? 9 : level}
+      value={plan === 9 ? 99 : level}
       onChange={(e) => {
         const v = Number(e.target.value);
-        onChange(v === 9 ? 9 : 0, v === 9 ? 1 : v);
+        onChange(v === 99 ? 9 : 0, v === 99 ? 1 : v);
       }}
     >
-      {LEVEL_NAMES.slice(1, 7).map((n, i) => (
+      {LEVEL_NAMES.slice(1, 11).map((n, i) => (
         <option key={n} value={i + 1}>{i === 0 ? "Любой статус" : `От «${n}»`}</option>
       ))}
-      <option value={9}>Только администраторы</option>
+      <option value={99}>Только администраторы</option>
     </select>
   </div>
 );
