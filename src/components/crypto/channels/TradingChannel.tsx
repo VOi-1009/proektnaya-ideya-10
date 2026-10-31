@@ -153,6 +153,8 @@ const TradingChannel = ({ coins }: Props) => {
 
   const m = Number(margin) || 0;
   const risk = riskOf(leverage);
+  const entryRef = mode === "limit" && Number(limit) > 0 ? Number(limit) : livePrice;
+  const liqPrice = entryRef > 0 ? (side === "long" ? entryRef * (1 - 0.95 / leverage) : entryRef * (1 + 0.95 / leverage)) : 0;
   const sideColor = side === "long" ? "#22C55E" : "#EA3943";
   const volume = m * leverage;
 
@@ -184,6 +186,7 @@ const TradingChannel = ({ coins }: Props) => {
           <CandleChart
             coinId={coinId}
             price={livePrice}
+            liqPrice={liqPrice}
             closeInfo={coinPositions.length ? `${usd(coinPnl, true)}${coinPositions.length > 1 ? ` · ${coinPositions.length} шт.` : ""}` : undefined}
             closeProfit={coinPnl >= 0}
             onCloseAll={closeAll}
@@ -196,6 +199,7 @@ const TradingChannel = ({ coins }: Props) => {
               ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
               ...(st?.positions.filter((p) => p.coinId === coinId && p.sl).map((p) => ({ price: p.sl as number, label: "Стоп-лосс", color: "#EA3943" })) ?? []),
               ...(st?.positions.filter((p) => p.coinId === coinId && p.tp).map((p) => ({ price: p.tp as number, label: "Тейк-профит", color: "#22C55E" })) ?? []),
+              ...(liqPrice > 0 ? [{ price: liqPrice, label: "Ликвидация (черновик)", color: "#EA3943" }] : []),
               ...(Number(sl) > 0 ? [{ price: Number(sl), label: "Стоп (черновик)", color: "#EA3943" }] : []),
               ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
             ]}
@@ -343,6 +347,13 @@ const TradingChannel = ({ coins }: Props) => {
               </p>
             )}
           </div>
+
+          {liqPrice > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-3 py-2 text-xs">
+              <span className="flex items-center gap-1.5 text-[#EA3943] font-semibold"><Icon name="Skull" size={14} fallback="Flame" /> Цена ликвидации</span>
+              <span className="font-mono text-sm text-white">{fmtPrice(liqPrice, coinId)} <span className="text-[#EA3943]">({side === "long" ? "−" : "+"}{(95 / leverage).toFixed(1)}%)</span></span>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <div>

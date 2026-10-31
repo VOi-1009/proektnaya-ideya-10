@@ -133,9 +133,9 @@ const CandleShape = (props: ShapeProps) => {
   );
 };
 
-interface Props { coinId: string; price: number; lines?: Line[]; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean }
+interface Props { coinId: string; price: number; lines?: Line[]; liqPrice?: number; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean }
 
-const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisabled, closeInfo, closeProfit, onCloseAll, closeDisabled }: Props) => {
+const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, quickDisabled, closeInfo, closeProfit, onCloseAll, closeDisabled }: Props) => {
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
   const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
@@ -143,6 +143,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
   const boxRef = useRef<HTMLDivElement>(null);
   const axisRef = useRef<HTMLDivElement>(null);
   const [yZoom, setYZoom] = useState(1);
+  const [autoFit, setAutoFit] = useState(false);
   const yDrag = useRef<{ y: number; z: number } | null>(null);
   const drag = useRef<{ x: number; start: number } | null>(null);
   const total = useRef(0);
@@ -209,6 +210,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setAutoFit(false);
       setYZoom((z) => clampY(z * (e.deltaY > 0 ? 1 / 1.15 : 1.15)));
     };
     el.addEventListener("wheel", onWheel, { passive: false });
@@ -217,6 +219,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
 
   const onAxisDown = (e: React.PointerEvent) => {
     e.stopPropagation();
+    setAutoFit(false);
     yDrag.current = { y: e.clientY, z: yZoom };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
@@ -253,10 +256,21 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
     const lo = Math.min(...visible.map((c) => c.l));
     const hi = Math.max(...visible.map((c) => c.h));
     const pad = (hi - lo) * 0.06 || hi * 0.001;
+    if (autoFit) {
+      let a = lo;
+      let b = hi;
+      const range = hi - lo || hi * 0.001;
+      if (liqPrice && liqPrice > 0 && liqPrice > lo - range * 3 && liqPrice < hi + range * 3) {
+        a = Math.min(a, liqPrice);
+        b = Math.max(b, liqPrice);
+      }
+      const p2 = (b - a) * 0.06 || b * 0.001;
+      return [a - p2, b + p2];
+    }
     const mid = (hi + lo) / 2;
     const half = (hi - lo) / 2 + pad;
     return [mid - half / yZoom, mid + half / yZoom];
-  }, [visible, yZoom]);
+  }, [visible, yZoom, autoFit, liqPrice]);
 
   const fmtTick = (t: number) => {
     const d = new Date(t);
@@ -288,7 +302,14 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
         <div className="flex bg-rail rounded p-0.5">
           <button onClick={() => zoom(1 / 1.5)} title="Приблизить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomIn" size={14} /></button>
           <button onClick={() => zoom(1.5)} title="Отдалить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomOut" size={14} /></button>
-          <button onClick={() => { setView(null); setYZoom(1); }} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
+          <button
+            onClick={() => setAutoFit((v) => !v)}
+            title="Автоподгонка: все видимые свечи и цена ликвидации помещаются на экран"
+            className={`px-2 py-1 text-xs font-mono flex items-center gap-1 rounded ${autoFit ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"}`}
+          >
+            <Icon name="ChevronsUpDown" size={14} /> Авто
+          </button>
+          <button onClick={() => { setView(null); setYZoom(1); setAutoFit(false); }} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
         </div>
         </div>
       </div>
@@ -299,7 +320,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        onDoubleClick={() => { setView(null); setYZoom(1); }}
+        onDoubleClick={() => { setView(null); setYZoom(1); setAutoFit(false); }}
       >
         {isLoading || !data ? (
           <Skeleton className="w-full h-[380px] bg-rail" />
@@ -316,11 +337,12 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
             onPointerCancel={onAxisUp}
             onDoubleClick={(e) => {
               e.stopPropagation();
+              setAutoFit(false);
               setYZoom(1);
             }}
           >
             <div className="absolute inset-y-0 right-0 w-full rounded bg-white/0 group-hover:bg-white/5 transition-colors" />
-            {yZoom !== 1 && <span className="absolute top-1 right-1 text-[10px] font-mono text-primary">×{yZoom.toFixed(1)}</span>}
+            {!autoFit && yZoom !== 1 && <span className="absolute top-1 right-1 text-[10px] font-mono text-primary">×{yZoom.toFixed(1)}</span>}
           </div>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
