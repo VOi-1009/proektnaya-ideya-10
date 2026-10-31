@@ -32,7 +32,7 @@ export const NEWS_TAGS: Record<NewsKind, NewsTag[]> = {
 export const NEWS_SOURCES: Record<NewsKind, string[]> = {
   crypto: ["Bits.media", "Forklog", "Investing.com"],
   commodities: ["Investing.com", "Финам", "Коммерсантъ"],
-  stocks: ["Финам", "Investing.com", "Smart-lab", "Ведомости"],
+  stocks: ["Финам", "Investing.com", "Smart-lab", "Ведомости", "РБК", "Интерфакс", "Прайм"],
 };
 
 export const TAG_STYLE: Record<string, string> = {
@@ -57,6 +57,9 @@ export const SOURCE_STYLE: Record<string, { avatar: string; cls: string }> = {
   Финам: { avatar: "Ф", cls: "bg-yellow-400 text-black" },
   Forklog: { avatar: "F", cls: "bg-orange-500 text-white" },
   Коммерсантъ: { avatar: "К", cls: "bg-zinc-200 text-black" },
+  РБК: { avatar: "Р", cls: "bg-emerald-600 text-white" },
+  Интерфакс: { avatar: "И", cls: "bg-blue-700 text-white" },
+  Прайм: { avatar: "П", cls: "bg-red-600 text-white" },
   "Smart-lab": { avatar: "S", cls: "bg-emerald-600 text-white" },
   Ведомости: { avatar: "В", cls: "bg-pink-700 text-white" },
 };

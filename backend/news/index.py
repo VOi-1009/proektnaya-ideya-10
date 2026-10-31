@@ -38,8 +38,14 @@ FEEDS = {
         ("Investing.com", "https://ru.investing.com/rss/stock.rss", None),
         ("Smart-lab", "https://smart-lab.ru/rss/", None),
         ("Ведомости", "https://www.vedomosti.ru/rss/rubric/finance", None),
+        ("РБК", "https://rssexport.rbc.ru/rbcnews/news/30/full.rss", None),
+        ("Интерфакс", "https://www.interfax.ru/rss.asp", None),
+        ("Прайм", "https://1prime.ru/export/rss2/index.xml", None),
     ],
 }
+
+GENERAL_STOCK_SOURCES = {"РБК", "Интерфакс", "Прайм"}
+STOCK_FILTER = r"акци[йяиюе]|акционер|дивиденд|дивотсечк|мосбирж|московск[а-я]* бирж|индекс мосбирж|\bрти\b|\bipo\b|\bspo\b|облигац|ммвб|s&p|nasdaq|dow jones|биржев|котировк|капитализац|мсфо|рсбу|чистая прибыль|байбэк|допэмисси|торги на бирж|рынок акций|фондов[а-я]* рын"
 
 COMMODITY_RULES = [
     ("Нефть и газ", r"(?<![а-яё])нефт|brent|\bwti\b|(?<![а-яё])опек\+?|\bopec|баррел|(?<![а-яё])газ(а|у|ом|е|ов)?(?![а-яё])|\bспг\b|\blng\b|бензин|дизел"),
@@ -134,6 +140,8 @@ def fetch_feed(source: str, url: str, kind: str = "crypto", default_tag=None) ->
                 continue
             coins = [COMMODITY_COINS[tag]] if tag in COMMODITY_COINS else []
         elif kind == "stocks":
+            if source in GENERAL_STOCK_SOURCES and not re.search(STOCK_FILTER, f"{title} {text[:300]}".lower()):
+                continue
             tag = classify_by(STOCK_RULES, title, text) or "Компании"
             coins = []
         else:
