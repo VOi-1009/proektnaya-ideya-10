@@ -8,6 +8,8 @@ import { chatColor, useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { BASE_ITEMS, DEFAULT_MENU_TITLE, DEFAULT_RADARS_TITLE, mergeMenu, useMenuSettings } from "@/lib/menu";
 
+const MOVED = ["market", "alerts", "converter"];
+
 interface Props {
   channel: string;
   go: GoFn;
@@ -22,7 +24,9 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
-  const items = mergeMenu(menuCfg).filter((i) => !i.hidden);
+  const allItems = mergeMenu(menuCfg).filter((i) => !i.hidden);
+  const items = allItems.filter((i) => !MOVED.includes(i.id));
+  const movedItems = allItems.filter((i) => MOVED.includes(i.id));
   const radarsFirst = !!menuCfg?.radarsFirst;
 
   return (
@@ -156,14 +160,30 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             ))}
           </div>
         </div>
-        {radars && radars.length > 0 && (
+        {((radars && radars.length > 0) || movedItems.length > 0) && (
           <div className={radarsFirst ? "order-1" : "order-2"}>
             <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
               <Icon name="ChevronDown" size={12} />
               <span>{menuCfg?.radarsTitle || DEFAULT_RADARS_TITLE}</span>
             </div>
             <div className="mt-0.5 space-y-0">
-              {radars.map((r) => (
+              {movedItems.map((it) => {
+                const label = it.label || BASE_ITEMS.find((b) => b.id === it.id)?.name || it.id;
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => go(it.id)}
+                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                      channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
+                    <span className="text-[14px] truncate">{label}</span>
+                    {it.id === "alerts" && activeAlerts > 0 && <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>}
+                  </button>
+                );
+              })}
+              {(radars ?? []).map((r) => (
                 <button
                   key={r.id}
                   onClick={() => go(`radar-${r.id}`)}
