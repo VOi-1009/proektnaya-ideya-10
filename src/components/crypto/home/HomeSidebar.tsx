@@ -60,6 +60,9 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <Icon name="X" size={16} />
         </Button>
       </div>
+      <div className="border-b border-border">
+        <HeroSiteNews />
+      </div>
       <div className="flex-1 p-2">
         <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
           <Icon name="ChevronDown" size={12} />
@@ -131,20 +134,6 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             );
           })}
         </div>
-      </div>
-      <div className="border-t border-border">
-        <HeroSiteNews />
-      </div>
-      <div className="p-4 flex justify-center">
-        <button
-          onClick={() => go("trading")}
-          className="group w-full max-w-[200px] flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-5 py-4 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
-        >
-          <span className="w-9 h-9 rounded-lg bg-background text-primary flex items-center justify-center font-display font-black text-xl leading-none">
-            Т
-          </span>
-          <span className="font-display font-black text-xl tracking-widest">TRADE</span>
-        </button>
       </div>
     </aside>
   );

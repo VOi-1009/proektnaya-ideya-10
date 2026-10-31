@@ -107,6 +107,15 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
             <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center">
               <QuoteBlock />
+              <button
+                onClick={() => go("trading")}
+                className="mt-4 mb-4 flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-6 py-3 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
+              >
+                <span className="w-9 h-9 rounded-lg bg-background text-primary flex items-center justify-center font-display font-black text-xl leading-none">
+                  Т
+                </span>
+                <span className="font-display font-black text-xl tracking-widest">TRADE</span>
+              </button>
             </div>
           </div>
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
