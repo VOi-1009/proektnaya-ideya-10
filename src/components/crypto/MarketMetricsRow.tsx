@@ -1,5 +1,4 @@
 import { useCmcMetrics } from "@/lib/cmcMetrics";
-import AltseasonCard from "./AltseasonCard";
 import { cardCls, labelCls, valueCls } from "./summaryCard";
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("ru-RU");
@@ -18,8 +17,6 @@ const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
 
   return (
     <div className={`grid ${cols} gap-2 mt-2`}>
-      <AltseasonCard />
-
       <a
         href={LIQ_URL}
         target="_blank"

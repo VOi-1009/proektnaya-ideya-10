@@ -46,10 +46,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               <div className={labelCls}>Капитализация крипто</div>
               <div className={valueCls}>{fmtBig(totalCap)}</div>
             </div>
-            <div className={cardCls("border-metric-indigo")}>
-              <div className={labelCls}>Доминация BTC</div>
-              <div className={valueCls}>{dominance.toFixed(1).replace(".", ",")}%</div>
-            </div>
             {best && (
               <button onClick={() => go("market", best.id)} className={cardCls("border-metric-lime", true)}>
                 <div className={labelCls}>Сильнее рынка</div>
