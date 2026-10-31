@@ -342,10 +342,10 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
         onDoubleClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }}
       >
         {isLoading || !data ? (
-          <Skeleton className="w-full h-[380px] bg-rail" />
+          <Skeleton className="w-full h-[460px] sm:h-[600px] bg-rail" />
         ) : (
           <>
-          <div ref={plotRef} className="h-[300px] sm:h-[380px] relative">
+          <div ref={plotRef} className="h-[460px] sm:h-[600px] relative">
           <div
             ref={axisRef}
             title="Тяните вверх и вниз или крутите колесо — растяжение шкалы цены. Двойной клик — сброс"
