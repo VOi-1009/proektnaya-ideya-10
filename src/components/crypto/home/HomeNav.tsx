@@ -1,11 +1,17 @@
 import { GoFn } from "./homeConfig";
+import UserAvatar from "@/components/crypto/UserAvatar";
+import { useAuth } from "@/lib/auth";
+import { useNavigate } from "@/lib/router-compat";
 
 interface Props {
   go: GoFn;
 }
 
-const HomeNav = ({ go }: Props) => (
-  <nav className="bg-card sticky top-0 z-30 grid grid-cols-2">
+const HomeNav = ({ go }: Props) => {
+  const { user, setAuthOpen } = useAuth();
+  const navigate = useNavigate();
+  return (
+  <nav className="bg-card sticky top-0 z-30 flex items-center justify-between">
     <div className="px-4 sm:px-6 py-3">
       <button onClick={() => go("welcome")} className="flex items-center gap-3">
         <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-black text-xl sm:text-2xl leading-none">
@@ -17,7 +23,20 @@ const HomeNav = ({ go }: Props) => (
         </div>
       </button>
     </div>
+    <button
+      onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
+      className="px-4 sm:px-6 flex-shrink-0"
+      title={user ? "Личный кабинет" : "Войти"}
+      aria-label={user ? "Личный кабинет" : "Войти"}
+    >
+      {user ? (
+        <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" />
+      ) : (
+        <UserAvatar />
+      )}
+    </button>
   </nav>
-);
+  );
+};
 
 export default HomeNav;
