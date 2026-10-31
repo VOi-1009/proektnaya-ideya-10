@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { communityRequest } from "@/lib/community";
 import CandleChart from "../CandleChart";
 import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import func2url from "../../../../backend/func2url.json";
@@ -80,6 +81,19 @@ const TradingChannel = ({ coins }: Props) => {
       toast({ title: (e as Error).message, variant: "destructive" });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const [shared, setShared] = useState<number[]>([]);
+  const share = async (t: Trade) => {
+    const dir = t.side === "long" ? "Лонг" : "Шорт";
+    const text = `${t.pnl >= 0 ? "Закрыл в плюс" : "Закрыл в минус"} на тренировочной бирже: ${name(t.coinId)}, ${dir} x${t.leverage}. Вход ${fmtPrice(t.entry, t.coinId)} → выход ${fmtPrice(t.close, t.coinId)}. Результат: ${usd(t.pnl, true)} (${((t.pnl / t.margin) * 100).toFixed(1)}% от суммы сделки).`;
+    try {
+      await communityRequest(token, "", { action: "post", body: text, sentiment: t.side === "long" ? "bull" : "bear", coins: [t.coinId] });
+      setShared((a) => [...a, t.id]);
+      toast({ title: "Сделка опубликована в соцсети сайта" });
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
     }
   };
 
@@ -254,6 +268,11 @@ const TradingChannel = ({ coins }: Props) => {
                     <div className="text-xs text-muted-foreground">{fmtPrice(t.entry, t.coinId)} → {fmtPrice(t.close, t.coinId)} · {reasonText[t.reason] ?? t.reason} · {new Date(t.closedAt + "Z").toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
                   </div>
                   <div className={`text-sm ${tone(t.pnl)}`}>{usd(t.pnl, true)}</div>
+                  {t.reason !== "reset" && (
+                    <Button size="sm" variant="outline" disabled={shared.includes(t.id)} onClick={() => share(t)}>
+                      {shared.includes(t.id) ? "Опубликовано" : "Поделиться"}
+                    </Button>
+                  )}
                 </Row>
               ))}
             </List>
