@@ -3,15 +3,15 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import Message from "../Message";
 import ReactionButtons from "../ReactionButtons";
 import { useAuth } from "@/lib/auth";
 import { useReactions } from "@/lib/reactions";
-import { fmtNewsTime, markSeen, NEWS_SOURCES, NEWS_TABS, NEWS_TAGS, NewsKind, NewsTag, SOURCE_STYLE, TAG_STYLE, useNews } from "../news";
+import { fmtNewsTime, markSeen, NEWS_SOURCES, NEWS_TAGS, NewsKind, NewsTag, SOURCE_STYLE, TAG_STYLE, useNews } from "../news";
 
 const PAGE = 15;
 
-const NewsChannel = () => {
-  const [kind, setKind] = useState<NewsKind>("crypto");
+const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
   const { token } = useAuth();
   const { data, isLoading, isError, error, refetch, isFetching, dataUpdatedAt } = useNews(kind);
   const [tag, setTag] = useState<NewsTag | "Все">("Все");
@@ -22,15 +22,6 @@ const NewsChannel = () => {
   const lastTop = useRef<string | null>(null);
 
   const items = useMemo(() => data?.items ?? [], [data]);
-
-  const switchKind = (k: NewsKind) => {
-    setKind(k);
-    setTag("Все");
-    setSource(null);
-    setCoin(null);
-    setLimit(PAGE);
-    lastTop.current = null;
-  };
 
   useEffect(() => {
     if (!items.length) return;
@@ -57,7 +48,7 @@ const NewsChannel = () => {
     (n) => (tag === "Все" || n.tag === tag) && (!coin || n.coins.includes(coin)) && (!source || n.source === source),
   );
   const visibleItems = useMemo(
-    () => list.slice(0, limit).map((n) => ({ id: n.id, title: n.title, link: n.link, source: n.source, ts: n.ts, kind: "crypto" })),
+    () => list.slice(0, limit).map((n) => ({ id: n.id, title: n.title, link: n.link, source: n.source, ts: n.ts, kind })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [list.map((n) => n.id).join(","), limit, kind],
   );
@@ -72,25 +63,6 @@ const NewsChannel = () => {
   return (
     <div className="space-y-4">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur py-2 -mt-2 space-y-2">
-        <div className="grid grid-cols-3 gap-1.5">
-          {NEWS_TABS.map((t) => {
-            const active = kind === t.kind;
-            return (
-              <button
-                key={t.kind}
-                onClick={() => switchKind(t.kind)}
-                className="h-8 rounded-md text-sm font-semibold border transition-colors"
-                style={{
-                  color: active ? "#fff" : t.color,
-                  background: `color-mix(in srgb, ${t.color} ${active ? 85 : 12}%, transparent)`,
-                  borderColor: `color-mix(in srgb, ${t.color} ${active ? 100 : 40}%, transparent)`,
-                }}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
         <div className="flex flex-wrap gap-2 items-center">
           {["Все", ...NEWS_TAGS[kind]].map((t) => (
             <button
@@ -188,42 +160,18 @@ const NewsChannel = () => {
         <div className="text-muted-foreground text-sm py-8 text-center">По этому фильтру свежих новостей нет.</div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {list.slice(0, limit).map((n) => {
-          const isOpen = open === n.id;
-          const st = SOURCE_STYLE[n.source];
-          return (
-            <article key={n.id} className="bg-card border border-border rounded-lg overflow-hidden flex flex-col">
-              <a href={n.link} target="_blank" rel="noreferrer" className="block aspect-[16/9] bg-hover overflow-hidden">
-                {n.image ? (
-                  <img
-                    src={n.image}
-                    alt=""
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className={`w-12 h-12 rounded-lg text-xl font-bold flex items-center justify-center ${st?.cls ?? "bg-hover"}`}>
-                      {st?.avatar ?? n.source[0]}
-                    </span>
-                  </div>
-                )}
-              </a>
-              <div className="p-3 flex-1 min-w-0 flex flex-col">
-                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  <span className={`w-4 h-4 rounded-sm text-[9px] font-bold flex items-center justify-center ${st?.cls ?? "bg-hover"}`}>
-                    {st?.avatar ?? n.source[0]}
-                  </span>
+      {list.slice(0, limit).map((n, idx) => {
+        const isOpen = open === n.id;
+        return (
+          <Message key={n.id} author="" time="" bot delay={Math.min(idx, 8) * 40}>
+            <article className="bg-card border-l-4 border-primary rounded overflow-hidden flex flex-col sm:flex-row">
+              <div className="p-3 sm:p-4 flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="text-xs text-white/80 font-medium">{n.source}</span>
                   <span className="text-xs text-muted-foreground">{fmtNewsTime(n.ts)}</span>
-                </div>
-                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  <span className={`text-[9px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TAG_STYLE[n.tag]}`}>{n.tag}</span>
+                  <span className={`text-[9px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TAG_STYLE[n.tag]}`}>
+                    {n.tag}
+                  </span>
                   {Date.now() - n.ts < 60 * 60_000 && (
                     <span className="text-[9px] uppercase tracking-wider bg-down/15 text-down rounded px-1.5 py-0.5 flex items-center gap-1">
                       <Icon name="Flame" size={10} /> Свежее
@@ -235,24 +183,26 @@ const NewsChannel = () => {
                     </span>
                   ))}
                 </div>
-                <h3 className="text-white font-semibold text-sm leading-snug mb-1.5">{n.title}</h3>
-                {n.text && <p className={`text-muted-foreground text-xs ${isOpen ? "" : "line-clamp-3"}`}>{n.text}</p>}
-                <div className="flex items-center gap-3 mt-auto pt-3 text-xs flex-wrap">
-                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v, { title: n.title, link: n.link, source: n.source, kind: "crypto" })} />
+                <h3 className="text-white font-semibold text-sm sm:text-base leading-snug mb-1.5">{n.title}</h3>
+                {n.text && (
+                  <p className={`text-muted-foreground text-sm ${isOpen ? "" : "line-clamp-2"}`}>{n.text}</p>
+                )}
+                <div className="flex items-center gap-4 mt-3 text-xs flex-wrap">
+                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v, { title: n.title, link: n.link, source: n.source, kind })} />
                   {n.text.length > 140 && (
                     <button onClick={() => setOpen(isOpen ? null : n.id)} className="text-primary hover:underline">
-                      {isOpen ? "Свернуть" : "Читать"}
+                      {isOpen ? "Свернуть" : "Читать полностью"}
                     </button>
                   )}
                   <a href={n.link} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-white inline-flex items-center gap-1 ml-auto">
-                    <Icon name="ExternalLink" size={12} />
+                    Источник <Icon name="ExternalLink" size={12} />
                   </a>
                 </div>
               </div>
             </article>
-          );
-        })}
-      </div>
+          </Message>
+        );
+      })}
 
       {list.length > limit && (
         <div>

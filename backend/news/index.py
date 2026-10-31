@@ -23,48 +23,28 @@ CORS = {
 
 FEEDS = {
     "crypto": [
-        ("Bits.media", "https://bits.media/rss2/", None),
-        ("Forklog", "https://forklog.com/feed", None),
-        ("Investing.com", "https://ru.investing.com/rss/news_11.rss", None),
+        ("Bits.media", "https://bits.media/rss2/"),
+        ("Investing.com", "https://ru.investing.com/rss/news_11.rss"),
+        ("Investing.com", "https://ru.investing.com/rss/commodities_Metals.rss"),
+        ("Ведомости", "https://www.vedomosti.ru/rss/news"),
+        ("Финам", "https://www.finam.ru/analysis/conews/rsspoint/"),
     ],
-    "commodities": [
-        ("Investing.com", "https://ru.investing.com/rss/commodities_Metals.rss", "Металлы"),
-        ("Investing.com", "https://ru.investing.com/rss/commodities_Energy.rss", "Нефть и газ"),
-        ("Финам", "https://www.finam.ru/analysis/conews/rsspoint/", None),
-        ("Коммерсантъ", "https://www.kommersant.ru/RSS/section-business.xml", None),
-    ],
-    "stocks": [
-        ("Финам", "https://www.finam.ru/analysis/conews/rsspoint/", None),
-        ("Investing.com", "https://ru.investing.com/rss/stock.rss", None),
-        ("Smart-lab", "https://smart-lab.ru/rss/", None),
-        ("Ведомости", "https://www.vedomosti.ru/rss/rubric/finance", None),
-        ("РБК", "https://rssexport.rbc.ru/rbcnews/news/30/full.rss", None),
-        ("Интерфакс", "https://www.interfax.ru/rss.asp", None),
-        ("Прайм", "https://1prime.ru/export/rss2/index.xml", None),
+    "world": [
+        ("ТАСС", "https://tass.ru/rss/v2.xml"),
+        ("Lenta.ru", "https://lenta.ru/rss/news/world"),
+        ("РБК", "https://rssexport.rbc.ru/rbcnews/news/30/full.rss"),
+        ("Ведомости", "https://www.vedomosti.ru/rss/news"),
     ],
 }
 
-GENERAL_STOCK_SOURCES = {"РБК", "Интерфакс", "Прайм"}
-STOCK_FILTER = r"акци[йяиюе]|акционер|дивиденд|дивотсечк|мосбирж|московск[а-я]* бирж|индекс мосбирж|\bрти\b|\bipo\b|\bspo\b|облигац|ммвб|s&p|nasdaq|dow jones|биржев|котировк|капитализац|мсфо|рсбу|чистая прибыль|байбэк|допэмисси|торги на бирж|рынок акций|фондов[а-я]* рын"
-
-COMMODITY_RULES = [
-    ("Нефть и газ", r"(?<![а-яё])нефт|brent|\bwti\b|(?<![а-яё])опек\+?|\bopec|баррел|(?<![а-яё])газ(а|у|ом|е|ов)?(?![а-яё])|\bспг\b|\blng\b|бензин|дизел"),
-    ("Золото", r"(?<![а-яё])золот(о|а|у|ом|е)?(?![а-яё])|\bgold\b|\bxau\b|драгметалл"),
-    ("Металлы", r"серебр|платин|палладий|(?<![а-яё])мед[иь](?![а-яё])|алюмин|никел|железн[а-я]* руд|\bсталь|сталь|металл|литий|уран"),
-    ("Агро", r"пшениц|зерн|кукуруз|подсолнечн|сахар|кофе|какао|удобрен"),
-]
-STOCK_RULES = [
-    ("Дивиденды", r"дивиденд|дивотсечк|дивидендн"),
-    ("Отчётность", r"прибыл|выручк|отчётн|отчетн|рсбу|мсфо|ebitda|убыток"),
-    ("IPO и сделки", r"\bipo\b|\bspo\b|размещени|допэмисси|байбэк|выкуп|поглощен|слиян|оферт"),
-    ("Рынок", r"индекс мосбирж|\bмосбирж|\bрти\b|s&p|nasdaq|dow jones|акци|торги|бирж"),
-]
+COMMODITY_SOURCES = {"Investing.com", "Ведомости", "Финам"}
+OIL_RX = r"(?<![а-яё])нефт|brent|\bwti\b|(?<![а-яё])опек\+?|\bopec|баррел"
+GOLD_RX = r"(?<![а-яё])золот(о|а|у|ом|е)?(?![а-яё])|\bgold\b|\bxau\b|драгметалл"
 
 NS = {"dc": "http://purl.org/dc/elements/1.1/", "media": "http://search.yahoo.com/mrss/"}
 
 CACHE_TTL = 120
 _cache: dict = {k: {"at": 0.0, "items": []} for k in FEEDS}
-KIND_ALIASES = {"world": "crypto"}
 
 TAG_RULES = [
     ("Регулирование", r"регулир|закон|\bsec\b|\bсуд|налог|минфин|\bцб\b|центробанк|банк росси|санкц|запрет|лицензи[яю]|госдум|прокурат|\bfca\b|\bmica\b|арест|штраф"),
@@ -85,15 +65,17 @@ COINS = [
     ("ADA", r"cardano|кардано|\bada\b"),
     ("USDT", r"usdt|tether|тезер"),
     ("USDC", r"usdc|circle"),
+    ("BRENT", OIL_RX),
+    ("GOLD", GOLD_RX),
 ]
-COMMODITY_COINS = {"Нефть и газ": "BRENT", "Золото": "GOLD"}
 
 
-def classify_by(rules: list, title: str, text: str = "") -> str:
-    for hay in (title.lower(), text[:300].lower()):
-        for tag, rx in rules:
-            if re.search(rx, hay):
-                return tag
+def classify_commodity(title: str) -> str:
+    t = title.lower()
+    if re.search(OIL_RX, t):
+        return "Нефть"
+    if re.search(GOLD_RX, t):
+        return "Золото"
     return ""
 
 
@@ -106,6 +88,23 @@ def clean(raw: str) -> str:
 def first_image(raw: str) -> str:
     m = re.search(r'<img[^>]+src="([^"]+)"', raw or "")
     return m.group(1) if m else ""
+
+
+WORLD_RULES = [
+    ("Экономика", r"экономик|бизнес|финанс|нефт|газ|рынок|бирж|ставк|инфляц|ввп|бюджет|рубл|доллар|санкц|торгов|пошлин"),
+    ("Политика", r"политик|президент|выбор|парламент|министр|правительств|дипломат|переговор|саммит|оон|нато|госдеп|кремл"),
+    ("Происшествия", r"происшеств|авари|катастроф|пожар|взрыв|землетряс|наводнен|погиб|крушен|ураган|теракт"),
+    ("Технологии", r"технолог|наука|космос|\bии\b|искусствен|смартфон|интернет|медиа"),
+    ("Общество", r"обществ|культур|спорт|здоровь|образован|мигра"),
+]
+
+
+def classify_world(title: str, cats: list) -> str:
+    hay = f"{' '.join(cats)} {title}".lower()
+    for tag, rx in WORLD_RULES:
+        if re.search(rx, hay):
+            return tag
+    return "В мире"
 
 
 def classify(title: str, text: str, cats: list) -> str:
@@ -121,7 +120,7 @@ def detect_coins(title: str, text: str) -> list:
     return [c for c, rx in COINS if re.search(rx, hay)][:4]
 
 
-def fetch_feed(source: str, url: str, kind: str = "crypto", default_tag=None) -> list:
+def fetch_feed(source: str, url: str, kind: str = "crypto") -> list:
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (TraderkaNewsBot)"})
     with urllib.request.urlopen(req, timeout=3.5) as r:
         root = ET.fromstring(r.read())
@@ -134,19 +133,11 @@ def fetch_feed(source: str, url: str, kind: str = "crypto", default_tag=None) ->
         if not title or not link:
             continue
         cats = [clean(c.text or "") for c in it.findall("category")]
-        if kind == "commodities":
-            tag = classify_by(COMMODITY_RULES, title, text) or default_tag
-            if not tag:
+        commodity = ""
+        if kind == "crypto" and source in COMMODITY_SOURCES:
+            commodity = classify_commodity(title)
+            if not commodity:
                 continue
-            coins = [COMMODITY_COINS[tag]] if tag in COMMODITY_COINS else []
-        elif kind == "stocks":
-            if source in GENERAL_STOCK_SOURCES and not re.search(STOCK_FILTER, f"{title} {text[:300]}".lower()):
-                continue
-            tag = classify_by(STOCK_RULES, title, text) or "Компании"
-            coins = []
-        else:
-            tag = classify(title, text, cats)
-            coins = detect_coins(title, text)
         try:
             ts = int(parsedate_to_datetime(it.findtext("pubDate", "")).timestamp() * 1000)
         except (TypeError, ValueError):
@@ -168,8 +159,8 @@ def fetch_feed(source: str, url: str, kind: str = "crypto", default_tag=None) ->
             "source": source,
             "author": author,
             "ts": ts,
-            "tag": tag,
-            "coins": coins,
+            "tag": commodity or (classify(title, text, cats) if kind == "crypto" else classify_world(title, cats)),
+            "coins": (["BRENT"] if commodity == "Нефть" else ["GOLD"]) if commodity else (detect_coins(title, text) if kind == "crypto" else []),
         })
     return items
 
@@ -179,10 +170,16 @@ def load_all(kind: str) -> tuple:
     items = []
     feeds = FEEDS[kind]
     with ThreadPoolExecutor(max_workers=len(feeds)) as ex:
-        futures = [(ex.submit(fetch_feed, s, u, kind, d), s) for s, u, d in feeds]
-        for f, s in futures:
+        futures = {ex.submit(fetch_feed, s, u, kind): s for s, u in feeds}
+        per_source: dict = {}
+        for f, s in futures.items():
             try:
-                items.extend(f.result()[:30])
+                got = f.result()
+                if kind == "crypto" and s in COMMODITY_SOURCES:
+                    room = 12 - per_source.get(s, 0)
+                    got = got[:max(room, 0)]
+                    per_source[s] = per_source.get(s, 0) + len(got)
+                items.extend(got if kind == "crypto" else got[:25])
             except Exception as e:  # noqa: BLE001
                 errors.append(f"{s}: {type(e).__name__}")
     seen = set()
@@ -193,15 +190,16 @@ def load_all(kind: str) -> tuple:
             continue
         seen.add(key)
         uniq.append(it)
+    if kind == "crypto":
+        crypto = [i for i in uniq if i["tag"] not in ("Нефть", "Золото")][:50]
+        comm = [i for i in uniq if i["tag"] in ("Нефть", "Золото")][:20]
+        return sorted(crypto + comm, key=lambda x: x["ts"], reverse=True), errors
     return uniq[:60], errors
 
 
 COMMODITIES = {
     "brent": {"ticker": "BZ=F", "symbol": "brent", "name": "BRENT"},
     "gold": {"ticker": "GC=F", "symbol": "xau", "name": "Gold"},
-    "silver": {"ticker": "SI=F", "symbol": "xag", "name": "Silver"},
-    "natgas": {"ticker": "NG=F", "symbol": "gas", "name": "Natural Gas"},
-    "palladium": {"ticker": "PA=F", "symbol": "xpd", "name": "Palladium"},
     "usd-rub": {"ticker": "RUB=X", "symbol": "usd", "name": "USD/RUB", "quote": "RUB"},
     "eur-rub": {"ticker": "EURRUB=X", "symbol": "eur", "name": "EUR/RUB", "quote": "RUB"},
     "usdt-rub": {"ticker": "USDT-RUB", "symbol": "usdt", "name": "USDT/RUB", "quote": "RUB"},
@@ -309,7 +307,7 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|commodities|stocks) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar), притоки и оттоки активов на биржах (?resource=exflows)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar), притоки и оттоки активов на биржах (?resource=exflows)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}
@@ -333,9 +331,7 @@ def handler(event: dict, context) -> dict:
     if resource == "calendar":
         return calendar_response(json_resp)
 
-    kind = qs.get("kind")
-    kind = KIND_ALIASES.get(kind, kind)
-    kind = kind if kind in FEEDS else "crypto"
+    kind = qs.get("kind") if qs.get("kind") in FEEDS else "crypto"
     cache = _cache[kind]
     now = time.time()
     cached = False

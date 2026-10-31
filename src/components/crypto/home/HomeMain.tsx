@@ -118,7 +118,7 @@ const HomeMain = ({
         ) : channel === "calendar" ? (
           <CalendarChannel />
         ) : channel === "news" ? (
-          <NewsChannel />
+          <NewsChannel key="crypto" kind="crypto" />
         ) : channel === "articles" ? (
           <ArticlesChannel openId={articleId} setOpenId={setArticleId} />
         ) : channel === "ainews" ? (

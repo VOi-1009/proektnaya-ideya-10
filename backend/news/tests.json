@@ -19,15 +19,9 @@
       "expectedStatus": 200
     },
     {
-      "name": "Новости сырья",
+      "name": "Мировые новости",
       "method": "GET",
-      "path": "/?kind=commodities",
-      "expectedStatus": 200
-    },
-    {
-      "name": "Новости акций",
-      "method": "GET",
-      "path": "/?kind=stocks",
+      "path": "/?kind=world",
       "expectedStatus": 200
     },
     {

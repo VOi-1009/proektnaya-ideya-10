@@ -11,7 +11,7 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-const COMMODITY_ICON: Record<string, string> = { brent: "Droplet", gold: "Gem", silver: "Gem", natgas: "Flame", palladium: "Gem" };
+const COMMODITY_ICON: Record<string, string> = { brent: "Droplet", gold: "Gem" };
 
 const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
   const meta = COIN_META[coin.id];
