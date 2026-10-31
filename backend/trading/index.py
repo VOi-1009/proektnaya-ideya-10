@@ -211,6 +211,21 @@ def public_stats(cur, uid, px):
     return st if st["trades"] > 0 else None
 
 
+def public_trades(cur, uid, px):
+    out = []
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, size, entry_price, opened_at FROM {SCHEMA}.paper_positions WHERE user_id = {uid} AND status = 'open' ORDER BY id DESC LIMIT 5")
+    for pid, coin, side, lev, margin, size, entry, at in cur.fetchall():
+        margin, size, entry = float(margin), float(size), float(entry)
+        price = px.get(coin, entry)
+        pnl = pnl_of(side, entry, size, price)
+        out.append({"id": pid, "coinId": coin, "side": side, "leverage": lev, "entry": entry, "price": price, "pct": pnl / margin * 100 if margin else 0, "open": True, "at": at.isoformat()})
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {uid} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' ORDER BY closed_at DESC LIMIT 5")
+    for pid, coin, side, lev, margin, entry, close, pnl, at in cur.fetchall():
+        margin = float(margin)
+        out.append({"id": pid, "coinId": coin, "side": side, "leverage": lev, "entry": float(entry), "price": float(close), "pct": float(pnl) / margin * 100 if margin else 0, "open": False, "at": at.isoformat()})
+    return out
+
+
 def state(cur, user_id, px):
     cur.execute(f"INSERT INTO {SCHEMA}.paper_accounts (user_id) VALUES ({user_id}) ON CONFLICT (user_id) DO NOTHING")
     process(cur, user_id, px)
@@ -291,6 +306,11 @@ def handler(event, context):
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             return resp(200, {"checked": tick(cur, px)})
+        if method == "GET" and action == "trades":
+            uid_q = str(qs.get("userId", ""))
+            if not uid_q.isdigit():
+                return resp(400, {"error": "Не указан участник"})
+            return resp(200, {"trades": public_trades(cur, int(uid_q), px)})
         if method == "GET" and action == "profile":
             uid_q = str(qs.get("userId", ""))
             if not uid_q.isdigit():
