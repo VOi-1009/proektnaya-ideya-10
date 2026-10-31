@@ -86,7 +86,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                 <button
                   key={it.id}
                   onClick={() => open(it)}
-                  className={`group w-full flex items-center gap-2 px-2 py-1.5 my-0.5 rounded-md text-left transition-colors border ${active ? "text-white" : "hover:text-white"}`}
+                  className={`group w-full flex items-center gap-2 px-2 py-1 my-px rounded-md text-left transition-colors border ${active ? "text-white" : "hover:text-white"}`}
                   style={{
                     color: active ? undefined : color,
                     background: tint(color, active ? 20 : 10),
@@ -113,7 +113,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
               <button
                 key={it.id}
                 onClick={() => open(it)}
-                className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                className={`w-full flex items-center gap-2 px-2 py-0.5 rounded text-left transition-colors ${
                   active ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                 }`}
               >
