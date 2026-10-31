@@ -3,7 +3,7 @@ export type GoFn = (ch: string, coinId?: string) => void;
 export const CHANNELS = [
   { id: "welcome", name: "главная", topic: "", icon: "Hash" },
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
-  { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: Bits.media, Investing.com, Финам, Ведомости", icon: "Hash" },
+  { id: "news", name: "новости", short: "Новости", topic: "Криптовалюты, сырьё и акции", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
   { id: "ainews", name: "новости-AiTKA", short: "AiTKA", topic: "Дайджесты и заметки ИИ-бота AiTKA", icon: "Sparkles" },
   { id: "forum", name: "форум", topic: "Обсуждения по разделам: рынок, идеи, закрытые клубы", icon: "Hash" },
