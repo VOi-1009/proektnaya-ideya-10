@@ -27,7 +27,7 @@ export const BASE_ITEMS: { id: string; name: string }[] = [
 ];
 
 export const DEFAULT_MENU_TITLE = "Меню";
-export const DEFAULT_RADARS_TITLE = "Радары";
+export const DEFAULT_RADARS_TITLE = "Инструменты";
 
 export const mergeMenu = (saved?: MenuSettings | null): MenuItemCfg[] => {
   const known = new Set(BASE_ITEMS.map((i) => i.id));
