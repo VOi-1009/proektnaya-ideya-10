@@ -1,138 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import Icon from "@/components/ui/icon";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line as RLine, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, CartesianGrid, ComposedChart, Line as RLine, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmtPrice, useChart } from "@/lib/crypto";
 import { useAuth } from "@/lib/auth";
-import func2url from "../../../backend/func2url.json";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const INTERVALS = [
-  { v: "1m", label: "1м", ms: 60_000 },
-  { v: "5m", label: "5м", ms: 300_000 },
-  { v: "15m", label: "15м", ms: 900_000 },
-  { v: "1h", label: "1ч", ms: 3_600_000 },
-  { v: "4h", label: "4ч", ms: 14_400_000 },
-  { v: "1d", label: "1д", ms: 86_400_000 },
-];
-
-const fmtVol = (v: number) => (v >= 1e9 ? `${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}K` : v.toFixed(0));
-const FIRST_VIEW = 120;
-
-const loadKlines = async (coinId: string, interval: string, token: string | null): Promise<Candle[]> => {
-  const r = await fetch(`${func2url.trading}?action=candles&coinId=${coinId}&interval=${interval}`, { headers: { "X-Auth-Token": token ?? "" } });
-  if (!r.ok) throw new Error("klines unavailable");
-  const data = (await r.json()) as { candles: number[][] };
-  return data.candles.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v, range: [l, h] as [number, number] }));
-};
-
-interface Candle { empty?: boolean; t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number; macd?: number; sig?: number; hist?: number }
-interface Line { price: number; label: string; color: string }
-
-const UP = "#22C55E";
-const DOWN = "hsl(var(--down))";
-
-const sma = (c: number[], n: number, i: number) => (i >= n - 1 ? c.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n : undefined);
-
-const ema = (c: number[], n: number): number[] => {
-  const k = 2 / (n + 1);
-  const out: number[] = [];
-  c.forEach((v, i) => out.push(i === 0 ? v : v * k + out[i - 1] * (1 - k)));
-  return out;
-};
-
-const withIndicators = (d: Candle[]): Candle[] => {
-  const c = d.map((x) => x.c);
-  const e12 = ema(c, 12);
-  const e26 = ema(c, 26);
-  const macdLine = c.map((_, i) => e12[i] - e26[i]);
-  const sigLine = ema(macdLine, 9);
-  let ag = 0;
-  let al = 0;
-  return d.map((x, i) => {
-    const ma20 = sma(c, 20, i);
-    const ma50 = sma(c, 50, i);
-    let bbU: number | undefined;
-    let bbL: number | undefined;
-    if (ma20 !== undefined) {
-      const sd = Math.sqrt(c.slice(i - 19, i + 1).reduce((a, b) => a + (b - ma20) ** 2, 0) / 20);
-      bbU = ma20 + 2 * sd;
-      bbL = ma20 - 2 * sd;
-    }
-    let rsi: number | undefined;
-    if (i >= 1) {
-      const ch = c[i] - c[i - 1];
-      const g = Math.max(ch, 0);
-      const l = Math.max(-ch, 0);
-      if (i <= 14) {
-        ag += g / 14;
-        al += l / 14;
-      } else {
-        ag = (ag * 13 + g) / 14;
-        al = (al * 13 + l) / 14;
-      }
-      if (i >= 14) rsi = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
-    }
-    const ok = i >= 33;
-    return { ...x, ma20, ma50, bbU, bbL, rsi, macd: ok ? macdLine[i] : undefined, sig: ok ? sigLine[i] : undefined, hist: ok ? macdLine[i] - sigLine[i] : undefined };
-  });
-};
-
-const INDICATORS = [
-  { k: "ma20", label: "MA 20", color: "#FACC15" },
-  { k: "ma50", label: "MA 50", color: "#38BDF8" },
-  { k: "bb", label: "Боллинджер", color: "#A78BFA" },
-  { k: "rsi", label: "RSI 14", color: "#F472B6" },
-  { k: "macd", label: "MACD", color: "#FB923C" },
-] as const;
-
-const fromPoints = (pts: { t: number; p: number }[]): Candle[] => {
-  const size = Math.max(2, Math.floor(pts.length / 60));
-  const out: Candle[] = [];
-  for (let i = 0; i < pts.length; i += size) {
-    const g = pts.slice(i, i + size);
-    const ps = g.map((x) => x.p);
-    const h = Math.max(...ps);
-    const l = Math.min(...ps);
-    out.push({ t: g[0].t, o: ps[0], h, l, c: ps[ps.length - 1], v: 0, range: [l, h] });
-  }
-  return out;
-};
-
-interface ShapeProps {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  payload?: Candle;
-  background?: { y: number; height: number };
-  domain?: [number, number];
-}
-
-const CandleShape = (props: ShapeProps) => {
-  const { x = 0, y = 0, width = 0, height = 0, payload, background, domain } = props;
-  if (!payload || payload.empty) return null;
-  const { o, h, l, c } = payload;
-  const color = c >= o ? UP : DOWN;
-  let yOf: (v: number) => number;
-  if (background && domain && domain[1] > domain[0]) {
-    const span = domain[1] - domain[0];
-    yOf = (v) => background.y + ((domain[1] - v) / span) * background.height;
-  } else {
-    const span = h - l || 1;
-    yOf = (v) => y + ((h - v) / span) * height;
-  }
-  const top = yOf(Math.max(o, c));
-  const body = Math.max(Math.abs(yOf(o) - yOf(c)), 1);
-  const cx = x + width / 2;
-  const bw = Math.max(width * 0.7, 2);
-  return (
-    <g>
-      <line x1={cx} x2={cx} y1={yOf(h)} y2={yOf(l)} stroke={color} strokeWidth={1} />
-      <rect x={cx - bw / 2} y={top} width={bw} height={body} fill={color} />
-    </g>
-  );
-};
+import { Candle, CandleShape, FIRST_VIEW, INTERVALS, Line, fmtVol, fromPoints, loadKlines, withIndicators } from "./candle/chartUtils";
+import ChartToolbar from "./candle/ChartToolbar";
+import ChartFooter from "./candle/ChartFooter";
+import IndicatorPanes from "./candle/IndicatorPanes";
 
 interface Props { coinId: string; price: number; lines?: Line[]; liqPrice?: number; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean }
 
@@ -314,39 +189,23 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
 
   return (
     <div className={full ? "fixed inset-0 z-[100] bg-background p-3 sm:p-4 overflow-y-auto flex flex-col" : ""}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="font-display text-white">График</h3>
-          <span className="font-mono text-white text-sm">{price ? fmtPrice(price, coinId) : "—"}</span>
-          {onQuick && (
-            <>
-              <button disabled={quickDisabled} onClick={() => onQuick("long")} className="px-3 py-1 text-xs font-medium rounded bg-[#22C55E] text-black hover:bg-[#22C55E]/90 disabled:opacity-50">Лонг</button>
-              <button disabled={quickDisabled} onClick={() => onQuick("short")} className="px-3 py-1 text-xs font-medium rounded bg-[#EA3943] text-white hover:bg-[#EA3943]/90 disabled:opacity-50">Шорт</button>
-              {quickInfo && <span className="text-xs text-muted-foreground">{quickInfo}</span>}
-              {onCloseAll && closeInfo && (
-                <button disabled={closeDisabled} onClick={onCloseAll} className="px-3 py-1 text-xs font-medium rounded border border-border text-white hover:bg-hover disabled:opacity-50">
-                  Закрыть позицию <span className={closeProfit ? "text-[#22C55E]" : "text-[#EA3943]"}>{closeInfo}</span>
-                </button>
-              )}
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-        <div className="flex bg-rail rounded p-0.5">
-          <button onClick={() => zoom(1 / 1.5)} title="Приблизить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomIn" size={14} /></button>
-          <button onClick={() => zoom(1.5)} title="Отдалить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomOut" size={14} /></button>
-          <button
-            onClick={() => setAutoFit((v) => !v)}
-            title="Автоподгонка: все видимые свечи и цена ликвидации помещаются на экран"
-            className={`px-2 py-1 text-xs font-mono flex items-center gap-1 rounded ${autoFit ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"}`}
-          >
-            <Icon name="ChevronsUpDown" size={14} /> Авто
-          </button>
-          <button onClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }} title="Сбросить масштаб" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="RotateCcw" size={14} /></button>
-          <button onClick={() => setFull((v) => !v)} title={full ? "Свернуть (Esc)" : "На весь экран"} className={`px-2 py-1 rounded ${full ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"}`}><Icon name={full ? "Shrink" : "Expand"} size={14} /></button>
-        </div>
-        </div>
-      </div>
+      <ChartToolbar
+        coinId={coinId}
+        price={price}
+        onQuick={onQuick}
+        quickInfo={quickInfo}
+        quickDisabled={quickDisabled}
+        closeInfo={closeInfo}
+        closeProfit={closeProfit}
+        onCloseAll={onCloseAll}
+        closeDisabled={closeDisabled}
+        zoom={zoom}
+        autoFit={autoFit}
+        setAutoFit={setAutoFit}
+        resetAll={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }}
+        full={full}
+        setFull={setFull}
+      />
       <div
         ref={boxRef}
         title="Тяните график в любую сторону: влево-вправо — время, вверх-вниз — цена"
@@ -427,82 +286,11 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
             </ComposedChart>
           </ResponsiveContainer>
           </div>
-          {visible.some((c) => c.v > 0) && (
-            <div className="h-[80px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={visible} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
-                  <XAxis dataKey="t" hide />
-                  <YAxis orientation="right" tickFormatter={fmtVol} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={72} tickCount={3} />
-                  <Bar dataKey="v" isAnimationActive={false}>
-                    {visible.map((c) => (
-                      <Cell key={c.t} fill={c.c >= c.o ? UP : DOWN} fillOpacity={0.7} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-          {on.rsi && (
-            <div className="h-[90px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={visible} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
-                  <XAxis dataKey="t" hide />
-                  <YAxis orientation="right" domain={[0, 100]} ticks={[30, 70]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={72} />
-                  <ReferenceLine y={70} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
-                  <ReferenceLine y={30} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
-                  <RLine type="monotone" dataKey="rsi" stroke="#F472B6" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-          {on.macd && (
-            <div className="h-[100px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
-                  <XAxis dataKey="t" hide />
-                  <YAxis orientation="right" domain={["auto", "auto"]} tickFormatter={(v: number) => (Math.abs(v) >= 1 ? v.toFixed(1) : v.toPrecision(2))} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={72} tickCount={3} />
-                  <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
-                  <Bar dataKey="hist" isAnimationActive={false}>
-                    {visible.map((c) => (
-                      <Cell key={c.t} fill={(c.hist ?? 0) >= 0 ? UP : DOWN} fillOpacity={0.7} />
-                    ))}
-                  </Bar>
-                  <RLine type="monotone" dataKey="macd" stroke="#38BDF8" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-                  <RLine type="monotone" dataKey="sig" stroke="#FACC15" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          <IndicatorPanes visible={visible} on={on} />
           </>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-2 mt-2">
-      <div className="flex bg-rail rounded p-0.5 w-fit">
-        {INTERVALS.map((r) => (
-          <button
-            key={r.v}
-            onClick={() => setIntervalV(r.v)}
-            className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
-              interval === r.v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"
-            }`}
-          >
-            {r.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex bg-rail rounded p-0.5 w-fit">
-        {INDICATORS.map((ind) => (
-          <button
-            key={ind.k}
-            onClick={() => setOn((o) => ({ ...o, [ind.k]: !o[ind.k] }))}
-            className={`px-3 py-1 text-xs font-mono rounded transition-colors flex items-center gap-1.5 ${on[ind.k] ? "bg-hover text-white" : "text-muted-foreground hover:text-white"}`}
-          >
-            <span className="w-2 h-2 rounded-full" style={{ background: on[ind.k] ? ind.color : "transparent", border: `1px solid ${ind.color}` }} />
-            {ind.label}
-          </button>
-        ))}
-      </div>
-      </div>
+      <ChartFooter interval={interval} setIntervalV={setIntervalV} on={on} setOn={setOn} />
     </div>
   );
 };
