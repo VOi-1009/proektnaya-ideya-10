@@ -168,8 +168,105 @@ const TradingChannel = ({ coins }: Props) => {
         <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
       </div>
 
-      <div className="grid lg:grid-cols-[340px_1fr] gap-4">
-        <section className="rounded-xl border border-border bg-card p-4 space-y-3 h-fit">
+      <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-stretch">
+        <div className="space-y-4 min-w-0">
+        <section className="rounded-xl border border-border bg-card p-4 min-w-0">
+          <CandleChart
+            coinId={coinId}
+            price={livePrice}
+            closeInfo={coinPositions.length ? `${usd(coinPnl, true)}${coinPositions.length > 1 ? ` · ${coinPositions.length} шт.` : ""}` : undefined}
+            closeProfit={coinPnl >= 0}
+            onCloseAll={closeAll}
+            closeDisabled={busy}
+            quickDisabled={busy || !user || m < 10}
+            quickInfo={`${usd(m)} · x${leverage}`}
+            onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}
+            lines={[
+              ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.entry, label: `${p.side === "long" ? "Лонг" : "Шорт"} x${p.leverage}`, color: p.side === "long" ? "#16C784" : "#EA3943" })) ?? []),
+              ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
+              ...(st?.positions.filter((p) => p.coinId === coinId && p.sl).map((p) => ({ price: p.sl as number, label: "Стоп-лосс", color: "#EA3943" })) ?? []),
+              ...(st?.positions.filter((p) => p.coinId === coinId && p.tp).map((p) => ({ price: p.tp as number, label: "Тейк-профит", color: "#22C55E" })) ?? []),
+              ...(Number(sl) > 0 ? [{ price: Number(sl), label: "Стоп (черновик)", color: "#EA3943" }] : []),
+              ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
+            ]}
+          />
+        </section>
+
+        <section className="rounded-xl border border-border bg-card p-4 min-w-0">
+          <div className="flex gap-1 mb-3 flex-wrap">
+            {([["positions", `Позиции${st?.positions.length ? ` (${st.positions.length})` : ""}`], ["orders", `Ордера${st?.orders.length ? ` (${st.orders.length})` : ""}`], ["history", "История"], ["leaders", "Рейтинг"]] as const).map(([k, l]) => (
+              <Button key={k} size="sm" variant={tab === k ? "secondary" : "ghost"} onClick={() => setTab(k)}>{l}</Button>
+            ))}
+          </div>
+
+          {tab === "positions" && (
+            <List empty="Открытых позиций нет. Откройте первую сделку справа.">
+              {st?.positions.map((p) => (
+                <Row key={p.id}>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-white">{name(p.coinId)} <span className={p.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{p.side === "long" ? "Лонг" : "Шорт"} x{p.leverage}</span></div>
+                    <div className="text-xs text-muted-foreground">Вход {fmtPrice(p.entry, p.coinId)} · сейчас {fmtPrice(p.price, p.coinId)} · ликвидация {fmtPrice(p.liq, p.coinId)}{p.sl ? ` · стоп ${fmtPrice(p.sl, p.coinId)}` : ""}{p.tp ? ` · тейк ${fmtPrice(p.tp, p.coinId)}` : ""}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-sm ${tone(p.pnl)}`}>PnL {usd(p.pnl, true)}</div>
+                    <div className={`text-xs ${tone(p.pnl)}`}>{pct(p.pnl, p.margin)} · сумма {usd(p.margin)}</div>
+                  </div>
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => send({ action: "close", id: p.id }, "Позиция закрыта")}>Закрыть</Button>
+                </Row>
+              ))}
+            </List>
+          )}
+
+          {tab === "orders" && (
+            <List empty="Лимитных ордеров нет.">
+              {st?.orders.map((o) => (
+                <Row key={o.id}>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-white">{name(o.coinId)} <span className={o.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{o.side === "long" ? "Лонг" : "Шорт"} x{o.leverage}</span></div>
+                    <div className="text-xs text-muted-foreground">Исполнится по {fmtPrice(o.limit, o.coinId)} · сумма {usd(o.margin)}{o.sl ? ` · стоп ${fmtPrice(o.sl, o.coinId)}` : ""}{o.tp ? ` · тейк ${fmtPrice(o.tp, o.coinId)}` : ""}</div>
+                  </div>
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => send({ action: "cancel", id: o.id }, "Ордер отменён")}>Отменить</Button>
+                </Row>
+              ))}
+            </List>
+          )}
+
+          {tab === "history" && (
+            <List empty="Закрытых сделок пока нет.">
+              {st?.history.map((t) => (
+                <Row key={t.id}>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-white">{name(t.coinId)} <span className={t.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{t.side === "long" ? "Лонг" : "Шорт"} x{t.leverage}</span></div>
+                    <div className="text-xs text-muted-foreground">{fmtPrice(t.entry, t.coinId)} → {fmtPrice(t.close, t.coinId)} · {reasonText[t.reason] ?? t.reason} · {new Date(t.closedAt + "Z").toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-sm ${tone(t.pnl)}`}>PnL {usd(t.pnl, true)}</div>
+                    <div className={`text-xs ${tone(t.pnl)}`}>{pct(t.pnl, t.margin)}</div>
+                  </div>
+                  {t.reason !== "reset" && (
+                    <Button size="sm" variant="outline" disabled={shared.includes(t.id)} onClick={() => share(t)}>
+                      {shared.includes(t.id) ? "Опубликовано" : "Поделиться"}
+                    </Button>
+                  )}
+                </Row>
+              ))}
+            </List>
+          )}
+
+          {tab === "leaders" && (
+            <>
+          <Board
+            leaders={leaders?.leaders ?? []}
+            me={user?.id}
+            busy={busy || m < 10}
+            onRepeat={(t) => send({ action: "open", coinId: t.coinId, side: t.side, leverage: t.leverage, margin: m }, `Открыта такая же позиция на ${usd(m)}`)}
+          />
+          {user && <p className="text-xs text-muted-foreground mt-2">«Повторить сделку» открывает такую же позицию по текущему курсу на сумму из формы справа (сейчас {usd(m)}).</p>}
+            </>
+          )}
+        </section>
+        </div>
+        <section className="rounded-xl border border-border bg-card p-4 space-y-3">
           <h3 className="font-display text-white">Новая сделка</h3>
           <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -242,102 +339,7 @@ const TradingChannel = ({ coins }: Props) => {
           )}
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-4 min-w-0">
-          <CandleChart
-            coinId={coinId}
-            price={livePrice}
-            closeInfo={coinPositions.length ? `${usd(coinPnl, true)}${coinPositions.length > 1 ? ` · ${coinPositions.length} шт.` : ""}` : undefined}
-            closeProfit={coinPnl >= 0}
-            onCloseAll={closeAll}
-            closeDisabled={busy}
-            quickDisabled={busy || !user || m < 10}
-            quickInfo={`${usd(m)} · x${leverage}`}
-            onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}
-            lines={[
-              ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.entry, label: `${p.side === "long" ? "Лонг" : "Шорт"} x${p.leverage}`, color: p.side === "long" ? "#16C784" : "#EA3943" })) ?? []),
-              ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
-              ...(st?.positions.filter((p) => p.coinId === coinId && p.sl).map((p) => ({ price: p.sl as number, label: "Стоп-лосс", color: "#EA3943" })) ?? []),
-              ...(st?.positions.filter((p) => p.coinId === coinId && p.tp).map((p) => ({ price: p.tp as number, label: "Тейк-профит", color: "#22C55E" })) ?? []),
-              ...(Number(sl) > 0 ? [{ price: Number(sl), label: "Стоп (черновик)", color: "#EA3943" }] : []),
-              ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
-            ]}
-          />
-        </section>
       </div>
-
-        <section className="rounded-xl border border-border bg-card p-4 min-w-0">
-          <div className="flex gap-1 mb-3 flex-wrap">
-            {([["positions", `Позиции${st?.positions.length ? ` (${st.positions.length})` : ""}`], ["orders", `Ордера${st?.orders.length ? ` (${st.orders.length})` : ""}`], ["history", "История"], ["leaders", "Рейтинг"]] as const).map(([k, l]) => (
-              <Button key={k} size="sm" variant={tab === k ? "secondary" : "ghost"} onClick={() => setTab(k)}>{l}</Button>
-            ))}
-          </div>
-
-          {tab === "positions" && (
-            <List empty="Открытых позиций нет. Откройте первую сделку слева.">
-              {st?.positions.map((p) => (
-                <Row key={p.id}>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-white">{name(p.coinId)} <span className={p.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{p.side === "long" ? "Лонг" : "Шорт"} x{p.leverage}</span></div>
-                    <div className="text-xs text-muted-foreground">Вход {fmtPrice(p.entry, p.coinId)} · сейчас {fmtPrice(p.price, p.coinId)} · ликвидация {fmtPrice(p.liq, p.coinId)}{p.sl ? ` · стоп ${fmtPrice(p.sl, p.coinId)}` : ""}{p.tp ? ` · тейк ${fmtPrice(p.tp, p.coinId)}` : ""}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-sm ${tone(p.pnl)}`}>PnL {usd(p.pnl, true)}</div>
-                    <div className={`text-xs ${tone(p.pnl)}`}>{pct(p.pnl, p.margin)} · сумма {usd(p.margin)}</div>
-                  </div>
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => send({ action: "close", id: p.id }, "Позиция закрыта")}>Закрыть</Button>
-                </Row>
-              ))}
-            </List>
-          )}
-
-          {tab === "orders" && (
-            <List empty="Лимитных ордеров нет.">
-              {st?.orders.map((o) => (
-                <Row key={o.id}>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-white">{name(o.coinId)} <span className={o.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{o.side === "long" ? "Лонг" : "Шорт"} x{o.leverage}</span></div>
-                    <div className="text-xs text-muted-foreground">Исполнится по {fmtPrice(o.limit, o.coinId)} · сумма {usd(o.margin)}{o.sl ? ` · стоп ${fmtPrice(o.sl, o.coinId)}` : ""}{o.tp ? ` · тейк ${fmtPrice(o.tp, o.coinId)}` : ""}</div>
-                  </div>
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => send({ action: "cancel", id: o.id }, "Ордер отменён")}>Отменить</Button>
-                </Row>
-              ))}
-            </List>
-          )}
-
-          {tab === "history" && (
-            <List empty="Закрытых сделок пока нет.">
-              {st?.history.map((t) => (
-                <Row key={t.id}>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-white">{name(t.coinId)} <span className={t.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{t.side === "long" ? "Лонг" : "Шорт"} x{t.leverage}</span></div>
-                    <div className="text-xs text-muted-foreground">{fmtPrice(t.entry, t.coinId)} → {fmtPrice(t.close, t.coinId)} · {reasonText[t.reason] ?? t.reason} · {new Date(t.closedAt + "Z").toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-sm ${tone(t.pnl)}`}>PnL {usd(t.pnl, true)}</div>
-                    <div className={`text-xs ${tone(t.pnl)}`}>{pct(t.pnl, t.margin)}</div>
-                  </div>
-                  {t.reason !== "reset" && (
-                    <Button size="sm" variant="outline" disabled={shared.includes(t.id)} onClick={() => share(t)}>
-                      {shared.includes(t.id) ? "Опубликовано" : "Поделиться"}
-                    </Button>
-                  )}
-                </Row>
-              ))}
-            </List>
-          )}
-
-          {tab === "leaders" && (
-            <>
-          <Board
-            leaders={leaders?.leaders ?? []}
-            me={user?.id}
-            busy={busy || m < 10}
-            onRepeat={(t) => send({ action: "open", coinId: t.coinId, side: t.side, leverage: t.leverage, margin: m }, `Открыта такая же позиция на ${usd(m)}`)}
-          />
-          {user && <p className="text-xs text-muted-foreground mt-2">«Повторить сделку» открывает такую же позицию по текущему курсу на сумму из формы слева (сейчас {usd(m)}).</p>}
-            </>
-          )}
-        </section>
       <p className="text-xs text-muted-foreground/70">Учебный режим: все деньги виртуальные, курсы реальные и обновляются раз в несколько секунд. Это не инвестиционная рекомендация.</p>
     </div>
   );
