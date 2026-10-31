@@ -9,7 +9,7 @@ import { SPECIAL_META } from "@/components/crypto/SpecialAchievements";
 const ALL_META: Record<string, { title: string; desc: string; icon: string; color: string }> = { ...META, ...SPECIAL_META };
 
 const AchievementsMini = () => {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, setAuthOpen } = useAuth();
   const { data } = useQuery({
     queryKey: ["home-achievements", token],
     enabled: !!user && !!token,
@@ -24,7 +24,14 @@ const AchievementsMini = () => {
   });
 
   if (!user)
-    return <p className="text-[10px] text-muted-foreground text-center leading-snug px-2">Достижения показываются только после входа на сайт</p>;
+    return (
+      <div className="flex flex-col items-center gap-1 px-2">
+        <p className="text-[10px] text-muted-foreground text-center leading-snug">Достижения показываются только после входа на сайт</p>
+        <button onClick={() => setAuthOpen(true)} className="text-[11px] text-primary hover:underline">
+          Войти
+        </button>
+      </div>
+    );
 
   const done = (data ?? []).filter((a) => a.done).length;
 
