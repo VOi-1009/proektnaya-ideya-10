@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
@@ -13,7 +14,7 @@ import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import func2url from "../../../../backend/func2url.json";
 
 const URL = func2url.trading;
-const LEVERAGE = [1, 2, 3, 5, 10, 20];
+const LEVERAGE_MARKS = [1, 10, 25, 50, 75, 100];
 
 interface Position { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; size: number; entry: number; price: number; pnl: number; liq: number; sl: number | null; tp: number | null }
 interface Order { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; limit: number; sl: number | null; tp: number | null }
@@ -307,12 +308,19 @@ const TradingChannel = ({ coins }: Props) => {
           </div>
 
           <div>
-            <label className="text-xs text-muted-foreground">Плечо</label>
-            <div className="flex gap-1 flex-wrap">
-              {LEVERAGE.map((l) => (
-                <Button key={l} size="sm" variant={leverage === l ? "secondary" : "outline"} className="h-8 px-3" onClick={() => setLeverage(l)}>x{l}</Button>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Плечо</label>
+              <span className="font-mono text-sm text-white">x{leverage}</span>
+            </div>
+            <Slider className="mt-2" min={1} max={100} step={1} value={[leverage]} onValueChange={(v) => setLeverage(v[0])} />
+            <div className="flex justify-between mt-1.5">
+              {LEVERAGE_MARKS.map((l) => (
+                <button key={l} type="button" onClick={() => setLeverage(l)} className={`text-[10px] font-mono ${leverage === l ? "text-white" : "text-muted-foreground hover:text-white"}`}>
+                  x{l}
+                </button>
               ))}
             </div>
+            {leverage >= 20 && <p className="text-xs text-[#EA3943] mt-1">Высокое плечо: позиция ликвидируется при движении цены против вас всего на {(95 / leverage).toFixed(1)}%.</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
