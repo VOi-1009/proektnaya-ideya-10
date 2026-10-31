@@ -424,7 +424,7 @@ def handler(event, context):
             if lev < 1 or lev > MAX_LEV:
                 return resp(400, {"error": f"Плечо от 1 до {MAX_LEV}"})
             if margin < MIN_MARGIN:
-                return resp(400, {"error": f"Минимальная ставка {int(MIN_MARGIN)} TKA"})
+                return resp(400, {"error": f"Минимальная ставка {int(MIN_MARGIN)} USDT (виртуальных)"})
             sl = tp = None
             try:
                 if body.get("sl") not in (None, "", 0):
@@ -489,7 +489,7 @@ def handler(event, context):
             cur.execute(f"SELECT COALESCE(SUM(margin), 0) FROM {SCHEMA}.paper_orders WHERE user_id = {uid} AND status = 'pending'")
             in_ord = float(cur.fetchone()[0])
             if free + in_pos + in_ord >= START:
-                return resp(400, {"error": f"Пополнение доступно, когда на кошельке меньше {int(START)} TKA"})
+                return resp(400, {"error": f"Пополнение доступно, когда на балансе меньше {int(START)} USDT (виртуальных)"})
             cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = entry_price, pnl = 0, close_reason = 'reset', closed_at = NOW() WHERE user_id = {uid} AND status = 'open'")
             cur.execute(f"UPDATE {SCHEMA}.paper_orders SET status = 'cancelled', done_at = NOW() WHERE user_id = {uid} AND status = 'pending'")
             topup = START - (free + in_pos + in_ord)

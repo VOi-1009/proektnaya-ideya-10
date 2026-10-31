@@ -5,7 +5,6 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
 import { Coin, fmtPrice } from "@/lib/crypto";
-import TkaIcon from "@/components/crypto/TkaIcon";
 import { Send, State, name, usd } from "./shared";
 
 const riskOf = (l: number) =>
@@ -54,7 +53,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
         <section className="rounded-xl border border-border bg-card p-3 space-y-2 lg:sticky lg:top-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <h3 className="font-display text-sm text-white flex items-center gap-2">
             <Icon name="Flame" size={15} className="text-primary" /> Новая сделка
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-accent flex items-center gap-1"><TkaIcon size={14} /> TKA</span>
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-accent flex items-center gap-1">USDT <span className="normal-case tracking-normal text-muted-foreground">(виртуальные)</span></span>
           </h3>
           <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -89,7 +88,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
           )}
 
           <div>
-            <label className="text-xs font-semibold text-accent flex items-center gap-1">Ставка, <TkaIcon size={12} /> TKA</label>
+            <label className="text-xs font-semibold text-accent flex items-center gap-1">Ставка, USDT <span className="font-normal text-muted-foreground">(виртуальные)</span></label>
             <div className="flex gap-1.5">
               <Input type="number" className="h-8 text-sm flex-1 min-w-0" value={margin} onChange={(e) => setMargin(e.target.value)} />
               <div className="flex gap-0.5">
@@ -155,8 +154,8 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
             {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
           </Button>
           {st && st.balance + st.locked < st.start / 2 && (
-            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Пополнить кошелёк до 1 000 TKA? Все открытые позиции и ордера будут закрыты.") && send({ action: "reset" }, "Кошелёк пополнен до 1 000 TKA")}>
-              Пополнить кошелёк до 1 000 TKA
+            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Пополнить баланс до 1 000 USDT (виртуальных)? Все открытые позиции и ордера будут закрыты.") && send({ action: "reset" }, "Баланс пополнен до 1 000 USDT (виртуальных)")}>
+              Пополнить баланс до 1 000 USDT (виртуальных)
             </Button>
           )}
         </section>

@@ -1,5 +1,4 @@
 import { COIN_META } from "@/lib/crypto";
-import { tka } from "@/lib/tka";
 import func2url from "../../../../backend/func2url.json";
 
 export const TRADING_API = func2url.trading;
@@ -15,7 +14,8 @@ export interface PubTrade { id: number; coinId: string; side: "long" | "short"; 
 export type Tab = "positions" | "orders" | "history" | "leaders";
 export type Send = (body: Record<string, unknown>, ok: string) => Promise<void>;
 
-export const usd = tka;
+export const usd = (v: number, sign = false) =>
+  `${sign && v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
 export const pct = (pnl: number, base: number) => `${pnl > 0 ? "+" : ""}${base ? ((pnl / base) * 100).toFixed(1) : "0.0"}%`;
 export const tone = (v: number) => (v >= 0 ? "text-[#16C784]" : "text-[#EA3943]");
 export const name = (id: string) => COIN_META[id]?.ru ?? id;
