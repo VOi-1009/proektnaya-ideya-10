@@ -34,7 +34,7 @@ def esc(v: str) -> str:
 def load_posts(cur, where: str, me, limit: int = PAGE) -> list:
     cur.execute(
         f"SELECT p.id, p.user_id, p.body, p.image_url, p.sentiment, p.coins, p.created_at, "
-        f"u.name, u.email, u.avatar_url, {points_sql(SCHEMA)}, u.status_override, u.is_creator, u.supporter_no, u.founder_no "
+        f"u.name, u.email, u.avatar_url, {points_sql(SCHEMA)}, u.status_override, u.is_creator, u.supporter_no, u.founder_no, u.team "
         f"FROM {SCHEMA}.community_posts p JOIN {SCHEMA}.users u ON u.id = p.user_id "
         f"WHERE NOT p.hidden AND {where} ORDER BY p.id DESC LIMIT {int(limit)}"
     )
@@ -66,7 +66,7 @@ def load_posts(cur, where: str, me, limit: int = PAGE) -> list:
             "createdAt": r[6].isoformat(),
             "user": {
                 "id": r[1], "name": display_name(r[7], r[8]), "avatar": r[9] or "", "level": st["level"],
-                "title": st["title"], "creator": bool(r[12]), "supporter": r[13], "founder": r[14],
+                "title": st["title"], "creator": bool(r[12]), "supporter": r[13], "founder": r[14], "team": r[15] or "",
             },
             "reactions": counts.get(r[0], {}),
             "mine": mine.get(r[0], []),
@@ -78,7 +78,7 @@ def load_posts(cur, where: str, me, limit: int = PAGE) -> list:
 def load_author(cur, aid: int, me) -> dict:
     cur.execute(
         f"SELECT u.id, u.name, u.email, u.avatar_url, u.bio, u.city, u.headline, u.experience, u.interests, u.contacts, "
-        f"u.created_at, u.last_seen_at, u.is_bot, u.is_ai, u.status_override, {points_sql(SCHEMA)}, u.founder_no, u.supporter_no, u.is_creator "
+        f"u.created_at, u.last_seen_at, u.is_bot, u.is_ai, u.status_override, {points_sql(SCHEMA)}, u.founder_no, u.supporter_no, u.is_creator, u.team "
         f"FROM {SCHEMA}.users u WHERE u.id = {int(aid)}"
     )
     r = cur.fetchone()
@@ -117,7 +117,7 @@ def load_author(cur, aid: int, me) -> dict:
         "headline": r[6] or "", "experience": r[7] or "", "interests": r[8] or "",
         "contacts": contacts if me else {}, "contactsHidden": bool(not me and has_contacts),
         "createdAt": r[10].isoformat(), "online": online, "level": st["level"], "title": st["title"], "points": pts, "place": place,
-        "founder": r[16], "supporter": r[17], "creator": bool(r[18]),
+        "founder": r[16], "supporter": r[17], "creator": bool(r[18]), "team": r[19] or "",
         "posts": posts, "bulls": bulls, "bears": bears, "followers": followers, "following": following, "reactions": reactions,
         "isFollowing": is_following, "isMe": bool(me and me == r[0]),
     }}

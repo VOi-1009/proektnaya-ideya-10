@@ -21,26 +21,6 @@ export const LEVELS: StatusLevel[] = [
   { title: "Аналитик", need: 5250, icon: "BrainCircuit", desc: "Глубоко в рынке уже не первый месяц", cls: "bg-[#D946EF]/15 text-[#D946EF]", text: "text-[#D946EF]", color: "#D946EF" },
   { title: "Кит", need: 10500, icon: "Crown", desc: "Самые преданные участники сообщества", cls: "bg-[#A78BFA]/15 text-[#A78BFA]", text: "text-[#A78BFA]", color: "#A78BFA" },
   {
-    title: "Медведь",
-    need: null,
-    icon: "TrendingDown",
-    desc: "Привилегированный статус — присваивает только администрация",
-    cls: "bg-[#EF4444] text-white shadow-[0_0_10px_rgba(239,68,68,0.55)]",
-    name: "text-[#EF4444] font-semibold",
-    text: "text-[#EF4444] font-semibold",
-    color: "#EF4444",
-  },
-  {
-    title: "Бык",
-    need: null,
-    icon: "TrendingUp",
-    desc: "Привилегированный статус — присваивает только администрация",
-    cls: "bg-[#22C55E] text-black shadow-[0_0_10px_rgba(34,197,94,0.55)]",
-    name: "text-[#22C55E] font-semibold",
-    text: "text-[#22C55E] font-semibold",
-    color: "#22C55E",
-  },
-  {
     title: "Модератор",
     need: null,
     icon: "ShieldCheck",
@@ -61,6 +41,15 @@ export const LEVELS: StatusLevel[] = [
     color: "#FACC15",
   },
 ];
+
+export const TEAMS = {
+  bull: { title: "Быки", icon: "TrendingUp", cls: "bg-[#22C55E] text-black shadow-[0_0_10px_rgba(34,197,94,0.55)]", text: "text-[#22C55E]", color: "#22C55E", desc: "Верят в рост рынка" },
+  bear: { title: "Медведи", icon: "TrendingDown", cls: "bg-[#EF4444] text-white shadow-[0_0_10px_rgba(239,68,68,0.55)]", text: "text-[#EF4444]", color: "#EF4444", desc: "Ждут снижения рынка" },
+} as const;
+
+export type Team = keyof typeof TEAMS;
+
+export const TEAM_CHANGE_PRICE = 100;
 
 export const nameCls = (level?: number, fallback = "text-white") => levelInfo(level).name ?? fallback;
 

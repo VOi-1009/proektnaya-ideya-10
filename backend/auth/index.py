@@ -117,12 +117,15 @@ def handler(event: dict, context) -> dict:
         row = cur.fetchone()
 
         if action == "register":
+            team = str(body.get("team", ""))
+            if team not in ("bull", "bear"):
+                return resp(400, {"error": "Выберите команду: Быки или Медведи"})
             if row and not row[1]:
                 return resp(409, {"error": "Эта почта привязана к Яндекс ID — войдите через Яндекс"})
             if row:
                 return resp(409, {"error": "Эта почта уже зарегистрирована — войдите"})
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (email, password_hash) VALUES ('{esc(email)}', '{hash_password(password)}') RETURNING id"
+                f"INSERT INTO {SCHEMA}.users (email, password_hash, team, team_changed_at) VALUES ('{esc(email)}', '{hash_password(password)}', '{team}', NOW()) RETURNING id"
             )
             user_id = cur.fetchone()[0]
         elif action == "login":

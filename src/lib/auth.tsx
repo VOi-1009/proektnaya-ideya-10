@@ -26,7 +26,7 @@ interface AuthCtx {
   ready: boolean;
   authOpen: boolean;
   setAuthOpen: (v: boolean) => void;
-  auth: (action: "login" | "register", email: string, password: string) => Promise<void>;
+  auth: (action: "login" | "register", email: string, password: string, team?: string) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (u: Partial<User>) => void;
 }
@@ -58,11 +58,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .finally(() => setReady(true));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const auth = useCallback(async (action: "login" | "register", email: string, password: string) => {
+  const auth = useCallback(async (action: "login" | "register", email: string, password: string, team?: string) => {
     const r = await fetch(AUTH_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, email, password }),
+      body: JSON.stringify({ action, email, password, team }),
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.error ?? "Не удалось войти, попробуйте ещё раз");

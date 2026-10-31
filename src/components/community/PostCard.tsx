@@ -2,6 +2,7 @@ import Icon from "@/components/ui/icon";
 import { COIN_META } from "@/lib/crypto";
 import { nameCls } from "@/lib/status";
 import MemberIcon from "@/components/crypto/MemberIcon";
+import TeamBadge from "@/components/crypto/TeamBadge";
 import { CommunityPost, MOODS, REACTIONS, timeAgo } from "@/lib/community";
 
 interface Props {
@@ -26,6 +27,7 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor 
           <button onClick={() => onAuthor(p.user.id)} className={`text-sm font-semibold hover:underline truncate ${nameCls(p.user.level)}`}>
             {p.user.name}
           </button>
+          <TeamBadge team={p.user.team} compact />
           <span className="text-muted-foreground text-xs">{p.user.title}</span>
           <span className="text-muted-foreground text-xs">· {timeAgo(p.createdAt)}</span>
           {p.sentiment && (

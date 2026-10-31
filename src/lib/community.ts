@@ -1,11 +1,11 @@
 import { PROFILE_URL } from "@/lib/auth";
-import { LEVELS } from "@/lib/status";
+import { TEAMS } from "@/lib/status";
 
 export const REACTIONS = ["🚀", "🔥", "👍", "😂", "😮", "📉"];
 export const QUICK_EMOJI = ["😀", "😎", "🤔", "🙏", "💪", "💎", "🐂", "🐻", "💰", "📈", "📉", "🚀", "🔥", "😱", "🤝", "👀"];
 
-const bullLevel = LEVELS.find((l) => l.title === "Бык")!;
-const bearLevel = LEVELS.find((l) => l.title === "Медведь")!;
+const bullLevel = TEAMS.bull;
+const bearLevel = TEAMS.bear;
 
 export const MOODS = {
   bull: { label: "Бычий", plural: "Бычьи", icon: bullLevel.icon, cls: bullLevel.cls, color: bullLevel.color },
@@ -19,7 +19,7 @@ export interface CommunityPost {
   sentiment: "" | "bull" | "bear";
   coins: string[];
   createdAt: string;
-  user: { id: number; name: string; avatar: string; level: number; title: string; creator?: boolean; supporter?: number | null; founder?: number | null };
+  user: { id: number; name: string; avatar: string; level: number; title: string; creator?: boolean; supporter?: number | null; founder?: number | null; team?: string };
   reactions: Record<string, number>;
   mine: string[];
   following: boolean;
@@ -45,6 +45,7 @@ export interface AuthorProfile {
   founder?: number | null;
   supporter?: number | null;
   creator?: boolean;
+  team?: string;
   posts: number;
   bulls: number;
   bears: number;

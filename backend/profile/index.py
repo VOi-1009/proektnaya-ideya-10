@@ -10,6 +10,7 @@ import psycopg2
 from articles import handle_articles
 from blocks import handle_blocks
 from status import level_for
+from teams import change_team, team_state
 from achievements import special_for
 from users import handle_users
 from reactions import handle_reactions
@@ -121,6 +122,7 @@ def load_profile(cur, user_id: int) -> dict:
         "creator": bool(r[13]),
         "promo": r[14] or "",
         "foundersTaken": founders_taken,
+        "team": team_state(cur, user_id),
     }
 
 
@@ -210,6 +212,12 @@ def handler(event: dict, context) -> dict:
                 f"experience = '{esc(exp)}', contacts = '{esc(contacts)}', updated_at = NOW() WHERE id = {user_id}"
             )
             return resp(200, {"profile": load_profile(cur, user_id)})
+
+        if action == "set-team":
+            code, data = change_team(cur, user_id, str(body.get("team", "")), bool(body.get("pay")))
+            if code != 200:
+                return resp(code, data)
+            return resp(200, {"profile": load_profile(cur, user_id), "paid": data["paid"]})
 
         if action in ("avatar", "remove-avatar") and user_id != 2:
             cur.execute(f"SELECT status_override FROM {SCHEMA}.users WHERE id = {user_id}")

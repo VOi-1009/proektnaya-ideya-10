@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { Team } from "@/lib/status";
+import TeamPicker from "./TeamPicker";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -16,16 +18,18 @@ const AuthDialog = () => {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [team, setTeam] = useState<Team | "">("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setErr("Укажите корректную почту");
     if (password.length < 6) return setErr("Пароль должен быть не короче 6 символов");
+    if (mode === "register" && !team) return setErr("Выберите команду: Быки или Медведи");
     if (!agree) return setErr("Подтвердите согласие на обработку персональных данных");
     setErr("");
     setLoading(true);
     try {
-      await auth(mode, email.trim(), password);
+      await auth(mode, email.trim(), password, mode === "register" ? team : undefined);
       setAuthOpen(false);
       setPassword("");
       toast({ title: mode === "login" ? "С возвращением!" : "Аккаунт создан", description: "Портфель теперь сохраняется в вашем аккаунте." });
@@ -78,6 +82,15 @@ const AuthDialog = () => {
               className={`${inputCls} mt-1`}
             />
           </div>
+          {mode === "register" && (
+            <div>
+              <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Ваша команда</label>
+              <div className="mt-1">
+                <TeamPicker value={team} onChange={setTeam} />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5">Сменить можно раз в месяц или за 100 ТКА.</p>
+            </div>
+          )}
           <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer leading-snug">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[hsl(var(--primary))]" />
             <span>

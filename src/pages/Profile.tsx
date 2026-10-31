@@ -16,6 +16,9 @@ import TradingStats from "@/components/crypto/TradingStats";
 import ProfileRewards from "@/components/crypto/ProfileRewards";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
+import TeamBadge from "@/components/crypto/TeamBadge";
+import TeamCard, { TeamInfo } from "@/components/crypto/TeamCard";
+import { Team } from "@/lib/status";
 import ContactLinks from "@/components/crypto/ContactLinks";
 import { CONTACT_FIELDS, EXPERIENCE } from "@/lib/contacts";
 
@@ -34,6 +37,7 @@ interface ProfileData {
   founder?: number | null;
   foundersTaken?: number;
   supporter?: number | null;
+  team?: TeamInfo;
   creator?: boolean;
   promo?: string;
   headline?: string;
@@ -101,6 +105,10 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const changeTeam = async (team: Team, pay: boolean) => {
+    apply(await call({ action: "set-team", team, pay }));
   };
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,6 +240,7 @@ const Profile = () => {
                       <Icon name={LEVELS[s.level - 1].icon} size={14} />
                       {s.title}
                     </span>
+                    <TeamBadge team={profile.team?.team} />
                     <SupporterBadge no={profile.supporter} creator={profile.creator} />
                     <FounderBadge no={profile.founder} />
                   </div>
@@ -418,6 +427,7 @@ const Profile = () => {
                   );
                 })()}
               </section>
+              {profile.team && <TeamCard info={profile.team} onChange={changeTeam} />}
               <TkaWalletCard token={token} />
               <TkaDailyCalendar token={token} />
               <TradingStats token={token} />

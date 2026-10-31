@@ -8,6 +8,7 @@ import MemberIcon from "@/components/crypto/MemberIcon";
 import StatusBadge from "@/components/crypto/StatusBadge";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
+import TeamBadge from "@/components/crypto/TeamBadge";
 import ContactLinks from "@/components/crypto/ContactLinks";
 import { AuthorProfile, MOODS } from "@/lib/community";
 
@@ -62,6 +63,7 @@ const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollo
             </div>
             <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
               <StatusBadge level={a.level} compact />
+              <TeamBadge team={a.team} compact />
               <SupporterBadge no={a.supporter} creator={a.creator} compact />
               <FounderBadge no={a.founder} compact />
               <span className={`text-[11px] ${a.online ? "text-white" : "text-muted-foreground"}`}>{a.online ? "в сети" : "не в сети"}</span>
