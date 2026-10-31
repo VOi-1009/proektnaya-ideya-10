@@ -41,7 +41,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
     <div className="space-y-3">
       <div className="grid grid-cols-1 lg:grid-cols-[18fr_32fr_32fr_18fr] gap-3 animate-scale-in">
         <div className="p-2 sm:p-3 rounded-xl border border-border bg-card min-w-0 lg:order-2 flex flex-col gap-2">
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 content-start">
+          <div className="flex-1 grid grid-cols-3 gap-2 content-start">
             <div className={cardCls("border-metric-gold")}>
               <div className={labelCls}>Капитализация крипто</div>
               <div className={valueCls}>{fmtBig(totalCap)}</div>
@@ -80,16 +80,26 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               </div>
             )}
             <MarketMetricsRow flat />
+            <div className="bg-hover rounded-lg border-l-4 border-metric-sky h-[48px] min-w-0 overflow-hidden">
+              <ExchangeOutflowCard go={go} />
+            </div>
           </div>
-          <div className="flex-1" />
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
           <div className="flex-1 grid grid-cols-2">
             <FearGreedGauge compact />
             <AltseasonGauge compact />
           </div>
-          <div className="p-3">
-            <ExchangeOutflowCard go={go} />
+          <div className="p-3 flex justify-center">
+            <button
+              onClick={() => go("trading")}
+              className="flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-6 py-3 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
+            >
+              <span className="w-9 h-9 rounded-lg bg-background text-primary flex items-center justify-center font-display font-black text-xl leading-none">
+                Т
+              </span>
+              <span className="font-display font-black text-xl tracking-widest">TRADE</span>
+            </button>
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3 overflow-hidden">
@@ -106,15 +116,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
             <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center">
               <QuoteBlock />
-              <button
-                onClick={() => go("trading")}
-                className="mt-4 mb-4 flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-6 py-3 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
-              >
-                <span className="w-9 h-9 rounded-lg bg-background text-primary flex items-center justify-center font-display font-black text-xl leading-none">
-                  Т
-                </span>
-                <span className="font-display font-black text-xl tracking-widest">TRADE</span>
-              </button>
             </div>
           </div>
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">

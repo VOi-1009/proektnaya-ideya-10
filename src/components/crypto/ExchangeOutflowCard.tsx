@@ -36,7 +36,7 @@ const ExchangeOutflowCard = ({ go }: { go: (channel: string) => void }) => {
       type="button"
       disabled={!radar}
       onClick={() => radar && go(`radar-${radar.id}`)}
-      className={`bg-transparent rounded-lg px-3 py-1.5 h-[56px] flex flex-col justify-between items-center min-w-0 w-full overflow-hidden ${radar ? "cursor-pointer" : ""}`}
+      className={`bg-transparent rounded-lg px-3 py-1 h-[48px] flex flex-col justify-between items-center min-w-0 w-full overflow-hidden ${radar ? "cursor-pointer" : ""}`}
       title={radar ? "Открыть радар «Притоки и оттоки на биржах»" : "Биржи с самым большим оттоком активов за 24 часа"}
     >
       <div className={`${labelCls} text-center line-clamp-1`}>Больше всего оттока за 24ч</div>
