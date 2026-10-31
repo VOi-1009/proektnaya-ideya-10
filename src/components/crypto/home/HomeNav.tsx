@@ -30,9 +30,9 @@ const HomeNav = ({ go }: Props) => {
       aria-label={user ? "Личный кабинет" : "Войти"}
     >
       {user ? (
-        <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" />
+        <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" className="w-11 h-11 text-lg" />
       ) : (
-        <UserAvatar />
+        <UserAvatar className="w-11 h-11 text-lg" />
       )}
     </button>
   </nav>
