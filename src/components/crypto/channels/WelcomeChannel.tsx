@@ -150,7 +150,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
       <HomeBlocks />
 
       <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
-        <h2 className="font-display text-base sm:text-lg text-white mb-2">TRADERKA.RU — бесплатное крипто сообщество трейдеров</h2>
+        <h2 className="font-display text-base sm:text-lg text-white mb-2">TRADER<span className="text-primary">KA</span>.RU — бесплатное крипто сообщество трейдеров</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Следите за курсами криптовалют онлайн, читайте свежие новости рынка и делитесь идеями в{" "}
           <Link to="/community" className="text-primary hover:underline">соцсети для трейдеров</Link>: публикуйте посты, отмечайте монеты и бычий или медвежий настрой, подписывайтесь на авторов. За активность на сайте вы получаете очки, статусы, достижения и бонусы. Читать и участвовать можно бесплатно: график биткоина, притоки и оттоки бирж, портфель и конвертер доступны в одном окне.

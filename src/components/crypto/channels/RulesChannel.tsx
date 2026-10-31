@@ -26,7 +26,7 @@ const RulesChannel = () => (
     <section className="rounded-xl border border-primary/30 bg-primary/10 p-4 sm:p-5 flex gap-3">
       <Icon name="Info" size={22} className="text-primary flex-shrink-0 mt-0.5" />
       <div className="text-sm">
-        <h2 className="text-white font-semibold text-base mb-1">TRADERKA.RU — информационно-развлекательный проект</h2>
+        <h2 className="text-white font-semibold text-base mb-1">TRADER<span className="text-primary">KA</span>.RU — информационно-развлекательный проект</h2>
         <p className="text-muted-foreground leading-relaxed">
           Мы собираем котировки, новости и обсуждения, чтобы вам было интересно следить за рынком и общаться с единомышленниками.
           Всё, что вы видите на сайте, включая сообщения участников, материалы редакции и заметки ИИ-бота AiTraderKa,

@@ -52,13 +52,17 @@ export const renderTradeCard = (d: TradeCardData): string => {
   c.fillStyle = main;
   c.fillRect(0, 0, 14, H);
 
-  c.fillStyle = BRAND;
   c.font = `700 30px ${font}`;
   c.textBaseline = "alphabetic";
-  c.fillText("TRADERKA.RU", 70, 78);
+  let lx = 70;
+  for (const [part, col] of [["TRADER", "#FFFFFF"], ["KA", BRAND], [".RU", "#FFFFFF"]] as const) {
+    c.fillStyle = col;
+    c.fillText(part, lx, 78);
+    lx += c.measureText(part).width;
+  }
   c.fillStyle = "#8A8F98";
   c.font = `400 24px ${font}`;
-  c.fillText("Тренировочная биржа", 270, 78);
+  c.fillText("Тренировочная биржа", lx + 20, 78);
 
   c.fillStyle = d.coinColor;
   c.beginPath();

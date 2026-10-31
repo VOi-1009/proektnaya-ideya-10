@@ -139,7 +139,7 @@ const Profile = () => {
           Т
         </div>
         <span className="font-display text-lg sm:text-xl text-white tracking-wide">
-          TRADERKA<span className="text-primary">.RU</span>
+          TRADER<span className="text-primary">KA</span>.RU
         </span>
       </Link>
       <Button variant="ghost" asChild className="text-muted-foreground hover:text-white hover:bg-hover">

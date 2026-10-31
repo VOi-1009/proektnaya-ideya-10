@@ -153,7 +153,7 @@ const Admin = () => {
           Т
         </div>
         <span className="font-display text-lg sm:text-xl text-white tracking-wide hidden sm:inline">
-          TRADERKA<span className="text-primary">.RU</span>
+          TRADER<span className="text-primary">KA</span>.RU
         </span>
         <span className="text-xs uppercase tracking-wider bg-primary/15 text-primary rounded px-2 py-0.5">Админ</span>
       </Link>
