@@ -6,7 +6,7 @@ import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
-import { DEFAULT_MENU_TITLE, MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
+import { MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
 
 interface Props {
   channel: string;
@@ -59,8 +59,17 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
         </Button>
       </div>
       <div className="p-2">
-        <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
-          <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
+        <div className="px-2 pt-1 pb-2 flex flex-col items-center gap-1.5">
+          <span className="text-muted-foreground text-xs text-center">Перейти на трейнинг-биржу</span>
+          <button
+            onClick={() => go("trading")}
+            className="flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-6 py-3 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
+          >
+            <span className="w-9 h-9 rounded-lg bg-background text-primary flex items-center justify-center font-display font-black text-xl leading-none">
+              Т
+            </span>
+            <span className="font-display font-black text-xl tracking-widest">TRADE</span>
+          </button>
         </div>
         <div className="mt-0.5 space-y-0">
           {items.map((it) => {
