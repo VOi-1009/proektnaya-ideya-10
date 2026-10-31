@@ -171,6 +171,46 @@ def tick(cur, px):
     return len(ids)
 
 
+def build_stats(cur, user_id, equity, reset_at):
+    cur.execute(f"SELECT pnl, margin, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' AND closed_at >= '{reset_at.isoformat()}' ORDER BY closed_at, id")
+    tr = [(float(a or 0), float(b or 0), c) for a, b, c in cur.fetchall()]
+    curve = [{"t": reset_at.isoformat(), "v": START}]
+    run = START
+    for pnl, _, at in tr:
+        run += pnl
+        curve.append({"t": at.isoformat(), "v": round(run, 2)})
+    curve.append({"t": "now", "v": round(equity, 2)})
+    pcts = [(a / b * 100) if b > 0 else 0 for a, b, _ in tr]
+    return {
+        "trades": len(tr),
+        "wins": sum(1 for a, _, _ in tr if a > 0),
+        "winRate": (sum(1 for a, _, _ in tr if a > 0) / len(tr) * 100) if tr else 0,
+        "avgPnl": (sum(a for a, _, _ in tr) / len(tr)) if tr else 0,
+        "avgPct": (sum(pcts) / len(pcts)) if pcts else 0,
+        "best": max((a for a, _, _ in tr), default=0),
+        "bestPct": max(pcts, default=0),
+        "worst": min((a for a, _, _ in tr), default=0),
+        "worstPct": min(pcts, default=0),
+        "totalPnl": equity - START,
+        "curve": curve,
+    }
+
+
+def public_stats(cur, uid, px):
+    cur.execute(f"SELECT balance, reset_at FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
+    row = cur.fetchone()
+    if not row:
+        return None
+    equity = float(row[0])
+    cur.execute(f"SELECT coin_id, side, margin, size, entry_price FROM {SCHEMA}.paper_positions WHERE user_id = {uid} AND status = 'open'")
+    for coin, side, margin, size, entry in cur.fetchall():
+        equity += max(float(margin) + pnl_of(side, float(entry), float(size), px.get(coin, float(entry))), 0)
+    cur.execute(f"SELECT COALESCE(SUM(margin), 0) FROM {SCHEMA}.paper_orders WHERE user_id = {uid} AND status = 'pending'")
+    equity += float(cur.fetchone()[0])
+    st = build_stats(cur, uid, equity, row[1])
+    return st if st["trades"] > 0 else None
+
+
 def state(cur, user_id, px):
     cur.execute(f"INSERT INTO {SCHEMA}.paper_accounts (user_id) VALUES ({user_id}) ON CONFLICT (user_id) DO NOTHING")
     process(cur, user_id, px)
@@ -198,28 +238,7 @@ def state(cur, user_id, px):
     cur.execute(f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, close_reason, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' ORDER BY closed_at DESC LIMIT 50")
     history = [{"id": r[0], "coinId": r[1], "side": r[2], "leverage": r[3], "margin": float(r[4]), "entry": float(r[5]), "close": float(r[6]), "pnl": float(r[7]), "reason": r[8], "closedAt": r[9].isoformat()} for r in cur.fetchall()]
     equity = balance + locked + unreal
-    cur.execute(f"SELECT pnl, margin, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' AND closed_at >= '{reset_at.isoformat()}' ORDER BY closed_at, id")
-    tr = [(float(a or 0), float(b or 0), c) for a, b, c in cur.fetchall()]
-    curve = [{"t": reset_at.isoformat(), "v": START}]
-    run = START
-    for pnl, _, at in tr:
-        run += pnl
-        curve.append({"t": at.isoformat(), "v": round(run, 2)})
-    curve.append({"t": "now", "v": round(equity, 2)})
-    pcts = [(a / b * 100) if b > 0 else 0 for a, b, _ in tr]
-    stats = {
-        "trades": len(tr),
-        "wins": sum(1 for a, _, _ in tr if a > 0),
-        "winRate": (sum(1 for a, _, _ in tr if a > 0) / len(tr) * 100) if tr else 0,
-        "avgPnl": (sum(a for a, _, _ in tr) / len(tr)) if tr else 0,
-        "avgPct": (sum(pcts) / len(pcts)) if pcts else 0,
-        "best": max((a for a, _, _ in tr), default=0),
-        "bestPct": max(pcts, default=0),
-        "worst": min((a for a, _, _ in tr), default=0),
-        "worstPct": min(pcts, default=0),
-        "totalPnl": equity - START,
-        "curve": curve,
-    }
+    stats = build_stats(cur, user_id, equity, reset_at)
     return {"stats": stats, "balance": balance, "equity": equity, "locked": locked, "unrealized": unreal, "resets": resets, "start": START, "positions": positions, "orders": orders, "history": history, "prices": px}
 
 
@@ -272,6 +291,11 @@ def handler(event, context):
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             return resp(200, {"checked": tick(cur, px)})
+        if method == "GET" and action == "profile":
+            uid_q = str(qs.get("userId", ""))
+            if not uid_q.isdigit():
+                return resp(400, {"error": "Не указан участник"})
+            return resp(200, {"stats": public_stats(cur, int(uid_q), px)})
         if method == "GET" and action == "leaderboard":
             return resp(200, {"leaders": leaderboard(cur, px)})
         if not token:

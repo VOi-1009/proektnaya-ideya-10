@@ -17,29 +17,33 @@ const Cell = ({ label, value, sub, cls = "text-white" }: { label: string; value:
   </div>
 );
 
-const TradingStats = ({ token }: { token: string | null }) => {
-  const { data, isLoading } = useQuery<{ stats: Stats }>({
-    queryKey: ["trading-stats", token],
+interface Props { token?: string | null; userId?: number }
+
+const TradingStats = ({ token, userId }: Props) => {
+  const compact = userId !== undefined;
+  const { data, isLoading } = useQuery<{ stats: Stats | null }>({
+    queryKey: ["trading-stats", compact ? userId : token],
     queryFn: async () => {
-      const r = await fetch(func2url.trading, { headers: { "X-Auth-Token": token ?? "" } });
+      const r = await fetch(compact ? `${func2url.trading}?action=profile&userId=${userId}` : func2url.trading, { headers: { "X-Auth-Token": token ?? "" } });
       if (!r.ok) throw new Error("bad");
       return r.json();
     },
-    enabled: !!token,
+    enabled: compact || !!token,
     staleTime: 30_000,
   });
-  const s = data?.stats;
+  const s = data?.stats ?? undefined;
+  if (compact && !isLoading && !s) return null;
   const curve = (s?.curve ?? []).map((p, i, a) => ({ t: p.t === "now" ? Date.now() : new Date(p.t + (p.t.endsWith("Z") ? "" : "Z")).getTime(), v: p.v, i }));
   const up = (s?.totalPnl ?? 0) >= 0;
   const color = up ? "#22C55E" : "#EA3943";
 
   return (
-    <section className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+    <section className={compact ? "" : "bg-card border border-border rounded-2xl p-4 sm:p-5"}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-white font-semibold text-sm flex items-center gap-1.5">
           <Icon name="LineChart" size={15} className="text-primary" /> Тренировочная биржа
         </span>
-        {s && <span className="text-xs text-muted-foreground">с последнего сброса счёта</span>}
+        {s && !compact && <span className="text-xs text-muted-foreground">с последнего сброса счёта</span>}
       </div>
       {isLoading || !s ? (
         <Skeleton className="h-40 w-full bg-rail" />
@@ -50,14 +54,14 @@ const TradingStats = ({ token }: { token: string | null }) => {
           <div className="grid grid-cols-2 gap-2">
             <Cell label="Прибыльных сделок" value={`${s.winRate.toFixed(0)}%`} sub={`${s.wins} из ${s.trades}`} cls={s.winRate >= 50 ? "text-[#22C55E]" : "text-white"} />
             <Cell label="Общий PnL" value={usd(s.totalPnl, true)} cls={tone(s.totalPnl)} />
-            <Cell label="Средний результат" value={usd(s.avgPnl, true)} sub={`${s.avgPct > 0 ? "+" : ""}${s.avgPct.toFixed(1)}%`} cls={tone(s.avgPnl)} />
-            <Cell label="Всего сделок" value={String(s.trades)} />
+            {!compact && <Cell label="Средний результат" value={usd(s.avgPnl, true)} sub={`${s.avgPct > 0 ? "+" : ""}${s.avgPct.toFixed(1)}%`} cls={tone(s.avgPnl)} />}
+            {!compact && <Cell label="Всего сделок" value={String(s.trades)} />}
             <Cell label="Лучшая сделка" value={usd(s.best, true)} sub={`${s.bestPct > 0 ? "+" : ""}${s.bestPct.toFixed(1)}%`} cls={tone(s.best)} />
-            <Cell label="Худшая сделка" value={usd(s.worst, true)} sub={`${s.worstPct > 0 ? "+" : ""}${s.worstPct.toFixed(1)}%`} cls={tone(s.worst)} />
+            {!compact && <Cell label="Худшая сделка" value={usd(s.worst, true)} sub={`${s.worstPct > 0 ? "+" : ""}${s.worstPct.toFixed(1)}%`} cls={tone(s.worst)} />}
           </div>
           <div>
             <div className="text-xs text-muted-foreground mb-1">Изменение капитала</div>
-            <div className="h-[160px]">
+            <div className={compact ? "h-[110px]" : "h-[160px]"}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={curve} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
                   <defs>
