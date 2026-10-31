@@ -1,7 +1,7 @@
 export type GoFn = (ch: string, coinId?: string) => void;
 
 export const CHANNELS = [
-  { id: "welcome", name: "обзор-рынка", topic: "", icon: "Hash" },
+  { id: "welcome", name: "главная", topic: "", icon: "Hash" },
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
   { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: Bits.media, Investing.com, Финам, Ведомости", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
