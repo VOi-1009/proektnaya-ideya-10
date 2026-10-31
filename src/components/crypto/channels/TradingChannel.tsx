@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import CandleChart from "../CandleChart";
 import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import func2url from "../../../../backend/func2url.json";
 
@@ -173,6 +174,18 @@ const TradingChannel = ({ coins }: Props) => {
         </section>
 
         <section className="rounded-xl border border-border bg-card p-4 min-w-0">
+          <CandleChart
+            coinId={coinId}
+            price={livePrice}
+            lines={[
+              ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.entry, label: `${p.side === "long" ? "Лонг" : "Шорт"} x${p.leverage}`, color: p.side === "long" ? "#16C784" : "#EA3943" })) ?? []),
+              ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
+            ]}
+          />
+        </section>
+      </div>
+
+        <section className="rounded-xl border border-border bg-card p-4 min-w-0">
           <div className="flex gap-1 mb-3 flex-wrap">
             {([["positions", `Позиции${st?.positions.length ? ` (${st.positions.length})` : ""}`], ["orders", `Ордера${st?.orders.length ? ` (${st.orders.length})` : ""}`], ["history", "История"], ["leaders", "Рейтинг"]] as const).map(([k, l]) => (
               <Button key={k} size="sm" variant={tab === k ? "secondary" : "ghost"} onClick={() => setTab(k)}>{l}</Button>
@@ -227,7 +240,6 @@ const TradingChannel = ({ coins }: Props) => {
 
           {tab === "leaders" && <Board leaders={leaders?.leaders ?? []} me={user?.id} />}
         </section>
-      </div>
       <p className="text-xs text-muted-foreground/70">Учебный режим: все деньги виртуальные, курсы реальные и обновляются раз в несколько секунд. Это не инвестиционная рекомендация.</p>
     </div>
   );
