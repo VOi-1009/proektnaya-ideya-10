@@ -112,7 +112,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                     key={it.id}
                     onClick={() => navigate("/rating")}
                     className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                      channel === it.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                      channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
@@ -125,7 +125,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                   key={it.id}
                   onClick={() => go(it.id)}
                   className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                    channel === it.id ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                    channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "ainews" ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]" : it.id === "portfolio" ? "bg-[#A78BFA]" : "bg-primary"}`} />
@@ -146,7 +146,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                 key={r.id}
                 onClick={() => go(`chat-${r.id}`)}
                 className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                  channel === `chat-${r.id}` ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                  channel === `chat-${r.id}` ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${chatColor(r.color).dot}`} />
@@ -168,7 +168,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                   key={r.id}
                   onClick={() => go(`radar-${r.id}`)}
                   className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                    channel === `radar-${r.id}` ? "bg-hover text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
+                    channel === `radar-${r.id}` ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full flex-shrink-0 mx-1" style={{ background: r.color }} />
