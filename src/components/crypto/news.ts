@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import func2url from "../../../backend/func2url.json";
 
-export type NewsKind = "crypto" | "world";
+export type NewsKind = "crypto" | "commodities" | "stocks";
 export type NewsTag = string;
 
 export interface NewsItem {
@@ -17,14 +17,22 @@ export interface NewsItem {
   coins: string[];
 }
 
+export const NEWS_TABS: { kind: NewsKind; label: string; color: string }[] = [
+  { kind: "crypto", label: "Крипто", color: "#F97316" },
+  { kind: "commodities", label: "Сырьё", color: "#EAB308" },
+  { kind: "stocks", label: "Акции", color: "#3B82F6" },
+];
+
 export const NEWS_TAGS: Record<NewsKind, NewsTag[]> = {
-  crypto: ["Рынок", "Нефть", "Золото", "Аналитика", "Регулирование", "Технологии", "DeFi"],
-  world: ["Политика", "Экономика", "В мире", "Происшествия", "Общество", "Технологии"],
+  crypto: ["Рынок", "Аналитика", "Регулирование", "Технологии", "DeFi"],
+  commodities: ["Нефть и газ", "Золото", "Металлы", "Агро"],
+  stocks: ["Рынок", "Дивиденды", "Отчётность", "IPO и сделки", "Компании"],
 };
 
 export const NEWS_SOURCES: Record<NewsKind, string[]> = {
-  crypto: ["Bits.media", "Investing.com", "Финам", "Ведомости"],
-  world: ["ТАСС", "РБК", "Lenta.ru", "Ведомости"],
+  crypto: ["Bits.media", "Forklog", "Investing.com"],
+  commodities: ["Investing.com", "Финам", "Коммерсантъ"],
+  stocks: ["Финам", "Investing.com", "Smart-lab", "Ведомости"],
 };
 
 export const TAG_STYLE: Record<string, string> = {
@@ -33,22 +41,23 @@ export const TAG_STYLE: Record<string, string> = {
   Регулирование: "text-sky-400 border-sky-400/40",
   Технологии: "text-violet-300 border-violet-300/40",
   DeFi: "text-pink-300 border-pink-300/40",
-  Нефть: "text-amber-500 border-amber-500/40",
+  "Нефть и газ": "text-amber-500 border-amber-500/40",
   Золото: "text-yellow-300 border-yellow-300/40",
-  Политика: "text-sky-400 border-sky-400/40",
-  Экономика: "text-primary border-primary/40",
-  "В мире": "text-accent border-accent/40",
-  Происшествия: "text-down border-down/40",
-  Общество: "text-pink-300 border-pink-300/40",
+  Металлы: "text-slate-300 border-slate-300/40",
+  Агро: "text-lime-400 border-lime-400/40",
+  Дивиденды: "text-emerald-400 border-emerald-400/40",
+  Отчётность: "text-sky-400 border-sky-400/40",
+  "IPO и сделки": "text-violet-300 border-violet-300/40",
+  Компании: "text-muted-foreground border-border",
 };
 
 export const SOURCE_STYLE: Record<string, { avatar: string; cls: string }> = {
   "Bits.media": { avatar: "B", cls: "bg-sky-500 text-white" },
   "Investing.com": { avatar: "I", cls: "bg-amber-400 text-black" },
   Финам: { avatar: "Ф", cls: "bg-yellow-400 text-black" },
-  ТАСС: { avatar: "Т", cls: "bg-blue-700 text-white" },
-  РБК: { avatar: "Р", cls: "bg-emerald-600 text-white" },
-  "Lenta.ru": { avatar: "L", cls: "bg-zinc-200 text-black" },
+  Forklog: { avatar: "F", cls: "bg-orange-500 text-white" },
+  Коммерсантъ: { avatar: "К", cls: "bg-zinc-200 text-black" },
+  "Smart-lab": { avatar: "S", cls: "bg-emerald-600 text-white" },
   Ведомости: { avatar: "В", cls: "bg-pink-700 text-white" },
 };
 

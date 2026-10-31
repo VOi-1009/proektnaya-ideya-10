@@ -7,11 +7,12 @@ import Message from "../Message";
 import ReactionButtons from "../ReactionButtons";
 import { useAuth } from "@/lib/auth";
 import { useReactions } from "@/lib/reactions";
-import { fmtNewsTime, markSeen, NEWS_SOURCES, NEWS_TAGS, NewsKind, NewsTag, SOURCE_STYLE, TAG_STYLE, useNews } from "../news";
+import { fmtNewsTime, markSeen, NEWS_SOURCES, NEWS_TABS, NEWS_TAGS, NewsKind, NewsTag, SOURCE_STYLE, TAG_STYLE, useNews } from "../news";
 
 const PAGE = 15;
 
-const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
+const NewsChannel = () => {
+  const [kind, setKind] = useState<NewsKind>("crypto");
   const { token } = useAuth();
   const { data, isLoading, isError, error, refetch, isFetching, dataUpdatedAt } = useNews(kind);
   const [tag, setTag] = useState<NewsTag | "Все">("Все");
@@ -22,6 +23,15 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
   const lastTop = useRef<string | null>(null);
 
   const items = useMemo(() => data?.items ?? [], [data]);
+
+  const switchKind = (k: NewsKind) => {
+    setKind(k);
+    setTag("Все");
+    setSource(null);
+    setCoin(null);
+    setLimit(PAGE);
+    lastTop.current = null;
+  };
 
   useEffect(() => {
     if (!items.length) return;
@@ -48,7 +58,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
     (n) => (tag === "Все" || n.tag === tag) && (!coin || n.coins.includes(coin)) && (!source || n.source === source),
   );
   const visibleItems = useMemo(
-    () => list.slice(0, limit).map((n) => ({ id: n.id, title: n.title, link: n.link, source: n.source, ts: n.ts, kind })),
+    () => list.slice(0, limit).map((n) => ({ id: n.id, title: n.title, link: n.link, source: n.source, ts: n.ts, kind: "crypto" })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [list.map((n) => n.id).join(","), limit, kind],
   );
@@ -63,6 +73,25 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
   return (
     <div className="space-y-4">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur py-2 -mt-2 space-y-2">
+        <div className="grid grid-cols-3 gap-1.5">
+          {NEWS_TABS.map((t) => {
+            const active = kind === t.kind;
+            return (
+              <button
+                key={t.kind}
+                onClick={() => switchKind(t.kind)}
+                className="h-8 rounded-md text-sm font-semibold border transition-colors"
+                style={{
+                  color: active ? "#fff" : t.color,
+                  background: `color-mix(in srgb, ${t.color} ${active ? 85 : 12}%, transparent)`,
+                  borderColor: `color-mix(in srgb, ${t.color} ${active ? 100 : 40}%, transparent)`,
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
         <div className="flex flex-wrap gap-2 items-center">
           {["Все", ...NEWS_TAGS[kind]].map((t) => (
             <button
@@ -188,7 +217,7 @@ const NewsChannel = ({ kind = "crypto" }: { kind?: NewsKind }) => {
                   <p className={`text-muted-foreground text-sm ${isOpen ? "" : "line-clamp-2"}`}>{n.text}</p>
                 )}
                 <div className="flex items-center gap-4 mt-3 text-xs flex-wrap">
-                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v, { title: n.title, link: n.link, source: n.source, kind })} />
+                  <ReactionButtons value={reactions[n.id]} onReact={(v) => react(n.id, v, { title: n.title, link: n.link, source: n.source, kind: "crypto" })} />
                   {n.text.length > 140 && (
                     <button onClick={() => setOpen(isOpen ? null : n.id)} className="text-primary hover:underline">
                       {isOpen ? "Свернуть" : "Читать полностью"}
