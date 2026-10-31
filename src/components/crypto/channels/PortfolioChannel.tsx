@@ -183,45 +183,8 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-3 items-stretch">
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-3">
           <PortfolioChart holdings={holdings} coins={coins} />
-        </div>
-        <div className="bg-card border border-border rounded-lg p-3 min-w-0">
-          <div className="space-y-2.5 mb-3">
-            <div>
-              <div className="text-muted-foreground text-xs">Стоимость портфеля</div>
-              <div className="font-mono text-xl text-white tabular leading-tight">{fmtUsd(total)}</div>
-              <div className={`font-mono text-xs tabular ${upCls(day)}`}>{fmtUsd(day, true)} ({fmtPct(dayPct)}) за 24ч</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground text-xs">Вложено</div>
-              <div className="font-mono text-base text-white tabular leading-tight">{fmtUsd(invested)}</div>
-              <div className="text-xs text-muted-foreground">Позиций: {holdings.length}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground text-xs">{pnl >= 0 ? "Прибыль" : "Убыток"}</div>
-              <div className={`font-mono text-base tabular leading-tight ${upCls(pnl)}`}>{fmtUsd(pnl, true)}</div>
-              <div className={`font-mono text-xs tabular ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
-            </div>
-          </div>
-          {total > 0 && (
-          <>
-          <div className="text-muted-foreground text-xs mb-1 pt-2 border-t border-border">Распределение активов</div>
-          <PortfolioDonut3D
-            compact
-            items={Object.entries(
-              rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.coinId]: (acc[r.coinId] ?? 0) + r.value }), {})
-            )
-              .filter(([, v]) => v > 0)
-              .sort((x, y) => y[1] - x[1])
-              .map(([id, v]) => ({ id, label: COIN_META[id]?.short ?? id, value: v, color: COIN_META[id]?.color ?? "#888", valueText: fmtUsd(v) }))}
-          />
-          </>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-3">
       <Message author="Traderka Бот" time="Сегодня" icon="Wallet" bot>
         <p className="text-muted-foreground mb-3">
           Добавьте купленные монеты — сайт посчитает текущую стоимость и результат по живому курсу. Если не указать цену покупки, возьму текущую.
@@ -332,6 +295,40 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
           </table>
         </div>
       </div>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-3 min-w-0 lg:self-stretch">
+          <div className="space-y-2.5 mb-3">
+            <div>
+              <div className="text-muted-foreground text-xs">Стоимость портфеля</div>
+              <div className="font-mono text-xl text-white tabular leading-tight">{fmtUsd(total)}</div>
+              <div className={`font-mono text-xs tabular ${upCls(day)}`}>{fmtUsd(day, true)} ({fmtPct(dayPct)}) за 24ч</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground text-xs">Вложено</div>
+              <div className="font-mono text-base text-white tabular leading-tight">{fmtUsd(invested)}</div>
+              <div className="text-xs text-muted-foreground">Позиций: {holdings.length}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground text-xs">{pnl >= 0 ? "Прибыль" : "Убыток"}</div>
+              <div className={`font-mono text-base tabular leading-tight ${upCls(pnl)}`}>{fmtUsd(pnl, true)}</div>
+              <div className={`font-mono text-xs tabular ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
+            </div>
+          </div>
+          {total > 0 && (
+          <>
+          <div className="text-muted-foreground text-xs mb-1 pt-2 border-t border-border">Распределение активов</div>
+          <PortfolioDonut3D
+            compact
+            items={Object.entries(
+              rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.coinId]: (acc[r.coinId] ?? 0) + r.value }), {})
+            )
+              .filter(([, v]) => v > 0)
+              .sort((x, y) => y[1] - x[1])
+              .map(([id, v]) => ({ id, label: COIN_META[id]?.short ?? id, value: v, color: COIN_META[id]?.color ?? "#888", valueText: fmtUsd(v) }))}
+          />
+          </>
+          )}
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground/70 pb-2">
