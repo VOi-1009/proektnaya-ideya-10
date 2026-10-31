@@ -17,8 +17,8 @@ export interface CalcProps {
 export const inputCls =
   "w-full bg-rail rounded px-3 h-10 font-mono text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground placeholder:font-body";
 
-export const Field = ({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) => (
-  <label className="space-y-1 block min-w-0">
+export const Field = ({ label, hint, children, className = "" }: { label: string; hint?: string; children: ReactNode; className?: string }) => (
+  <label className={`space-y-1 block min-w-0 ${className}`}>
     <span className="text-xs text-muted-foreground">{label}</span>
     {children}
     {hint && <span className="block text-[10px] text-muted-foreground/70">{hint}</span>}

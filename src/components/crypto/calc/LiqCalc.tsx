@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Field, Note, NumInput, Panel, Result, Segment, fmt, num } from "./shared";
+import PriceFill from "./PriceFill";
+import { CalcProps, Field, Note, NumInput, Panel, Result, Segment, fmt, num } from "./shared";
 
-const LiqCalc = () => {
+const LiqCalc = ({ coins }: CalcProps) => {
   const [side, setSide] = useState<"long" | "short">("long");
   const [entry, setEntry] = useState("");
   const [lev, setLev] = useState("10");
@@ -19,7 +20,10 @@ const LiqCalc = () => {
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
       <div className="grid grid-cols-3 gap-2">
-        <Field label="Цена входа"><NumInput value={entry} onChange={setEntry} placeholder="0" /></Field>
+        <Field label="Цена входа" className="col-span-3">
+          <NumInput value={entry} onChange={setEntry} placeholder="0" />
+          <PriceFill coins={coins} onFill={setEntry} />
+        </Field>
         <Field label="Плечо"><NumInput value={lev} onChange={setLev} /></Field>
         <Field label="Поддерж. маржа, %" hint="У бирж обычно 0,4–1%"><NumInput value={mmr} onChange={setMmr} /></Field>
       </div>

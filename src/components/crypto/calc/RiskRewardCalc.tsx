@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Field, Note, NumInput, Panel, Result, Segment, fmt, num } from "./shared";
+import PriceFill from "./PriceFill";
+import { CalcProps, Field, Note, NumInput, Panel, Result, Segment, fmt, num } from "./shared";
 
-const RiskRewardCalc = () => {
+const RiskRewardCalc = ({ coins }: CalcProps) => {
   const [side, setSide] = useState<"long" | "short">("long");
   const [entry, setEntry] = useState("");
   const [stop, setStop] = useState("");
@@ -22,7 +23,10 @@ const RiskRewardCalc = () => {
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
       <div className="grid grid-cols-3 gap-2">
-        <Field label="Цена входа"><NumInput value={entry} onChange={setEntry} placeholder="0" /></Field>
+        <Field label="Цена входа" className="col-span-3">
+          <NumInput value={entry} onChange={setEntry} placeholder="0" />
+          <PriceFill coins={coins} onFill={setEntry} />
+        </Field>
         <Field label="Стоп-лосс"><NumInput value={stop} onChange={setStop} placeholder="0" /></Field>
         <Field label="Тейк-профит"><NumInput value={take} onChange={setTake} placeholder="0" /></Field>
       </div>

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Field, Note, NumInput, Panel, Result, Segment, fmt, fmtSigned, num, tone } from "./shared";
+import PriceFill from "./PriceFill";
+import { CalcProps, Field, Note, NumInput, Panel, Result, Segment, fmt, fmtSigned, num, tone } from "./shared";
 
-const PnlCalc = () => {
+const PnlCalc = ({ coins }: CalcProps) => {
   const [side, setSide] = useState<"long" | "short">("long");
   const [entry, setEntry] = useState("");
   const [exit, setExit] = useState("");
@@ -26,8 +27,11 @@ const PnlCalc = () => {
   return (
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-        <Field label="Цена входа"><NumInput value={entry} onChange={setEntry} placeholder="0" /></Field>
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+        <Field label="Цена входа" className="col-span-2">
+          <NumInput value={entry} onChange={setEntry} placeholder="0" />
+          <PriceFill coins={coins} onFill={setEntry} />
+        </Field>
         <Field label="Цена выхода"><NumInput value={exit} onChange={setExit} placeholder="0" /></Field>
         <Field label="Ставка (маржа), $"><NumInput value={margin} onChange={setMargin} /></Field>
         <Field label="Плечо"><NumInput value={lev} onChange={setLev} /></Field>

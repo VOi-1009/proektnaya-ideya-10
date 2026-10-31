@@ -108,11 +108,11 @@ const ConverterChannel = ({ coins }: { coins: Coin[] }) => {
         <p className="text-muted-foreground text-sm">{active.hint}.</p>
         {tool === "pivot" && <PivotCalc />}
         {tool === "fib" && <FibCalc />}
-        {tool === "size" && <PositionSizeCalc />}
-        {tool === "pnl" && <PnlCalc />}
+        {tool === "size" && <PositionSizeCalc coins={coins} />}
+        {tool === "pnl" && <PnlCalc coins={coins} />}
         {tool === "avg" && <AverageCalc />}
-        {tool === "liq" && <LiqCalc />}
-        {tool === "rr" && <RiskRewardCalc />}
+        {tool === "liq" && <LiqCalc coins={coins} />}
+        {tool === "rr" && <RiskRewardCalc coins={coins} />}
       </div>
     );
   }
