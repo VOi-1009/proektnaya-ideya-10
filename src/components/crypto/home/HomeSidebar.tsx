@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
-import LangSwitch from "@/components/crypto/LangSwitch";
+import UserAvatar from "@/components/crypto/UserAvatar";
+import { useAuth } from "@/lib/auth";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { DEFAULT_MENU_TITLE, MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
@@ -19,6 +20,7 @@ interface Props {
 
 const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, setMobileSidebarOpen }: Props) => {
   const navigate = useNavigate();
+  const { user, setAuthOpen } = useAuth();
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
@@ -48,7 +50,17 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <button onClick={() => go("market")} className="hover:text-white" aria-label="Поиск монет" title="Поиск монет">
             <Icon name="Search" size={18} />
           </button>
-          <LangSwitch />
+          <button
+            onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
+            title={user ? "Личный кабинет" : "Войти"}
+            aria-label={user ? "Личный кабинет" : "Войти"}
+          >
+            {user ? (
+              <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" />
+            ) : (
+              <UserAvatar />
+            )}
+          </button>
         </div>
         <Button
           variant="ghost"

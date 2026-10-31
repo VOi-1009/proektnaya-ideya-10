@@ -1,15 +1,11 @@
 import { GoFn } from "./homeConfig";
-import UserAvatar from "@/components/crypto/UserAvatar";
-import { useAuth } from "@/lib/auth";
-import { useNavigate } from "@/lib/router-compat";
+import LangSwitch from "@/components/crypto/LangSwitch";
 
 interface Props {
   go: GoFn;
 }
 
 const HomeNav = ({ go }: Props) => {
-  const { user, setAuthOpen } = useAuth();
-  const navigate = useNavigate();
   return (
   <nav className="bg-card sticky top-0 z-30 flex items-center justify-between">
     <div className="px-4 sm:px-6 py-3">
@@ -23,18 +19,9 @@ const HomeNav = ({ go }: Props) => {
         </div>
       </button>
     </div>
-    <button
-      onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-      className="px-4 sm:px-6 flex-shrink-0"
-      title={user ? "Личный кабинет" : "Войти"}
-      aria-label={user ? "Личный кабинет" : "Войти"}
-    >
-      {user ? (
-        <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" />
-      ) : (
-        <UserAvatar />
-      )}
-    </button>
+    <div className="px-4 sm:px-6 flex-shrink-0 text-muted-foreground">
+      <LangSwitch />
+    </div>
   </nav>
   );
 };
