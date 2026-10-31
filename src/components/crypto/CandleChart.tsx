@@ -144,10 +144,12 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   const [view, setView] = useState<{ start: number; size: number } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const axisRef = useRef<HTMLDivElement>(null);
+  const plotRef = useRef<HTMLDivElement>(null);
   const [yZoom, setYZoom] = useState(1);
+  const [yShift, setYShift] = useState(0);
   const [autoFit, setAutoFit] = useState(false);
   const yDrag = useRef<{ y: number; z: number } | null>(null);
-  const drag = useRef<{ x: number; start: number } | null>(null);
+  const drag = useRef<{ x: number; start: number; y: number; shift: number } | null>(null);
   const total = useRef(0);
   const MIN = 10;
   const { data: line } = useChart(coinId, days, price);
@@ -171,6 +173,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   useEffect(() => {
     setView(null);
     setYZoom(1);
+    setYShift(0);
   }, [coinId, interval]);
 
   const firstLen = data?.length ?? 0;
@@ -236,7 +239,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   };
 
   const onDown = (e: React.PointerEvent) => {
-    drag.current = { x: e.clientX, start: view?.start ?? 0 };
+    drag.current = { x: e.clientX, start: view?.start ?? 0, y: e.clientY, shift: yShift };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
   const onMove = (e: React.PointerEvent) => {
@@ -246,6 +249,10 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
     const w = boxRef.current.getBoundingClientRect().width || 1;
     const shift = ((drag.current.x - e.clientX) / w) * cur.size;
     setView(clampView(drag.current.start + shift, cur.size, n));
+    const h = plotRef.current?.getBoundingClientRect().height || 1;
+    const dy = e.clientY - drag.current.y;
+    if (autoFit && Math.abs(dy) > 3) setAutoFit(false);
+    if (!autoFit || Math.abs(dy) > 3) setYShift(drag.current.shift + (dy / h) * (domain[1] - domain[0]));
   };
   const onUp = () => {
     drag.current = null;
@@ -269,10 +276,10 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
       const p2 = (b - a) * 0.06 || b * 0.001;
       return [a - p2, b + p2];
     }
-    const mid = (hi + lo) / 2;
+    const mid = (hi + lo) / 2 + yShift;
     const half = (hi - lo) / 2 + pad;
     return [mid - half / yZoom, mid + half / yZoom];
-  }, [visible, yZoom, autoFit, liqPrice]);
+  }, [visible, yZoom, yShift, autoFit, liqPrice]);
 
   const fmtTick = (t: number) => {
     const d = new Date(t);
@@ -311,27 +318,28 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
           >
             <Icon name="ChevronsUpDown" size={14} /> Авто
           </button>
-          <button onClick={() => { setView(null); setYZoom(1); setAutoFit(false); }} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
+          <button onClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
         </div>
         </div>
       </div>
       <div
         ref={boxRef}
+        title="Тяните график в любую сторону: влево-вправо — время, вверх-вниз — цена"
         className="cursor-grab active:cursor-grabbing touch-pan-y select-none"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        onDoubleClick={() => { setView(null); setYZoom(1); setAutoFit(false); }}
+        onDoubleClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }}
       >
         {isLoading || !data ? (
           <Skeleton className="w-full h-[380px] bg-rail" />
         ) : (
           <>
-          <div className="h-[300px] sm:h-[380px] relative">
+          <div ref={plotRef} className="h-[300px] sm:h-[380px] relative">
           <div
             ref={axisRef}
-            title="Тяните вверх и вниз или крутите колесо — высота свеч. Двойной клик — сброс"
+            title="Тяните вверх и вниз или крутите колесо — растяжение шкалы цены. Двойной клик — сброс"
             className="absolute right-0 top-0 bottom-6 w-[72px] z-10 cursor-ns-resize touch-none group"
             onPointerDown={onAxisDown}
             onPointerMove={onAxisMove}
@@ -341,10 +349,11 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
               e.stopPropagation();
               setAutoFit(false);
               setYZoom(1);
+              setYShift(0);
             }}
           >
             <div className="absolute inset-y-0 right-0 w-full rounded bg-white/0 group-hover:bg-white/5 transition-colors" />
-            {!autoFit && yZoom !== 1 && <span className="absolute top-1 right-1 text-[10px] font-mono text-primary">×{yZoom.toFixed(1)}</span>}
+            {!autoFit && (yZoom !== 1 || yShift !== 0) && <span className="absolute top-1 right-1 text-[10px] font-mono text-primary">{yZoom !== 1 ? `×${yZoom.toFixed(1)}` : "сдвиг"}</span>}
           </div>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
