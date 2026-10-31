@@ -4,6 +4,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
+import TkaBadge from "./TkaBadge";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
@@ -70,6 +71,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             </span>
             <span className="font-display font-black text-xl tracking-widest">TRADE</span>
           </button>
+          <TkaBadge go={go} className="mt-3 flex-col gap-3" />
         </div>
         <div className="mt-0.5 space-y-0">
           {items.map((it) => {

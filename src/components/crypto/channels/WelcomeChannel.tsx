@@ -11,7 +11,6 @@ import ExchangeOutflowCard from "../ExchangeOutflowCard";
 import UpcomingEvents from "../UpcomingEvents";
 import LiqBars from "../LiqBars";
 import LiqHistory from "../LiqHistory";
-import TkaBadge from "../home/TkaBadge";
 import ProfileMiniCard from "../home/ProfileMiniCard";
 import EtfNetFlow from "../EtfNetFlow";
 import SocialSentiment from "../SocialSentiment";
@@ -113,9 +112,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <div className="contents">
           <TopNewsBlock onAll={() => go("news")} />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
-            <div className="flex-1 min-h-[100px] px-3 py-2 flex flex-col items-start justify-center gap-2 overflow-hidden">
-              <TkaBadge go={go} />
-            </div>
+            <div className="flex-1 min-h-[100px]" />
             <div className="flex-1 min-h-[260px]">
               <LiqHistory />
             </div>
