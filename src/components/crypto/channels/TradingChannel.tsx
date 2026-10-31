@@ -14,6 +14,13 @@ import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import func2url from "../../../../backend/func2url.json";
 
 const URL = func2url.trading;
+const riskOf = (l: number) =>
+  l >= 75 ? { label: "Ва-банк!", color: "#EA3943", hsl: "355 85% 62%" }
+  : l >= 40 ? { label: "Адреналин", color: "#F97316", hsl: "24 95% 55%" }
+  : l >= 15 ? { label: "Жарко", color: "#FACC15", hsl: "48 96% 53%" }
+  : l >= 4 ? { label: "Бодро", color: "#A3E635", hsl: "84 81% 55%" }
+  : { label: "Спокойно", color: "#22C55E", hsl: "142 71% 45%" };
+
 const LEVERAGE_MARKS = [1, 10, 25, 50, 75, 100];
 
 interface Position { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; size: number; entry: number; price: number; pnl: number; liq: number; sl: number | null; tp: number | null }
@@ -145,6 +152,8 @@ const TradingChannel = ({ coins }: Props) => {
     );
 
   const m = Number(margin) || 0;
+  const risk = riskOf(leverage);
+  const sideColor = side === "long" ? "#22C55E" : "#EA3943";
   const volume = m * leverage;
 
   if (ready && !user) {
@@ -268,7 +277,10 @@ const TradingChannel = ({ coins }: Props) => {
         </section>
         </div>
         <section className="rounded-xl border border-border bg-card p-4 space-y-3 lg:sticky lg:top-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
-          <h3 className="font-display text-white">Новая сделка</h3>
+          <h3 className="font-display text-white flex items-center gap-2">
+            <Icon name="Flame" size={18} className="text-primary" /> Новая сделка
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-accent">виртуальные $</span>
+          </h3>
           <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -277,11 +289,15 @@ const TradingChannel = ({ coins }: Props) => {
               ))}
             </SelectContent>
           </Select>
-          <div className="text-sm text-muted-foreground">Курс сейчас: <span className="text-white">{livePrice ? fmtPrice(livePrice, coinId) : "—"}</span></div>
+          <div className="text-sm text-muted-foreground">Курс прямо сейчас: <span className="text-accent font-mono">{livePrice ? fmtPrice(livePrice, coinId) : "—"}</span></div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button variant={side === "long" ? "default" : "outline"} onClick={() => setSide("long")} className={side === "long" ? "bg-[#16C784] hover:bg-[#16C784]/90 text-black" : ""}>Лонг</Button>
-            <Button variant={side === "short" ? "default" : "outline"} onClick={() => setSide("short")} className={side === "short" ? "bg-[#EA3943] hover:bg-[#EA3943]/90 text-white" : ""}>Шорт</Button>
+            <Button variant={side === "long" ? "default" : "outline"} onClick={() => setSide("long")} className={side === "long" ? "bg-[#22C55E] hover:bg-[#22C55E]/90 text-black shadow-[0_0_14px_rgba(34,197,94,0.45)]" : "border-[#22C55E]/40 text-[#22C55E] hover:bg-[#22C55E]/10 hover:text-[#22C55E]"}>
+              <Icon name="TrendingUp" size={16} className="mr-1.5" /> Лонг
+            </Button>
+            <Button variant={side === "short" ? "default" : "outline"} onClick={() => setSide("short")} className={side === "short" ? "bg-[#EA3943] hover:bg-[#EA3943]/90 text-white shadow-[0_0_14px_rgba(234,57,67,0.45)]" : "border-[#EA3943]/40 text-[#EA3943] hover:bg-[#EA3943]/10 hover:text-[#EA3943]"}>
+              <Icon name="TrendingDown" size={16} className="mr-1.5" /> Шорт
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -291,14 +307,14 @@ const TradingChannel = ({ coins }: Props) => {
 
           {mode === "limit" && (
             <div>
-              <label className="text-xs text-muted-foreground">Цена исполнения, $</label>
+              <label className="text-xs font-semibold text-accent">Ловим цену, $</label>
               <Input type="number" value={limit} onChange={(e) => setLimit(e.target.value)} />
-              <p className="text-xs text-muted-foreground mt-1">{side === "long" ? "Лонг откроется, когда курс опустится до этой цены." : "Шорт откроется, когда курс поднимется до этой цены."}</p>
+              <p className="text-xs text-muted-foreground mt-1">{side === "long" ? "Ждём просадку: лонг сработает, как только курс опустится до этой цены." : "Ждём отскок: шорт сработает, как только курс поднимется до этой цены."}</p>
             </div>
           )}
 
           <div>
-            <label className="text-xs text-muted-foreground">Своя сумма, $</label>
+            <label className="text-xs font-semibold text-accent">Ставка, $</label>
             <Input type="number" value={margin} onChange={(e) => setMargin(e.target.value)} />
             <div className="flex gap-1 mt-1">
               {[25, 50, 100].map((p) => (
@@ -309,10 +325,10 @@ const TradingChannel = ({ coins }: Props) => {
 
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Плечо</label>
-              <span className="font-mono text-sm text-white">x{leverage}</span>
+              <label className="text-xs font-semibold" style={{ color: risk.color }}>Плечо · {risk.label}</label>
+              <span className="font-display text-xl leading-none" style={{ color: risk.color, textShadow: `0 0 12px ${risk.color}66` }}>x{leverage}</span>
             </div>
-            <Slider className="mt-2" min={1} max={100} step={1} value={[leverage]} onValueChange={(v) => setLeverage(v[0])} />
+            <Slider className="mt-2" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={100} step={1} value={[leverage]} onValueChange={(v) => setLeverage(v[0])} />
             <div className="flex justify-between mt-1.5">
               {LEVERAGE_MARKS.map((l) => (
                 <button key={l} type="button" onClick={() => setLeverage(l)} className={`text-[10px] font-mono ${leverage === l ? "text-white" : "text-muted-foreground hover:text-white"}`}>
@@ -320,29 +336,43 @@ const TradingChannel = ({ coins }: Props) => {
                 </button>
               ))}
             </div>
-            {leverage >= 20 && <p className="text-xs text-[#EA3943] mt-1">Высокое плечо: позиция ликвидируется при движении цены против вас всего на {(95 / leverage).toFixed(1)}%.</p>}
+            {leverage >= 10 && (
+              <p className="text-xs mt-1.5 font-medium" style={{ color: risk.color }}>
+                {leverage >= 75 ? "Ва-банк! Один неверный тик — и ставка сгорит: хватит движения против вас всего на " : leverage >= 40 ? "Кровь кипит: ликвидация уже при движении против вас на " : "Риск растёт: ликвидация при движении против вас на "}
+                {(95 / leverage).toFixed(1)}%.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-muted-foreground">Стоп-лосс, $</label>
+              <label className="text-xs font-semibold text-[#EA3943]">Стоп-лосс, $</label>
               <Input type="number" placeholder="не задан" value={sl} onChange={(e) => setSl(e.target.value)} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">Тейк-профит, $</label>
+              <label className="text-xs font-semibold text-[#22C55E]">Тейк-профит, $</label>
               <Input type="number" placeholder="не задан" value={tp} onChange={(e) => setTp(e.target.value)} />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground -mt-1">{side === "long" ? "Для лонга: стоп ниже цены входа, тейк выше." : "Для шорта: стоп выше цены входа, тейк ниже."}</p>
+          <p className="text-xs text-muted-foreground -mt-1">{side === "long" ? "Лонг: стоп страхует ниже входа, тейк фиксирует прибыль выше." : "Шорт: стоп страхует выше входа, тейк фиксирует прибыль ниже."}</p>
 
-          <div className="text-xs text-muted-foreground">Объём позиции: <span className="text-white">{usd(volume)}</span>{leverage > 1 && " · при сильном движении против вас позиция будет ликвидирована"}</div>
+          <div className="rounded-lg border px-3 py-2 text-xs" style={{ borderColor: `${risk.color}55`, background: `${risk.color}12` }}>
+            <span className="text-muted-foreground">В игре на </span>
+            <span className="font-mono text-sm font-semibold" style={{ color: risk.color }}>{usd(volume)}</span>
+            {leverage > 1 && <span className="text-muted-foreground"> · ставка {usd(m)} умножена в {leverage} раз</span>}
+          </div>
 
-          <Button className="w-full" disabled={busy || !user || m < 10} onClick={submit}>
-            {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
+          <Button
+            className="w-full h-11 font-bold text-base text-black hover:opacity-90"
+            style={{ background: `linear-gradient(90deg, ${sideColor}, ${risk.color})`, color: side === "long" ? "#000" : "#fff", boxShadow: `0 0 18px ${sideColor}55` }}
+            disabled={busy || !user || m < 10}
+            onClick={submit}
+          >
+            {mode === "market" ? (side === "long" ? "В бой: ставлю на рост!" : "В бой: ставлю на падение!") : "Расставить ловушку (ордер)"}
           </Button>
           {st && (
             <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Сбросить счёт к 10 000 $? Все позиции и ордера будут закрыты.") && send({ action: "reset" }, "Счёт сброшен")}>
-              Сбросить счёт к 10 000 $
+              Начать заново с 10 000 $
             </Button>
           )}
         </section>
