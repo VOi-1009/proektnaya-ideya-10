@@ -364,11 +364,11 @@ const TradingChannel = ({ coins }: Props) => {
 
           <Button
             className="w-full h-11 font-bold text-base text-black hover:opacity-90"
-            style={{ background: `linear-gradient(90deg, ${sideColor}, ${risk.color})`, color: side === "long" ? "#000" : "#fff", boxShadow: `0 0 18px ${sideColor}55` }}
+            style={{ background: sideColor, color: side === "long" ? "#000" : "#fff", boxShadow: `0 0 18px ${sideColor}55` }}
             disabled={busy || !user || m < 10}
             onClick={submit}
           >
-            {mode === "market" ? (side === "long" ? "В бой: ставлю на рост!" : "В бой: ставлю на падение!") : "Расставить ловушку (ордер)"}
+            {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
           </Button>
           {st && (
             <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Сбросить счёт к 10 000 $? Все позиции и ордера будут закрыты.") && send({ action: "reset" }, "Счёт сброшен")}>
