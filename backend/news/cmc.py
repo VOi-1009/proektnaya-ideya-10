@@ -93,3 +93,31 @@ def cmc_response(json_resp) -> dict:
     data["updatedAt"] = int(now)
     _cache.update(at=now, data=data)
     return json_resp(200, data)
+
+
+_hist: dict = {}
+
+
+def liq_history_response(qs: dict, json_resp) -> dict:
+    """История ликвидаций по всем монетам и биржам (?range=24h)"""
+    rng = "24h"
+    now = time.time()
+    c = _hist.get(rng)
+    if c and now - c[0] < 120:
+        return json_resp(200, c[1], 60)
+    try:
+        bars = _get(f"/liquidations/chart?range={rng}")["data"]["bars"]
+    except Exception as e:
+        print("liq history error:", e)
+        if c:
+            return json_resp(200, c[1], 60)
+        return json_resp(502, {"error": "История ликвидаций временно недоступна"})
+    num = lambda v: float(v) if v is not None else 0.0
+    out = [
+        {"t": int(b["timestamp"]) * 1000, "longs": num(b.get("totalLongs")), "shorts": num(b.get("totalShorts")),
+         "price": num(b.get("coinPrice")) or None}
+        for b in bars
+    ]
+    data = {"bars": out, "totalLongs": sum(x["longs"] for x in out), "totalShorts": sum(x["shorts"] for x in out), "updatedAt": int(now)}
+    _hist[rng] = (now, data)
+    return json_resp(200, data, 60)

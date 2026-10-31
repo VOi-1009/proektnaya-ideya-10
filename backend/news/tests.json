@@ -1,5 +1,6 @@
 {
   "tests": [
+    {"name": "История ликвидаций", "method": "GET", "path": "/?resource=liqhist", "expectedStatus": 200},
     {
       "name": "CORS",
       "method": "OPTIONS",

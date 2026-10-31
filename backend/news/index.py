@@ -11,7 +11,7 @@ from email.utils import parsedate_to_datetime
 from radar import heatmap_response, liqmap_response
 from exchange_flows import exchange_flows_response
 from toptxs import toptxs_response
-from cmc import cmc_response
+from cmc import cmc_response, liq_history_response
 from econ_calendar import calendar_response
 
 CORS = {
@@ -326,6 +326,8 @@ def handler(event: dict, context) -> dict:
         return liqmap_response(qs, json_resp)
     if resource == "toptxs":
         return toptxs_response(json_resp)
+    if resource == "liqhist":
+        return liq_history_response(qs, json_resp)
     if resource == "cmc":
         return cmc_response(json_resp)
     if resource == "calendar":
