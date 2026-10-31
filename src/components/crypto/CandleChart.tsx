@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, Cell, ComposedChart, Line as RLine, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line as RLine, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmtPrice, useChart } from "@/lib/crypto";
 import { useAuth } from "@/lib/auth";
 import func2url from "../../../backend/func2url.json";
@@ -382,10 +382,12 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
           </div>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
+              <CartesianGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.09} strokeWidth={1} />
               <XAxis dataKey="t" tickFormatter={fmtTick} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={50} />
               <YAxis
                 orientation="right"
                 domain={domain}
+                tickCount={full ? 16 : 11}
                 allowDataOverflow
                 tickFormatter={(v: number) => fmtPrice(v, coinId)}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
