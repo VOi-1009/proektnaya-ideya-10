@@ -63,7 +63,7 @@ const MenuManager = ({ token }: { token: string | null }) => {
 
   const reset = () =>
     setForm({
-      items: BASE_ITEMS.map((i) => ({ id: i.id, label: "", hidden: false })),
+      items: BASE_ITEMS.map((i) => (TOOL_IDS.includes(i.id) ? form.items.find((x) => x.id === i.id) : undefined) ?? { id: i.id, label: "", hidden: false }),
       menuTitle: "",
       radarsTitle: "",
       radarsFirst: false,
