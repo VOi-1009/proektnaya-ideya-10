@@ -44,7 +44,7 @@ const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> =
   throw new Error("klines unavailable");
 };
 
-interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number }
+interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number; macd?: number; sig?: number; hist?: number }
 interface Line { price: number; label: string; color: string }
 
 const UP = "#22C55E";
@@ -52,8 +52,19 @@ const DOWN = "hsl(var(--down))";
 
 const sma = (c: number[], n: number, i: number) => (i >= n - 1 ? c.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n : undefined);
 
+const ema = (c: number[], n: number): number[] => {
+  const k = 2 / (n + 1);
+  const out: number[] = [];
+  c.forEach((v, i) => out.push(i === 0 ? v : v * k + out[i - 1] * (1 - k)));
+  return out;
+};
+
 const withIndicators = (d: Candle[]): Candle[] => {
   const c = d.map((x) => x.c);
+  const e12 = ema(c, 12);
+  const e26 = ema(c, 26);
+  const macdLine = c.map((_, i) => e12[i] - e26[i]);
+  const sigLine = ema(macdLine, 9);
   let ag = 0;
   let al = 0;
   return d.map((x, i) => {
@@ -80,7 +91,8 @@ const withIndicators = (d: Candle[]): Candle[] => {
       }
       if (i >= 14) rsi = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
     }
-    return { ...x, ma20, ma50, bbU, bbL, rsi };
+    const ok = i >= 33;
+    return { ...x, ma20, ma50, bbU, bbL, rsi, macd: ok ? macdLine[i] : undefined, sig: ok ? sigLine[i] : undefined, hist: ok ? macdLine[i] - sigLine[i] : undefined };
   });
 };
 
@@ -89,6 +101,7 @@ const INDICATORS = [
   { k: "ma50", label: "MA 50", color: "#38BDF8" },
   { k: "bb", label: "Боллинджер", color: "#A78BFA" },
   { k: "rsi", label: "RSI 14", color: "#F472B6" },
+  { k: "macd", label: "MACD", color: "#FB923C" },
 ] as const;
 
 const fromPoints = (pts: { t: number; p: number }[]): Candle[] => {
@@ -128,7 +141,7 @@ interface Props { coinId: string; price: number; lines?: Line[] }
 const CandleChart = ({ coinId, price, lines = [] }: Props) => {
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
-  const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false });
+  const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
   const [view, setView] = useState<{ start: number; size: number } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; start: number } | null>(null);
@@ -274,6 +287,7 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
                       {p.v > 0 && <div>Объём {fmtVol(p.v)}</div>}
                       {on.ma20 && p.ma20 !== undefined && <div style={{ color: "#FACC15" }}>MA 20 {fmtPrice(p.ma20, coinId)}</div>}
                       {on.ma50 && p.ma50 !== undefined && <div style={{ color: "#38BDF8" }}>MA 50 {fmtPrice(p.ma50, coinId)}</div>}
+                      {on.macd && p.macd !== undefined && <div style={{ color: "#FB923C" }}>MACD {p.macd.toPrecision(3)} / сигнал {(p.sig ?? 0).toPrecision(3)}</div>}
                       {on.rsi && p.rsi !== undefined && <div style={{ color: "#F472B6" }}>RSI {p.rsi.toFixed(1)}</div>}
                     </div>
                   );
@@ -315,6 +329,24 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
                   <ReferenceLine y={30} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
                   <RLine type="monotone" dataKey="rsi" stroke="#F472B6" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                 </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          {on.macd && (
+            <div className="h-[100px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
+                  <XAxis dataKey="t" hide />
+                  <YAxis orientation="right" domain={["auto", "auto"]} tickFormatter={(v: number) => (Math.abs(v) >= 1 ? v.toFixed(1) : v.toPrecision(2))} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={72} tickCount={3} />
+                  <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
+                  <Bar dataKey="hist" isAnimationActive={false}>
+                    {visible.map((c) => (
+                      <Cell key={c.t} fill={(c.hist ?? 0) >= 0 ? UP : DOWN} fillOpacity={0.7} />
+                    ))}
+                  </Bar>
+                  <RLine type="monotone" dataKey="macd" stroke="#38BDF8" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                  <RLine type="monotone" dataKey="sig" stroke="#FACC15" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           )}
