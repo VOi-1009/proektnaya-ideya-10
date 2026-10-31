@@ -115,6 +115,26 @@ const TradingChannel = ({ coins }: Props) => {
     }
   };
 
+  const closeAll = async () => {
+    const list = st?.positions.filter((p) => p.coinId === coinId) ?? [];
+    if (!list.length) return;
+    setBusy(true);
+    try {
+      let data: State | undefined;
+      for (const p of list) data = await call("POST", "", { action: "close", id: p.id });
+      if (data) qc.setQueryData(["trading", token], data);
+      qc.invalidateQueries({ queryKey: ["trading-leaders"] });
+      toast({ title: list.length > 1 ? "Позиции закрыты" : "Позиция закрыта" });
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const coinPositions = st?.positions.filter((p) => p.coinId === coinId) ?? [];
+  const coinPnl = coinPositions.reduce((a, p) => a + p.pnl, 0);
+
   const submit = () =>
     send(
       { action: mode === "market" ? "open" : "limit", coinId, side, leverage, margin: Number(margin), limit: Number(limit), sl: Number(sl) || null, tp: Number(tp) || null },
@@ -223,6 +243,10 @@ const TradingChannel = ({ coins }: Props) => {
           <CandleChart
             coinId={coinId}
             price={livePrice}
+            closeInfo={coinPositions.length ? `${usd(coinPnl, true)}${coinPositions.length > 1 ? ` · ${coinPositions.length} шт.` : ""}` : undefined}
+            closeProfit={coinPnl >= 0}
+            onCloseAll={closeAll}
+            closeDisabled={busy}
             quickDisabled={busy || !user || m < 10}
             quickInfo={`${usd(m)} · x${leverage}`}
             onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}

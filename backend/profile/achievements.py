@@ -8,6 +8,10 @@ SPECIAL = [
     ("investor", 10),
     ("legend", 100),
     ("watcher", 1000),
+    ("trade_first", 1),
+    ("trade_liq", 1),
+    ("trade_streak", 5),
+    ("trade_profit", 50),
 ]
 
 
@@ -20,6 +24,27 @@ def _pack(values: dict) -> list:
         {"id": aid, "done": values.get(aid, 0) >= goal, "progress": min(values.get(aid, 0), goal), "goal": goal}
         for aid, goal in SPECIAL
     ]
+
+
+def trade_stats(cur, schema: str, uid: int) -> dict:
+    uid = int(uid)
+    cur.execute(f"SELECT (SELECT COUNT(*) FROM {schema}.paper_positions WHERE user_id = {uid}), "
+                f"(SELECT COUNT(*) FROM {schema}.paper_positions WHERE user_id = {uid} AND close_reason = 'liquidation')")
+    total, liq = cur.fetchone()
+    cur.execute(f"SELECT pnl, margin FROM {schema}.paper_positions WHERE user_id = {uid} AND status = 'closed' "
+                f"AND COALESCE(close_reason, '') <> 'reset' ORDER BY closed_at, id")
+    best_streak = streak = 0
+    best_pct = 0.0
+    for pnl, margin in cur.fetchall():
+        pnl, margin = float(pnl or 0), float(margin or 0)
+        if pnl > 0:
+            streak += 1
+            best_streak = max(best_streak, streak)
+        else:
+            streak = 0
+        if margin > 0:
+            best_pct = max(best_pct, pnl / margin * 100)
+    return {"trade_first": int(total), "trade_liq": int(liq), "trade_streak": best_streak, "trade_profit": int(best_pct)}
 
 
 def special_for(cur, schema: str, uid: int) -> list:
@@ -40,9 +65,11 @@ def special_for(cur, schema: str, uid: int) -> list:
     if is_bot:
         chance = 20 + lvl * 11
         fake = {}
-        for aid, goal in SPECIAL:
+        for aid, goal in SPECIAL[:7]:
             fake[aid] = goal if _h("ach", uid, aid) % 100 < chance else _h("p", uid, aid) % goal
         fake["critic"] = max(fake["critic"], min(reacts, 25))
         fake["voter"] = max(fake["voter"], min(votes, 5))
+        for aid in ("trade_first", "trade_liq", "trade_streak", "trade_profit"):
+            fake[aid] = 0
         return _pack(fake)
-    return _pack({"critic": reacts, "voter": votes, "month": days, "marathon": best, "investor": coins, "legend": days, "watcher": mins})
+    return _pack({"critic": reacts, "voter": votes, "month": days, "marathon": best, "investor": coins, "legend": days, "watcher": mins, **trade_stats(cur, schema, uid)})

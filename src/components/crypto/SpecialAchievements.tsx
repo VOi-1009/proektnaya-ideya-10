@@ -8,6 +8,10 @@ export const SPECIAL_META: Record<string, { title: string; desc: string; icon: s
   marathon: { title: "Железная воля", desc: "30 дней подряд без пропусков", icon: "Zap", color: "from-yellow-300 to-orange-500", unit: "дней подряд" },
   investor: { title: "Диверсификатор", desc: "Соберите портфель из 10 активов", icon: "PieChart", color: "from-violet-400 to-fuchsia-600", unit: "активов" },
   legend: { title: "Легенда TRADERKA", desc: "100 дней на сайте", icon: "Trophy", color: "from-amber-300 via-yellow-400 to-amber-600", unit: "дней" },
+  trade_first: { title: "Первая сделка", desc: "Откройте первую позицию на тренировочной бирже", icon: "Rocket", color: "from-green-300 to-emerald-600", unit: "сделок" },
+  trade_liq: { title: "Первая ликвидация", desc: "Переживите ликвидацию позиции на тренировочной бирже", icon: "Flame", color: "from-rose-400 to-red-600", unit: "ликвидаций" },
+  trade_streak: { title: "Серия из 5 плюсов", desc: "Закройте 5 прибыльных сделок подряд", icon: "TrendingUp", color: "from-lime-300 to-green-600", unit: "плюсов подряд" },
+  trade_profit: { title: "Профит +50%", desc: "Закройте сделку с прибылью от 50% суммы", icon: "BadgePercent", color: "from-emerald-300 via-green-400 to-teal-600", unit: "% лучшей сделки" },
   watcher: { title: "Смотритель", desc: "1000 минут на сайте", icon: "Telescope", color: "from-cyan-300 to-blue-600", unit: "минут" },
 };
 

@@ -117,9 +117,9 @@ const CandleShape = (props: { x?: number; y?: number; width?: number; height?: n
   );
 };
 
-interface Props { coinId: string; price: number; lines?: Line[]; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean }
+interface Props { coinId: string; price: number; lines?: Line[]; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean }
 
-const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisabled }: Props) => {
+const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisabled, closeInfo, closeProfit, onCloseAll, closeDisabled }: Props) => {
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
   const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
@@ -225,6 +225,11 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
               <button disabled={quickDisabled} onClick={() => onQuick("long")} className="px-3 py-1 text-xs font-medium rounded bg-[#22C55E] text-black hover:bg-[#22C55E]/90 disabled:opacity-50">Лонг</button>
               <button disabled={quickDisabled} onClick={() => onQuick("short")} className="px-3 py-1 text-xs font-medium rounded bg-[#EA3943] text-white hover:bg-[#EA3943]/90 disabled:opacity-50">Шорт</button>
               {quickInfo && <span className="text-xs text-muted-foreground">{quickInfo}</span>}
+              {onCloseAll && closeInfo && (
+                <button disabled={closeDisabled} onClick={onCloseAll} className="px-3 py-1 text-xs font-medium rounded border border-border text-white hover:bg-hover disabled:opacity-50">
+                  Закрыть позицию <span className={closeProfit ? "text-[#22C55E]" : "text-[#EA3943]"}>{closeInfo}</span>
+                </button>
+              )}
             </>
           )}
         </div>
