@@ -116,6 +116,32 @@ def wallet_base(cur, uid):
     return float(cur.fetchone()[0])
 
 
+DAILY_REWARDS = [10, 15, 20, 25, 30, 40, 50]
+TODAY = "(NOW() AT TIME ZONE 'Europe/Moscow')::date"
+
+
+def daily_state(cur, uid):
+    cur.execute(f"SELECT last_day = {TODAY}, last_day = {TODAY} - 1, streak FROM {SCHEMA}.tka_daily WHERE user_id = {uid}")
+    row = cur.fetchone()
+    if not row:
+        streak, claimed = 0, False
+        nxt = 1
+    else:
+        claimed, yesterday, streak = bool(row[0]), bool(row[1]), int(row[2])
+        nxt = streak if claimed else (streak + 1 if yesterday else 1)
+        if not claimed and not yesterday:
+            streak = 0
+    pos = min(nxt, len(DAILY_REWARDS))
+    return {
+        "claimed": claimed,
+        "streak": streak,
+        "nextDay": nxt,
+        "reward": DAILY_REWARDS[pos - 1],
+        "tomorrow": DAILY_REWARDS[min(nxt + 1, len(DAILY_REWARDS)) - 1] if claimed else DAILY_REWARDS[pos - 1],
+        "rewards": DAILY_REWARDS,
+    }
+
+
 def process(cur, user_id, px):
     cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, sl, tp FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending'")
     for oid, coin, side, lev, margin, lim, osl, otp in cur.fetchall():
@@ -347,6 +373,9 @@ def handler(event, context):
         if not row:
             return resp(401, {"error": "Сессия истекла, войдите заново"})
         uid = int(row[0])
+        if method == "GET" and action == "daily":
+            ensure_account(cur, uid)
+            return resp(200, daily_state(cur, uid))
         if method == "GET" and action == "wallet":
             ensure_account(cur, uid)
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
@@ -364,6 +393,23 @@ def handler(event, context):
         act = body.get("action")
         ensure_account(cur, uid)
         process(cur, uid, px)
+        if act == "daily":
+            ds = daily_state(cur, uid)
+            if ds["claimed"]:
+                return resp(400, {"error": "Сегодняшний бонус уже получен, заходите завтра"})
+            day = ds["nextDay"]
+            reward = ds["reward"]
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.tka_daily (user_id, last_day, streak) VALUES ({uid}, {TODAY}, {day}) "
+                f"ON CONFLICT (user_id) DO UPDATE SET last_day = {TODAY}, streak = {day} WHERE {SCHEMA}.tka_daily.last_day < {TODAY} RETURNING user_id"
+            )
+            if not cur.fetchone():
+                return resp(400, {"error": "Сегодняшний бонус уже получен, заходите завтра"})
+            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {reward} WHERE user_id = {uid}")
+            cur.execute(f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) VALUES ({uid}, {reward}, 'daily', 'Ежедневный бонус, день {day}')")
+            out = daily_state(cur, uid)
+            out["got"] = reward
+            return resp(200, out)
         if act in ("open", "limit"):
             coin = str(body.get("coinId", ""))
             side = body.get("side")

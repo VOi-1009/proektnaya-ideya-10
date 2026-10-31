@@ -24,3 +24,25 @@ export const useWallet = (token: string | null) =>
       return r.json();
     },
   });
+
+export interface Daily {
+  claimed: boolean;
+  streak: number;
+  nextDay: number;
+  reward: number;
+  tomorrow: number;
+  rewards: number[];
+  got?: number;
+}
+
+export const useDaily = (token: string | null) =>
+  useQuery<Daily>({
+    queryKey: ["tka-daily", token],
+    enabled: !!token,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const r = await fetch(`${TRADING_URL}?action=daily`, { headers: { "X-Auth-Token": token ?? "" } });
+      if (!r.ok) throw new Error("bad");
+      return r.json();
+    },
+  });

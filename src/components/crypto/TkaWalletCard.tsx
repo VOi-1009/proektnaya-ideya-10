@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { tka, useWallet } from "@/lib/tka";
 import TkaIcon from "./TkaIcon";
 
-const KIND: Record<string, string> = { bonus: "Бонус", reward: "Награда", refill: "Пополнение", gift: "Подарок" };
+const KIND: Record<string, string> = { daily: "Ежедневный бонус", bonus: "Бонус", reward: "Награда", refill: "Пополнение", gift: "Подарок" };
 
 const TkaWalletCard = ({ token }: { token: string | null }) => {
   const { data, isLoading } = useWallet(token);

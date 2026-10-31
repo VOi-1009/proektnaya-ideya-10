@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS tka_daily (
+  user_id INTEGER PRIMARY KEY,
+  last_day DATE NOT NULL,
+  streak INTEGER NOT NULL DEFAULT 1
+);
