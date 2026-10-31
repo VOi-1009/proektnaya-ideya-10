@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { communityRequest } from "@/lib/community";
+import { renderTradeCard } from "@/lib/tradeCard";
 import CandleChart from "../CandleChart";
 import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import func2url from "../../../../backend/func2url.json";
@@ -89,7 +90,24 @@ const TradingChannel = ({ coins }: Props) => {
     const dir = t.side === "long" ? "Лонг" : "Шорт";
     const text = `${t.pnl >= 0 ? "Закрыл в плюс" : "Закрыл в минус"} на тренировочной бирже: ${name(t.coinId)}, ${dir} x${t.leverage}. Вход ${fmtPrice(t.entry, t.coinId)} → выход ${fmtPrice(t.close, t.coinId)}. Результат: ${usd(t.pnl, true)} (${((t.pnl / t.margin) * 100).toFixed(1)}% от суммы сделки).`;
     try {
-      await communityRequest(token, "", { action: "post", body: text, sentiment: t.side === "long" ? "bull" : "bear", coins: [t.coinId] });
+      let image: string | undefined;
+      try {
+        image = renderTradeCard({
+          coinName: name(t.coinId),
+          coinShort: COIN_META[t.coinId]?.short ?? t.coinId.slice(0, 4).toUpperCase(),
+          coinColor: COIN_META[t.coinId]?.color ?? "#F97316",
+          side: t.side,
+          leverage: t.leverage,
+          entry: fmtPrice(t.entry, t.coinId),
+          close: fmtPrice(t.close, t.coinId),
+          pct: (t.pnl / t.margin) * 100,
+          pnl: usd(t.pnl, true),
+          date: new Date(t.closedAt + "Z").toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }),
+        });
+      } catch {
+        image = undefined;
+      }
+      await communityRequest(token, "", { action: "post", body: text, sentiment: t.side === "long" ? "bull" : "bear", coins: [t.coinId], image, contentType: image ? "image/png" : undefined });
       setShared((a) => [...a, t.id]);
       toast({ title: "Сделка опубликована в соцсети сайта" });
     } catch (e) {
