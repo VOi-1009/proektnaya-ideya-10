@@ -5,21 +5,49 @@ import { Bar, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis,
 import { fmtPrice, useChart } from "@/lib/crypto";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const RANGES = [
-  { d: 1, label: "1Д" },
-  { d: 7, label: "1Н" },
-  { d: 30, label: "1М" },
-  { d: 90, label: "3М" },
+const INTERVALS = [
+  { v: "1m", label: "1м", ms: 60_000 },
+  { v: "5m", label: "5м", ms: 300_000 },
+  { v: "15m", label: "15м", ms: 900_000 },
+  { v: "1h", label: "1ч", ms: 3_600_000 },
+  { v: "4h", label: "4ч", ms: 14_400_000 },
+  { v: "1d", label: "1д", ms: 86_400_000 },
 ];
+
+const SYMBOLS: Record<string, string> = {
+  bitcoin: "BTC", ethereum: "ETH", binancecoin: "BNB", ripple: "XRP", solana: "SOL", dogecoin: "DOGE",
+  hyperliquid: "HYPE", zcash: "ZEC", tron: "TRX", cardano: "ADA", chainlink: "LINK", stellar: "XLM",
+  "avalanche-2": "AVAX", sui: "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", litecoin: "LTC",
+};
+const HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"];
+const FIRST_VIEW = 120;
+
+const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> => {
+  const sym = SYMBOLS[coinId];
+  if (!sym) throw new Error("no symbol");
+  for (const host of HOSTS) {
+    try {
+      const r = await fetch(`${host}/api/v3/klines?symbol=${sym}USDT&interval=${interval}&limit=500`);
+      if (!r.ok) continue;
+      const rows = (await r.json()) as string[][];
+      if (Array.isArray(rows) && rows.length > 5) {
+        return rows.map((k) => {
+          const o = +k[1], h = +k[2], l = +k[3], c = +k[4];
+          return { t: k[0] as unknown as number, o, h, l, c, range: [l, h] as [number, number] };
+        });
+      }
+    } catch {
+      continue;
+    }
+  }
+  throw new Error("klines unavailable");
+};
 
 interface Candle { t: number; o: number; h: number; l: number; c: number; range: [number, number] }
 interface Line { price: number; label: string; color: string }
 
 const UP = "#22C55E";
 const DOWN = "hsl(var(--down))";
-
-const fromOhlc = (rows: number[][]): Candle[] =>
-  rows.map(([t, o, h, l, c]) => ({ t, o, h, l, c, range: [l, h] }));
 
 const fromPoints = (pts: { t: number; p: number }[]): Candle[] => {
   const size = Math.max(2, Math.floor(pts.length / 60));
@@ -56,7 +84,8 @@ const CandleShape = (props: { x?: number; y?: number; width?: number; height?: n
 interface Props { coinId: string; price: number; lines?: Line[] }
 
 const CandleChart = ({ coinId, price, lines = [] }: Props) => {
-  const [days, setDays] = useState(1);
+  const [interval, setIntervalV] = useState("1h");
+  const days = 7;
   const [view, setView] = useState<{ start: number; size: number } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; start: number } | null>(null);
@@ -64,27 +93,30 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
   const MIN = 10;
   const { data: line } = useChart(coinId, days, price);
   const { data, isLoading } = useQuery<Candle[]>({
-    queryKey: ["ohlc", coinId, days, line?.length ?? 0],
+    queryKey: ["klines", coinId, interval, line?.length ?? 0],
     queryFn: async () => {
       try {
-        const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`);
-        if (!r.ok) throw new Error("bad");
-        const rows = (await r.json()) as number[][];
-        if (!Array.isArray(rows) || rows.length < 5) throw new Error("empty");
-        return fromOhlc(rows);
+        return await loadKlines(coinId, interval);
       } catch {
         return fromPoints(line ?? []);
       }
     },
     enabled: !!line,
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
+  const ivMs = INTERVALS.find((i) => i.v === interval)?.ms ?? 3_600_000;
 
   total.current = data?.length ?? 0;
 
   useEffect(() => {
     setView(null);
-  }, [coinId, days]);
+  }, [coinId, interval]);
+
+  const firstLen = data?.length ?? 0;
+  useEffect(() => {
+    if (firstLen > FIRST_VIEW) setView({ start: firstLen - FIRST_VIEW, size: FIRST_VIEW });
+  }, [coinId, interval, firstLen > 0]);
 
   const clampView = (start: number, size: number, n: number) => {
     const sz = Math.min(Math.max(Math.round(size), Math.min(MIN, n)), n);
@@ -139,7 +171,7 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
 
   const fmtTick = (t: number) => {
     const d = new Date(t);
-    return days <= 1
+    return ivMs < 86_400_000 * 1
       ? d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
       : d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
   };
@@ -153,19 +185,6 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
           <button onClick={() => zoom(1 / 1.5)} title="Приблизить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomIn" size={14} /></button>
           <button onClick={() => zoom(1.5)} title="Отдалить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomOut" size={14} /></button>
           <button onClick={() => setView(null)} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
-        </div>
-        <div className="flex bg-rail rounded p-0.5">
-          {RANGES.map((r) => (
-            <button
-              key={r.d}
-              onClick={() => setDays(r.d)}
-              className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
-                days === r.d ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
         </div>
         </div>
       </div>
@@ -216,6 +235,19 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
             </ComposedChart>
           </ResponsiveContainer>
         )}
+      </div>
+      <div className="flex bg-rail rounded p-0.5 mt-2 w-fit">
+        {INTERVALS.map((r) => (
+          <button
+            key={r.v}
+            onClick={() => setIntervalV(r.v)}
+            className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
+              interval === r.v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
       </div>
     </div>
   );
