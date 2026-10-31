@@ -11,7 +11,7 @@ import ExchangeOutflowCard from "../ExchangeOutflowCard";
 import UpcomingEvents from "../UpcomingEvents";
 import LiqBars from "../LiqBars";
 import LiqHistory from "../LiqHistory";
-import ProfileMiniCard from "../home/ProfileMiniCard";
+import AchievementsMini from "../home/AchievementsMini";
 import EtfNetFlow from "../EtfNetFlow";
 import SocialSentiment from "../SocialSentiment";
 import PuellStatus from "../PuellStatus";
@@ -96,8 +96,8 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             <FearGreedGauge compact />
             <AltseasonGauge compact />
           </div>
-          <div className="flex-1 min-h-[60px] px-3 py-2 flex items-center justify-center overflow-hidden">
-            <ProfileMiniCard />
+          <div className="flex-1 min-h-[60px] px-3 py-2 flex items-center justify-center">
+            <AchievementsMini />
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-3 overflow-hidden">
