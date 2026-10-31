@@ -211,7 +211,7 @@ const Admin = () => {
                 ["menu", "Меню слева", "PanelLeft"],
                 ["chats", "Чаты", "MessageCircle"],
                 ["forum", "Форум", "MessagesSquare"],
-                ["aibot", "AiTraderKa", "Sparkles"],
+                ["aibot", "AiTKA", "Sparkles"],
               ] as const
             ).map(([id, label, icon]) => (
               <button

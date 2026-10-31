@@ -78,7 +78,7 @@ export interface AiLog {
   user: string;
 }
 
-export const AI_NAME = "AiTraderKa";
+export const AI_NAME = "AiTKA";
 
 export const aiRequest = async <T,>(token: string | null, query = "", body?: object): Promise<T> => {
   const r = await fetch(`${PROFILE_URL}?resource=aibot${query}`, {

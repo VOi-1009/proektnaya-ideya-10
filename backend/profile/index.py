@@ -125,7 +125,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTraderKa (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits), настройки левого меню (?resource=menu)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTKA (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits), настройки левого меню (?resource=menu)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}

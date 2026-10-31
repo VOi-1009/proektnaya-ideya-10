@@ -1,0 +1,1 @@
+UPDATE t_p98937530_proektnaya_ideya_10.users SET name = 'AiTKA' WHERE is_ai = true AND name = 'AiTraderKa';

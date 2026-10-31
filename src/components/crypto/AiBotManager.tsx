@@ -72,7 +72,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
   const save = async () => {
     if (!f) return;
     setSaving(true);
-    await run({ action: "settings", ...f }, "Настройки AiTraderKa сохранены");
+    await run({ action: "settings", ...f }, "Настройки AiTKA сохранены");
     setSaving(false);
   };
 
@@ -88,7 +88,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
           <h1 className="font-display text-2xl text-white flex items-center gap-2">
             {AI_NAME} <BotBadge ai />
           </h1>
-          <p className="text-muted-foreground text-sm">ИИ-бот сайта: модерация чатов, реакции на новости и канал «Новости от AiTraderKa».</p>
+          <p className="text-muted-foreground text-sm">ИИ-бот сайта: модерация чатов, реакции на новости и канал «Новости от AiTKA».</p>
         </div>
         <label className="ml-auto flex items-center gap-2 text-sm text-white">
           <Switch checked={f.enabled} onCheckedChange={(v) => setF({ ...f, enabled: v })} />
@@ -166,7 +166,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
               <span className="font-mono text-indigo-200">{f.reactShare}%</span>
             </div>
             <Slider value={[f.reactShare]} min={0} max={100} step={5} onValueChange={([v]) => setF({ ...f, reactShare: v })} />
-            <p className="text-xs text-muted-foreground">Обычные боты оценивают 45% новостей, AiTraderKa — чаще и быстрее (в первые 2 минуты).</p>
+            <p className="text-xs text-muted-foreground">Обычные боты оценивают 45% новостей, AiTKA — чаще и быстрее (в первые 2 минуты).</p>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
@@ -211,7 +211,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
           />
           <Toggle
             label="Отвечать на любые вопросы"
-            hint="Если выключить — бот отвечает, только когда к нему обращаются по имени (AiTraderKa, бот)"
+            hint="Если выключить — бот отвечает, только когда к нему обращаются по имени (AiTKA, бот)"
             checked={f.replyAll}
             onChange={(v) => setF({ ...f, replyAll: v })}
           />

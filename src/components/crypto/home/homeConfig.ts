@@ -5,7 +5,7 @@ export const CHANNELS = [
   { id: "market", name: "котировки", topic: "Цены и графики топовых монет в реальном времени", icon: "Hash" },
   { id: "news", name: "новости-криптовалют", short: "Крипто-новости", topic: "Криптоновости: Bits.media, Investing.com, Финам, Ведомости", icon: "Hash" },
   { id: "articles", name: "статьи", topic: "Разборы и обучающие материалы от редакции", icon: "Hash" },
-  { id: "ainews", name: "новости-AiTraderKa", short: "AiTraderKa", topic: "Дайджесты и заметки ИИ-бота AiTraderKa", icon: "Sparkles" },
+  { id: "ainews", name: "новости-AiTKA", short: "AiTKA", topic: "Дайджесты и заметки ИИ-бота AiTKA", icon: "Sparkles" },
   { id: "forum", name: "форум", topic: "Обсуждения по разделам: рынок, идеи, закрытые клубы", icon: "Hash" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "trading", name: "тренировочная-биржа", short: "Биржа", topic: "Игровая монета TKA, реальные курсы, плечо, шорт и рейтинг трейдеров", icon: "Hash" },

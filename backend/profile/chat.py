@@ -219,7 +219,7 @@ def handle_chat(event: dict) -> dict:
             reason = moderate(text, settings)
             if reason:
                 log_block(cur, me, room, text, reason)
-                return resp(422, {"error": f"AiTraderKa не пропустил сообщение: {reason}", "moderated": True})
+                return resp(422, {"error": f"AiTKA не пропустил сообщение: {reason}", "moderated": True})
         cur.execute(f"INSERT INTO {SCHEMA}.chat_messages (room, user_id, text) VALUES ('{room}', {me}, '{esc(text)}') RETURNING id")
         mid = cur.fetchone()[0]
         cur.execute(f"SELECT name, email FROM {SCHEMA}.users WHERE id = {me}")

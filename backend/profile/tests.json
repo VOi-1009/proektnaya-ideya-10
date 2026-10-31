@@ -273,7 +273,7 @@
       "expectedStatus": 403
     },
     {
-      "name": "Новости AiTraderKa",
+      "name": "Новости AiTKA",
       "method": "GET",
       "path": "/?resource=aibot",
       "expectedStatus": 200

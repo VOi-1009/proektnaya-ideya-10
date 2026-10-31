@@ -381,7 +381,7 @@ def handle_aibot(event: dict) -> dict:
                     reason = moderate(text, s)
                     if reason:
                         log_block(cur, me, "ainews", text, reason)
-                        return resp(422, {"error": f"AiTraderKa не пропустил комментарий: {reason}"})
+                        return resp(422, {"error": f"AiTKA не пропустил комментарий: {reason}"})
                 cur.execute(f"INSERT INTO {SCHEMA}.ai_post_comments (post_id, user_id, text) VALUES ({pid}, {me}, '{esc(text)}')")
                 return resp(200, {"comments": comments_list(cur, pid, me, is_admin)})
             cid = int(body.get("id", 0) or 0)
@@ -465,8 +465,8 @@ def handle_aibot(event: dict) -> dict:
                 "enabled": bool(body.get("enabled", True)),
                 "daily": bool(body.get("daily", True)),
                 "digest": bool(body.get("digest", True)),
-                "fromName": re.sub(r"[\r\n<>]", "", str(body.get("fromName", "AiTraderKa"))).strip()[:60] or "AiTraderKa",
-                "subjectPrefix": re.sub(r"[\r\n]", "", str(body.get("subjectPrefix", "AiTraderKa"))).strip()[:60],
+                "fromName": re.sub(r"[\r\n<>]", "", str(body.get("fromName", "AiTKA"))).strip()[:60] or "AiTKA",
+                "subjectPrefix": re.sub(r"[\r\n]", "", str(body.get("subjectPrefix", "AiTKA"))).strip()[:60],
             }
             val = esc(json.dumps(data, ensure_ascii=False))
             cur.execute(

@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 from email.utils import formataddr
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
-DEFAULT_MAIL = {"enabled": True, "daily": True, "digest": True, "fromName": "AiTraderKa", "subjectPrefix": "AiTraderKa"}
+DEFAULT_MAIL = {"enabled": True, "daily": True, "digest": True, "fromName": "AiTKA", "subjectPrefix": "AiTKA"}
 GOLD = 3
 
 
@@ -59,7 +59,7 @@ def render(title: str, body: str, links: list, site: str) -> tuple:
     page = (
         '<div style="background:#0f1115;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">'
         '<table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#1a1d24;border-radius:12px;padding:24px">'
-        '<tr><td style="color:#a5b4fc;font-size:12px;letter-spacing:1px;text-transform:uppercase">AiTraderKa · рассылка для подписчиков «Золото»</td></tr>'
+        '<tr><td style="color:#a5b4fc;font-size:12px;letter-spacing:1px;text-transform:uppercase">AiTKA · рассылка для подписчиков «Золото»</td></tr>'
         f'<tr><td style="color:#ffffff;font-size:22px;font-weight:bold;padding:10px 0 12px">{html.escape(title)}</td></tr>'
         f"{rows}"
         f'<tr><td>{link_html}</td></tr>'
@@ -110,8 +110,8 @@ def process_queue(cur, limit: int = 8, budget: float = 3.2) -> dict:
             try:
                 text, page = render(title, body, json.loads(links or "[]"), site)
                 msg = MIMEMultipart("alternative")
-                msg["Subject"] = Header(f"{cfg.get('subjectPrefix', 'AiTraderKa')}: {title}", "utf-8")
-                msg["From"] = formataddr((str(Header(cfg.get("fromName", "AiTraderKa"), "utf-8")), sender))
+                msg["Subject"] = Header(f"{cfg.get('subjectPrefix', 'AiTKA')}: {title}", "utf-8")
+                msg["From"] = formataddr((str(Header(cfg.get("fromName", "AiTKA"), "utf-8")), sender))
                 msg["To"] = email
                 msg.attach(MIMEText(text, "plain", "utf-8"))
                 msg.attach(MIMEText(page, "html", "utf-8"))

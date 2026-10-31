@@ -199,7 +199,7 @@ def handle_forum(event: dict) -> dict:
                     reason = moderate(title + "\n" + text, settings)
                     if reason:
                         log_block(cur, me, "forum", title + "\n" + text, reason)
-                        return resp(422, {"error": f"AiTraderKa не пропустил тему: {reason}"})
+                        return resp(422, {"error": f"AiTKA не пропустил тему: {reason}"})
                 cur.execute(
                     f"INSERT INTO {SCHEMA}.forum_topics (section_id, user_id, title) VALUES ({sec['id']}, {me}, '{esc(title)}') RETURNING id"
                 )
@@ -220,7 +220,7 @@ def handle_forum(event: dict) -> dict:
                 reason = moderate(text, settings)
                 if reason:
                     log_block(cur, me, "forum", text, reason)
-                    return resp(422, {"error": f"AiTraderKa не пропустил сообщение: {reason}"})
+                    return resp(422, {"error": f"AiTKA не пропустил сообщение: {reason}"})
             cur.execute(f"INSERT INTO {SCHEMA}.forum_posts (topic_id, user_id, text) VALUES ({tid}, {me}, '{esc(text)}')")
             cur.execute(f"UPDATE {SCHEMA}.forum_topics SET posts_count = posts_count + 1, last_post_at = NOW() WHERE id = {tid}")
             return resp(200, {"id": tid})
