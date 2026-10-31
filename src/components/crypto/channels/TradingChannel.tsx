@@ -139,7 +139,7 @@ const TradingChannel = ({ coins }: Props) => {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
         <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
         <Stat label="В сделках" value={st ? usd(st.locked) : "—"} />
         <Stat label="Нереализ. PnL" value={st ? usd(st.unrealized, true) : "—"} cls={st ? tone(st.unrealized) : ""} />
@@ -220,10 +220,12 @@ const TradingChannel = ({ coins }: Props) => {
 };
 
 const Stat = ({ label, value, sub, cls = "" }: { label: string; value: string; sub?: string; cls?: string }) => (
-  <div className="rounded-xl border border-border bg-card p-3">
-    <div className="text-xs text-muted-foreground">{label}</div>
-    <div className={`font-display text-base sm:text-lg text-white ${cls}`}>{value}</div>
-    {sub && <div className={`text-xs ${cls}`}>{sub}</div>}
+  <div className="rounded-lg border border-border bg-card px-2.5 py-1.5 min-w-0">
+    <div className="text-[11px] leading-tight text-muted-foreground truncate">{label}</div>
+    <div className="flex items-baseline gap-1.5 flex-wrap">
+      <span className={`font-display text-sm sm:text-base leading-tight text-white ${cls}`}>{value}</span>
+      {sub && <span className={`text-[10px] leading-tight ${cls}`}>{sub}</span>}
+    </div>
   </div>
 );
 
