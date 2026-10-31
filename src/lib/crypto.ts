@@ -40,7 +40,7 @@ export const COIN_IDS = [
   "litecoin",
 ];
 
-export const COMMODITY_IDS = ["brent", "gold", "usd-rub", "eur-rub", "usdt-rub"];
+export const COMMODITY_IDS = ["brent", "gold", "silver", "natgas", "palladium", "usd-rub", "eur-rub", "usdt-rub"];
 export const FX_IDS = ["usd-rub", "eur-rub", "usdt-rub"];
 export const isFx = (id: string) => FX_IDS.includes(id);
 export const isCommodity = (id: string) => COMMODITY_IDS.includes(id);
@@ -66,6 +66,9 @@ export const COIN_META: Record<string, { ru: string; color: string; short: strin
   "litecoin": { ru: "Litecoin", color: "#a6a9aa", short: "LTC" },
   brent: { ru: "BRENT", color: "#3d3d3d", short: "BRENT" },
   gold: { ru: "Gold", color: "#d4af37", short: "GOLD" },
+  silver: { ru: "Silver", color: "#c0c0c0", short: "SILVER" },
+  natgas: { ru: "Natural Gas", color: "#38bdf8", short: "GAS" },
+  palladium: { ru: "Palladium", color: "#8d99ae", short: "PALL" },
   "usd-rub": { ru: "USD/RUB", color: "#2f855a", short: "USD/RUB" },
   "eur-rub": { ru: "EUR/RUB", color: "#2b6cb0", short: "EUR/RUB" },
   "usdt-rub": { ru: "USDT/RUB", color: "#26a17b", short: "USDT/RUB" },
@@ -93,6 +96,9 @@ const FALLBACK: Array<[string, string, string, number, number, number]> = [
   ["litecoin", "ltc", "Litecoin", 78, -0.9, 5900000000],
   ["brent", "brent", "BRENT", 109.86, 3.72, 0],
   ["gold", "xau", "Gold", 4181.1, 0.26, 0],
+  ["silver", "xag", "Silver", 48, 0.3, 0],
+  ["natgas", "gas", "Natural Gas", 3.6, 0.5, 0],
+  ["palladium", "xpd", "Palladium", 1450, 0.2, 0],
   ["usd-rub", "usd", "USD/RUB", 83.46, -0.48, 0],
   ["eur-rub", "eur", "EUR/RUB", 93.83, -0.29, 0],
   ["usdt-rub", "usdt", "USDT/RUB", 80.43, -0.05, 0],

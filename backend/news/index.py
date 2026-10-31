@@ -191,6 +191,9 @@ def load_all(kind: str) -> tuple:
 COMMODITIES = {
     "brent": {"ticker": "BZ=F", "symbol": "brent", "name": "BRENT"},
     "gold": {"ticker": "GC=F", "symbol": "xau", "name": "Gold"},
+    "silver": {"ticker": "SI=F", "symbol": "xag", "name": "Silver"},
+    "natgas": {"ticker": "NG=F", "symbol": "gas", "name": "Natural Gas"},
+    "palladium": {"ticker": "PA=F", "symbol": "xpd", "name": "Palladium"},
     "usd-rub": {"ticker": "RUB=X", "symbol": "usd", "name": "USD/RUB", "quote": "RUB"},
     "eur-rub": {"ticker": "EURRUB=X", "symbol": "eur", "name": "EUR/RUB", "quote": "RUB"},
     "usdt-rub": {"ticker": "USDT-RUB", "symbol": "usdt", "name": "USDT/RUB", "quote": "RUB"},
