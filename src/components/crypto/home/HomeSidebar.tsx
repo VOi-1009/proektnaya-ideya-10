@@ -4,6 +4,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
+import HeroSiteNews from "@/components/crypto/HeroSiteNews";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { DEFAULT_MENU_TITLE, MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
@@ -130,6 +131,20 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             );
           })}
         </div>
+      </div>
+      <div className="border-t border-border">
+        <HeroSiteNews />
+      </div>
+      <div className="p-4 flex justify-center">
+        <button
+          onClick={() => go("trading")}
+          className="group w-full max-w-[200px] flex items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground px-5 py-4 shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition"
+        >
+          <span className="w-9 h-9 rounded-lg bg-background text-primary flex items-center justify-center font-display font-black text-xl leading-none">
+            Т
+          </span>
+          <span className="font-display font-black text-xl tracking-widest">TRADE</span>
+        </button>
       </div>
     </aside>
   );
