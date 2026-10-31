@@ -17,7 +17,7 @@ const LatestArticles = ({ onOpen, onAll }: Props) => {
   return (
     <section className="animate-fade-in">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <h3 className="font-display text-lg sm:text-xl text-white">Свежие статьи</h3>
+        <h3 className="font-display text-lg sm:text-xl text-white">Свежие статьи и новости сайта</h3>
         <Button
           variant="outline"
           size="sm"
