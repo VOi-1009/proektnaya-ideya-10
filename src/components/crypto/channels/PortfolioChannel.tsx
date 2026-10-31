@@ -182,11 +182,10 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         </div>
       )}
 
-      <div className={`grid grid-cols-1 gap-3 items-stretch ${total > 0 ? "lg:grid-cols-[4fr_1fr]" : ""}`}>
+      <div className="grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-3 items-stretch">
         <div className="min-w-0">
           <PortfolioChart holdings={holdings} coins={coins} />
         </div>
-      {total > 0 && (
         <div className="bg-card border border-border rounded-lg p-3 min-w-0">
           <div className="space-y-2.5 mb-3">
             <div>
@@ -205,6 +204,8 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
               <div className={`font-mono text-xs tabular ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
             </div>
           </div>
+          {total > 0 && (
+          <>
           <div className="text-muted-foreground text-xs mb-1 pt-2 border-t border-border">Распределение активов</div>
           <PortfolioDonut3D
             compact
@@ -215,8 +216,9 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
               .sort((x, y) => y[1] - x[1])
               .map(([id, v]) => ({ id, label: COIN_META[id]?.short ?? id, value: v, color: COIN_META[id]?.color ?? "#888", valueText: fmtUsd(v) }))}
           />
+          </>
+          )}
         </div>
-      )}
       </div>
 
       <div className="space-y-3">
