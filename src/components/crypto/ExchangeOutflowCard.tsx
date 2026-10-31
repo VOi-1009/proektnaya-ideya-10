@@ -39,7 +39,7 @@ const ExchangeOutflowCard = ({ go }: { go: (channel: string) => void }) => {
       className={`bg-transparent rounded-lg px-3 py-1 h-[48px] flex flex-col justify-between items-center min-w-0 w-full overflow-hidden ${radar ? "cursor-pointer" : ""}`}
       title={radar ? "Открыть радар «Притоки и оттоки на биржах»" : "Биржи с самым большим оттоком активов за 24 часа"}
     >
-      <div className={`${labelCls} text-center line-clamp-1`}>отток бирж за 24ч</div>
+      <div className={`${labelCls} text-center line-clamp-1`}>Больший отток за 24ч</div>
       <div className="flex items-center justify-center gap-2 w-full">
         {top.length ? top.map((e) => <Logo key={e.slug || e.name} e={e} />) : <span className="text-muted-foreground text-sm">—</span>}
       </div>
