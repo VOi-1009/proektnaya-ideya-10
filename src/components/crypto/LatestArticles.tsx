@@ -10,7 +10,7 @@ interface Props {
 }
 
 const LatestArticles = ({ onOpen, onAll }: Props) => {
-  const { data, isLoading } = useArticles(null, 3);
+  const { data, isLoading } = useArticles(null, 5);
   if (!isLoading && !data?.length) return null;
 
   return (
@@ -27,9 +27,9 @@ const LatestArticles = ({ onOpen, onAll }: Props) => {
           <Icon name="ArrowRight" size={14} className="ml-1.5" />
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {isLoading
-          ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-56 bg-card" />)
+          ? [1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-56 bg-card" />)
           : data!.map((a) => (
               <Link
                 key={a.id}
