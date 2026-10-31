@@ -81,7 +81,6 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
                 <div className={valueCls}>—</div>
               </div>
             )}
-            <MarketMetricsRow flat />
             <div className="bg-hover rounded-lg border-l-4 border-metric-sky h-[48px] min-w-0 overflow-hidden">
               <ExchangeOutflowCard go={go} />
             </div>
@@ -120,7 +119,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <div className="contents">
           <TopNewsBlock onAll={() => go("news")} />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
-            <div className="flex-1 min-h-[100px]" />
+            <div className="flex-1 min-h-[100px] px-2 pb-2 pt-0">
+              <MarketMetricsRow cols="grid-cols-1" />
+            </div>
             <div className="flex-1 min-h-[260px]">
               <LiqHistory />
             </div>
