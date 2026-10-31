@@ -202,13 +202,15 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         </div>
       </div>
 
-      <PortfolioChart holdings={holdings} coins={coins} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
+      <div className={`grid grid-cols-1 gap-3 items-stretch ${total > 0 ? "lg:grid-cols-[4fr_1fr]" : ""}`}>
+        <div className="min-w-0">
+          <PortfolioChart holdings={holdings} coins={coins} />
+        </div>
       {total > 0 && (
         <div className="bg-card border border-border rounded-lg p-3 min-w-0">
           <div className="text-muted-foreground text-xs mb-1">Распределение активов</div>
           <PortfolioDonut3D
+            compact
             items={Object.entries(
               rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.coinId]: (acc[r.coinId] ?? 0) + r.value }), {})
             )
@@ -218,9 +220,9 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
           />
         </div>
       )}
+      </div>
 
-      <div className={`min-w-0 ${total > 0 ? "relative lg:min-h-[420px]" : ""}`}>
-      <div className={`space-y-3 ${total > 0 ? "lg:absolute lg:inset-0 lg:overflow-y-auto lg:pr-1 scrollbar-thin" : ""}`}>
+      <div className="space-y-3">
       <Message author="Traderka Бот" time="Сегодня" icon="Wallet" bot>
         <p className="text-muted-foreground mb-3">
           Добавьте купленные монеты — сайт посчитает текущую стоимость и результат по живому курсу. Если не указать цену покупки, возьму текущую.
@@ -330,8 +332,6 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
             </tbody>
           </table>
         </div>
-      </div>
-      </div>
       </div>
       </div>
 

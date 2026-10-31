@@ -22,7 +22,7 @@ const sector = (a0: number, a1: number) => {
   return `M ${pt(a0, 1)} A ${RX} ${RY} 0 ${large} 1 ${pt(a1, 1)} L ${pt(a1, INNER)} A ${RX * INNER} ${RY * INNER} 0 ${large} 0 ${pt(a0, INNER)} Z`;
 };
 
-const PortfolioDonut3D = ({ items }: { items: DonutItem[] }) => {
+const PortfolioDonut3D = ({ items, compact = false }: { items: DonutItem[]; compact?: boolean }) => {
   const [hover, setHover] = useState<string | null>(null);
   const total = items.reduce((s, i) => s + i.value, 0);
   if (!total) return null;
@@ -40,7 +40,7 @@ const PortfolioDonut3D = ({ items }: { items: DonutItem[] }) => {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-full max-w-[320px]">
+      <div className={`relative w-full ${compact ? "max-w-[220px]" : "max-w-[320px]"}`}>
         <svg viewBox="0 0 260 178" className="w-full h-auto overflow-visible" role="img" aria-label="Распределение активов">
           <ellipse cx={CX} cy={CY + DEPTH + 8} rx={RX * 0.92} ry={RY * 0.7} fill="#000" opacity="0.35" style={{ filter: "blur(7px)" }} />
           <g style={{ filter: "brightness(0.5)" }}>
@@ -73,7 +73,7 @@ const PortfolioDonut3D = ({ items }: { items: DonutItem[] }) => {
           <span className="text-[10px] text-muted-foreground mt-1">{active ? active.label : "активов"}</span>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 w-full text-xs">
+      <div className={`grid grid-cols-1 gap-x-4 gap-y-1 w-full text-xs ${compact ? "" : "sm:grid-cols-2"}`}>
         {arcs.map((a) => (
           <div
             key={a.id}
@@ -84,7 +84,7 @@ const PortfolioDonut3D = ({ items }: { items: DonutItem[] }) => {
             <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: a.color }} />
             <span className="text-muted-foreground">{a.label}</span>
             <span className="font-mono text-white ml-auto">{a.pct.toFixed(1).replace(".", ",")}%</span>
-            <span className="font-mono text-muted-foreground w-20 text-right hidden sm:block">{a.valueText}</span>
+            {!compact && <span className="font-mono text-muted-foreground w-20 text-right hidden sm:block">{a.valueText}</span>}
           </div>
         ))}
       </div>
