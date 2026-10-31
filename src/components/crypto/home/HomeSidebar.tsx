@@ -130,7 +130,11 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           })}
         </div>
       </div>
-      <div className="flex-1 min-h-[160px] mx-4 mt-3 border-t border-primary p-2 flex flex-col gap-2" />
+      <div className="flex-1 mx-4 mt-3 mb-2 flex flex-col gap-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="flex-1 min-h-[72px] border-t border-primary p-2" />
+        ))}
+      </div>
     </aside>
   );
 };
