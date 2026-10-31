@@ -13,7 +13,7 @@ const HomeNav = ({ go }: Props) => (
           Т
         </div>
         <div className="text-left">
-          <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADERKA.RU</h1>
+          <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADER<span className="text-primary">KA</span>.RU</h1>
           <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости.</p>
         </div>
       </button>
