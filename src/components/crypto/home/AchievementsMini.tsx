@@ -51,7 +51,7 @@ const AchievementsMini = () => {
           <Icon name="LogOut" size={16} />
         </Button>
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap justify-center gap-1.5">
         {(data ?? []).map((a) => {
           const m = ALL_META[a.id];
           return (
