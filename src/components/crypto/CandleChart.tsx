@@ -26,7 +26,7 @@ const loadKlines = async (coinId: string, interval: string, token: string | null
   return data.candles.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v, range: [l, h] as [number, number] }));
 };
 
-interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number; macd?: number; sig?: number; hist?: number }
+interface Candle { empty?: boolean; t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number; macd?: number; sig?: number; hist?: number }
 interface Line { price: number; label: string; color: string }
 
 const UP = "#22C55E";
@@ -111,7 +111,7 @@ interface ShapeProps {
 
 const CandleShape = (props: ShapeProps) => {
   const { x = 0, y = 0, width = 0, height = 0, payload, background, domain } = props;
-  if (!payload) return null;
+  if (!payload || payload.empty) return null;
   const { o, h, l, c } = payload;
   const color = c >= o ? UP : DOWN;
   let yOf: (v: number) => number;
@@ -183,7 +183,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
 
   const clampView = (start: number, size: number, n: number) => {
     const sz = Math.min(Math.max(Math.round(size), Math.min(MIN, n)), n);
-    return { start: Math.min(Math.max(Math.round(start), 0), n - sz), size: sz };
+    return { start: Math.min(Math.max(Math.round(start), 0), n - Math.ceil(sz * 0.4)), size: sz };
   };
 
   const zoom = (factor: number, ratio = 0.5) =>
@@ -259,11 +259,20 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   };
 
   const enriched = useMemo(() => (data ? withIndicators(data) : []), [data]);
-  const visible = useMemo(() => (view ? enriched.slice(view.start, view.start + view.size) : enriched), [enriched, view]);
+  const visible = useMemo(() => {
+    if (!view) return enriched;
+    const part = enriched.slice(view.start, view.start + view.size);
+    const missing = view.size - part.length;
+    if (missing <= 0 || !enriched.length) return part;
+    const lastT = enriched[enriched.length - 1].t;
+    const blanks: Candle[] = Array.from({ length: missing }, (_, i) => ({ t: lastT + (i + 1) * ivMs, o: 0, h: 0, l: 0, c: 0, v: 0, range: [0, 0] as [number, number], empty: true }));
+    return [...part, ...blanks];
+  }, [enriched, view, ivMs]);
   const domain = useMemo<[number, number]>(() => {
-    if (!visible.length) return [0, 1];
-    const lo = Math.min(...visible.map((c) => c.l));
-    const hi = Math.max(...visible.map((c) => c.h));
+    const real = visible.filter((c) => !c.empty);
+    if (!real.length) return [0, 1];
+    const lo = Math.min(...real.map((c) => c.l));
+    const hi = Math.max(...real.map((c) => c.h));
     const pad = (hi - lo) * 0.06 || hi * 0.001;
     if (autoFit) {
       let a = lo;
@@ -372,7 +381,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
                 cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "3 3" }}
                 content={({ active, payload }) => {
                   const p = active ? (payload?.[0]?.payload as Candle | undefined) : undefined;
-                  if (!p) return null;
+                  if (!p || p.empty) return null;
                   return (
                     <div className="rounded-md border border-border bg-popover px-3 py-2 text-xs font-mono text-white space-y-0.5">
                       <div className="text-muted-foreground">{new Date(p.t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
