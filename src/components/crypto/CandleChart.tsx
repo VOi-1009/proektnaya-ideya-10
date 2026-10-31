@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, Cell, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, ComposedChart, Line as RLine, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmtPrice, useChart } from "@/lib/crypto";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -44,11 +44,52 @@ const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> =
   throw new Error("klines unavailable");
 };
 
-interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number] }
+interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number]; ma20?: number; ma50?: number; bbU?: number; bbL?: number; rsi?: number }
 interface Line { price: number; label: string; color: string }
 
 const UP = "#22C55E";
 const DOWN = "hsl(var(--down))";
+
+const sma = (c: number[], n: number, i: number) => (i >= n - 1 ? c.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n : undefined);
+
+const withIndicators = (d: Candle[]): Candle[] => {
+  const c = d.map((x) => x.c);
+  let ag = 0;
+  let al = 0;
+  return d.map((x, i) => {
+    const ma20 = sma(c, 20, i);
+    const ma50 = sma(c, 50, i);
+    let bbU: number | undefined;
+    let bbL: number | undefined;
+    if (ma20 !== undefined) {
+      const sd = Math.sqrt(c.slice(i - 19, i + 1).reduce((a, b) => a + (b - ma20) ** 2, 0) / 20);
+      bbU = ma20 + 2 * sd;
+      bbL = ma20 - 2 * sd;
+    }
+    let rsi: number | undefined;
+    if (i >= 1) {
+      const ch = c[i] - c[i - 1];
+      const g = Math.max(ch, 0);
+      const l = Math.max(-ch, 0);
+      if (i <= 14) {
+        ag += g / 14;
+        al += l / 14;
+      } else {
+        ag = (ag * 13 + g) / 14;
+        al = (al * 13 + l) / 14;
+      }
+      if (i >= 14) rsi = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+    }
+    return { ...x, ma20, ma50, bbU, bbL, rsi };
+  });
+};
+
+const INDICATORS = [
+  { k: "ma20", label: "MA 20", color: "#FACC15" },
+  { k: "ma50", label: "MA 50", color: "#38BDF8" },
+  { k: "bb", label: "Боллинджер", color: "#A78BFA" },
+  { k: "rsi", label: "RSI 14", color: "#F472B6" },
+] as const;
 
 const fromPoints = (pts: { t: number; p: number }[]): Candle[] => {
   const size = Math.max(2, Math.floor(pts.length / 60));
@@ -87,6 +128,7 @@ interface Props { coinId: string; price: number; lines?: Line[] }
 const CandleChart = ({ coinId, price, lines = [] }: Props) => {
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
+  const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false });
   const [view, setView] = useState<{ start: number; size: number } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; start: number } | null>(null);
@@ -161,7 +203,8 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
     drag.current = null;
   };
 
-  const visible = useMemo(() => (data ? (view ? data.slice(view.start, view.start + view.size) : data) : []), [data, view]);
+  const enriched = useMemo(() => (data ? withIndicators(data) : []), [data]);
+  const visible = useMemo(() => (view ? enriched.slice(view.start, view.start + view.size) : enriched), [enriched, view]);
   const domain = useMemo<[number, number]>(() => {
     if (!visible.length) return [0, 1];
     const lo = Math.min(...visible.map((c) => c.l));
@@ -209,6 +252,7 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
               <YAxis
                 orientation="right"
                 domain={domain}
+                allowDataOverflow
                 tickFormatter={(v: number) => fmtPrice(v, coinId)}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
                 axisLine={false}
@@ -228,11 +272,18 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
                       <div>Мин. {fmtPrice(p.l, coinId)}</div>
                       <div>Закр. {fmtPrice(p.c, coinId)}</div>
                       {p.v > 0 && <div>Объём {fmtVol(p.v)}</div>}
+                      {on.ma20 && p.ma20 !== undefined && <div style={{ color: "#FACC15" }}>MA 20 {fmtPrice(p.ma20, coinId)}</div>}
+                      {on.ma50 && p.ma50 !== undefined && <div style={{ color: "#38BDF8" }}>MA 50 {fmtPrice(p.ma50, coinId)}</div>}
+                      {on.rsi && p.rsi !== undefined && <div style={{ color: "#F472B6" }}>RSI {p.rsi.toFixed(1)}</div>}
                     </div>
                   );
                 }}
               />
               <Bar dataKey="range" shape={<CandleShape />} isAnimationActive={false} />
+              {on.bb && <RLine type="monotone" dataKey="bbU" stroke="#A78BFA" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} activeDot={false} />}
+              {on.bb && <RLine type="monotone" dataKey="bbL" stroke="#A78BFA" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} activeDot={false} />}
+              {on.ma20 && <RLine type="monotone" dataKey="ma20" stroke="#FACC15" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
+              {on.ma50 && <RLine type="monotone" dataKey="ma50" stroke="#38BDF8" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
               {lines.map((l, i) => (
                 <ReferenceLine key={i} y={l.price} ifOverflow="hidden" stroke={l.color} strokeDasharray="4 4" label={{ value: l.label, fill: l.color, fontSize: 10, position: "insideTopLeft" }} />
               ))}
@@ -254,10 +305,24 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
               </ResponsiveContainer>
             </div>
           )}
+          {on.rsi && (
+            <div className="h-[90px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={visible} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
+                  <XAxis dataKey="t" hide />
+                  <YAxis orientation="right" domain={[0, 100]} ticks={[30, 70]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={72} />
+                  <ReferenceLine y={70} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
+                  <ReferenceLine y={30} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
+                  <RLine type="monotone" dataKey="rsi" stroke="#F472B6" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           </>
         )}
       </div>
-      <div className="flex bg-rail rounded p-0.5 mt-2 w-fit">
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+      <div className="flex bg-rail rounded p-0.5 w-fit">
         {INTERVALS.map((r) => (
           <button
             key={r.v}
@@ -269,6 +334,19 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
             {r.label}
           </button>
         ))}
+      </div>
+      <div className="flex bg-rail rounded p-0.5 w-fit">
+        {INDICATORS.map((ind) => (
+          <button
+            key={ind.k}
+            onClick={() => setOn((o) => ({ ...o, [ind.k]: !o[ind.k] }))}
+            className={`px-3 py-1 text-xs font-mono rounded transition-colors flex items-center gap-1.5 ${on[ind.k] ? "bg-hover text-white" : "text-muted-foreground hover:text-white"}`}
+          >
+            <span className="w-2 h-2 rounded-full" style={{ background: on[ind.k] ? ind.color : "transparent", border: `1px solid ${ind.color}` }} />
+            {ind.label}
+          </button>
+        ))}
+      </div>
       </div>
     </div>
   );
