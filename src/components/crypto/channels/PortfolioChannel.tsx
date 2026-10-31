@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { PORTFOLIO_URL, useAuth } from "@/lib/auth";
 import Message from "../Message";
 import PortfolioChart from "../PortfolioChart";
+import PortfolioDonut3D from "../PortfolioDonut3D";
 import { CoinLogo } from "../QuotesTable";
 
 interface Holding {
@@ -164,7 +165,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
   const upCls = (v: number) => (v >= 0 ? "text-up" : "text-down");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {ready && !user && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-primary/10 border border-primary/30 rounded-lg p-4 animate-fade-in">
           <Icon name="Cloud" size={22} className="text-primary flex-shrink-0" />
@@ -181,56 +182,47 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 animate-fade-in">
-        <div className="bg-card border border-border rounded-lg p-4 border-l-4 border-l-primary">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 animate-fade-in">
+        <div className="bg-card border border-border rounded-lg p-3 border-l-4 border-l-primary">
           <div className="text-muted-foreground text-xs">Стоимость портфеля</div>
-          <div className="font-mono text-2xl text-white tabular mt-1">{fmtUsd(total)}</div>
+          <div className="font-mono text-xl text-white tabular mt-1">{fmtUsd(total)}</div>
           <div className={`font-mono text-xs tabular mt-1 ${upCls(day)}`}>
             {fmtUsd(day, true)} ({fmtPct(dayPct)}) за 24ч
           </div>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4 border-l-4 border-l-accent">
+        <div className="bg-card border border-border rounded-lg p-3 border-l-4 border-l-accent">
           <div className="text-muted-foreground text-xs">Вложено</div>
-          <div className="font-mono text-2xl text-white tabular mt-1">{fmtUsd(invested)}</div>
+          <div className="font-mono text-xl text-white tabular mt-1">{fmtUsd(invested)}</div>
           <div className="text-xs text-muted-foreground mt-1">Позиций: {holdings.length}</div>
         </div>
-        <div className={`bg-card border border-border rounded-lg p-4 border-l-4 ${pnl >= 0 ? "border-l-up" : "border-l-down"}`}>
+        <div className={`bg-card border border-border rounded-lg p-3 border-l-4 ${pnl >= 0 ? "border-l-up" : "border-l-down"}`}>
           <div className="text-muted-foreground text-xs">{pnl >= 0 ? "Прибыль" : "Убыток"}</div>
-          <div className={`font-mono text-2xl tabular mt-1 ${upCls(pnl)}`}>{fmtUsd(pnl, true)}</div>
+          <div className={`font-mono text-xl tabular mt-1 ${upCls(pnl)}`}>{fmtUsd(pnl, true)}</div>
           <div className={`font-mono text-xs tabular mt-1 ${upCls(pnl)}`}>{fmtPct(pnlPct)} за всё время</div>
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+      <div className="space-y-3 min-w-0">
       <PortfolioChart holdings={holdings} coins={coins} />
 
       {total > 0 && (
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="text-muted-foreground text-xs mb-2">Распределение активов</div>
-          <div className="flex h-3 rounded-full overflow-hidden bg-rail">
-            {rows
-              .filter((r) => r.value > 0)
-              .map((r) => (
-                <div
-                  key={r.id}
-                  style={{ width: `${(r.value / total) * 100}%`, background: COIN_META[r.coinId]?.color ?? "#888" }}
-                  title={`${COIN_META[r.coinId]?.short}: ${((r.value / total) * 100).toFixed(1)}%`}
-                />
-              ))}
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
-            {Object.entries(
+        <div className="bg-card border border-border rounded-lg p-3">
+          <div className="text-muted-foreground text-xs mb-1">Распределение активов</div>
+          <PortfolioDonut3D
+            items={Object.entries(
               rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.coinId]: (acc[r.coinId] ?? 0) + r.value }), {})
-            ).map(([id, v]) => (
-              <span key={id} className="flex items-center gap-1.5 text-muted-foreground">
-                <span className="w-2 h-2 rounded-full" style={{ background: COIN_META[id]?.color ?? "#888" }} />
-                {COIN_META[id]?.short ?? id}
-                <span className="font-mono text-white">{((v / total) * 100).toFixed(1).replace(".", ",")}%</span>
-              </span>
-            ))}
-          </div>
+            )
+              .filter(([, v]) => v > 0)
+              .sort((x, y) => y[1] - x[1])
+              .map(([id, v]) => ({ id, label: COIN_META[id]?.short ?? id, value: v, color: COIN_META[id]?.color ?? "#888", valueText: fmtUsd(v) }))}
+          />
         </div>
       )}
 
+      </div>
+
+      <div className="space-y-3 min-w-0">
       <Message author="Traderka Бот" time="Сегодня" icon="Wallet" bot>
         <p className="text-muted-foreground mb-3">
           Добавьте купленные монеты — сайт посчитает текущую стоимость и результат по живому курсу. Если не указать цену покупки, возьму текущую.
@@ -280,7 +272,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
 
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto scrollbar-thin">
-          <table className="w-full text-sm min-w-[640px]">
+          <table className="w-full text-sm min-w-[520px]">
             <thead className="text-muted-foreground text-[10px] uppercase tracking-wider">
               <tr>
                 <th className="px-3 py-2 text-left font-medium">Монета</th>
@@ -294,7 +286,7 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-white/5 hover:bg-hover/60 transition-colors">
-                  <td className="px-3 py-2.5">
+                  <td className="px-2.5 py-2">
                     <button onClick={() => go("market", r.coinId)} className="flex items-center gap-2.5 text-left">
                       {r.coin && <CoinLogo coin={r.coin} />}
                       <div>
@@ -303,17 +295,17 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
                       </div>
                     </button>
                   </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-white tabular">{fmtAmount(r.amount)}</td>
-                  <td className="px-3 py-2.5 text-right font-mono tabular">
+                  <td className="px-2.5 py-2 text-right font-mono text-white tabular">{fmtAmount(r.amount)}</td>
+                  <td className="px-2.5 py-2 text-right font-mono tabular">
                     <div className="text-muted-foreground text-xs">{fmtPrice(r.buyPrice)}</div>
                     <div className="text-white">{fmtPrice(r.price)}</div>
                   </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-white tabular">{fmtUsd(r.value)}</td>
-                  <td className={`px-3 py-2.5 text-right font-mono tabular ${upCls(r.pnl)}`}>
+                  <td className="px-2.5 py-2 text-right font-mono text-white tabular">{fmtUsd(r.value)}</td>
+                  <td className={`px-2.5 py-2 text-right font-mono tabular ${upCls(r.pnl)}`}>
                     <div>{fmtUsd(r.pnl, true)}</div>
                     <div className="text-xs">{fmtPct(r.pnlPct)}</div>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-2.5 py-2 text-right">
                     <button onClick={() => remove(r.id)} className="text-muted-foreground hover:text-down" aria-label="Удалить">
                       <Icon name="Trash2" size={15} />
                     </button>
@@ -340,6 +332,8 @@ const PortfolioChannel = ({ coins, go }: { coins: Coin[]; go: (ch: string, coinI
             </tbody>
           </table>
         </div>
+      </div>
+      </div>
       </div>
 
       <p className="text-xs text-muted-foreground/70 pb-2">
