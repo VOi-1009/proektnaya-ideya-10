@@ -8,7 +8,7 @@ const fmtUsd = (v?: number | null) =>
 
 const LIQ_URL = "https://coinmarketcap.com/ru/charts/liquidations/";
 
-const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
+const MarketMetricsRow = ({ cols = "grid-cols-2", flat }: { cols?: string; flat?: boolean }) => {
   const { data } = useCmcMetrics();
   const l = data?.liquidations;
   const share = (v?: number | null) => (l?.total && v != null ? Math.round((v / l.total) * 100) : null);
@@ -16,7 +16,7 @@ const MarketMetricsRow = ({ cols = "grid-cols-2" }: { cols?: string }) => {
   const shortPct = share(l?.shorts);
 
   return (
-    <div className={`grid ${cols} gap-2 mt-2`}>
+    <div className={flat ? "contents" : `grid ${cols} gap-2 mt-2`}>
       <a
         href={LIQ_URL}
         target="_blank"
