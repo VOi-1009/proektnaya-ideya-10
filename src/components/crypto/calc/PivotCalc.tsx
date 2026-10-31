@@ -57,7 +57,7 @@ const PivotCalc = () => {
           { id: "woodie", label: "Вуди" },
         ]}
       />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Field label="Максимум (High)"><NumInput value={high} onChange={setHigh} placeholder="0" /></Field>
         <Field label="Минимум (Low)"><NumInput value={low} onChange={setLow} placeholder="0" /></Field>
         <Field label="Закрытие (Close)"><NumInput value={close} onChange={setClose} placeholder="0" /></Field>
@@ -66,7 +66,7 @@ const PivotCalc = () => {
       {high && low && Number.isFinite(h) && Number.isFinite(l) && h < l && <div className="text-down text-xs">Максимум не может быть ниже минимума</div>}
       <div className="divide-y divide-white/5 bg-rail rounded">
         {rows.map((r) => (
-          <div key={r.k} className="flex items-center justify-between px-3 py-2 text-sm">
+          <div key={r.k} className="flex items-center justify-between px-3 py-1 text-xs">
             <span className="text-muted-foreground">{r.label}</span>
             <span className={`font-mono ${r.cls}`}>{res ? fmt(res[r.k]) : "—"}</span>
           </div>

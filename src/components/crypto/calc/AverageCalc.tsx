@@ -28,7 +28,7 @@ const AverageCalc = () => {
               type="button"
               disabled={buys.length <= 1}
               onClick={() => setBuys((x) => x.filter((_, j) => j !== i))}
-              className="h-10 w-10 rounded text-muted-foreground hover:text-down disabled:opacity-30"
+              className="h-9 w-9 rounded text-muted-foreground hover:text-down disabled:opacity-30"
               aria-label="Убрать покупку"
             >
               <Icon name="X" size={16} className="mx-auto" />
@@ -42,7 +42,7 @@ const AverageCalc = () => {
       <Field label="Текущая цена" hint="Укажите, чтобы увидеть результат сейчас">
         <input value={now} onChange={(e) => setNow(e.target.value)} inputMode="decimal" placeholder="0" className={`${inputCls} max-w-xs`} />
       </Field>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Result label="Средняя цена" value={qty ? fmt(avg, 6) : "—"} cls="text-primary" />
         <Result label="Всего монет" value={qty ? fmt(qty, 6) : "—"} />
         <Result label="Вложено" value={qty ? `${fmt(cost, 2)} $` : "—"} />

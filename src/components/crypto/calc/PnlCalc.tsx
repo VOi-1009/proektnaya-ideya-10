@@ -27,7 +27,7 @@ const PnlCalc = ({ coins }: CalcProps) => {
   return (
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Field label="Цена входа" className="col-span-2">
           <NumInput value={entry} onChange={setEntry} placeholder="0" />
           <PriceFill coins={coins} onFill={setEntry} />
@@ -37,7 +37,7 @@ const PnlCalc = ({ coins }: CalcProps) => {
         <Field label="Плечо"><NumInput value={lev} onChange={setLev} /></Field>
         <Field label="Комиссия, % за сторону"><NumInput value={fee} onChange={setFee} /></Field>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Result label="Результат" value={ok ? `${fmtSigned(net)} $` : "—"} cls={ok ? tone(net) : "text-white"} />
         <Result label="Доходность от ставки" value={ok ? fmtSigned(roe, "%") : "—"} cls={ok ? tone(roe) : "text-white"} />
         <Result label="Объём сделки" value={ok ? `${fmt(volume, 2)} $` : "—"} />

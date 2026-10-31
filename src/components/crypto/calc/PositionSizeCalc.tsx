@@ -27,7 +27,7 @@ const PositionSizeCalc = ({ coins }: CalcProps) => {
   return (
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Field label="Депозит, $"><NumInput value={deposit} onChange={setDeposit} /></Field>
         <Field label="Риск на сделку, %"><NumInput value={riskPct} onChange={setRiskPct} /></Field>
         <Field label="Цена входа" className="col-span-2">
@@ -40,7 +40,7 @@ const PositionSizeCalc = ({ coins }: CalcProps) => {
       {entry && stop && Number.isFinite(e) && Number.isFinite(s) && !dirOk && (
         <div className="text-down text-xs">{side === "long" ? "Для лонга стоп должен быть ниже входа" : "Для шорта стоп должен быть выше входа"}</div>
       )}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Result label="Рискуете" value={ok ? `${fmt(riskUsd, 2)} $` : "—"} cls="text-down" />
         <Result label="Размер позиции" value={ok ? fmt(qty, 6) : "—"} sub="в монетах" />
         <Result label="Объём сделки" value={ok ? `${fmt(volume, 2)} $` : "—"} />

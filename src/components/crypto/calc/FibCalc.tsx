@@ -24,12 +24,12 @@ const FibCalc = () => {
         <Field label="Максимум движения"><NumInput value={high} onChange={setHigh} placeholder="0" /></Field>
       </div>
       {low && high && Number.isFinite(lo) && Number.isFinite(hi) && hi <= lo && <div className="text-down text-xs">Максимум должен быть выше минимума</div>}
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Коррекция</div>
           <div className="divide-y divide-white/5 bg-rail rounded">
             {RETRACE.map((r) => (
-              <div key={r} className="flex items-center justify-between px-3 py-2 text-sm">
+              <div key={r} className="flex items-center justify-between px-2.5 py-1 text-xs">
                 <span className={r === 0.618 || r === 0.382 ? "text-primary font-semibold" : "text-muted-foreground"}>{(r * 100).toFixed(1).replace(".0", "")}%</span>
                 <span className="font-mono text-white">{ok ? fmt(retr(r)) : "—"}</span>
               </div>
@@ -40,7 +40,7 @@ const FibCalc = () => {
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Расширение (цели)</div>
           <div className="divide-y divide-white/5 bg-rail rounded">
             {EXT.map((r) => (
-              <div key={r} className="flex items-center justify-between px-3 py-2 text-sm">
+              <div key={r} className="flex items-center justify-between px-2.5 py-1 text-xs">
                 <span className="text-muted-foreground">{(r * 100).toFixed(1).replace(".0", "")}%</span>
                 <span className="font-mono text-white">{ok ? fmt(ext(r)) : "—"}</span>
               </div>

@@ -19,8 +19,8 @@ const LiqCalc = ({ coins }: CalcProps) => {
   return (
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
-      <div className="grid grid-cols-3 gap-2">
-        <Field label="Цена входа" className="col-span-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Цена входа" className="col-span-2">
           <NumInput value={entry} onChange={setEntry} placeholder="0" />
           <PriceFill coins={coins} onFill={setEntry} />
         </Field>

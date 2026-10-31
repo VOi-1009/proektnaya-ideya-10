@@ -22,8 +22,8 @@ const RiskRewardCalc = ({ coins }: CalcProps) => {
   return (
     <Panel>
       <Segment value={side} onChange={setSide} options={[{ id: "long", label: "Лонг" }, { id: "short", label: "Шорт" }]} />
-      <div className="grid grid-cols-3 gap-2">
-        <Field label="Цена входа" className="col-span-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Цена входа" className="col-span-2">
           <NumInput value={entry} onChange={setEntry} placeholder="0" />
           <PriceFill coins={coins} onFill={setEntry} />
         </Field>
@@ -33,7 +33,7 @@ const RiskRewardCalc = ({ coins }: CalcProps) => {
       {entry && stop && take && [e, s, t].every(Number.isFinite) && !dirOk && (
         <div className="text-down text-xs">{side === "long" ? "Для лонга: стоп ниже входа, тейк выше" : "Для шорта: стоп выше входа, тейк ниже"}</div>
       )}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Result label="Риск / прибыль" value={ok ? `1 : ${fmt(rr, 2)}` : "—"} cls={ok ? (rr >= 2 ? "text-up" : rr >= 1 ? "text-white" : "text-down") : "text-white"} />
         <Result label="Риск до стопа" value={ok ? `${fmt((risk / e) * 100, 2)}%` : "—"} cls="text-down" />
         <Result label="Потенциал до тейка" value={ok ? `${fmt((reward / e) * 100, 2)}%` : "—"} cls="text-up" />

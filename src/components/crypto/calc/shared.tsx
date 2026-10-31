@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Icon from "@/components/ui/icon";
 import { Coin } from "@/lib/crypto";
 
 export const num = (s: string) => parseFloat(s.replace(/\s/g, "").replace(",", "."));
@@ -15,7 +16,7 @@ export interface CalcProps {
 }
 
 export const inputCls =
-  "w-full bg-rail rounded px-3 h-10 font-mono text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground placeholder:font-body";
+  "w-full bg-rail rounded px-3 h-9 font-mono text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground placeholder:font-body";
 
 export const Field = ({ label, hint, children, className = "" }: { label: string; hint?: string; children: ReactNode; className?: string }) => (
   <label className={`space-y-1 block min-w-0 ${className}`}>
@@ -29,12 +30,22 @@ export const NumInput = ({ value, onChange, placeholder }: { value: string; onCh
   <input value={value} onChange={(e) => onChange(e.target.value)} inputMode="decimal" placeholder={placeholder} className={inputCls} />
 );
 
-export const Panel = ({ children }: { children: ReactNode }) => <div className="bg-card border border-border rounded-lg p-4 space-y-3">{children}</div>;
+export const Panel = ({ children }: { children: ReactNode }) => <div className="space-y-2">{children}</div>;
+
+export const ToolCard = ({ title, icon, children }: { title: string; icon: string; children: ReactNode }) => (
+  <section className="bg-card border border-border rounded-lg p-3 mb-3 break-inside-avoid">
+    <h3 className="flex items-center gap-1.5 text-sm font-semibold text-white mb-2">
+      <Icon name={icon} size={15} fallback="Calculator" className="text-primary" />
+      {title}
+    </h3>
+    {children}
+  </section>
+);
 
 export const Result = ({ label, value, cls = "text-white", sub }: { label: string; value: string; cls?: string; sub?: string }) => (
-  <div className="bg-rail rounded px-3 py-2 min-w-0">
+  <div className="bg-rail rounded px-2.5 py-1.5 min-w-0">
     <div className="text-[11px] text-muted-foreground">{label}</div>
-    <div className={`font-mono text-base truncate ${cls}`}>{value}</div>
+    <div className={`font-mono text-sm truncate ${cls}`}>{value}</div>
     {sub && <div className="text-[10px] text-muted-foreground font-mono truncate">{sub}</div>}
   </div>
 );
@@ -46,7 +57,7 @@ export const Segment = <T extends string>({ value, onChange, options }: { value:
         key={o.id}
         type="button"
         onClick={() => onChange(o.id)}
-        className={`px-3 py-1.5 text-xs rounded transition-colors ${value === o.id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"}`}
+        className={`px-2.5 py-1 text-xs rounded transition-colors ${value === o.id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"}`}
       >
         {o.label}
       </button>
@@ -54,4 +65,4 @@ export const Segment = <T extends string>({ value, onChange, options }: { value:
   </div>
 );
 
-export const Note = ({ children }: { children: ReactNode }) => <p className="text-xs text-muted-foreground leading-relaxed">{children}</p>;
+export const Note = ({ children }: { children: ReactNode }) => <p className="text-[11px] text-muted-foreground leading-snug">{children}</p>;
