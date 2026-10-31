@@ -9,7 +9,7 @@ import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
 import GuestCard from "../trading/GuestCard";
 import TradeForm from "../trading/TradeForm";
 import TradeTabs from "../trading/TradeTabs";
-import { Leader, State, Tab, Trade, URL, name, tone, usd } from "../trading/shared";
+import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
 interface Props { coins: Coin[] }
 
@@ -28,7 +28,7 @@ const TradingChannel = ({ coins }: Props) => {
   const [tab, setTab] = useState<Tab>("positions");
 
   const call = useCallback(async (method: string, query = "", body?: unknown) => {
-    const r = await fetch(URL + query, {
+    const r = await fetch(TRADING_API + query, {
       method,
       headers: { "Content-Type": "application/json", "X-Auth-Token": token ?? "" },
       body: body ? JSON.stringify(body) : undefined,

@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { fmtPrice } from "@/lib/crypto";
-import { Leader, PubTrade, Row, URL, name, tone, usd } from "./shared";
+import { Leader, PubTrade, Row, TRADING_API, name, tone, usd } from "./shared";
 
 const LeaderTrades = ({ userId, onRepeat, busy }: { userId: number; onRepeat?: (t: PubTrade) => void; busy?: boolean }) => {
   const { token } = useAuth();
@@ -12,7 +12,7 @@ const LeaderTrades = ({ userId, onRepeat, busy }: { userId: number; onRepeat?: (
     queryKey: ["trading-trades", userId, !!token],
     enabled: !!token,
     queryFn: async () => {
-      const r = await fetch(`${URL}?action=trades&userId=${userId}`, { headers: { "X-Auth-Token": token ?? "" } });
+      const r = await fetch(`${TRADING_API}?action=trades&userId=${userId}`, { headers: { "X-Auth-Token": token ?? "" } });
       if (!r.ok) throw new Error("bad");
       return r.json();
     },

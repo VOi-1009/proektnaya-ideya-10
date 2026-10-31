@@ -2,7 +2,7 @@ import { COIN_META } from "@/lib/crypto";
 import { tka } from "@/lib/tka";
 import func2url from "../../../../backend/func2url.json";
 
-export const URL = func2url.trading;
+export const TRADING_API = func2url.trading;
 
 export interface Position { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; size: number; entry: number; price: number; pnl: number; liq: number; sl: number | null; tp: number | null }
 export interface Order { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; limit: number; sl: number | null; tp: number | null }
