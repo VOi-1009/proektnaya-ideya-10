@@ -30,7 +30,7 @@ const AchievementsMini = () => {
 
   return (
     <div className="w-full flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
+      <div className="relative flex items-center justify-center gap-2 min-h-8">
         <span className="text-white font-semibold text-sm flex items-center gap-1.5">
           <Icon name="Award" size={14} className="text-primary" /> Достижения
           <span className="text-muted-foreground text-xs font-mono font-normal">
@@ -40,7 +40,7 @@ const AchievementsMini = () => {
         <Button
           variant="ghost"
           size="sm"
-          className="w-8 h-8 p-0 hover:bg-hover text-muted-foreground hover:text-down"
+          className="absolute right-0 w-8 h-8 p-0 hover:bg-hover text-muted-foreground hover:text-down"
           onClick={() => {
             logout();
             toast({ title: "Вы вышли из аккаунта" });
