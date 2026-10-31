@@ -59,7 +59,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
         </Button>
       </div>
       <div className="p-2">
-        <div className="px-2 pt-1 pb-2 flex flex-col items-center gap-1.5">
+        <div className="px-2 pt-1 pb-5 flex flex-col items-center gap-1.5">
           <span className="text-muted-foreground text-xs text-center">Перейти на трейнинг-биржу</span>
           <button
             onClick={() => go("trading")}
