@@ -6,7 +6,7 @@ import func2url from "../../../backend/func2url.json";
 
 interface Stats { trades: number; wins: number; winRate: number; avgPnl: number; avgPct: number; best: number; bestPct: number; worst: number; worstPct: number; totalPnl: number; curve: { t: string; v: number }[] }
 
-const usd = (v: number, sign = false) => `${sign && v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+import { tka as usd } from "@/lib/tka";
 const tone = (v: number) => (v >= 0 ? "text-[#22C55E]" : "text-[#EA3943]");
 
 const Cell = ({ label, value, sub, cls = "text-white" }: { label: string; value: string; sub?: string; cls?: string }) => (
@@ -72,7 +72,7 @@ const TradingStats = ({ token, userId }: Props) => {
                   </defs>
                   <XAxis dataKey="i" hide />
                   <YAxis orientation="right" domain={["auto", "auto"]} tickFormatter={(v: number) => Math.round(v).toLocaleString("ru-RU")} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={48} />
-                  <ReferenceLine y={10000} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
+                  <ReferenceLine y={curve[0]?.v} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
                   <Tooltip
                     content={({ active, payload }) => {
                       const p = active ? (payload?.[0]?.payload as { t: number; v: number } | undefined) : undefined;

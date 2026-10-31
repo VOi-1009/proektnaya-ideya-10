@@ -10,6 +10,7 @@ import { COIN_META } from "@/lib/crypto";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import { LEVELS } from "@/lib/status";
 import { Achievement } from "@/components/crypto/Achievements";
+import TkaWalletCard from "@/components/crypto/TkaWalletCard";
 import TradingStats from "@/components/crypto/TradingStats";
 import ProfileRewards from "@/components/crypto/ProfileRewards";
 import FounderBadge from "@/components/crypto/FounderBadge";
@@ -416,6 +417,7 @@ const Profile = () => {
                   );
                 })()}
               </section>
+              <TkaWalletCard token={token} />
               <TradingStats token={token} />
               <ProfileRewards level={s.level} achievements={profile.achievements} special={profile.special} founder={profile.founder} foundersTaken={profile.foundersTaken} promo={profile.promo} streak={profile.stats.streak ?? 0} />
               </div>

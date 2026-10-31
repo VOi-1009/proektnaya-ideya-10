@@ -7,6 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { tka } from "@/lib/tka";
+import TkaIcon from "../TkaIcon";
 import { communityRequest } from "@/lib/community";
 import { renderTradeCard } from "@/lib/tradeCard";
 import CandleChart from "../CandleChart";
@@ -30,7 +32,7 @@ interface Stats { trades: number; winRate: number; avgPnl: number; avgPct: numbe
 interface State { stats?: Stats; balance: number; equity: number; locked: number; unrealized: number; resets: number; start: number; positions: Position[]; orders: Order[]; history: Trade[]; prices: Record<string, number> }
 interface Leader { pnl?: number; userId: number; name: string; avatar: string; equity: number; profitPct: number; trades: number }
 
-const usd = (v: number, sign = false) => `${sign && v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+const usd = tka;
 const pct = (pnl: number, base: number) => `${pnl > 0 ? "+" : ""}${base ? ((pnl / base) * 100).toFixed(1) : "0.0"}%`;
 const tone = (v: number) => (v >= 0 ? "text-[#16C784]" : "text-[#EA3943]");
 const name = (id: string) => COIN_META[id]?.ru ?? id;
@@ -44,7 +46,7 @@ const TradingChannel = ({ coins }: Props) => {
   const [coinId, setCoinId] = useState("bitcoin");
   const [side, setSide] = useState<"long" | "short">("long");
   const [leverage, setLeverage] = useState(1);
-  const [margin, setMargin] = useState("1000");
+  const [margin, setMargin] = useState("100");
   const [mode, setMode] = useState<"market" | "limit">("market");
   const [limit, setLimit] = useState("");
   const [sl, setSl] = useState("");
@@ -87,6 +89,7 @@ const TradingChannel = ({ coins }: Props) => {
       const data = await call("POST", "", body);
       qc.setQueryData(["trading", token], data);
       qc.invalidateQueries({ queryKey: ["trading-leaders"] });
+      qc.invalidateQueries({ queryKey: ["tka-wallet"] });
       toast({ title: ok });
     } catch (e) {
       toast({ title: (e as Error).message, variant: "destructive" });
@@ -134,6 +137,7 @@ const TradingChannel = ({ coins }: Props) => {
       for (const p of list) data = await call("POST", "", { action: "close", id: p.id });
       if (data) qc.setQueryData(["trading", token], data);
       qc.invalidateQueries({ queryKey: ["trading-leaders"] });
+      qc.invalidateQueries({ queryKey: ["tka-wallet"] });
       toast({ title: list.length > 1 ? "Позиции закрыты" : "Позиция закрыта" });
     } catch (e) {
       toast({ title: (e as Error).message, variant: "destructive" });
@@ -163,7 +167,7 @@ const TradingChannel = ({ coins }: Props) => {
       <div className="rounded-xl border border-border bg-card p-6 text-center space-y-3">
         <Icon name="LineChart" size={32} className="mx-auto text-primary" />
         <h2 className="font-display text-lg text-white">Тренировочная биржа</h2>
-        <p className="text-sm text-muted-foreground">Торгуйте на виртуальные 10 000 $ по реальным курсам и соревнуйтесь с другими трейдерами. Для этого нужно войти.</p>
+        <p className="text-sm text-muted-foreground">Торгуйте на игровую монету TKA (1 TKA = 1 USDT) по реальным курсам и соревнуйтесь с другими трейдерами. Для этого нужно войти.</p>
         <Button onClick={() => setAuthOpen(true)}>Войти или зарегистрироваться</Button>
         <Board leaders={leaders?.leaders ?? []} me={undefined} />
       </div>
@@ -191,7 +195,7 @@ const TradingChannel = ({ coins }: Props) => {
             closeProfit={coinPnl >= 0}
             onCloseAll={closeAll}
             closeDisabled={busy}
-            quickDisabled={busy || !user || m < 10}
+            quickDisabled={busy || !user || m < 1}
             quickInfo={`${usd(m)} · x${leverage}`}
             onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}
             lines={[
@@ -273,7 +277,7 @@ const TradingChannel = ({ coins }: Props) => {
           <Board
             leaders={leaders?.leaders ?? []}
             me={user?.id}
-            busy={busy || m < 10}
+            busy={busy || m < 1}
             onRepeat={(t) => send({ action: "open", coinId: t.coinId, side: t.side, leverage: t.leverage, margin: m }, `Открыта такая же позиция на ${usd(m)}`)}
           />
           {user && <p className="text-xs text-muted-foreground mt-2">«Повторить сделку» открывает такую же позицию по текущему курсу на сумму из формы справа (сейчас {usd(m)}).</p>}
@@ -284,7 +288,7 @@ const TradingChannel = ({ coins }: Props) => {
         <section className="rounded-xl border border-border bg-card p-4 space-y-3 lg:sticky lg:top-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <h3 className="font-display text-white flex items-center gap-2">
             <Icon name="Flame" size={18} className="text-primary" /> Новая сделка
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-accent">виртуальные $</span>
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-accent flex items-center gap-1"><TkaIcon size={14} /> TKA</span>
           </h3>
           <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -319,7 +323,7 @@ const TradingChannel = ({ coins }: Props) => {
           )}
 
           <div>
-            <label className="text-xs font-semibold text-accent">Ставка, $</label>
+            <label className="text-xs font-semibold text-accent flex items-center gap-1">Ставка, <TkaIcon size={12} /> TKA</label>
             <Input type="number" value={margin} onChange={(e) => setMargin(e.target.value)} />
             <div className="flex gap-1 mt-1">
               {[25, 50, 100].map((p) => (
@@ -377,14 +381,14 @@ const TradingChannel = ({ coins }: Props) => {
           <Button
             className="w-full h-11 font-bold text-base text-black hover:opacity-90"
             style={{ background: sideColor, color: side === "long" ? "#000" : "#fff", boxShadow: `0 0 18px ${sideColor}55` }}
-            disabled={busy || !user || m < 10}
+            disabled={busy || !user || m < 1}
             onClick={submit}
           >
             {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
           </Button>
-          {st && (
-            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Сбросить счёт к 10 000 $? Все позиции и ордера будут закрыты.") && send({ action: "reset" }, "Счёт сброшен")}>
-              Начать заново с 10 000 $
+          {st && st.balance + st.locked < st.start / 2 && (
+            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={busy} onClick={() => confirm("Пополнить кошелёк до 1 000 TKA? Все открытые позиции и ордера будут закрыты.") && send({ action: "reset" }, "Кошелёк пополнен до 1 000 TKA")}>
+              Пополнить кошелёк до 1 000 TKA
             </Button>
           )}
         </section>
