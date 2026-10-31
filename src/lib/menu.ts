@@ -26,6 +26,8 @@ export const BASE_ITEMS: { id: string; name: string }[] = [
   ...EXTRA_ITEMS,
 ];
 
+export const TOOL_IDS = ["market", "portfolio", "alerts", "converter"];
+
 export const DEFAULT_MENU_TITLE = "Меню";
 export const DEFAULT_RADARS_TITLE = "Инструменты";
 

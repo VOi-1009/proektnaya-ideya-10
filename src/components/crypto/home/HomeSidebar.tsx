@@ -6,9 +6,7 @@ import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
 import { chatColor, useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
-import { BASE_ITEMS, DEFAULT_MENU_TITLE, DEFAULT_RADARS_TITLE, mergeMenu, useMenuSettings } from "@/lib/menu";
-
-const MOVED = ["market", "portfolio", "alerts", "converter"];
+import { BASE_ITEMS, TOOL_IDS, DEFAULT_MENU_TITLE, DEFAULT_RADARS_TITLE, mergeMenu, useMenuSettings } from "@/lib/menu";
 
 interface Props {
   channel: string;
@@ -25,8 +23,8 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
   const allItems = mergeMenu(menuCfg).filter((i) => !i.hidden);
-  const items = allItems.filter((i) => !MOVED.includes(i.id));
-  const movedItems = allItems.filter((i) => MOVED.includes(i.id));
+  const items = allItems.filter((i) => !TOOL_IDS.includes(i.id));
+  const movedItems = allItems.filter((i) => TOOL_IDS.includes(i.id));
   const radarsFirst = !!menuCfg?.radarsFirst;
 
   return (
