@@ -84,6 +84,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
               <ExchangeOutflowCard go={go} />
             </div>
           </div>
+          <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center">
+            <QuoteBlock />
+          </div>
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
           <div className="flex-1 grid grid-cols-2">
@@ -115,9 +118,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <div className="contents">
           <TopNewsBlock onAll={() => go("news")} />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
-            <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center">
-              <QuoteBlock />
-            </div>
+            <div className="flex-1 min-h-[100px]" />
           </div>
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
             <div className="flex-1 min-h-[100px]">
