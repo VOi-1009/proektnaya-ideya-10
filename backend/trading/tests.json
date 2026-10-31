@@ -3,6 +3,7 @@
     {"name": "CORS", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
     {"name": "Без токена", "method": "GET", "path": "/", "expectedStatus": 401},
     {"name": "Неизвестная монета", "method": "GET", "path": "/?action=candles&coinId=nope&interval=1h", "expectedStatus": 503},
+    {"name": "Проверка без ключа", "method": "GET", "path": "/?action=tick", "expectedStatus": 403},
     {"name": "Рейтинг открыт", "method": "GET", "path": "/?action=leaderboard", "expectedStatus": 200}
   ]
 }

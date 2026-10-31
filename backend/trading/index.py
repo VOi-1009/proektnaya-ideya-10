@@ -137,6 +137,14 @@ def process(cur, user_id, px):
             cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {margin + res} WHERE user_id = {user_id}")
 
 
+def tick(cur, px):
+    cur.execute(f"SELECT DISTINCT user_id FROM {SCHEMA}.paper_orders WHERE status = 'pending' UNION SELECT DISTINCT user_id FROM {SCHEMA}.paper_positions WHERE status = 'open'")
+    ids = [r[0] for r in cur.fetchall()]
+    for u in ids:
+        process(cur, int(u), px)
+    return len(ids)
+
+
 def state(cur, user_id, px):
     cur.execute(f"INSERT INTO {SCHEMA}.paper_accounts (user_id) VALUES ({user_id}) ON CONFLICT (user_id) DO NOTHING")
     process(cur, user_id, px)
@@ -207,6 +215,13 @@ def handler(event, context):
                 return resp(503, {"error": "Свечи сейчас недоступны"})
             return resp(200, {"source": res["source"], "candles": res["candles"]})
         px = prices()
+        if action == "tick":
+            secret = os.environ.get("TRADING_CRON_SECRET", "")
+            if not secret or qs.get("key", "") != secret:
+                return resp(403, {"error": "Доступ запрещён"})
+            if not px:
+                return resp(503, {"error": "Курсы недоступны"})
+            return resp(200, {"checked": tick(cur, px)})
         if method == "GET" and action == "leaderboard":
             return resp(200, {"leaders": leaderboard(cur, px)})
         if not token:
