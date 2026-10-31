@@ -8,7 +8,7 @@ import { chatColor, useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { BASE_ITEMS, DEFAULT_MENU_TITLE, DEFAULT_RADARS_TITLE, mergeMenu, useMenuSettings } from "@/lib/menu";
 
-const MOVED = ["market", "alerts", "converter"];
+const MOVED = ["market", "portfolio", "alerts", "converter"];
 
 interface Props {
   channel: string;
@@ -177,7 +177,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                       channel === it.id ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                     }`}
                   >
-                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mx-1" />
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 mx-1 ${it.id === "portfolio" ? "bg-[#A78BFA]" : "bg-primary"}`} />
                     <span className="text-[14px] truncate">{label}</span>
                     {it.id === "alerts" && activeAlerts > 0 && <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>}
                   </button>
