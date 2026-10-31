@@ -7,7 +7,7 @@ import { Daily, TRADING_URL, useDaily, useWallet } from "@/lib/tka";
 import TkaIcon from "@/components/crypto/TkaIcon";
 import { GoFn } from "./homeConfig";
 
-const TkaBadge = ({ go, className = "" }: { go: GoFn; className?: string }) => {
+const TkaBadge = ({ go }: { go: GoFn }) => {
   const { user, token } = useAuth();
   const qc = useQueryClient();
   const { data } = useWallet(user ? token : null);
@@ -37,7 +37,7 @@ const TkaBadge = ({ go, className = "" }: { go: GoFn; className?: string }) => {
   };
 
   return (
-    <div className={`flex items-center gap-1.5 flex-shrink-0 ${className}`}>
+    <div className="flex items-center gap-1.5 flex-shrink-0">
       <button
         onClick={() => go("trading")}
         title="Кошелёк TKA — внутренняя игровая монета, 1 TKA = 1 USDT"
