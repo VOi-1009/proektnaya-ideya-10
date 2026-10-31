@@ -145,6 +145,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   const boxRef = useRef<HTMLDivElement>(null);
   const axisRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<HTMLDivElement>(null);
+  const [full, setFull] = useState(false);
   const [yZoom, setYZoom] = useState(1);
   const [yShift, setYShift] = useState(0);
   const [autoFit, setAutoFit] = useState(false);
@@ -297,8 +298,22 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
       : d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
   };
 
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFull(false);
+    };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [full]);
+
   return (
-    <div>
+    <div className={full ? "fixed inset-0 z-[100] bg-background p-3 sm:p-4 overflow-y-auto flex flex-col" : ""}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="font-display text-white">График</h3>
@@ -327,7 +342,8 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
           >
             <Icon name="ChevronsUpDown" size={14} /> Авто
           </button>
-          <button onClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
+          <button onClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }} title="Сбросить масштаб" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="RotateCcw" size={14} /></button>
+          <button onClick={() => setFull((v) => !v)} title={full ? "Свернуть (Esc)" : "На весь экран"} className={`px-2 py-1 rounded ${full ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-white"}`}><Icon name={full ? "Shrink" : "Expand"} size={14} /></button>
         </div>
         </div>
       </div>
@@ -342,10 +358,10 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
         onDoubleClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }}
       >
         {isLoading || !data ? (
-          <Skeleton className="w-full h-[460px] sm:h-[600px] bg-rail" />
+          <Skeleton className={`w-full bg-rail ${full ? "h-[60vh]" : "h-[460px] sm:h-[600px]"}`} />
         ) : (
           <>
-          <div ref={plotRef} className="h-[460px] sm:h-[600px] relative">
+          <div ref={plotRef} className={`relative ${full ? "h-[calc(100vh-190px)] min-h-[320px]" : "h-[460px] sm:h-[600px]"}`}>
           <div
             ref={axisRef}
             title="Тяните вверх и вниз или крутите колесо — растяжение шкалы цены. Двойной клик — сброс"
