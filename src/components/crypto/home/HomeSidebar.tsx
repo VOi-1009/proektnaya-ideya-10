@@ -5,6 +5,7 @@ import { useRadars } from "@/lib/radars";
 import DonateButton from "@/components/crypto/DonateButton";
 import LangSwitch from "@/components/crypto/LangSwitch";
 import HeroSiteNews from "@/components/crypto/HeroSiteNews";
+import SidePolls from "@/components/crypto/SidePolls";
 import { useChatRooms } from "@/lib/chat";
 import { GoFn } from "./homeConfig";
 import { DEFAULT_MENU_TITLE, MenuEntry, mergeMenu, useMenuSettings } from "@/lib/menu";
@@ -134,6 +135,9 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
             );
           })}
         </div>
+      </div>
+      <div className="p-3">
+        <SidePolls />
       </div>
     </aside>
   );
