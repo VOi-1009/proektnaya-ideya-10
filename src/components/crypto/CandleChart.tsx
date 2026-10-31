@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmtPrice, useChart } from "@/lib/crypto";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,6 +20,7 @@ const SYMBOLS: Record<string, string> = {
   "avalanche-2": "AVAX", sui: "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", litecoin: "LTC",
 };
 const HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"];
+const fmtVol = (v: number) => (v >= 1e9 ? `${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}K` : v.toFixed(0));
 const FIRST_VIEW = 120;
 
 const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> => {
@@ -32,8 +33,8 @@ const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> =
       const rows = (await r.json()) as string[][];
       if (Array.isArray(rows) && rows.length > 5) {
         return rows.map((k) => {
-          const o = +k[1], h = +k[2], l = +k[3], c = +k[4];
-          return { t: k[0] as unknown as number, o, h, l, c, range: [l, h] as [number, number] };
+          const o = +k[1], h = +k[2], l = +k[3], c = +k[4], v = +k[5];
+          return { t: k[0] as unknown as number, o, h, l, c, v, range: [l, h] as [number, number] };
         });
       }
     } catch {
@@ -43,7 +44,7 @@ const loadKlines = async (coinId: string, interval: string): Promise<Candle[]> =
   throw new Error("klines unavailable");
 };
 
-interface Candle { t: number; o: number; h: number; l: number; c: number; range: [number, number] }
+interface Candle { t: number; o: number; h: number; l: number; c: number; v: number; range: [number, number] }
 interface Line { price: number; label: string; color: string }
 
 const UP = "#22C55E";
@@ -57,7 +58,7 @@ const fromPoints = (pts: { t: number; p: number }[]): Candle[] => {
     const ps = g.map((x) => x.p);
     const h = Math.max(...ps);
     const l = Math.min(...ps);
-    out.push({ t: g[0].t, o: ps[0], h, l, c: ps[ps.length - 1], range: [l, h] });
+    out.push({ t: g[0].t, o: ps[0], h, l, c: ps[ps.length - 1], v: 0, range: [l, h] });
   }
   return out;
 };
@@ -190,7 +191,7 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
       </div>
       <div
         ref={boxRef}
-        className="h-[300px] sm:h-[380px] cursor-grab active:cursor-grabbing touch-pan-y select-none"
+        className="cursor-grab active:cursor-grabbing touch-pan-y select-none"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -198,8 +199,10 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
         onDoubleClick={() => setView(null)}
       >
         {isLoading || !data ? (
-          <Skeleton className="w-full h-full bg-rail" />
+          <Skeleton className="w-full h-[380px] bg-rail" />
         ) : (
+          <>
+          <div className="h-[300px] sm:h-[380px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
               <XAxis dataKey="t" tickFormatter={fmtTick} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={50} />
@@ -224,6 +227,7 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
                       <div>Макс. {fmtPrice(p.h, coinId)}</div>
                       <div>Мин. {fmtPrice(p.l, coinId)}</div>
                       <div>Закр. {fmtPrice(p.c, coinId)}</div>
+                      {p.v > 0 && <div>Объём {fmtVol(p.v)}</div>}
                     </div>
                   );
                 }}
@@ -234,6 +238,23 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
               ))}
             </ComposedChart>
           </ResponsiveContainer>
+          </div>
+          {visible.some((c) => c.v > 0) && (
+            <div className="h-[80px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={visible} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
+                  <XAxis dataKey="t" hide />
+                  <YAxis orientation="right" tickFormatter={fmtVol} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} width={72} tickCount={3} />
+                  <Bar dataKey="v" isAnimationActive={false}>
+                    {visible.map((c) => (
+                      <Cell key={c.t} fill={c.c >= c.o ? UP : DOWN} fillOpacity={0.7} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          </>
         )}
       </div>
       <div className="flex bg-rail rounded p-0.5 mt-2 w-fit">
