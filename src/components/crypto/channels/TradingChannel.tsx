@@ -18,10 +18,12 @@ const LEVERAGE = [1, 2, 3, 5, 10, 20];
 interface Position { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; size: number; entry: number; price: number; pnl: number; liq: number; sl: number | null; tp: number | null }
 interface Order { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; limit: number; sl: number | null; tp: number | null }
 interface Trade { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; close: number; pnl: number; reason: string; closedAt: string }
-interface State { balance: number; equity: number; locked: number; unrealized: number; resets: number; start: number; positions: Position[]; orders: Order[]; history: Trade[]; prices: Record<string, number> }
-interface Leader { userId: number; name: string; avatar: string; equity: number; profitPct: number; trades: number }
+interface Stats { trades: number; winRate: number; avgPnl: number; avgPct: number; best: number; bestPct: number; worst: number; worstPct: number; totalPnl: number; curve: { t: string; v: number }[] }
+interface State { stats?: Stats; balance: number; equity: number; locked: number; unrealized: number; resets: number; start: number; positions: Position[]; orders: Order[]; history: Trade[]; prices: Record<string, number> }
+interface Leader { pnl?: number; userId: number; name: string; avatar: string; equity: number; profitPct: number; trades: number }
 
 const usd = (v: number, sign = false) => `${sign && v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+const pct = (pnl: number, base: number) => `${pnl > 0 ? "+" : ""}${base ? ((pnl / base) * 100).toFixed(1) : "0.0"}%`;
 const tone = (v: number) => (v >= 0 ? "text-[#16C784]" : "text-[#EA3943]");
 const name = (id: string) => COIN_META[id]?.ru ?? id;
 const reasonText: Record<string, string> = { stop: "Стоп-лосс", take: "Тейк-профит", manual: "Закрыта вручную", liquidation: "Ликвидация", reset: "Сброс счёта" };
@@ -158,11 +160,12 @@ const TradingChannel = ({ coins }: Props) => {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
         <Stat label="В сделках" value={st ? usd(st.locked) : "—"} />
-        <Stat label="Нереализ. результат" value={st ? usd(st.unrealized, true) : "—"} cls={st ? tone(st.unrealized) : ""} />
-        <Stat label="Капитал" value={st ? usd(st.equity) : "—"} sub={st ? `${usd(st.equity - st.start, true)} от старта` : ""} cls={st ? tone(st.equity - st.start) : ""} />
+        <Stat label="Нереализ. PnL" value={st ? usd(st.unrealized, true) : "—"} cls={st ? tone(st.unrealized) : ""} />
+        <Stat label="Общий PnL" value={st ? usd(st.equity - st.start, true) : "—"} sub={st ? `${((st.equity - st.start) / st.start * 100).toFixed(2)}% от старта` : ""} cls={st ? tone(st.equity - st.start) : ""} />
+        <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
       </div>
 
       <div className="grid lg:grid-cols-[340px_1fr] gap-4">
@@ -278,8 +281,8 @@ const TradingChannel = ({ coins }: Props) => {
                     <div className="text-xs text-muted-foreground">Вход {fmtPrice(p.entry, p.coinId)} · сейчас {fmtPrice(p.price, p.coinId)} · ликвидация {fmtPrice(p.liq, p.coinId)}{p.sl ? ` · стоп ${fmtPrice(p.sl, p.coinId)}` : ""}{p.tp ? ` · тейк ${fmtPrice(p.tp, p.coinId)}` : ""}</div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-sm ${tone(p.pnl)}`}>{usd(p.pnl, true)}</div>
-                    <div className="text-xs text-muted-foreground">сумма {usd(p.margin)}</div>
+                    <div className={`text-sm ${tone(p.pnl)}`}>PnL {usd(p.pnl, true)}</div>
+                    <div className={`text-xs ${tone(p.pnl)}`}>{pct(p.pnl, p.margin)} · сумма {usd(p.margin)}</div>
                   </div>
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => send({ action: "close", id: p.id }, "Позиция закрыта")}>Закрыть</Button>
                 </Row>
@@ -309,7 +312,10 @@ const TradingChannel = ({ coins }: Props) => {
                     <div className="text-sm text-white">{name(t.coinId)} <span className={t.side === "long" ? "text-[#16C784]" : "text-[#EA3943]"}>{t.side === "long" ? "Лонг" : "Шорт"} x{t.leverage}</span></div>
                     <div className="text-xs text-muted-foreground">{fmtPrice(t.entry, t.coinId)} → {fmtPrice(t.close, t.coinId)} · {reasonText[t.reason] ?? t.reason} · {new Date(t.closedAt + "Z").toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
                   </div>
-                  <div className={`text-sm ${tone(t.pnl)}`}>{usd(t.pnl, true)}</div>
+                  <div className="text-right">
+                    <div className={`text-sm ${tone(t.pnl)}`}>PnL {usd(t.pnl, true)}</div>
+                    <div className={`text-xs ${tone(t.pnl)}`}>{pct(t.pnl, t.margin)}</div>
+                  </div>
                   {t.reason !== "reset" && (
                     <Button size="sm" variant="outline" disabled={shared.includes(t.id)} onClick={() => share(t)}>
                       {shared.includes(t.id) ? "Опубликовано" : "Поделиться"}
@@ -355,6 +361,7 @@ const Board = ({ leaders, me }: { leaders: Leader[]; me?: number }) => (
             <div className="text-xs text-muted-foreground">{l.trades} сделок</div>
             <div className="text-right">
               <div className="text-sm text-white">{usd(l.equity)}</div>
+              {l.pnl !== undefined && <div className={`text-xs ${tone(l.pnl)}`}>PnL {usd(l.pnl, true)}</div>}
               <div className={`text-xs ${tone(l.profitPct)}`}>{l.profitPct > 0 ? "+" : ""}{l.profitPct.toFixed(2)}%</div>
             </div>
           </Row>

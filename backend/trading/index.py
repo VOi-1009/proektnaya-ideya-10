@@ -175,8 +175,8 @@ def state(cur, user_id, px):
     cur.execute(f"INSERT INTO {SCHEMA}.paper_accounts (user_id) VALUES ({user_id}) ON CONFLICT (user_id) DO NOTHING")
     process(cur, user_id, px)
     grant_awards(cur, user_id)
-    cur.execute(f"SELECT balance, resets FROM {SCHEMA}.paper_accounts WHERE user_id = {user_id}")
-    balance, resets = cur.fetchone()
+    cur.execute(f"SELECT balance, resets, reset_at FROM {SCHEMA}.paper_accounts WHERE user_id = {user_id}")
+    balance, resets, reset_at = cur.fetchone()
     balance = float(balance)
     cur.execute(f"SELECT id, coin_id, side, leverage, margin, size, entry_price, opened_at, sl, tp FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open' ORDER BY id DESC")
     positions = []
@@ -198,7 +198,29 @@ def state(cur, user_id, px):
     cur.execute(f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, close_reason, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' ORDER BY closed_at DESC LIMIT 50")
     history = [{"id": r[0], "coinId": r[1], "side": r[2], "leverage": r[3], "margin": float(r[4]), "entry": float(r[5]), "close": float(r[6]), "pnl": float(r[7]), "reason": r[8], "closedAt": r[9].isoformat()} for r in cur.fetchall()]
     equity = balance + locked + unreal
-    return {"balance": balance, "equity": equity, "locked": locked, "unrealized": unreal, "resets": resets, "start": START, "positions": positions, "orders": orders, "history": history, "prices": px}
+    cur.execute(f"SELECT pnl, margin, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' AND closed_at >= '{reset_at.isoformat()}' ORDER BY closed_at, id")
+    tr = [(float(a or 0), float(b or 0), c) for a, b, c in cur.fetchall()]
+    curve = [{"t": reset_at.isoformat(), "v": START}]
+    run = START
+    for pnl, _, at in tr:
+        run += pnl
+        curve.append({"t": at.isoformat(), "v": round(run, 2)})
+    curve.append({"t": "now", "v": round(equity, 2)})
+    pcts = [(a / b * 100) if b > 0 else 0 for a, b, _ in tr]
+    stats = {
+        "trades": len(tr),
+        "wins": sum(1 for a, _, _ in tr if a > 0),
+        "winRate": (sum(1 for a, _, _ in tr if a > 0) / len(tr) * 100) if tr else 0,
+        "avgPnl": (sum(a for a, _, _ in tr) / len(tr)) if tr else 0,
+        "avgPct": (sum(pcts) / len(pcts)) if pcts else 0,
+        "best": max((a for a, _, _ in tr), default=0),
+        "bestPct": max(pcts, default=0),
+        "worst": min((a for a, _, _ in tr), default=0),
+        "worstPct": min(pcts, default=0),
+        "totalPnl": equity - START,
+        "curve": curve,
+    }
+    return {"stats": stats, "balance": balance, "equity": equity, "locked": locked, "unrealized": unreal, "resets": resets, "start": START, "positions": positions, "orders": orders, "history": history, "prices": px}
 
 
 def leaderboard(cur, px):
@@ -220,6 +242,7 @@ def leaderboard(cur, px):
     rows = sorted(users.values(), key=lambda x: -x["equity"])[:20]
     for r in rows:
         r["profitPct"] = (r["equity"] - START) / START * 100
+        r["pnl"] = r["equity"] - START
     return rows
 
 
