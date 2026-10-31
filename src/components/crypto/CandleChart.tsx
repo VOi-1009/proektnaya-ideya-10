@@ -98,20 +98,36 @@ const fromPoints = (pts: { t: number; p: number }[]): Candle[] => {
   return out;
 };
 
-const CandleShape = (props: { x?: number; y?: number; width?: number; height?: number; payload?: Candle }) => {
-  const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+interface ShapeProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: Candle;
+  background?: { y: number; height: number };
+  domain?: [number, number];
+}
+
+const CandleShape = (props: ShapeProps) => {
+  const { x = 0, y = 0, width = 0, height = 0, payload, background, domain } = props;
   if (!payload) return null;
   const { o, h, l, c } = payload;
   const color = c >= o ? UP : DOWN;
-  const span = h - l || 1;
-  const k = height / span;
-  const top = y + (h - Math.max(o, c)) * k;
-  const body = Math.max(Math.abs(c - o) * k, 1);
+  let yOf: (v: number) => number;
+  if (background && domain && domain[1] > domain[0]) {
+    const span = domain[1] - domain[0];
+    yOf = (v) => background.y + ((domain[1] - v) / span) * background.height;
+  } else {
+    const span = h - l || 1;
+    yOf = (v) => y + ((h - v) / span) * height;
+  }
+  const top = yOf(Math.max(o, c));
+  const body = Math.max(Math.abs(yOf(o) - yOf(c)), 1);
   const cx = x + width / 2;
   const bw = Math.max(width * 0.7, 2);
   return (
     <g>
-      <line x1={cx} x2={cx} y1={y} y2={y + height} stroke={color} strokeWidth={1} />
+      <line x1={cx} x2={cx} y1={yOf(h)} y2={yOf(l)} stroke={color} strokeWidth={1} />
       <rect x={cx - bw / 2} y={top} width={bw} height={body} fill={color} />
     </g>
   );
@@ -125,6 +141,9 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
   const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
   const [view, setView] = useState<{ start: number; size: number } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const axisRef = useRef<HTMLDivElement>(null);
+  const [yZoom, setYZoom] = useState(1);
+  const yDrag = useRef<{ y: number; z: number } | null>(null);
   const drag = useRef<{ x: number; start: number } | null>(null);
   const total = useRef(0);
   const MIN = 10;
@@ -148,6 +167,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
 
   useEffect(() => {
     setView(null);
+    setYZoom(1);
   }, [coinId, interval]);
 
   const firstLen = data?.length ?? 0;
@@ -181,6 +201,35 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
     return () => el.removeEventListener("wheel", onWheel);
   }, [data]);
 
+  const clampY = (z: number) => Math.min(Math.max(z, 0.3), 12);
+
+  useEffect(() => {
+    const el = axisRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setYZoom((z) => clampY(z * (e.deltaY > 0 ? 1 / 1.15 : 1.15)));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [data]);
+
+  const onAxisDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    yDrag.current = { y: e.clientY, z: yZoom };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onAxisMove = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    if (!yDrag.current) return;
+    setYZoom(clampY(yDrag.current.z * Math.exp((yDrag.current.y - e.clientY) / 120)));
+  };
+  const onAxisUp = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    yDrag.current = null;
+  };
+
   const onDown = (e: React.PointerEvent) => {
     drag.current = { x: e.clientX, start: view?.start ?? 0 };
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -204,8 +253,10 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
     const lo = Math.min(...visible.map((c) => c.l));
     const hi = Math.max(...visible.map((c) => c.h));
     const pad = (hi - lo) * 0.06 || hi * 0.001;
-    return [lo - pad, hi + pad];
-  }, [visible]);
+    const mid = (hi + lo) / 2;
+    const half = (hi - lo) / 2 + pad;
+    return [mid - half / yZoom, mid + half / yZoom];
+  }, [visible, yZoom]);
 
   const fmtTick = (t: number) => {
     const d = new Date(t);
@@ -237,7 +288,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
         <div className="flex bg-rail rounded p-0.5">
           <button onClick={() => zoom(1 / 1.5)} title="Приблизить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomIn" size={14} /></button>
           <button onClick={() => zoom(1.5)} title="Отдалить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomOut" size={14} /></button>
-          <button onClick={() => setView(null)} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
+          <button onClick={() => { setView(null); setYZoom(1); }} title="Весь график" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="Maximize" size={14} /></button>
         </div>
         </div>
       </div>
@@ -248,13 +299,29 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        onDoubleClick={() => setView(null)}
+        onDoubleClick={() => { setView(null); setYZoom(1); }}
       >
         {isLoading || !data ? (
           <Skeleton className="w-full h-[380px] bg-rail" />
         ) : (
           <>
-          <div className="h-[300px] sm:h-[380px]">
+          <div className="h-[300px] sm:h-[380px] relative">
+          <div
+            ref={axisRef}
+            title="Тяните вверх и вниз или крутите колесо — высота свеч. Двойной клик — сброс"
+            className="absolute right-0 top-0 bottom-6 w-[72px] z-10 cursor-ns-resize touch-none group"
+            onPointerDown={onAxisDown}
+            onPointerMove={onAxisMove}
+            onPointerUp={onAxisUp}
+            onPointerCancel={onAxisUp}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              setYZoom(1);
+            }}
+          >
+            <div className="absolute inset-y-0 right-0 w-full rounded bg-white/0 group-hover:bg-white/5 transition-colors" />
+            {yZoom !== 1 && <span className="absolute top-1 right-1 text-[10px] font-mono text-primary">×{yZoom.toFixed(1)}</span>}
+          </div>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
               <XAxis dataKey="t" tickFormatter={fmtTick} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={50} />
@@ -289,7 +356,7 @@ const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisab
                   );
                 }}
               />
-              <Bar dataKey="range" shape={<CandleShape />} isAnimationActive={false} />
+              <Bar dataKey="range" shape={<CandleShape domain={domain} />} isAnimationActive={false} />
               {on.bb && <RLine type="monotone" dataKey="bbU" stroke="#A78BFA" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} activeDot={false} />}
               {on.bb && <RLine type="monotone" dataKey="bbL" stroke="#A78BFA" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} activeDot={false} />}
               {on.ma20 && <RLine type="monotone" dataKey="ma20" stroke="#FACC15" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
