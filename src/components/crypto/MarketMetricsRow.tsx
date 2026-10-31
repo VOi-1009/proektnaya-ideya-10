@@ -24,7 +24,7 @@ const MarketMetricsRow = ({ cols = "grid-cols-2", flat }: { cols?: string; flat?
         className={cardCls("border-metric-sky", true)}
         title="Общий объём ликвидаций на фьючерсных биржах за последние 24 часа"
       >
-        <div className={labelCls}>Общий объем ликвидаций (24h)</div>
+        <div className={labelCls}>Объем ликвидаций 24h</div>
         <div className={valueCls}>
           {fmtUsd(l?.total)}
           {l?.change24h != null && (
