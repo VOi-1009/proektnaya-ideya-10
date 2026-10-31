@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import Icon from "@/components/ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
 import { communityRequest } from "@/lib/community";
 import { renderTradeCard } from "@/lib/tradeCard";
@@ -224,6 +226,16 @@ const Stat = ({ label, value, sub, cls = "" }: { label: string; value: string; s
     <div className="text-[11px] leading-tight text-muted-foreground truncate">{label}</div>
     <div className="flex items-baseline gap-1.5 flex-wrap">
       <span className={`font-display text-sm sm:text-base leading-tight text-white ${cls}`}>{value}</span>
+      <TooltipProvider delayDuration={100}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" aria-label="Виртуальные USDT" className="text-primary self-center">
+              <Icon name="Info" size={12} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>виртуальные</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       {sub && <span className={`text-[10px] leading-tight ${cls}`}>{sub}</span>}
     </div>
   </div>
