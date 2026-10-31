@@ -199,6 +199,7 @@ const TradingChannel = ({ coins }: Props) => {
               ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
               ...(st?.positions.filter((p) => p.coinId === coinId && p.sl).map((p) => ({ price: p.sl as number, label: "Стоп-лосс", color: "#EA3943" })) ?? []),
               ...(st?.positions.filter((p) => p.coinId === coinId && p.tp).map((p) => ({ price: p.tp as number, label: "Тейк-профит", color: "#22C55E" })) ?? []),
+              ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.liq, label: "Ликвидация", color: "#EA3943" })) ?? []),
               ...(liqPrice > 0 ? [{ price: liqPrice, label: "Ликвидация (черновик)", color: "#EA3943" }] : []),
               ...(Number(sl) > 0 ? [{ price: Number(sl), label: "Стоп (черновик)", color: "#EA3943" }] : []),
               ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
