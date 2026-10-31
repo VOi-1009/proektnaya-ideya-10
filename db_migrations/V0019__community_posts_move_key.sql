@@ -1,0 +1,2 @@
+ALTER TABLE t_p98937530_proektnaya_ideya_10.community_posts ADD COLUMN IF NOT EXISTS move_key VARCHAR(120) NOT NULL DEFAULT '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_community_posts_move_key ON t_p98937530_proektnaya_ideya_10.community_posts (move_key) WHERE move_key <> '';

@@ -1,6 +1,12 @@
+import json
+import os
 import time
+import uuid
+
+import boto3
 
 from aiprices import fmt_change, fmt_price, prices
+from movecard import render_move_card
 
 SCHEMA_CHECK = {"at": 0.0}
 CHECK_EVERY = 300
@@ -17,6 +23,12 @@ WATCH = [
     ("brent", "Нефть Brent", "brent|нефт"),
     ("gold", "Золото", "золот|gold"),
 ]
+LOOK = {
+    "bitcoin": ("BTC", "#F7931A"), "ethereum": ("ETH", "#627EEA"), "solana": ("SOL", "#9945FF"), "toncoin": ("TON", "#0098EA"),
+    "xrp": ("XRP", "#23292F"), "bnb": ("BNB", "#F3BA2F"), "dogecoin": ("DOGE", "#C2A633"), "hyperliquid": ("HYPE", "#50D2C1"),
+    "zcash": ("ZEC", "#F4B728"), "brent": ("OIL", "#4B5563"), "gold": ("GOLD", "#D4A017"),
+}
+AI_EMAIL = "aitraderka@bots.traderka.ru"
 UP = ["резко выросл{e}", "уверенно идёт вверх", "прибавил{e} за сутки"]
 TIPS_UP = [
     "Рост на таких объёмах часто сопровождается откатом — смотрите на график в #котировки.",
@@ -58,13 +70,30 @@ def related_news(cur, schema: str, pattern: str):
     return cur.fetchone()
 
 
+def upload_card(data: bytes) -> str:
+    key = f"community/moves/{uuid.uuid4().hex}.png"
+    s3 = boto3.client(
+        "s3", endpoint_url="https://bucket.poehali.dev",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    s3.put_object(Bucket="files", Key=key, Body=data, ContentType="image/png")
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+
 def check_moves(cur, schema: str, threshold: float, force: bool = False) -> int:
     now = time.time()
     if not force and now - SCHEMA_CHECK["at"] < CHECK_EVERY:
         return 0
     SCHEMA_CHECK["at"] = now
+    cur.execute(f"SELECT id FROM {schema}.users WHERE email = '{AI_EMAIL}'")
+    ai = cur.fetchone()
+    if not ai:
+        return 0
+    ai_id = int(ai[0])
     p = prices()
+    t = time.gmtime(now + 3 * 3600)
     day = msk_day()
+    date_text = f"{t.tm_mday:02d}.{t.tm_mon:02d}.{t.tm_year}"
     created = 0
     for key, name, pattern in WATCH:
         v = p.get(key)
@@ -76,21 +105,29 @@ def check_moves(cur, schema: str, threshold: float, force: bool = False) -> int:
         up = ch > 0
         step = int(abs(ch) // threshold)
         move_key = f"{key}:{'up' if up else 'down'}:{day}:{step}"
-        title = f"{name}: {fmt_change(ch)} за сутки"
+        cur.execute(
+            f"SELECT 1 FROM {schema}.community_posts WHERE move_key = '{esc(move_key)}' "
+            f"UNION ALL SELECT 1 FROM {schema}.ai_posts WHERE move_key = '{esc(move_key)}' LIMIT 1"
+        )
+        if cur.fetchone():
+            continue
         seed = int(now // 3600) + len(key)
         lines = [f"{name} {verb(name, up, seed)} — {fmt_change(ch)}. Сейчас около {fmt_price(key, v['price'])}."]
-        links = []
         news = related_news(cur, schema, pattern)
         if news:
             lines.append(f"Что пишут: {news[0]}" + (f" ({news[2]})" if news[2] else ""))
-            if str(news[1]).startswith("http"):
-                links.append({"title": news[0], "url": news[1]})
         tips = TIPS_UP if up else TIPS_DOWN
         lines.append(tips[seed % len(tips)])
-        import json
+        short, color = LOOK.get(key, (key[:4].upper(), "#F97316"))
+        change_text = fmt_change(ch).replace("-", "\u2212")
+        try:
+            image = upload_card(render_move_card(name, short, color, change_text, fmt_price(key, v["price"]), up, date_text))
+        except Exception as e:
+            print("move card error:", e)
+            image = ""
         cur.execute(
-            f"INSERT INTO {schema}.ai_posts (title, body, links, kind, move_key) VALUES ('{esc(title)}', '{esc(chr(10).join(lines))}', "
-            f"'{esc(json.dumps(links, ensure_ascii=False))}', 'move', '{esc(move_key)}') ON CONFLICT DO NOTHING"
+            f"INSERT INTO {schema}.community_posts (user_id, body, image_url, sentiment, coins, move_key) VALUES "
+            f"({ai_id}, '{esc(chr(10).join(lines))}', '{esc(image)}', '{'bull' if up else 'bear'}', '{key}', '{esc(move_key)}') ON CONFLICT DO NOTHING"
         )
         created += cur.rowcount or 0
     return created

@@ -229,7 +229,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
           <div className="border-t border-border pt-3 space-y-3">
             <Toggle
               label="Заметки о резких движениях"
-              hint="Монеты, нефть и золото: бот пишет заметку, когда цена за сутки меняется больше порога"
+              hint="Монеты, нефть и золото: бот публикует карточку в «Сообществе», когда цена за сутки меняется больше порога"
               checked={f.moves}
               onChange={(v) => setF({ ...f, moves: v })}
             />
