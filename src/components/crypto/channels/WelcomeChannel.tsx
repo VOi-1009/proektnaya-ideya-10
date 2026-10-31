@@ -6,6 +6,7 @@ import BtcLiveChart from "../BtcLiveChart";
 import MarketMetricsRow from "../MarketMetricsRow";
 import QuoteBlock from "../QuoteBlock";
 import FearGreedGauge from "../FearGreedGauge";
+import AltseasonGauge from "../AltseasonGauge";
 import ExchangeOutflowCard from "../ExchangeOutflowCard";
 import UpcomingEvents from "../UpcomingEvents";
 import LiqBars from "../LiqBars";
@@ -86,8 +87,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
           <MarketMetricsRow />
         </div>
         <div className="rounded-xl border border-border bg-card min-h-[120px] lg:order-1 flex flex-col divide-y divide-transparent">
-          <div className="flex-1">
-            <FearGreedGauge />
+          <div className="flex-1 grid grid-cols-2">
+            <FearGreedGauge compact />
+            <AltseasonGauge compact />
           </div>
           <div className="p-3">
             <ExchangeOutflowCard go={go} />

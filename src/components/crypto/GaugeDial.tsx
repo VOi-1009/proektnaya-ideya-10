@@ -27,14 +27,15 @@ interface Props {
   segments: GaugeSegment[];
   tooltip?: string;
   href?: string;
+  compact?: boolean;
 }
 
-const GaugeDial = ({ title, value, label, valueCls = "text-white", segments, tooltip, href }: Props) => {
+const GaugeDial = ({ title, value, label, valueCls = "text-white", segments, tooltip, href, compact }: Props) => {
   const tip = point(value ?? 50, 62);
   const body = (
-    <div className="h-full flex flex-col items-center justify-center p-3" title={tooltip}>
+    <div className={`h-full flex flex-col items-center justify-center ${compact ? "p-2" : "p-3"}`} title={tooltip}>
       <div className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold mb-1 text-center">{title}</div>
-      <svg viewBox="0 0 200 118" className="w-full max-w-[200px]" role="img" aria-label={title}>
+      <svg viewBox="0 0 200 118" className={`w-full ${compact ? "max-w-[120px]" : "max-w-[200px]"}`} role="img" aria-label={title}>
         {segments.map((s) => (
           <path key={s.from} d={arc(s.from + 0.6, s.to - 0.6)} stroke={s.color} strokeWidth="16" fill="none" />
         ))}
@@ -49,7 +50,7 @@ const GaugeDial = ({ title, value, label, valueCls = "text-white", segments, too
       </svg>
       {value !== null ? (
         <div className="flex flex-col items-center text-center -mt-1">
-          <span className={`font-mono tabular text-2xl leading-none ${valueCls}`}>{value}</span>
+          <span className={`font-mono tabular ${compact ? "text-lg" : "text-2xl"} leading-none ${valueCls}`}>{value}</span>
           {label && <span className="text-white text-xs mt-1">{label}</span>}
         </div>
       ) : (

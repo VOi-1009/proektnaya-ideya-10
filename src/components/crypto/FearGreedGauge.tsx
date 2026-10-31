@@ -9,7 +9,7 @@ const SEGMENTS = [
   { from: 75, to: 100, color: "#fb923c" },
 ];
 
-const FearGreedGauge = () => {
+const FearGreedGauge = ({ compact }: { compact?: boolean }) => {
   const { data: fg } = useFearGreed();
   return (
     <GaugeDial
@@ -18,6 +18,7 @@ const FearGreedGauge = () => {
       label={fg?.label}
       valueCls={fg ? fgColor(fg.value) : undefined}
       segments={SEGMENTS}
+      compact={compact}
       tooltip={`Индекс страха и жадности крипторынка: 0 — паника, 100 — эйфория${fg?.prev != null ? `. Вчера: ${fg.prev}` : ""}`}
     />
   );
