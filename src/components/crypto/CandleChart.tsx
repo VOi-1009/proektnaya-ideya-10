@@ -136,9 +136,9 @@ const CandleShape = (props: { x?: number; y?: number; width?: number; height?: n
   );
 };
 
-interface Props { coinId: string; price: number; lines?: Line[] }
+interface Props { coinId: string; price: number; lines?: Line[]; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean }
 
-const CandleChart = ({ coinId, price, lines = [] }: Props) => {
+const CandleChart = ({ coinId, price, lines = [], onQuick, quickInfo, quickDisabled }: Props) => {
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
   const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
@@ -236,7 +236,17 @@ const CandleChart = ({ coinId, price, lines = [] }: Props) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-display text-white">График</h3>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-display text-white">График</h3>
+          <span className="font-mono text-white text-sm">{price ? fmtPrice(price, coinId) : "—"}</span>
+          {onQuick && (
+            <>
+              <button disabled={quickDisabled} onClick={() => onQuick("long")} className="px-3 py-1 text-xs font-medium rounded bg-[#22C55E] text-black hover:bg-[#22C55E]/90 disabled:opacity-50">Лонг</button>
+              <button disabled={quickDisabled} onClick={() => onQuick("short")} className="px-3 py-1 text-xs font-medium rounded bg-[#EA3943] text-white hover:bg-[#EA3943]/90 disabled:opacity-50">Шорт</button>
+              {quickInfo && <span className="text-xs text-muted-foreground">{quickInfo}</span>}
+            </>
+          )}
+        </div>
         <div className="flex items-center gap-2">
         <div className="flex bg-rail rounded p-0.5">
           <button onClick={() => zoom(1 / 1.5)} title="Приблизить" className="px-2 py-1 text-muted-foreground hover:text-white"><Icon name="ZoomIn" size={14} /></button>

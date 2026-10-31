@@ -177,6 +177,9 @@ const TradingChannel = ({ coins }: Props) => {
           <CandleChart
             coinId={coinId}
             price={livePrice}
+            quickDisabled={busy || !user || m < 10}
+            quickInfo={`${usd(m)} · x${leverage}`}
+            onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m }, "Позиция открыта")}
             lines={[
               ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.entry, label: `${p.side === "long" ? "Лонг" : "Шорт"} x${p.leverage}`, color: p.side === "long" ? "#16C784" : "#EA3943" })) ?? []),
               ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
