@@ -26,7 +26,6 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
 
   const open = (it: MenuEntry) => {
     if (it.id === "community") return navigate("/community");
-    if (it.id === "rating") return navigate("/rating");
     go(it.id);
   };
 
