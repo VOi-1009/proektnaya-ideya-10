@@ -64,8 +64,8 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
       <div className="border-b border-border">
         <HeroSiteNews />
       </div>
-      <div className="flex-1 p-2">
-        <div className="flex items-center gap-1 px-2 py-1 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+      <div className="flex-1 px-2 py-1">
+        <div className="flex items-center gap-1 px-2 py-0.5 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
           <Icon name="ChevronDown" size={12} />
           <span>{menuCfg?.menuTitle || DEFAULT_MENU_TITLE}</span>
         </div>
@@ -91,7 +91,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                 <button
                   key={it.id}
                   onClick={() => open(it)}
-                  className={`group w-full flex items-center gap-2 px-2 py-1 my-px rounded-md text-left transition-colors border ${active ? "text-white" : "hover:text-white"}`}
+                  className={`group w-full flex items-center gap-2 px-2 py-0.5 my-px rounded-md text-left transition-colors border ${active ? "text-white" : "hover:text-white"}`}
                   style={{
                     color: active ? undefined : color,
                     background: tint(color, active ? 20 : 10),
@@ -105,7 +105,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
                   ) : (
                     <Icon name={icon || "Circle"} size={16} fallback="Circle" className="flex-shrink-0 mx-0.5" style={{ color }} />
                   )}
-                  <span className="text-[14px] font-semibold truncate">{label}</span>
+                  <span className="text-[13px] font-semibold truncate leading-tight">{label}</span>
                   <span className="ml-auto relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full rounded-full opacity-70 animate-ping" style={{ background: color }} />
                     <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
@@ -118,12 +118,12 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
               <button
                 key={it.id}
                 onClick={() => open(it)}
-                className={`w-full flex items-center gap-2 px-2 py-0.5 rounded text-left transition-colors ${
+                className={`w-full flex items-center gap-2 px-2 py-px rounded text-left transition-colors ${
                   active ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-hover/60"
                 }`}
               >
                 {mark}
-                <span className="text-[14px] truncate">{label}</span>
+                <span className="text-[13px] truncate leading-tight">{label}</span>
                 {it.id === "alerts" && activeAlerts > 0 && <span className="ml-auto text-[10px] font-mono text-primary">{activeAlerts}</span>}
                 {unreadOf(it.id) > 0 && (
                   <span className="ml-auto bg-down text-white text-[9px] font-bold rounded-full px-1.5">
