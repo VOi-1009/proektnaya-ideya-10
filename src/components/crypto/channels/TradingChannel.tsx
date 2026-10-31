@@ -147,7 +147,7 @@ const TradingChannel = ({ coins }: Props) => {
         <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-start">
+      <div className="grid lg:grid-cols-[1fr_270px] gap-4 items-start">
         <div className="space-y-4 min-w-0">
         <section className="rounded-xl border border-border bg-card p-4 min-w-0">
           <CandleChart
