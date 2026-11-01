@@ -33,15 +33,15 @@ const MobileWalletMini = () => {
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Кошелёк TKA</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <div className="min-w-0">
+        <div className="min-w-0 text-center">
           <div className="text-[10px] text-muted-foreground leading-none">TKA</div>
           <div className="text-white font-mono text-xs mt-1 truncate">{w ? num(w.total) : "—"}</div>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 text-center">
           <div className="text-[10px] text-muted-foreground leading-none">USDT</div>
           <div className="text-white font-mono text-xs mt-1 truncate">{w ? num(w.usdt?.total ?? 0) : "—"}</div>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 text-center">
           <div className="text-[10px] text-muted-foreground leading-none">Общий PnL</div>
           <div className={`font-mono text-xs mt-1 truncate ${pnl === null ? "text-white" : up ? "text-[#16C784]" : "text-[#EA3943]"}`}>{pnl === null ? "—" : num(pnl, true)}</div>
         </div>
