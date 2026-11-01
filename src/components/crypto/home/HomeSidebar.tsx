@@ -1,4 +1,7 @@
+import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import Icon from "@/components/ui/icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@/lib/router-compat";
 import { useRadars } from "@/lib/radars";
@@ -20,6 +23,17 @@ interface Props {
 
 const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, setMobileSidebarOpen }: Props) => {
   const navigate = useNavigate();
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
+
+  const onDownload = (e: React.MouseEvent) => {
+    if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024) {
+      e.preventDefault();
+      window.location.href = "/m";
+      return;
+    }
+    setQrUrl(`${window.location.origin}/m`);
+  };
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
@@ -60,10 +74,22 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
         </Button>
       </div>
       <div className="-mt-2 mb-1 flex justify-center">
-        <a href="/m" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors">
-          <Icon name="Download" size={11} />
-          Скачать МВ
-        </a>
+        <Popover open={qrOpen} onOpenChange={setQrOpen}>
+          <PopoverTrigger asChild>
+            <button onClick={onDownload} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors">
+              <Icon name="Download" size={11} />
+              Скачать МВ
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="center" className="w-48 p-3 flex flex-col items-center gap-2">
+            {qrUrl && (
+              <div className="bg-white p-2 rounded-lg">
+                <QRCodeSVG value={qrUrl} size={140} level="M" />
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground text-center leading-snug">Наведите камеру телефона, откроется МВ с кнопкой установки приложения</p>
+          </PopoverContent>
+        </Popover>
       </div>
       <div className="p-2">
         <div className="px-2 pt-1 pb-5 flex flex-col items-center gap-1.5">
