@@ -33,7 +33,7 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
   if (b.kind === "wallet") return <WalletView />;
   if (b.kind === "image") {
     if (!b.image) return preview ? <div className="rounded-xl border border-dashed border-border bg-card/40 min-h-[96px] flex items-center justify-center text-xs text-muted-foreground">Картинка не выбрана</div> : null;
-    const img = <img src={b.image} alt={b.title || ""} loading="lazy" className="w-full rounded-xl border border-border object-cover" />;
+    const img = <img src={b.image} alt={b.title || ""} loading="lazy" className="w-full rounded-xl object-cover" />;
     if (!b.url) return img;
     return b.url.startsWith("/") ? <Link to={b.url} className="block">{img}</Link> : <a href={b.url} target="_blank" rel="noreferrer" className="block">{img}</a>;
   }
