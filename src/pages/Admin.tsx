@@ -195,6 +195,21 @@ const Admin = () => {
     );
   }
 
+  const artSwitch = (
+    <div className="inline-flex gap-1 bg-card border border-border rounded-lg p-1">
+      {([["articles", "Статьи", "FileText"], ["categories", "Рубрики", "FolderTree"]] as const).map(([id, label, icon]) => (
+        <button
+          key={id}
+          onClick={() => setTab(id)}
+          className={`px-3 py-1.5 rounded-md text-sm inline-flex items-center gap-2 transition-colors ${tab === id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"}`}
+        >
+          <Icon name={icon} size={14} />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
       {header}
@@ -206,7 +221,6 @@ const Admin = () => {
               [
                 ["visits", "Посетители", "Activity"],
                 ["articles", "Статьи", "FileText"],
-                ["categories", "Рубрики", "FolderTree"],
                 ["blocks", "Блоки главной", "LayoutPanelLeft"],
                 ["side", "Боковые блоки", "PanelRight"],
                 ["users", "Пользователи", "Users"],
@@ -232,7 +246,7 @@ const Admin = () => {
                 key={id}
                 onClick={() => setTab(id)}
                 className={`px-4 py-2 rounded-md text-sm inline-flex items-center gap-2 transition-colors whitespace-nowrap lg:w-full ${
-                  tab === id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
+                  (tab === id || (id === "articles" && tab === "categories")) ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
                 }`}
               >
                 <Icon name={icon} size={16} />
@@ -283,9 +297,13 @@ const Admin = () => {
         ) : editing === null && tab === "users" ? (
           <UsersManager token={token} myId={user.id} />
         ) : editing === null && tab === "categories" ? (
-          <CategoriesManager token={token} onChanged={refresh} />
+          <>
+            {artSwitch}
+            <CategoriesManager token={token} onChanged={refresh} />
+          </>
         ) : editing === null ? (
           <>
+            {artSwitch}
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h1 className="font-display text-2xl text-white">Статьи</h1>
