@@ -1,5 +1,4 @@
 import Icon from "@/components/ui/icon";
-import SidePolls from "../SidePolls";
 
 const FEATURES: { id: string; icon: string; title: string; text: string; href: string; to?: string }[] = [
   { id: "market", icon: "LineChart", title: "Курсы и графики криптовалют", text: "Цены Bitcoin, Ethereum и других монет онлайн, свечные графики с индикаторами, сильнейшие и слабейшие за сутки и неделю.", href: "/market" },
@@ -45,9 +44,6 @@ const AboutTraderka = ({ go }: { go: (ch: string) => void }) => (
               </li>
             ))}
           </ul>
-        </div>
-        <div className="w-full xl:w-72 flex-shrink-0">
-          <SidePolls />
         </div>
       </section>
 );
