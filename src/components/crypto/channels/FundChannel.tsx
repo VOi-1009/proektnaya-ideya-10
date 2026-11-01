@@ -4,8 +4,9 @@ import TkaIcon from "../TkaIcon";
 import { useAuth } from "@/lib/auth";
 import { fundFmt, useFund } from "@/lib/fund";
 import ContestsList from "../ContestsList";
+import FundChart from "../FundChart";
 
-const KIND: Record<string, string> = { fee: "Комиссия обмена", deposit: "Пополнение", adjust: "Корректировка", payout: "Выплата участнику", contest: "Приз конкурса" };
+const KIND: Record<string, string> = { fee: "Комиссия обмена", deposit: "Пополнение", adjust: "Корректировка", payout: "Выплата участнику", contest: "Приз конкурса", donation: "Взнос в фонд" };
 
 const FundChannel = () => {
   const { token } = useAuth();
@@ -54,7 +55,31 @@ const FundChannel = () => {
         </div>
       </section>
 
+      <FundChart data={data.chart} />
+
       <ContestsList />
+
+      <section className="rounded-xl border border-border bg-card p-4">
+        <h3 className="text-white font-semibold text-sm mb-2 flex items-center gap-1.5"><Icon name="Medal" size={14} className="text-primary" /> Победители конкурсов</h3>
+        {data.winners.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Пока конкурсов не было. Победители появятся здесь после первого розыгрыша.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {data.winners.map((w) => (
+              <div key={w.id} className="flex items-center gap-3 py-2 text-sm">
+                <Icon name="Trophy" size={15} className="text-primary flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-white truncate">{w.name}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    {w.title}{w.at ? ` · ${new Date(w.at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}` : ""}
+                  </div>
+                </div>
+                <span className="font-mono text-white whitespace-nowrap">+{fundFmt(w.prize)} TKA</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <section className="rounded-xl border border-border bg-card p-4">
@@ -83,8 +108,12 @@ const FundChannel = () => {
                 <div key={i} className="flex items-center gap-2 py-1.5 text-sm">
                   <Icon name={o.amount >= 0 ? "ArrowDownLeft" : "ArrowUpRight"} size={13} className={o.amount >= 0 ? "text-[#22C55E]" : "text-[#EA3943]"} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-white truncate">{KIND[o.kind] ?? o.kind}</div>
-                    <div className="text-[10px] text-muted-foreground">{new Date(o.at + "Z").toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}</div>
+                    <div className="text-white truncate">
+                      {o.kind === "donation" && o.user ? `${o.user} внёс ${fundFmt(Math.abs(o.amount)).replace(",00", "")} TKA` : KIND[o.kind] ?? o.kind}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {o.user && o.kind === "fee" ? `${o.user} · ` : ""}{new Date(o.at + "Z").toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+                    </div>
                   </div>
                   <span className="font-mono text-muted-foreground">{o.amount > 0 ? "+" : "−"}{fundFmt(Math.abs(o.amount))}</span>
                 </div>

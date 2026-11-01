@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import re
@@ -172,22 +173,42 @@ def fund_total(cur):
 
 def fund_state(cur, uid=None):
     st = fund_settings(cur)
-    cur.execute(f"SELECT COUNT(*), COUNT(DISTINCT user_id) FROM {SCHEMA}.fund_ledger WHERE kind = 'fee'")
+    cur.execute(f"SELECT COUNT(*) FILTER (WHERE kind = 'fee'), COUNT(DISTINCT user_id) FROM {SCHEMA}.fund_ledger WHERE kind IN ('fee', 'donation')")
     cnt, donors = cur.fetchone()
     mine = 0.0
     if uid:
-        cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE kind = 'fee' AND user_id = {int(uid)}")
+        cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE kind IN ('fee', 'donation') AND user_id = {int(uid)}")
         mine = float(cur.fetchone()[0])
     cur.execute(
-        f"SELECT f.amount, f.kind, f.note, f.created_at FROM {SCHEMA}.fund_ledger f ORDER BY f.id DESC LIMIT 15"
+        f"SELECT f.amount, f.kind, f.note, f.created_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1), '') "
+        f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id ORDER BY f.id DESC LIMIT 15"
     )
-    last = [{"amount": float(r[0]), "kind": r[1], "note": r[2], "at": r[3].isoformat()} for r in cur.fetchall()]
+    last = [{"amount": float(r[0]), "kind": r[1], "note": r[2], "at": r[3].isoformat(), "user": r[4] or ""} for r in cur.fetchall()]
     cur.execute(
         f"SELECT COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)), SUM(f.amount) AS s FROM {SCHEMA}.fund_ledger f "
-        f"JOIN {SCHEMA}.users u ON u.id = f.user_id WHERE f.kind = 'fee' GROUP BY f.user_id, u.name, u.email ORDER BY s DESC LIMIT 5"
+        f"JOIN {SCHEMA}.users u ON u.id = f.user_id WHERE f.kind IN ('fee', 'donation') GROUP BY f.user_id, u.name, u.email ORDER BY s DESC LIMIT 5"
     )
     top = [{"name": r[0], "amount": float(r[1])} for r in cur.fetchall()]
+    cur.execute(f"SELECT CURRENT_DATE")
+    today = cur.fetchone()[0]
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE created_at < CURRENT_DATE - 29")
+    run = float(cur.fetchone()[0])
+    cur.execute(f"SELECT created_at::date, SUM(amount) FROM {SCHEMA}.fund_ledger WHERE created_at >= CURRENT_DATE - 29 GROUP BY 1")
+    per_day = {r[0]: float(r[1]) for r in cur.fetchall()}
+    chart = []
+    for i in range(29, -1, -1):
+        d = today - datetime.timedelta(days=i)
+        inc = per_day.get(d, 0.0)
+        run += inc
+        chart.append({"d": d.isoformat(), "total": round(run, 2), "in": round(max(inc, 0.0), 2)})
+    cur.execute(
+        f"SELECT c.id, c.title, c.prize, c.finished_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)), c.winner_id, u.avatar_url "
+        f"FROM {SCHEMA}.contests c JOIN {SCHEMA}.users u ON u.id = c.winner_id WHERE c.status = 'finished' AND c.winner_id IS NOT NULL "
+        f"ORDER BY c.finished_at DESC LIMIT 10"
+    )
+    winners = [{"id": r[0], "title": r[1], "prize": float(r[2]), "at": r[3].isoformat() if r[3] else None, "name": r[4], "userId": r[5], "avatar": r[6] or ""} for r in cur.fetchall()]
     return {
+        "chart": chart, "winners": winners,
         "total": fund_total(cur), "count": int(cnt), "donors": int(donors), "mine": mine, "rate": fee_rate(cur),
         "title": st["title"], "description": st["description"], "goal": float(st["goal"] or 0), "last": last, "top": top,
     }

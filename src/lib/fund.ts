@@ -6,6 +6,7 @@ export interface FundOp {
   kind: string;
   note: string;
   at: string;
+  user?: string;
 }
 
 export interface Fund {
@@ -19,6 +20,8 @@ export interface Fund {
   goal: number;
   last: FundOp[];
   top: { name: string; amount: number }[];
+  chart: { d: string; total: number; in: number }[];
+  winners: { id: number; title: string; prize: number; at: string | null; name: string; userId: number; avatar: string }[];
 }
 
 export interface FundSettings {

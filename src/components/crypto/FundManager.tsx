@@ -14,7 +14,7 @@ interface AdminData {
   ops: (FundOp & { id: number; user: string })[];
 }
 
-const KIND: Record<string, string> = { fee: "Комиссия", deposit: "Пополнение", adjust: "Списание", payout: "Выплата", contest: "Приз конкурса" };
+const KIND: Record<string, string> = { fee: "Комиссия", deposit: "Пополнение", adjust: "Списание", payout: "Выплата", contest: "Приз конкурса", donation: "Взнос" };
 
 const FundManager = ({ token }: { token: string | null }) => {
   const qc = useQueryClient();
