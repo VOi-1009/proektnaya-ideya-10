@@ -97,7 +97,7 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
             <FearGreedGauge compact />
             <AltseasonGauge compact />
           </div>
-          <div className="flex-1 min-h-[60px] px-3 py-2 flex items-center justify-center">
+          <div className="hidden lg:flex flex-1 min-h-[60px] px-3 py-2 items-center justify-center">
             <AchievementsMini />
           </div>
         </div>
