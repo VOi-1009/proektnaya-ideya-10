@@ -10,6 +10,7 @@ import { fundFmt, fundRequest, GamesConfig, useGamesConfig } from "@/lib/fund";
 import TkaIcon from "../TkaIcon";
 
 type Game = "coin" | "dice" | "wheel" | "rocket" | "bullbear";
+const GAME_COLOR: Record<Game, string> = { coin: "#FBBF24", dice: "#38BDF8", wheel: "#D946EF", rocket: "#EF4444", bullbear: "#22C55E" };
 const GAMES: { id: Game; icon: string; title: string; desc: string }[] = [
   { id: "coin", icon: "Coins", title: "Монетка", desc: "Орёл или решка, угадали — почти x2" },
   { id: "dice", icon: "Dices", title: "Кости", desc: "Сумма двух кубиков: меньше, больше или ровно 7" },
@@ -220,9 +221,15 @@ const GamesChannel = () => {
               setGame(g.id);
               setRes(null);
             }}
-            className={`rounded-xl border px-3 py-2 text-left flex items-center gap-2 transition-colors ${cur?.id === g.id ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/40"}`}
+            className="rounded-xl border border-l-4 px-3 py-2 text-left flex items-center gap-2 transition-all hover:brightness-110"
+            style={{
+              borderColor: cur?.id === g.id ? `${GAME_COLOR[g.id]}99` : "hsl(var(--border))",
+              borderLeftColor: GAME_COLOR[g.id],
+              background: cur?.id === g.id ? `${GAME_COLOR[g.id]}22` : "hsl(var(--card))",
+              boxShadow: cur?.id === g.id ? `0 0 14px ${GAME_COLOR[g.id]}40` : undefined,
+            }}
           >
-            <Icon name={g.icon} size={18} className="text-primary" />
+            <Icon name={g.icon} size={18} style={{ color: GAME_COLOR[g.id] }} />
             <span>
               <span className="text-sm text-white font-semibold block leading-tight">{g.title}</span>
               <span className="text-[10px] text-muted-foreground hidden sm:block max-w-[190px] leading-tight">{g.desc}</span>
