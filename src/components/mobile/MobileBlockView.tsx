@@ -32,17 +32,15 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
   if (b.kind === "exchange") return <ExchangeBlock />;
   if (b.kind === "wallet") return <WalletView />;
   if (b.kind === "image") {
-    if (!b.image) return preview ? <div className="rounded-xl border border-dashed border-border bg-card/40 min-h-[96px] flex items-center justify-center text-xs text-muted-foreground">Картинка не выбрана</div> : null;
     const f = Math.max(0, Math.min(b.fade ?? 0, 100));
     const mask = f > 0 ? `linear-gradient(to bottom, #000 ${Math.round(100 - f)}%, transparent 100%)` : undefined;
     const img = (
-      <img
-        src={b.image}
-        alt={b.title || ""}
-        loading="lazy"
-        className={`w-full object-cover ${f > 0 ? "" : "rounded-xl border border-border"}`}
+      <div
+        className={`w-full min-h-[140px] flex items-center justify-center bg-gradient-to-b from-primary/20 via-card to-card ${f > 0 ? "" : "rounded-xl border border-border"}`}
         style={mask ? { WebkitMaskImage: mask, maskImage: mask } : undefined}
-      />
+      >
+        <div className="font-display text-4xl text-white leading-none tracking-wide">TRADER<span className="text-primary">KA</span>.RU</div>
+      </div>
     );
     if (!b.url) return img;
     return b.url.startsWith("/") ? <Link to={b.url} className="block">{img}</Link> : <a href={b.url} target="_blank" rel="noreferrer" className="block">{img}</a>;
