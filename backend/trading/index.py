@@ -128,16 +128,75 @@ def usdt_gross(cur, uid):
     return float(cur.fetchone()[0])
 
 
-def fund_state(cur, uid):
-    cur.execute(f"SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM {SCHEMA}.fund_ledger")
-    total, cnt = cur.fetchone()
-    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE user_id = {uid}")
-    mine = float(cur.fetchone()[0])
-    cur.execute(f"SELECT COUNT(DISTINCT user_id) FROM {SCHEMA}.fund_ledger")
-    donors = int(cur.fetchone()[0])
-    cur.execute(f"SELECT amount, note, created_at FROM {SCHEMA}.fund_ledger ORDER BY id DESC LIMIT 8")
-    last = [{"amount": float(r[0]), "note": r[1], "at": r[2].isoformat()} for r in cur.fetchall()]
-    return {"total": float(total), "count": int(cnt), "donors": donors, "mine": mine, "rate": FEE_RATE, "last": last}
+FUND_KEY = "fund_settings"
+FUND_DEFAULT = {
+    "title": "Фонд TRADERKA",
+    "description": "В фонд идёт комиссия с каждого обмена TKA и виртуальных USDT. Из фонда будут призы и награды для участников.",
+    "goal": 0,
+    "feePercent": 0.05,
+}
+
+
+def q(v):
+    return str(v).replace("'", "''").replace("\\", "")
+
+
+def qj(v):
+    return str(v).replace("'", "''")
+
+
+def fund_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{FUND_KEY}'")
+    row = cur.fetchone()
+    out = dict(FUND_DEFAULT)
+    if row and row[0]:
+        try:
+            out.update({k: v for k, v in json.loads(row[0]).items() if k in FUND_DEFAULT})
+        except ValueError:
+            pass
+    return out
+
+
+def fee_rate(cur):
+    try:
+        pct = float(fund_settings(cur)["feePercent"])
+    except (TypeError, ValueError):
+        pct = FEE_RATE * 100
+    return max(0.0, min(pct, 5.0)) / 100
+
+
+def fund_total(cur):
+    cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger")
+    return float(cur.fetchone()[0])
+
+
+def fund_state(cur, uid=None):
+    st = fund_settings(cur)
+    cur.execute(f"SELECT COUNT(*), COUNT(DISTINCT user_id) FROM {SCHEMA}.fund_ledger WHERE kind = 'fee'")
+    cnt, donors = cur.fetchone()
+    mine = 0.0
+    if uid:
+        cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE kind = 'fee' AND user_id = {int(uid)}")
+        mine = float(cur.fetchone()[0])
+    cur.execute(
+        f"SELECT f.amount, f.kind, f.note, f.created_at FROM {SCHEMA}.fund_ledger f ORDER BY f.id DESC LIMIT 15"
+    )
+    last = [{"amount": float(r[0]), "kind": r[1], "note": r[2], "at": r[3].isoformat()} for r in cur.fetchall()]
+    cur.execute(
+        f"SELECT COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)), SUM(f.amount) AS s FROM {SCHEMA}.fund_ledger f "
+        f"JOIN {SCHEMA}.users u ON u.id = f.user_id WHERE f.kind = 'fee' GROUP BY f.user_id, u.name, u.email ORDER BY s DESC LIMIT 5"
+    )
+    top = [{"name": r[0], "amount": float(r[1])} for r in cur.fetchall()]
+    return {
+        "total": fund_total(cur), "count": int(cnt), "donors": int(donors), "mine": mine, "rate": fee_rate(cur),
+        "title": st["title"], "description": st["description"], "goal": float(st["goal"] or 0), "last": last, "top": top,
+    }
+
+
+def is_admin(cur, uid):
+    cur.execute(f"SELECT is_admin FROM {SCHEMA}.users WHERE id = {int(uid)}")
+    r = cur.fetchone()
+    return bool(r and r[0])
 
 
 DAILY_REWARDS = [10, 15, 20, 25, 30, 40, 50]
@@ -376,6 +435,13 @@ def handler(event, context):
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             return resp(200, {"checked": tick(cur, px)})
+        if method == "GET" and action == "fund":
+            fuid = None
+            if token:
+                cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
+                frow = cur.fetchone()
+                fuid = int(frow[0]) if frow else None
+            return resp(200, fund_state(cur, fuid))
         if not token:
             return resp(401, {"error": "Биржа доступна только зарегистрированным пользователям. Войдите или зарегистрируйтесь"})
         cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
@@ -404,8 +470,15 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
-        if method == "GET" and action == "fund":
-            return resp(200, fund_state(cur, uid))
+        if method == "GET" and action == "fund_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            cur.execute(
+                f"SELECT f.id, f.amount, f.kind, f.note, f.created_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
+                f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id ORDER BY f.id DESC LIMIT 40"
+            )
+            ops = [{"id": r[0], "amount": float(r[1]), "kind": r[2], "note": r[3], "at": r[4].isoformat(), "user": r[5] or ""} for r in cur.fetchall()]
+            return resp(200, {"state": fund_state(cur, uid), "settings": fund_settings(cur), "ops": ops})
         if method == "GET" and action == "wallet":
             ensure_account(cur, uid)
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
@@ -422,6 +495,56 @@ def handler(event, context):
             return resp(200, state(cur, uid, px))
         body = json.loads(event.get("body") or "{}")
         act = body.get("action")
+        if act in ("fund_settings", "fund_adjust", "fund_payout"):
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            if act == "fund_settings":
+                try:
+                    goal = max(0.0, min(float(body.get("goal") or 0), 1e9))
+                    pct = max(0.0, min(float(body.get("feePercent")), 5.0))
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Проверьте цель и процент комиссии"})
+                new = {
+                    "title": str(body.get("title") or FUND_DEFAULT["title"]).strip()[:80],
+                    "description": str(body.get("description") or "").strip()[:600],
+                    "goal": goal,
+                    "feePercent": pct,
+                }
+                val = qj(json.dumps(new, ensure_ascii=False))
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{FUND_KEY}', '{val}', NOW()) "
+                    f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+                )
+                return resp(200, {"state": fund_state(cur, uid), "settings": fund_settings(cur)})
+            try:
+                amount = round(float(body.get("amount", 0)), 2)
+            except (TypeError, ValueError):
+                return resp(400, {"error": "Укажите сумму"})
+            note = q(str(body.get("note") or "").strip()[:80])
+            if act == "fund_adjust":
+                if amount == 0:
+                    return resp(400, {"error": "Сумма не может быть нулевой"})
+                if amount < 0 and fund_total(cur) + amount < 0:
+                    return resp(400, {"error": "В фонде недостаточно средств"})
+                kind = "deposit" if amount > 0 else "adjust"
+                label = q(("Пополнение админом" if amount > 0 else "Списание админом") + (f": {note}" if note else ""))[:120]
+                cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {amount}, '{kind}', '{label}')")
+            else:
+                try:
+                    target = int(body.get("userId"))
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Укажите номер участника"})
+                if amount <= 0:
+                    return resp(400, {"error": "Сумма выплаты должна быть больше нуля"})
+                if fund_total(cur) < amount:
+                    return resp(400, {"error": "В фонде недостаточно средств"})
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.users WHERE id = {target}")
+                if not cur.fetchone():
+                    return resp(404, {"error": "Участник не найден"})
+                label = q("Выплата из фонда" + (f": {note}" if note else ""))[:120]
+                cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({target}, -{amount}, 'payout', '{label}')")
+                cur.execute(f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) VALUES ({target}, {amount}, 'gift', '{label}')")
+            return resp(200, {"state": fund_state(cur, uid), "settings": fund_settings(cur)})
         ensure_account(cur, uid)
         process(cur, uid, px)
         if act == "daily":
@@ -447,7 +570,7 @@ def handler(event, context):
                 return resp(400, {"error": "Укажите сумму обмена"})
             if amount < MIN_EXCHANGE:
                 return resp(400, {"error": f"Минимальная сумма обмена {int(MIN_EXCHANGE)}"})
-            fee = round(amount * FEE_RATE, 4)
+            fee = round(amount * fee_rate(cur), 4)
             net = round(amount - fee, 4)
             if act == "exchange":
                 cur.execute(

@@ -16,9 +16,9 @@ import VirtualNote from "../trading/VirtualNote";
 import TradeTabs from "../trading/TradeTabs";
 import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
-interface Props { coins: Coin[] }
+interface Props { coins: Coin[]; go?: (ch: string) => void }
 
-const TradingChannel = ({ coins }: Props) => {
+const TradingChannel = ({ coins, go }: Props) => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [coinId, setCoinId] = useState("bitcoin");
@@ -195,7 +195,7 @@ const TradingChannel = ({ coins }: Props) => {
         </div>
         <div className="space-y-4 min-w-0">
         <ExchangeCard st={st} busy={busy} send={send} token={token} />
-        <FundCard token={token} />
+        <FundCard go={go} />
         <TradeForm
           coins={coins}
           coinId={coinId}

@@ -8,6 +8,7 @@ export const CHANNELS = [
   { id: "ainews", name: "новости-AiTKA", short: "AiTKA", topic: "Дайджесты и заметки ИИ-бота AiTKA", icon: "Sparkles" },
   { id: "forum", name: "форум", topic: "Обсуждения по разделам: рынок, идеи, закрытые клубы", icon: "Hash" },
   { id: "rating", name: "рейтинг", topic: "Топ-50 участников по очкам активности", icon: "Trophy" },
+  { id: "fund", name: "фонд", topic: "Общий фонд сообщества: комиссия с обменов, цели и выплаты", icon: "Landmark" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "trading", name: "тренировочная-биржа", short: "Биржа", topic: "Игровая монета TKA, реальные курсы, плечо, шорт и рейтинг трейдеров", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },

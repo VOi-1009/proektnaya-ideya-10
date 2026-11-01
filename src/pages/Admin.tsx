@@ -31,6 +31,7 @@ import VisitsManager from "@/components/crypto/VisitsManager";
 import ForumManager from "@/components/crypto/ForumManager";
 import UsersManager from "@/components/crypto/UsersManager";
 import BlocksManager from "@/components/crypto/BlocksManager";
+import FundManager from "@/components/crypto/FundManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -41,7 +42,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "quotes" | "donate" | "aibot" | "chats" | "forum" | "menu">("articles");
+  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "quotes" | "donate" | "aibot" | "chats" | "forum" | "menu" | "fund">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -208,6 +209,7 @@ const Admin = () => {
                 ["sitenews", "Новости сайта", "Megaphone"],
                 ["quotes", "Цитаты из книг", "Quote"],
                 ["donate", "Донаты", "Heart"],
+                ["fund", "Фонд", "Landmark"],
                 ["menu", "Меню слева", "PanelLeft"],
                 ["chats", "Чаты", "MessageCircle"],
                 ["forum", "Форум", "MessagesSquare"],
@@ -248,6 +250,8 @@ const Admin = () => {
           <AiBotManager token={token} />
         ) : editing === null && tab === "menu" ? (
           <MenuManager token={token} />
+        ) : editing === null && tab === "fund" ? (
+          <FundManager token={token} />
         ) : editing === null && tab === "donate" ? (
           <DonateManager token={token} />
         ) : editing === null && tab === "polls" ? (
