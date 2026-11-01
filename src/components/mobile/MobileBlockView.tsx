@@ -12,7 +12,7 @@ const MarketSummaryBlock = () => {
   if (isLoading || !data) return <Skeleton className="h-64 w-full bg-card" />;
   return (
     <div className="rounded-xl border border-border bg-card p-2 flex flex-col gap-2">
-      <MarketSummary coins={data.coins} go={() => navigate("/")} cols={2} />
+      <MarketSummary coins={data.coins} go={() => navigate("/")} cols={2} hideOutflow />
     </div>
   );
 };

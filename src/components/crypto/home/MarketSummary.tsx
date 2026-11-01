@@ -8,9 +8,10 @@ interface Props {
   coins: Coin[];
   go: (channel: string, coinId?: string) => void;
   cols?: 2 | 3;
+  hideOutflow?: boolean;
 }
 
-const MarketSummary = ({ coins, go, cols = 3 }: Props) => {
+const MarketSummary = ({ coins, go, cols = 3, hideOutflow }: Props) => {
   const cryptos = coins.filter((c) => !c.kind);
   const totalCap = cryptos.reduce((s, c) => s + c.market_cap, 0);
   const sorted = [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
@@ -62,9 +63,11 @@ const MarketSummary = ({ coins, go, cols = 3 }: Props) => {
           </div>
         )}
         <MarketMetricsRow flat />
-        <div className="bg-hover rounded-lg border-l-4 border-metric-sky h-[48px] min-w-0 overflow-hidden">
-          <ExchangeOutflowCard go={go} />
-        </div>
+        {!hideOutflow && (
+          <div className="bg-hover rounded-lg border-l-4 border-metric-sky h-[48px] min-w-0 overflow-hidden">
+            <ExchangeOutflowCard go={go} />
+          </div>
+        )}
       </div>
       <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center">
         <QuoteBlock />
