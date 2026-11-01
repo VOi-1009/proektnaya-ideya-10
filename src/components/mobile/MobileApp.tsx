@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
+import { useGraphics } from "@/lib/graphics";
 import { fundFmt, MOBILE_SECTIONS, useMobileSettings } from "@/lib/fund";
 import { useWallet } from "@/lib/tka";
 import MobileBlockView from "./MobileBlockView";
@@ -12,6 +13,7 @@ import TkaIcon from "@/components/crypto/TkaIcon";
 const MobileApp = () => {
   const { user, setAuthOpen, logout } = useAuth();
   const { data, isLoading } = useMobileSettings();
+  const { data: gfx } = useGraphics();
   const [tab, setTab] = useState("");
   const s = data?.settings;
   const tabs = (s?.tabs ?? []).filter((t) => t.enabled);
@@ -54,7 +56,11 @@ const MobileApp = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-30 bg-card border-b border-border px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black">Т</div>
+          {gfx?.logo ? (
+            <img src={gfx.logo} alt="" className="w-8 h-8 rounded-lg object-contain" />
+          ) : (
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black">Т</div>
+          )}
           <span className="font-display text-base text-white tracking-wide">{s.title}</span>
         </div>
         <div className="flex items-center gap-3">

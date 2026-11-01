@@ -1569,6 +1569,54 @@ def games_admin(cur):
     }
 
 
+GFX_KEY = "graphics_settings"
+GFX_IMG_FIELDS = ("logo", "favicon", "appIcon")
+GFX_TYPES = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/svg+xml": "svg", "image/x-icon": "ico", "image/vnd.microsoft.icon": "ico"}
+GFX_EMOJI_DEFAULT = ["😀", "😎", "🤔", "🙏", "💪", "💎", "🐂", "🐻", "💰", "📈", "📉", "🚀", "🔥", "😱", "🤝", "👀"]
+
+
+def gfx_clean(raw):
+    raw = raw if isinstance(raw, dict) else {}
+    out = {}
+    for f in GFX_IMG_FIELDS:
+        v = str(raw.get(f) or "")
+        out[f] = v[:500] if v.startswith("https://") else ""
+    em = raw.get("emoji")
+    lst = [str(e).strip()[:16] for e in em if str(e).strip()] if isinstance(em, list) else []
+    out["emoji"] = lst[:48] or list(GFX_EMOJI_DEFAULT)
+    return out
+
+
+def gfx_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{GFX_KEY}'")
+    row = cur.fetchone()
+    raw = {}
+    if row and row[0]:
+        try:
+            raw = json.loads(row[0])
+        except ValueError:
+            raw = {}
+    return gfx_clean(raw)
+
+
+def gfx_upload(data, ctype):
+    if ctype not in GFX_TYPES:
+        raise ValueError("Подойдёт PNG, JPG, WEBP, GIF, SVG или ICO")
+    raw = base64.b64decode(str(data).split(",")[-1])
+    if len(raw) > 1024 * 1024:
+        raise ValueError("Картинка должна быть до 1 МБ")
+    import boto3
+    key = f"graphics/{uuid.uuid4().hex}.{GFX_TYPES[ctype]}"
+    s3 = boto3.client(
+        "s3",
+        endpoint_url="https://bucket.poehali.dev",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    s3.put_object(Bucket="files", Key=key, Body=raw, ContentType=ctype)
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+
 MOBILE_KEY = "mobile_settings"
 MOBILE_SECTIONS = ["home", "market", "news", "trading", "games", "shop", "profile", "community", "fund"]
 MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link", "market_summary"]
@@ -1682,6 +1730,8 @@ def handler(event, context):
             return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
         if method == "GET" and action == "mobile_settings":
             return resp(200, {"settings": mobile_settings(cur), "sections": MOBILE_SECTIONS})
+        if method == "GET" and action == "graphics_settings":
+            return resp(200, {"settings": gfx_settings(cur)})
         if method == "GET" and action == "games_config":
             return resp(200, games_config(cur, opt_uid(cur, token)))
         if method == "GET" and action == "shop_catalog":
@@ -1825,6 +1875,28 @@ def handler(event, context):
             cfg = games_config(cur, uid)
             cfg["result"] = out
             return resp(200, cfg)
+        if act == "graphics_save":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            cur_set = gfx_settings(cur)
+            new = dict(cur_set)
+            try:
+                for f in GFX_IMG_FIELDS:
+                    if body.get(f + "Data"):
+                        new[f] = gfx_upload(body[f + "Data"], str(body.get(f + "Type") or ""))
+                    elif body.get(f + "Remove"):
+                        new[f] = ""
+            except ValueError as e:
+                return resp(400, {"error": str(e)})
+            if "emoji" in body:
+                new["emoji"] = body.get("emoji")
+            new = gfx_clean(new)
+            val = qj(json.dumps(new, ensure_ascii=False))
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{GFX_KEY}', '{val}', NOW()) "
+                f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+            )
+            return resp(200, {"settings": new})
         if act == "mobile_save":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})

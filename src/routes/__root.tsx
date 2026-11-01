@@ -9,6 +9,7 @@ import {HMR_CLIENT} from "@/platform/dev-hmr";
 import appCss from "@/index.css?url";
 import {VisitTracker} from "@/lib/visits";
 import {AuthProvider} from "@/lib/auth";
+import {useFaviconSync} from "@/lib/graphics";
 import {MemberCardProvider} from "@/lib/memberCard";
 import AuthDialog from "@/components/crypto/AuthDialog";
 import NotFound from "@/pages/NotFound";
@@ -93,6 +94,15 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+    return <RootInner/>;
+}
+
+function FaviconSync() {
+    useFaviconSync();
+    return null;
+}
+
+function RootInner() {
     const [queryClient] = useState(
         () =>
             new QueryClient({
@@ -110,6 +120,7 @@ function RootComponent() {
                             <AuthDialog/>
                             <VisitTracker/>
                             <CookieBanner/>
+                            <FaviconSync/>
                             <Outlet/>
                         </MemberCardProvider>
                     </TooltipProvider>

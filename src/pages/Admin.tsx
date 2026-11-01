@@ -37,6 +37,7 @@ import ExchangeManager from "@/components/crypto/ExchangeManager";
 import ShopManager from "@/components/crypto/ShopManager";
 import GamesManager from "@/components/crypto/GamesManager";
 import MobileManager from "@/components/crypto/MobileManager";
+import GraphicsManager from "@/components/crypto/GraphicsManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -47,7 +48,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "quotes" | "donate" | "aibot" | "chats" | "forum" | "menu" | "fund" | "contests" | "exchange" | "shop" | "games" | "mobile">("articles");
+  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "quotes" | "donate" | "aibot" | "chats" | "forum" | "menu" | "fund" | "contests" | "exchange" | "shop" | "games" | "mobile" | "graphics">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -218,6 +219,7 @@ const Admin = () => {
                 ["shop", "Магазин", "Store"],
                 ["games", "Игры", "Gamepad2"],
                 ["mobile", "Моб. версия", "Smartphone"],
+                ["graphics", "Графика", "Image"],
                 ["fund", "Фонд", "Landmark"],
                 ["contests", "Конкурсы", "Trophy"],
                 ["menu", "Меню слева", "PanelLeft"],
@@ -260,6 +262,8 @@ const Admin = () => {
           <AiBotManager token={token} />
         ) : editing === null && tab === "menu" ? (
           <MenuManager token={token} />
+        ) : editing === null && tab === "graphics" ? (
+          <GraphicsManager token={token} />
         ) : editing === null && tab === "mobile" ? (
           <MobileManager token={token} />
         ) : editing === null && tab === "games" ? (

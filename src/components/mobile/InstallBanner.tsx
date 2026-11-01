@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
+import { useGraphics } from "@/lib/graphics";
 
 interface PromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -10,6 +11,7 @@ interface PromptEvent extends Event {
 const KEY = "app-install-dismissed";
 
 const InstallBanner = ({ text }: { text: string }) => {
+  const { data: gfx } = useGraphics();
   const [evt, setEvt] = useState<PromptEvent | null>(null);
   const [ios, setIos] = useState(false);
   const [hidden, setHidden] = useState(true);
@@ -59,7 +61,7 @@ const InstallBanner = ({ text }: { text: string }) => {
   return (
     <div className="rounded-xl border border-primary/40 bg-primary/10 p-3 space-y-2">
       <div className="flex items-center gap-3">
-        <img src="/app-icons/icon-192.png" alt="" className="w-10 h-10 rounded-xl flex-shrink-0" />
+        <img src={gfx?.appIcon || "/app-icons/icon-192.png"} alt="" className="w-10 h-10 rounded-xl flex-shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="text-white text-sm font-semibold leading-tight">{text}</div>
           <div className="text-[11px] text-muted-foreground">Откроется как приложение, без адресной строки</div>

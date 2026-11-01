@@ -3,7 +3,8 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { COIN_META } from "@/lib/crypto";
-import { MOODS, QUICK_EMOJI, CommunityPost, communityRequest } from "@/lib/community";
+import { useEmojiList } from "@/lib/graphics";
+import { MOODS, CommunityPost, communityRequest } from "@/lib/community";
 
 interface Props {
   token: string | null;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const Composer = ({ token, onPosted }: Props) => {
+  const emojiList = useEmojiList();
   const [text, setText] = useState("");
   const [mood, setMood] = useState<"" | "bull" | "bear">("");
   const [coins, setCoins] = useState<string[]>([]);
@@ -97,7 +99,7 @@ const Composer = ({ token, onPosted }: Props) => {
           </button>
           {emojiOpen && (
             <div className="absolute z-20 top-10 left-0 bg-card border border-border rounded-xl p-2 grid grid-cols-8 gap-1 shadow-xl w-72">
-              {QUICK_EMOJI.map((e) => (
+              {emojiList.map((e) => (
                 <button key={e} onClick={() => addEmoji(e)} className="text-xl hover:bg-hover rounded p-1">{e}</button>
               ))}
             </div>

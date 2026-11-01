@@ -8,8 +8,6 @@ export interface PickedImage {
   preview: string;
 }
 
-const MAX_SIDE = 256;
-
 const readFile = (file: File) =>
   new Promise<string>((res, rej) => {
     const r = new FileReader();
@@ -18,11 +16,11 @@ const readFile = (file: File) =>
     r.readAsDataURL(file);
   });
 
-const shrink = (src: string) =>
+const shrink = (src: string, maxSide: number) =>
   new Promise<{ url: string; type: string }>((res, rej) => {
     const img = new Image();
     img.onload = () => {
-      const k = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+      const k = Math.min(1, maxSide / Math.max(img.width, img.height));
       const c = document.createElement("canvas");
       c.width = Math.max(1, Math.round(img.width * k));
       c.height = Math.max(1, Math.round(img.height * k));
@@ -41,9 +39,10 @@ interface Props {
   onPick: (v: PickedImage | null) => void;
   onRemove?: () => void;
   size?: number;
+  maxSide?: number;
 }
 
-const ShopImagePicker = ({ current, emoji, picked, removed, onPick, onRemove, size = 44 }: Props) => {
+const ShopImagePicker = ({ current, emoji, picked, removed, onPick, onRemove, size = 44, maxSide = 256 }: Props) => {
   const ref = useRef<HTMLInputElement>(null);
   const shown = picked?.preview ?? (removed ? "" : current);
 
@@ -59,7 +58,7 @@ const ShopImagePicker = ({ current, emoji, picked, removed, onPick, onRemove, si
         onPick({ data: raw, type: file.type, preview: raw });
         return;
       }
-      const s = await shrink(raw);
+      const s = await shrink(raw, maxSide);
       onPick({ data: s.url, type: s.type, preview: s.url });
     } catch {
       toast({ title: "Не удалось прочитать картинку", variant: "destructive" });
