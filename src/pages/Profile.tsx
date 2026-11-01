@@ -12,7 +12,6 @@ import { LEVELS } from "@/lib/status";
 import { Achievement } from "@/components/crypto/Achievements";
 import TkaDailyCalendar from "@/components/crypto/TkaDailyCalendar";
 import TkaWalletCard from "@/components/crypto/TkaWalletCard";
-import FundBadge from "@/components/crypto/FundBadge";
 import FundBadges from "@/components/crypto/FundBadges";
 import TradingStats from "@/components/crypto/TradingStats";
 import ProfileRewards from "@/components/crypto/ProfileRewards";
@@ -245,7 +244,6 @@ const Profile = () => {
                     <TeamBadge team={profile.team?.team} />
                     <SupporterBadge no={profile.supporter} creator={profile.creator} />
                     <FounderBadge no={profile.founder} />
-                    <FundBadge userId={profile.id} />
                   </div>
                   <ContactLinks contacts={profile.contacts} className="mt-4" />
                   {profile.avatar && canEditAvatar && (
