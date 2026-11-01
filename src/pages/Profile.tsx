@@ -16,6 +16,7 @@ import TkaDailyCalendar from "@/components/crypto/TkaDailyCalendar";
 import TkaWalletCard from "@/components/crypto/TkaWalletCard";
 import FundBadge from "@/components/crypto/FundBadge";
 import FundBadges from "@/components/crypto/FundBadges";
+import ProfileSummary from "@/components/crypto/ProfileSummary";
 import TradingStats from "@/components/crypto/TradingStats";
 import ProfileRewards from "@/components/crypto/ProfileRewards";
 import FounderBadge from "@/components/crypto/FounderBadge";
@@ -278,14 +279,14 @@ const Profile = () => {
               </div>
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              <form onSubmit={save} className="lg:col-span-2 xl:col-span-3 bg-card border border-border rounded-2xl p-5 sm:p-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+              <form onSubmit={save} className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-5 min-w-0">
                 <div>
                   <h2 className="font-display text-lg text-white mb-4 flex items-center gap-2">
                     <Icon name="UserRound" size={18} className="text-primary" />
                     Личная информация
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label className="block">
                       <span className="text-xs text-muted-foreground mb-1 block">Имя или ник</span>
                       <input className={inputCls} maxLength={60} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Как к вам обращаться" />
@@ -294,7 +295,7 @@ const Profile = () => {
                       <span className="text-xs text-muted-foreground mb-1 block">Город</span>
                       <input className={inputCls} maxLength={100} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Например, Москва" />
                     </label>
-                    <label className="block md:col-span-2 xl:col-span-1">
+                    <label className="block sm:col-span-2">
                       <span className="text-xs text-muted-foreground mb-1 block">Девиз или род занятий</span>
                       <input className={inputCls} maxLength={120} value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} placeholder="Например, свинг-трейдер, инвестор в BTC" />
                     </label>
@@ -330,7 +331,7 @@ const Profile = () => {
                       <span>{form.bio.length}/1000</span>
                     </span>
                     <textarea
-                      className={`${inputCls} h-32 py-2 resize-none`}
+                      className={`${inputCls} h-24 py-2 resize-none`}
                       maxLength={1000}
                       value={form.bio}
                       onChange={(e) => setForm({ ...form, bio: e.target.value })}
@@ -345,7 +346,7 @@ const Profile = () => {
                     Контакты и ссылки
                   </h2>
                   <p className="text-xs text-muted-foreground mb-4">Только ссылки на соцсети и сайты, видны вошедшим пользователям.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {CONTACT_FIELDS.map((f) => (
                       <label key={f.key} className="block">
                         <span className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
@@ -391,9 +392,9 @@ const Profile = () => {
                 </div>
               </form>
 
-              <div className="space-y-5 self-start">
-              <section className="bg-card border border-border rounded-2xl p-5 sm:p-6 ">
-                <h2 className="font-display text-lg text-white mb-4">Ваша активность</h2>
+              <div className="space-y-4 min-w-0">
+              <section className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+                <h2 className="font-display text-lg text-white mb-3">Ваша активность</h2>
                 <div className="space-y-3 text-sm">
                   {[
                     { icon: "CalendarCheck", label: "Дней на сайте", value: `${profile.stats.days} ${plural(profile.stats.days, ["день", "дня", "дней"])}`, hint: "+10 очков за день" },
@@ -437,8 +438,12 @@ const Profile = () => {
               </section>
               {profile.team && <TeamCard info={profile.team} onChange={changeTeam} />}
               <TkaWalletCard token={token} />
-              <FundBadges token={token} />
               <TkaDailyCalendar token={token} />
+              </div>
+
+              <div className="space-y-4 min-w-0">
+              <ProfileSummary token={token} streak={profile.stats.streak ?? 0} bestStreak={profile.stats.bestStreak ?? 0} days={profile.stats.days} />
+              <FundBadges token={token} />
               <TradingStats token={token} />
               <ProfileRewards level={s.level} achievements={profile.achievements} special={profile.special} founder={profile.founder} foundersTaken={profile.foundersTaken} promo={profile.promo} streak={profile.stats.streak ?? 0} />
               </div>

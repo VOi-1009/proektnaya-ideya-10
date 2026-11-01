@@ -128,3 +128,37 @@ export const useExchangeSettings = () =>
 
 export const tradeFee = (ex: ExchangeSettings, margin: number, leverage: number) =>
   Math.round((ex.feeBase === "volume" ? margin * leverage : margin) * ex.feePercent * 100) / 10000;
+
+export interface AiTraderSettings {
+  enabled: boolean;
+  startBalance: number;
+  betPercent: number;
+  maxBet: number;
+  leverage: number;
+  maxPositions: number;
+  stopLossPct: number;
+  takeProfitPct: number;
+  holdHours: number;
+  minMovePct: number;
+  intervalMin: number;
+  strategy: "trend" | "reversal" | "long_only";
+  coins: string[];
+}
+
+export interface AiTraderData {
+  settings: AiTraderSettings;
+  botId: number | null;
+  strategies: Record<string, string>;
+  lastRun: number | null;
+  account: {
+    free: number;
+    locked: number;
+    unrealized: number;
+    equity: number;
+    deposits: number;
+    pnl: number;
+    pnlPct: number;
+    positions: { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; price: number; pnl: number; openedAt: string }[];
+  } | null;
+  trades: { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; close: number; pnl: number; reason: string; closedAt: string }[];
+}

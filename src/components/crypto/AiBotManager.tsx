@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { AI_NAME, AiLog, AiMailSettings, AiMailStats, AiPost, AiSettings, aiRequest } from "@/lib/aibot";
 import BotBadge from "./BotBadge";
+import AiTraderManager from "./AiTraderManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -441,6 +442,7 @@ const AiBotManager = ({ token }: { token: string | null }) => {
           </div>
         )}
       </section>
+      <AiTraderManager token={token} />
     </div>
   );
 };

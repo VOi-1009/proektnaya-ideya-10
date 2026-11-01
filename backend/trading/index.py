@@ -422,7 +422,10 @@ def grant_awards(cur, uid):
 
 
 def tick(cur, px):
-    cur.execute(f"SELECT DISTINCT user_id FROM {SCHEMA}.paper_orders WHERE status = 'pending' UNION SELECT DISTINCT user_id FROM {SCHEMA}.paper_positions WHERE status = 'open'")
+    cur.execute(
+        f"SELECT DISTINCT user_id FROM {SCHEMA}.paper_orders WHERE status = 'pending' AND user_id NOT IN (SELECT id FROM {SCHEMA}.users WHERE is_ai) "
+        f"UNION SELECT DISTINCT user_id FROM {SCHEMA}.paper_positions WHERE status = 'open' AND user_id NOT IN (SELECT id FROM {SCHEMA}.users WHERE is_ai)"
+    )
     ids = [r[0] for r in cur.fetchall()]
     for u in ids:
         process(cur, int(u), px)
@@ -549,8 +552,244 @@ def leaderboard(cur, px):
     return rows
 
 
+
+AI_KEY = "ai_trader"
+AI_RUN_KEY = "ai_trader_run"
+AI_STRATEGIES = {"trend": "По тренду", "reversal": "Против движения", "long_only": "Только лонги"}
+AI_DEFAULT = {
+    "enabled": False, "startBalance": 1000.0, "betPercent": 5.0, "maxBet": 200.0, "leverage": 3, "maxPositions": 3,
+    "stopLossPct": 3.0, "takeProfitPct": 6.0, "holdHours": 6, "minMovePct": 1.5, "intervalMin": 15,
+    "strategy": "trend", "coins": [],
+}
+
+
+def clean_ai(raw):
+    out = dict(AI_DEFAULT)
+    try:
+        out["enabled"] = bool(raw.get("enabled", False))
+        out["startBalance"] = max(10.0, min(float(raw.get("startBalance", 1000)), 1000000.0))
+        out["betPercent"] = max(0.5, min(float(raw.get("betPercent", 5)), 50.0))
+        out["maxBet"] = max(1.0, min(float(raw.get("maxBet", 200)), 1000000.0))
+        out["leverage"] = max(1, min(int(raw.get("leverage", 3)), MAX_LEV))
+        out["maxPositions"] = max(1, min(int(raw.get("maxPositions", 3)), 10))
+        out["stopLossPct"] = max(0.0, min(float(raw.get("stopLossPct", 3)), 50.0))
+        out["takeProfitPct"] = max(0.0, min(float(raw.get("takeProfitPct", 6)), 200.0))
+        out["holdHours"] = max(1, min(int(raw.get("holdHours", 6)), 168))
+        out["minMovePct"] = max(0.0, min(float(raw.get("minMovePct", 1.5)), 50.0))
+        out["intervalMin"] = max(5, min(int(raw.get("intervalMin", 15)), 720))
+        out["strategy"] = raw.get("strategy") if raw.get("strategy") in AI_STRATEGIES else "trend"
+        out["coins"] = [c for c in (raw.get("coins") or []) if c in COINS]
+    except (TypeError, ValueError):
+        pass
+    return out
+
+
+def ai_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{AI_KEY}'")
+    row = cur.fetchone()
+    raw = {}
+    if row and row[0]:
+        try:
+            raw = json.loads(row[0])
+        except ValueError:
+            raw = {}
+    return clean_ai(raw)
+
+
+def ai_bot_id(cur):
+    cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_ai LIMIT 1")
+    r = cur.fetchone()
+    return int(r[0]) if r else None
+
+
+def ai_pick(s, ex, px, changes, held, free, open_count):
+    if open_count >= s["maxPositions"]:
+        return None
+    lev = max(1, min(int(s["leverage"]), int(ex["maxLeverage"])))
+    bet = round(min(free * s["betPercent"] / 100, s["maxBet"]), 2)
+    if bet < ex["minMargin"] or bet > free + 1e-9:
+        return None
+    cands = []
+    for c in COINS:
+        if c in held or c in ex["disabledCoins"] or (s["coins"] and c not in s["coins"]):
+            continue
+        if not px.get(c) or c not in changes:
+            continue
+        ch = changes[c]
+        if abs(ch) < s["minMovePct"]:
+            continue
+        if s["strategy"] == "long_only" and ch <= 0:
+            continue
+        cands.append((abs(ch), c))
+    if not cands:
+        return None
+    cands.sort(reverse=True)
+    coin = cands[0][1]
+    ch = changes[coin]
+    if s["strategy"] == "long_only":
+        side = "long"
+    elif s["strategy"] == "reversal":
+        side = "short" if ch > 0 else "long"
+    else:
+        side = "long" if ch > 0 else "short"
+    p = px[coin]
+    sl_pct = min(s["stopLossPct"], 90.0 / lev) if s["stopLossPct"] > 0 else 0.0
+    tp_pct = s["takeProfitPct"]
+    sign = 1 if side == "long" else -1
+    sl = p * (1 - sign * sl_pct / 100) if sl_pct > 0 else None
+    tp = p * (1 + sign * tp_pct / 100) if tp_pct > 0 else None
+    return {"coin": coin, "side": side, "leverage": lev, "margin": bet, "sl": sl, "tp": tp, "change": ch}
+
+
+def fetch_changes():
+    url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&include_24hr_change=true&ids=" + ",".join(COINS)
+    headers = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+    key = os.environ.get("COINGECKO_API_KEY", "")
+    if key:
+        headers["x-cg-demo-api-key"] = key
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=2) as r:
+        d = json.loads(r.read())
+    return {k: float(v["usd_24h_change"]) for k, v in d.items() if v.get("usd_24h_change") is not None}
+
+
+def ai_account(cur, bot):
+    cur.execute(f"INSERT INTO {SCHEMA}.paper_accounts (user_id, balance) VALUES ({bot}, 0) ON CONFLICT (user_id) DO NOTHING")
+
+
+def ai_fund(cur, bot, amount, kind, note):
+    ai_account(cur, bot)
+    if amount > 0:
+        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {amount} WHERE user_id = {bot}")
+    else:
+        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {abs(amount)} WHERE user_id = {bot} AND balance >= {abs(amount)} RETURNING user_id")
+        if not cur.fetchone():
+            return False
+    cur.execute(f"INSERT INTO {SCHEMA}.usdt_ledger (user_id, amount, kind, note) VALUES ({bot}, {amount}, '{kind}', '{q(note)}')")
+    return True
+
+
+def ai_close(cur, bot, row, px, reason):
+    pid, coin, side, margin, size, entry = row
+    p = px.get(coin)
+    if not p:
+        return False
+    margin, size, entry = float(margin), float(size), float(entry)
+    pnl = max(pnl_of(side, entry, size, p), -margin)
+    cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = {p}, pnl = {pnl}, close_reason = '{reason}', closed_at = NOW() WHERE id = {pid} AND status = 'open' RETURNING id")
+    if not cur.fetchone():
+        return False
+    cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {margin + pnl} WHERE user_id = {bot}")
+    return True
+
+
+def ai_snapshot(cur, bot, px):
+    cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {bot}")
+    row = cur.fetchone()
+    free = float(row[0]) if row else 0.0
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, size, entry_price, opened_at, sl, tp FROM {SCHEMA}.paper_positions WHERE user_id = {bot} AND status = 'open' ORDER BY id DESC")
+    positions, locked, unreal = [], 0.0, 0.0
+    for pid, coin, side, lev, margin, size, entry, at, sl, tp in cur.fetchall():
+        margin, size, entry = float(margin), float(size), float(entry)
+        price = px.get(coin, entry)
+        pnl = pnl_of(side, entry, size, price)
+        locked += margin
+        unreal += pnl
+        positions.append({"id": pid, "coinId": coin, "side": side, "leverage": lev, "margin": margin, "entry": entry, "price": price, "pnl": pnl, "openedAt": at.isoformat()})
+    cur.execute(f"SELECT COALESCE(SUM(margin), 0) FROM {SCHEMA}.paper_orders WHERE user_id = {bot} AND status = 'pending'")
+    locked += float(cur.fetchone()[0])
+    equity = free + locked + unreal
+    base = usdt_deposits(cur, bot)
+    return {"free": free, "locked": locked, "unrealized": unreal, "equity": equity, "deposits": base,
+            "pnl": equity - base if base > 0 else 0.0, "pnlPct": (equity - base) / base * 100 if base > 0 else 0.0, "positions": positions}
+
+
+def ai_claim_run(cur, interval_s, force):
+    now = int(time.time())
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{AI_RUN_KEY}'")
+    row = cur.fetchone()
+    if not row:
+        cur.execute(f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{AI_RUN_KEY}', '{now}', NOW()) ON CONFLICT (key) DO NOTHING RETURNING 1")
+        return bool(cur.fetchone())
+    try:
+        last = int(row[0])
+    except ValueError:
+        last = 0
+    if not force and now - last < interval_s:
+        return False
+    cur.execute(f"UPDATE {SCHEMA}.site_settings SET value = '{now}', updated_at = NOW() WHERE key = '{AI_RUN_KEY}' AND value = '{q(row[0])}' RETURNING 1")
+    return bool(cur.fetchone())
+
+
+def ai_trader_step(cur, px, started=None, force=False):
+    s = ai_settings(cur)
+    if not s["enabled"] or not px:
+        return {"ran": False, "reason": "off"}
+    if started is not None and time.time() - started > 2.5:
+        return {"ran": False, "reason": "busy"}
+    bot = ai_bot_id(cur)
+    if not bot:
+        return {"ran": False, "reason": "nobot"}
+    if not ai_claim_run(cur, s["intervalMin"] * 60, force):
+        return {"ran": False, "reason": "wait"}
+    ai_account(cur, bot)
+    process(cur, bot, px)
+    closed = opened = 0
+    cur.execute(
+        f"SELECT id, coin_id, side, margin, size, entry_price FROM {SCHEMA}.paper_positions "
+        f"WHERE user_id = {bot} AND status = 'open' AND opened_at <= NOW() - INTERVAL '{int(s['holdHours'])} hours'"
+    )
+    for row in cur.fetchall():
+        if ai_close(cur, bot, row, px, "time"):
+            closed += 1
+    ex = exchange_settings(cur)
+    if ex["enabled"]:
+        snap = ai_snapshot(cur, bot, px)
+        held = {p["coinId"] for p in snap["positions"]}
+        if len(held) < s["maxPositions"] and snap["free"] >= ex["minMargin"]:
+            try:
+                changes = fetch_changes()
+            except Exception as e:
+                print("ai changes error:", e)
+                changes = {}
+            plan = ai_pick(s, ex, px, changes, held, snap["free"], len(snap["positions"]))
+            if plan:
+                fee = trade_fee(ex, plan["margin"], plan["leverage"])
+                total = round(plan["margin"] + fee, 4)
+                cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {total} WHERE user_id = {bot} AND balance >= {total} RETURNING user_id")
+                if cur.fetchone():
+                    if fee > 0:
+                        cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({bot}, {fee}, 'fee', 'Комиссия сделки')")
+                    p = px[plan["coin"]]
+                    size = plan["margin"] * plan["leverage"] / p
+                    cur.execute(
+                        f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) "
+                        f"VALUES ({bot}, '{plan['coin']}', '{plan['side']}', {plan['leverage']}, {plan['margin']}, {size}, {p}, {sql_num(plan['sl'])}, {sql_num(plan['tp'])})"
+                    )
+                    opened = 1
+    return {"ran": True, "opened": opened, "closed": closed}
+
+
+def ai_admin_payload(cur, px):
+    bot = ai_bot_id(cur)
+    out = {"settings": ai_settings(cur), "botId": bot, "name": "AiTKA", "strategies": AI_STRATEGIES, "account": None, "trades": [], "lastRun": None}
+    if not bot:
+        return out
+    out["account"] = ai_snapshot(cur, bot, px)
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, close_reason, closed_at FROM {SCHEMA}.paper_positions WHERE user_id = {bot} AND status = 'closed' ORDER BY closed_at DESC LIMIT 15")
+    out["trades"] = [{"id": r[0], "coinId": r[1], "side": r[2], "leverage": r[3], "margin": float(r[4]), "entry": float(r[5]), "close": float(r[6]), "pnl": float(r[7]), "reason": r[8], "closedAt": r[9].isoformat()} for r in cur.fetchall()]
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{AI_RUN_KEY}'")
+    row = cur.fetchone()
+    try:
+        out["lastRun"] = int(row[0]) if row else None
+    except ValueError:
+        out["lastRun"] = None
+    return out
+
+
 def handler(event, context):
     """Тренировочная биржа: виртуальный счёт, рыночные и лимитные ордера, плечо, шорт, рейтинг"""
+    t0 = time.time()
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -570,7 +809,8 @@ def handler(event, context):
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             finish_due(cur)
-            return resp(200, {"checked": tick(cur, px)})
+            checked = tick(cur, px)
+            return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
         if method == "GET" and action == "exchange_settings":
             return resp(200, exchange_settings(cur))
         if method == "GET" and action == "fund":
@@ -607,10 +847,18 @@ def handler(event, context):
                 return resp(400, {"error": "Не указан участник"})
             return resp(200, {"stats": public_stats(cur, int(uid_q), px)})
         if method == "GET" and action == "leaderboard":
+            try:
+                ai_trader_step(cur, px, started=t0)
+            except Exception as e:
+                print("ai trader error:", e)
             return resp(200, {"leaders": leaderboard(cur, px)})
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "ai_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            return resp(200, ai_admin_payload(cur, px))
         if method == "GET" and action == "exchange_admin":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
@@ -647,6 +895,47 @@ def handler(event, context):
             return resp(200, state(cur, uid, px))
         body = json.loads(event.get("body") or "{}")
         act = body.get("action")
+        if act in ("ai_save", "ai_fund", "ai_run", "ai_close_all", "ai_reset"):
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            bot = ai_bot_id(cur)
+            if not bot:
+                return resp(404, {"error": "Бот AiTKA не найден"})
+            if act == "ai_save":
+                new = clean_ai(body)
+                val = qj(json.dumps(new, ensure_ascii=False))
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{AI_KEY}', '{val}', NOW()) "
+                    f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+                )
+            elif act == "ai_fund":
+                try:
+                    amount = round(float(body.get("amount", 0)), 2)
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Укажите сумму"})
+                if amount == 0 or abs(amount) > 1000000:
+                    return resp(400, {"error": "Сумма от 1 до 1 000 000, плюс — пополнить, минус — забрать"})
+                if not ai_fund(cur, bot, amount, "ai_admin", "Пополнение админом" if amount > 0 else "Списание админом"):
+                    return resp(400, {"error": "У AiTKA нет столько свободных USDT"})
+            elif act == "ai_run":
+                ai_trader_step(cur, px, force=True)
+            elif act == "ai_close_all":
+                cur.execute(f"SELECT id, coin_id, side, margin, size, entry_price FROM {SCHEMA}.paper_positions WHERE user_id = {bot} AND status = 'open'")
+                for row in cur.fetchall():
+                    ai_close(cur, bot, row, px, "manual")
+            elif act == "ai_reset":
+                cur.execute(f"SELECT id, coin_id, side, margin, size, entry_price FROM {SCHEMA}.paper_positions WHERE user_id = {bot} AND status = 'open'")
+                for row in cur.fetchall():
+                    ai_close(cur, bot, row, px, "manual")
+                cur.execute(f"UPDATE {SCHEMA}.paper_orders SET status = 'cancelled', done_at = NOW() WHERE user_id = {bot} AND status = 'pending'")
+                cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {bot}")
+                row = cur.fetchone()
+                have = float(row[0]) if row else 0.0
+                target = ai_settings(cur)["startBalance"]
+                if target != have:
+                    ai_fund(cur, bot, round(target - have, 2), "ai_admin", "Сброс счёта AiTKA")
+                cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET resets = resets + 1, reset_at = NOW() WHERE user_id = {bot}")
+            return resp(200, ai_admin_payload(cur, px))
         if act == "exchange_save":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
