@@ -258,3 +258,4 @@ def handler(event: dict, context) -> dict:
     finally:
         cur.close()
         conn.close()
+

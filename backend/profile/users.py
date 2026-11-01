@@ -331,7 +331,9 @@ def handle_users(event: dict) -> dict:
             if body.get("on"):
                 grant_supporter(cur, SCHEMA, uid)
             else:
-                promo = "" if r[1] else ", promo_code = NULL, supported_at = NULL"
+                promo = "" if r[1] else (
+                    ", supported_at = NULL, promo_code = CASE WHEN promo_code LIKE 'BAA%' THEN 'TRK' || LPAD(id::text, 4, '0') ELSE promo_code END"
+                )
                 cur.execute(f"UPDATE {SCHEMA}.users SET supporter_no = NULL{promo} WHERE id = {uid}")
             cur.execute(f"{base} WHERE u.id = {uid}")
             return resp(200, {"user": to_user(cur.fetchone(), True)})

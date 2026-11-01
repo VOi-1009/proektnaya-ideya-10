@@ -21,7 +21,7 @@ const DonateClaim = ({ open }: { open: boolean }) => {
   if (user?.supporter || user?.creator)
     return (
       <div className="flex items-center gap-2 rounded-lg bg-emerald-400/10 border border-emerald-400/25 px-3 py-2.5 text-sm text-emerald-200">
-        <Icon name="HeartHandshake" size={16} /> Вы уже поддержали проект — спасибо! Промокод в личном кабинете.
+        <Icon name="HeartHandshake" size={16} /> Вы уже поддержали проект — спасибо! Особый промокод в личном кабинете.
       </div>
     );
 
@@ -48,7 +48,7 @@ const DonateClaim = ({ open }: { open: boolean }) => {
       setForm(false);
       setAmount("");
       setComment("");
-      toast({ title: "Заявка отправлена", description: "Как только перевод подтвердят — получите значок и промокод." });
+      toast({ title: "Заявка отправлена", description: "Как только перевод подтвердят — получите значок и особый промокод." });
     } catch (e) {
       toast({ title: "Не получилось", description: (e as Error).message, variant: "destructive" });
     } finally {
@@ -71,7 +71,7 @@ const DonateClaim = ({ open }: { open: boolean }) => {
           Я перевёл
         </Button>
         <p className="text-[11px] text-muted-foreground text-center">
-          {user ? "Сообщите о переводе — получите значок «Поддержал проект» и личный промокод" : "Войдите, чтобы сообщить о переводе и получить значок и промокод"}
+          {user ? "Сообщите о переводе — получите значок «Поддержал проект» и особый код BAA" : "Войдите, чтобы сообщить о переводе и получить значок и промокод"}
         </p>
       </div>
     );

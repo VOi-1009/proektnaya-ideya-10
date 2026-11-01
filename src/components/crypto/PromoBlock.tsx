@@ -19,7 +19,7 @@ const PromoBlock = ({ promo, supporter, creator }: Props) => {
         <div className="flex-1">
           <h2 className="font-display text-lg text-white">Личный промокод</h2>
           <p className="text-muted-foreground text-sm mt-1">
-            Поддержите проект — получите значок «Поддержал проект», доступ в Премиум-чат и личный промокод для будущих возможностей сайта.
+            Войдите в аккаунт, и личный промокод появится сразу. А поддержав проект, вы получите значок «Поддержал проект» и доступ в Премиум-чат.
           </p>
         </div>
         <DonateButton />

@@ -1202,12 +1202,10 @@ def shop_do(cur, uid, act, body):
         code = re.sub(r"\s+", "", str(body.get("code") or "")).upper()
         if not re.fullmatch(r"[A-Z0-9]{4,16}", code):
             return 400, {"error": "Промокод: от 4 до 16 символов, только латинские буквы и цифры"}
-        if re.fullmatch(r"BAA\d+", code):
-            return 400, {"error": "Коды вида BAA и цифры зарезервированы за поддержавшими проект"}
+        if re.fullmatch(r"(BAA|TRK)\d+", code):
+            return 400, {"error": "Коды вида BAA и TRK с цифрами выдаёт система, придумайте свой"}
         cur.execute(f"SELECT COALESCE(promo_code, '') FROM {SCHEMA}.users WHERE id = {uid}")
         old = (cur.fetchone() or [""])[0]
-        if not old:
-            return 400, {"error": "Личный промокод появляется после поддержки проекта, менять пока нечего"}
         if old.upper() == code:
             return 400, {"error": "Это ваш текущий промокод"}
         cur.execute(
@@ -2465,3 +2463,4 @@ def handler(event, context):
     finally:
         cur.close()
         conn.close()
+

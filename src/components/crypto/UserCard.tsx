@@ -57,7 +57,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
 
   const setSupporter = async (on: boolean) => {
     if (!u) return;
-    if (!on && !window.confirm(`Снять отметку «Поддержал проект» с ${u.name}? Промокод ${u.promo} будет удалён.`)) return;
+    if (!on && !window.confirm(`Снять отметку «Поддержал проект» с ${u.name}? Премиум-чат и значок будут сняты, промокод заменится на обычный.`)) return;
     setBusy(true);
     try {
       const { user } = await usersRequest<{ user: AdminUser }>(token, "", { action: "set-supporter", userId: u.id, on });
@@ -149,7 +149,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
                     {u.promo ? (
                       <>Промокод: <span className="font-mono text-emerald-200">{u.promo}</span>{u.supporter ? ` · №${u.supporter}` : ""}</>
                     ) : (
-                      "Значок, доступ в Премиум-чат и личный промокод"
+                      "Значок и доступ в Премиум-чат"
                     )}
                   </div>
                 </div>

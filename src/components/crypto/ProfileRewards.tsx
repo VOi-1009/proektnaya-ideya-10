@@ -45,7 +45,7 @@ const ProfileRewards = ({ level, achievements, special, founder, foundersTaken, 
           </button>
         ) : (
           <div className="space-y-3">
-            <p className="text-muted-foreground text-xs">Поддержите проект и получите значок, Премиум-чат и личный промокод.</p>
+            <p className="text-muted-foreground text-xs">Код появится сразу после регистрации. Поддержите проект и получите значок и Премиум-чат.</p>
             <DonateButton />
           </div>
         )}

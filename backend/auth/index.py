@@ -135,6 +135,10 @@ def handler(event: dict, context) -> dict:
         else:
             return resp(400, {"error": "Неизвестное действие"})
 
+        cur.execute(
+            f"UPDATE {SCHEMA}.users SET promo_code = 'TRK{int(user_id):04d}' "
+            f"WHERE id = {int(user_id)} AND (promo_code IS NULL OR promo_code = '') AND NOT is_bot AND NOT is_ai"
+        )
         new_token = create_session(cur, user_id)
         cur.execute(f"UPDATE {SCHEMA}.users SET last_seen_at = NOW() WHERE id = {int(user_id)}")
         claim_founder(cur, user_id)

@@ -237,12 +237,11 @@ const ShopChannel = () => {
               <Input maxLength={16} value={code} onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())} placeholder="Например, TRADER777" className="font-mono" />
             </label>
             <p className="text-[11px] text-muted-foreground">
-              Спишется {shopFmt(promoItem.price)} TKA. Вернуть старый код бесплатно нельзя, а занятые коды выбрать не получится.
+              Спишется {shopFmt(promoItem.price)} TKA. Прежний код освободится, вернуть его бесплатно нельзя. Занятые коды выбрать не получится.
             </p>
-            <Button className="w-full font-semibold" disabled={busy === promoItem.id || code.length < 4 || !data.promo} onClick={changePromo}>
+            <Button className="w-full font-semibold" disabled={busy === promoItem.id || code.length < 4} onClick={changePromo}>
               Сменить за {shopFmt(promoItem.price)} TKA
             </Button>
-            {!data.promo && <p className="text-[11px] text-muted-foreground">Личный промокод появляется после поддержки проекта, поэтому менять пока нечего.</p>}
           </div>
         </div>
       )}
