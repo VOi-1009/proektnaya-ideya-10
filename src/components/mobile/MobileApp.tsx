@@ -9,13 +9,14 @@ import InstallBanner from "./InstallBanner";
 import { chooseDesktop, chooseMobile } from "@/lib/mobile";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import MobileProfile from "./MobileProfile";
+import MobileCommunity from "./MobileCommunity";
 
 const MobileApp = () => {
   const { user, setAuthOpen } = useAuth();
   const { data, isLoading } = useMobileSettings();
   const { data: gfx } = useGraphics();
   const [tab, setTabRaw] = useState("");
-  const [page, setPage] = useState<"" | "me">("");
+  const [page, setPage] = useState<"" | "me" | "community">("");
   const setTab = (id: string) => {
     setPage("");
     setTabRaw(id);
@@ -80,9 +81,14 @@ const MobileApp = () => {
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black text-lg">Т</div>
         )}
         <div className="flex items-center justify-end">
-          <a href="/community" aria-label="Сообщество" title="Сообщество" className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-white active:bg-hover/60">
+          <button
+            onClick={() => { setPage(page === "community" ? "" : "community"); window.scrollTo({ top: 0 }); }}
+            aria-label="Сообщество"
+            title="Сообщество"
+            className={`w-9 h-9 rounded-full flex items-center justify-center active:bg-hover/60 ${page === "community" ? "text-primary" : "text-muted-foreground hover:text-white"}`}
+          >
             <Icon name="Users" size={22} />
-          </a>
+          </button>
         </div>
       </header>
 
@@ -90,7 +96,9 @@ const MobileApp = () => {
         <a href="/?full=1" onClick={() => chooseDesktop()} className="text-[11px] text-muted-foreground hover:text-white inline-flex items-center gap-1">
           <Icon name="Monitor" size={12} /> Полная версия сайта
         </a>
-        {page === "me" ? (
+        {page === "community" ? (
+          <MobileCommunity onClose={() => setPage("")} />
+        ) : page === "me" ? (
           <MobileProfile onClose={() => setPage("")} onWallet={() => setTab(tabs.find((t) => t.id === "profile")?.id ?? first?.id ?? "")} />
         ) : (
           <>
@@ -111,7 +119,7 @@ const MobileApp = () => {
       <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border grid items-end" style={{ gridTemplateColumns: `repeat(${Math.max(tabs.length, 1)}, minmax(0, 1fr))` }}>
         {tabs.map((t, i) => {
           const center = tabs.length % 2 === 1 && tabs.length >= 3 && i === (tabs.length - 1) / 2;
-          const active = page !== "me" && current?.id === t.id;
+          const active = page === "" && current?.id === t.id;
           const icon = t.icon || MOBILE_SECTIONS[t.id]?.icon || "Circle";
           const label = t.label || MOBILE_SECTIONS[t.id]?.label;
           if (center) {
