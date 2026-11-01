@@ -213,20 +213,6 @@ const TradingChannel = ({ coins, go }: Props) => {
         <TopTradesFeed />
         </div>
         <div className="space-y-4 min-w-0">
-        <ExchangeCard st={st} busy={busy} send={send} token={token} />
-        <FundCard go={go} />
-        <AiTraderCard />
-        {go && (
-          <button
-            onClick={() => go("converter")}
-            className="w-full flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-white hover:border-primary/50 hover:bg-hover/40 transition-colors"
-          >
-            <Icon name="Calculator" size={16} className="text-primary" />
-            Калькуляторы
-            <span className="ml-auto text-xs text-muted-foreground">размер позиции, ликвидация, прибыль</span>
-            <Icon name="ChevronRight" size={14} className="text-muted-foreground" />
-          </button>
-        )}
         <TradeForm
           coins={coins}
           coinId={coinId}
@@ -253,6 +239,20 @@ const TradingChannel = ({ coins, go }: Props) => {
           submit={submit}
           send={send}
         />
+        <ExchangeCard st={st} busy={busy} send={send} token={token} />
+        <FundCard go={go} />
+        <AiTraderCard />
+        {go && (
+          <button
+            onClick={() => go("converter")}
+            className="w-full flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-white hover:border-primary/50 hover:bg-hover/40 transition-colors"
+          >
+            <Icon name="Calculator" size={16} className="text-primary" />
+            Калькуляторы
+            <span className="ml-auto text-xs text-muted-foreground">размер позиции, ликвидация, прибыль</span>
+            <Icon name="ChevronRight" size={14} className="text-muted-foreground" />
+          </button>
+        )}
         </div>
 
       </div>
