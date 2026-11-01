@@ -34,7 +34,15 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
   if (b.kind === "image") {
     const f = Math.max(0, Math.min(b.fade ?? 0, 100));
     const mask = f > 0 ? `linear-gradient(to bottom, #000 ${Math.round(100 - f)}%, transparent 100%)` : undefined;
-    const img = (
+    const img = b.image ? (
+      <img
+        src={b.image}
+        alt={b.title || ""}
+        loading="lazy"
+        className={`w-full object-cover ${f > 0 ? "" : "rounded-xl border border-border"}`}
+        style={mask ? { WebkitMaskImage: mask, maskImage: mask } : undefined}
+      />
+    ) : (
       <div
         className={`w-full min-h-[140px] flex items-center justify-center ${f > 0 ? "" : "rounded-xl border border-border"}`}
         style={mask ? { WebkitMaskImage: mask, maskImage: mask } : undefined}
