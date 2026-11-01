@@ -15,15 +15,16 @@ const MobileApp = () => {
   const [tab, setTab] = useState("");
   const s = data?.settings;
   const tabs = (s?.tabs ?? []).filter((t) => t.enabled);
-  const current = tabs.find((t) => t.id === tab) ?? tabs[0];
+  const first = tabs.find((t) => t.id === "home") ?? tabs[0];
+  const current = tabs.find((t) => t.id === tab) ?? first;
 
   useEffect(() => {
     chooseMobile();
   }, []);
 
   useEffect(() => {
-    if (!tab && tabs[0]) setTab(tabs[0].id);
-  }, [tab, tabs]);
+    if (!tab && first) setTab(first.id);
+  }, [tab, first]);
 
   if (isLoading || !s) {
     return (
