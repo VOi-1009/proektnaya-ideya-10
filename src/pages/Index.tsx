@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMarkets } from "@/lib/crypto";
+import { useMobileRedirect } from "@/lib/mobile";
 import Ticker from "@/components/crypto/Ticker";
 import { getSeen, useNews } from "@/components/crypto/news";
 import { usePriceAlerts } from "@/lib/alerts";
@@ -11,6 +12,7 @@ import HomeMain from "@/components/crypto/home/HomeMain";
 import { CHANNELS, PINNED } from "@/components/crypto/home/homeConfig";
 
 const Index = () => {
+  useMobileRedirect();
   const { data, isLoading, dataUpdatedAt } = useMarkets();
   const coins = data?.coins ?? [];
   const [channel, setChannel] = useState("welcome");

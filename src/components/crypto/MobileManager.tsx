@@ -110,6 +110,13 @@ const MobileManager = ({ token }: { token: string | null }) => {
             <span className="text-xs text-muted-foreground">Название в шапке</span>
             <input className={inputCls} maxLength={30} value={f.title} onChange={(e) => set("title", e.target.value)} />
           </label>
+          <label className="flex items-start gap-2 text-sm text-white cursor-pointer">
+            <Switch checked={f.redirect} onCheckedChange={(v) => set("redirect", v)} className="mt-0.5" />
+            <span>
+              Автопереход с телефонов
+              <span className="block text-[11px] text-muted-foreground">Посетителей с телефона с главной страницы перенаправляет на /m. Включайте, когда версия будет готова.</span>
+            </span>
+          </label>
           <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
             <Switch checked={f.bigButtons} onCheckedChange={(v) => set("bigButtons", v)} />
             Крупные кнопки в нижнем меню

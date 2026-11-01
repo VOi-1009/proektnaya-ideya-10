@@ -1548,6 +1548,7 @@ MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link"]
 MOBILE_DEFAULT = {
     "enabled": True,
     "message": "",
+    "redirect": False,
     "title": "TRADERKA",
     "bigButtons": True,
     "tabs": [
@@ -1571,6 +1572,7 @@ def clean_mobile(raw):
         return out
     out["enabled"] = bool(raw.get("enabled", True))
     out["message"] = str(raw.get("message") or "")[:200]
+    out["redirect"] = bool(raw.get("redirect", False))
     out["title"] = str(raw.get("title") or "TRADERKA")[:30].strip() or "TRADERKA"
     out["bigButtons"] = bool(raw.get("bigButtons", True))
     tabs = []

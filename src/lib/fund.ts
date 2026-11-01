@@ -299,6 +299,7 @@ export interface MobileBlock {
 export interface MobileSettings {
   enabled: boolean;
   message: string;
+  redirect: boolean;
   title: string;
   bigButtons: boolean;
   tabs: MobileTab[];
