@@ -10,7 +10,7 @@ import MobileBlockView from "@/components/mobile/MobileBlockView";
 const inputCls =
   "w-full bg-rail rounded px-3 h-9 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
 
-const KINDS: Record<string, string> = { empty: "Пустой (заполним позже)", text: "Текст", banner: "Баннер", link: "Ссылка", market_summary: "Рыночная сводка", bullbear: "Игра «Бык или медведь»", exchange: "Биржа: график, сделки, обменник", wallet: "Кошелёк: TKA и данные биржи", image: "Картинка", trades: "Лента последних сделок", my_coins: "Мои монеты: BTC, ETH и 4 на выбор" };
+const KINDS: Record<string, string> = { empty: "Пустой (заполним позже)", text: "Текст", banner: "Баннер", link: "Ссылка", market_summary: "Рыночная сводка", bullbear: "Игра «Бык или медведь»", exchange: "Биржа: график, сделки, обменник", wallet: "Кошелёк: TKA и данные биржи", image: "Картинка", trades: "Лента последних сделок", my_coins: "Мои монеты: BTC, ETH и 4 на выбор", wallet_mini: "Мини-кошелёк: TKA, USDT и общий PnL" };
 type Data = { settings: MobileSettings; sections: string[] };
 
 const MobileManager = ({ token }: { token: string | null }) => {
@@ -259,7 +259,7 @@ const MobileManager = ({ token }: { token: string | null }) => {
                     <input className={inputCls} maxLength={300} placeholder="Ссылка при нажатии (необязательно): /community или https://…" value={b.url} onChange={(e) => setBlock(b.id, { url: e.target.value })} />
                   </>
                 )}
-                {b.kind !== "empty" && b.kind !== "image" && b.kind !== "market_summary" && b.kind !== "bullbear" && b.kind !== "exchange" && b.kind !== "wallet" && b.kind !== "trades" && b.kind !== "my_coins" && (
+                {b.kind !== "empty" && b.kind !== "image" && b.kind !== "market_summary" && b.kind !== "bullbear" && b.kind !== "exchange" && b.kind !== "wallet" && b.kind !== "trades" && b.kind !== "my_coins" && b.kind !== "wallet_mini" && (
                   <>
                     <input className={inputCls} maxLength={60} placeholder="Заголовок" value={b.title} onChange={(e) => setBlock(b.id, { title: e.target.value })} />
                     <textarea className={`${inputCls} h-20 py-2 resize-none`} maxLength={400} placeholder="Текст" value={b.text} onChange={(e) => setBlock(b.id, { text: e.target.value })} />
