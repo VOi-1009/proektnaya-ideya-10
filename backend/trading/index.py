@@ -27,6 +27,8 @@ CORS = {
     "Access-Control-Max-Age": "86400",
 }
 _cache = {"at": 0.0, "data": {}}
+_okx = {"at": 0.0, "data": {}}
+_chg = {"at": 0.0, "data": {}}
 _kcache = {}
 _top = {"at": 0.0, "data": None}
 _feed = {"at": 0.0, "data": None}
@@ -92,20 +94,46 @@ def resp(status, body):
     return {"statusCode": status, "headers": {**CORS, "Content-Type": "application/json"}, "body": json.dumps(body, ensure_ascii=False)}
 
 
+def okx_tickers():
+    now = time.time()
+    if _okx["data"] and now - _okx["at"] < 20:
+        return _okx["data"]
+    try:
+        rows = http_json("https://www.okx.com/api/v5/market/tickers?instType=SPOT").get("data") or []
+        by = {r.get("instId"): r for r in rows}
+        out = {}
+        for coin, sym in SYM.items():
+            r = by.get(f"{sym}-USDT")
+            if not r:
+                continue
+            last, opened = float(r["last"]), float(r.get("open24h") or 0)
+            if last > 0:
+                out[coin] = {"price": last, "change": (last / opened - 1) * 100 if opened > 0 else None}
+        if out:
+            _okx.update(at=now, data=out)
+    except Exception as e:
+        print("okx tickers error:", e)
+    return _okx["data"]
+
+
 def prices():
     now = time.time()
     if _cache["data"] and now - _cache["at"] < 20:
         return _cache["data"]
+    data = {}
     try:
         url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=" + ",".join(COINS)
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=4) as r:
+        with urllib.request.urlopen(req, timeout=2.5) as r:
             d = json.loads(r.read())
         data = {k: float(v["usd"]) for k, v in d.items() if v.get("usd")}
-        if data:
-            _cache.update(at=now, data={**_cache["data"], **data})
     except Exception as e:
         print("price error:", e)
+    if len(data) < len(COINS):
+        for coin, t in okx_tickers().items():
+            data.setdefault(coin, t["price"])
+    if data:
+        _cache.update(at=now, data={**_cache["data"], **data})
     return _cache["data"]
 
 
@@ -773,16 +801,39 @@ def ai_pick(s, ex, px, changes, held, free, open_count, level=1):
     return {"coin": coin, "side": side, "leverage": lev, "margin": bet, "sl": sl, "tp": tp, "change": ch}, ""
 
 
-def fetch_changes():
-    url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&include_24hr_change=true&ids=" + ",".join(COINS)
-    headers = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+def coingecko_changes(only=None):
+    ids = [c for c in (only or COINS)]
+    url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&include_24hr_change=true&ids=" + ",".join(ids)
+    base = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
     key = os.environ.get("COINGECKO_API_KEY", "")
-    if key:
-        headers["x-cg-demo-api-key"] = key
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=2) as r:
-        d = json.loads(r.read())
-    return {k: float(v["usd_24h_change"]) for k, v in d.items() if v.get("usd_24h_change") is not None}
+    last = None
+    for headers in ([{**base, "x-cg-demo-api-key": key}] if key else []) + [base]:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=2) as r:
+                d = json.loads(r.read())
+            return {k: float(v["usd_24h_change"]) for k, v in d.items() if v.get("usd_24h_change") is not None}
+        except Exception as e:
+            last = e
+    raise last
+
+
+def fetch_changes():
+    now = time.time()
+    if _chg["data"] and now - _chg["at"] < 60:
+        return _chg["data"]
+    out = {c: t["change"] for c, t in okx_tickers().items() if t.get("change") is not None}
+    missing = [c for c in COINS if c not in out]
+    if missing:
+        try:
+            out.update(coingecko_changes(missing))
+        except Exception as e:
+            print("coingecko changes error:", e)
+    if out:
+        _chg.update(at=now, data=out)
+        return out
+    if _chg["data"] and now - _chg["at"] < 1800:
+        return _chg["data"]
+    raise RuntimeError("нет данных о движении монет")
 
 
 COIN_RU = {"bitcoin": "Bitcoin", "ethereum": "Ethereum", "binancecoin": "BNB", "ripple": "XRP", "solana": "Solana", "dogecoin": "Dogecoin", "hyperliquid": "Hyperliquid", "zcash": "Zcash", "tron": "TRON", "cardano": "Cardano", "chainlink": "Chainlink", "stellar": "Stellar", "avalanche-2": "Avalanche", "sui": "Sui", "shiba-inu": "Shiba Inu", "the-open-network": "Gram", "hedera-hashgraph": "Hedera", "litecoin": "Litecoin"}
