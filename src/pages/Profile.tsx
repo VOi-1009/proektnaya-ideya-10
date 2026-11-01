@@ -12,6 +12,7 @@ import { LEVELS } from "@/lib/status";
 import { Achievement } from "@/components/crypto/Achievements";
 import TkaDailyCalendar from "@/components/crypto/TkaDailyCalendar";
 import TkaWalletCard from "@/components/crypto/TkaWalletCard";
+import FundBadges from "@/components/crypto/FundBadges";
 import TradingStats from "@/components/crypto/TradingStats";
 import ProfileRewards from "@/components/crypto/ProfileRewards";
 import FounderBadge from "@/components/crypto/FounderBadge";
@@ -429,6 +430,7 @@ const Profile = () => {
               </section>
               {profile.team && <TeamCard info={profile.team} onChange={changeTeam} />}
               <TkaWalletCard token={token} />
+              <FundBadges token={token} />
               <TkaDailyCalendar token={token} />
               <TradingStats token={token} />
               <ProfileRewards level={s.level} achievements={profile.achievements} special={profile.special} founder={profile.founder} foundersTaken={profile.foundersTaken} promo={profile.promo} streak={profile.stats.streak ?? 0} />
