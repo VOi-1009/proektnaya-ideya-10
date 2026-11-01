@@ -15,6 +15,7 @@ interface AdminData {
   bank: number;
   titles: string[];
   wheel: number[];
+  bbActive?: { count: number; sum: number };
   stats: { count: number; players: number; bets: number; payouts: number; result: number; day: number };
   per: { game: string; count: number; bets: number; payouts: number }[];
   recent: GameRow[];
@@ -137,6 +138,21 @@ const GamesManager = ({ token }: { token: string | null }) => {
                   {name}
                 </label>
               ))}
+            </div>
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-white font-semibold">
+                <img src="/icons/bull.png" alt="" className="w-6 h-6 rounded" />
+                <img src="/icons/bear.png" alt="" className="w-6 h-6 rounded" />
+                Бык или медведь
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Num label="Длительность, мин" value={f.bbMinutes} min={1} max={60} onChange={(v) => set("bbMinutes", v)} />
+                <Num label="Множитель выигрыша" hint="x1,9 значит ставка 10 даёт 19" value={f.bbMult} min={1.1} max={3} step={0.05} onChange={(v) => set("bbMult", v)} />
+                <Num label="Макс. ставка, TKA" value={f.bbMaxBet} min={1} onChange={(v) => set("bbMaxBet", v)} />
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Раунд идёт на сервере и закрывается сам, даже если игрок закрыл сайт. При равной цене ставка возвращается. Сейчас идёт раундов: {data.bbActive?.count ?? 0} на {fundFmt(data.bbActive?.sum ?? 0)} TKA. При множителе x{String(f.bbMult).replace(".", ",")} фонд в среднем получает {(100 - (f.bbMult / 2) * 100).toFixed(1).replace(".", ",")}% с каждой ставки.
+              </p>
             </div>
             <div className="rounded-lg bg-rail/50 px-3 py-2 text-[11px] text-muted-foreground leading-snug space-y-0.5">
               <div>Возврат игроку при текущих настройках (в среднем):</div>

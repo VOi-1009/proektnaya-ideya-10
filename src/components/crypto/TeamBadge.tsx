@@ -17,7 +17,7 @@ const TeamBadge = ({ team, compact, className = "" }: Props) => {
         compact ? "px-1.5 py-1 text-[9px]" : "px-2.5 py-1 text-xs"
       } ${className}`}
     >
-      <Icon name={t.icon} size={compact ? 10 : 12} />
+      <img src={team === "bull" ? "/icons/bull.png" : "/icons/bear.png"} alt="" className={`rounded-full object-cover ${compact ? "w-3.5 h-3.5" : "w-4 h-4"}`} />
       {!compact && t.title}
     </span>
   );

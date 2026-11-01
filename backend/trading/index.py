@@ -1181,12 +1181,13 @@ def shop_admin(cur):
 _rng = secrets.SystemRandom()
 GAMES_KEY = "games_settings"
 GAMES_LOCK = 7101
-GAME_NAMES = {"coin": "Монетка", "dice": "Кости", "wheel": "Колесо удачи", "rocket": "Ракета"}
+GAME_NAMES = {"coin": "Монетка", "dice": "Кости", "wheel": "Колесо удачи", "rocket": "Ракета", "bullbear": "Бык или медведь"}
 WHEEL = [0, 1, 0.5, 2, 0, 0.5, 1.5, 0, 0.5, 3, 0, 0.5, 1, 0, 1.5, 0.5, 5, 0, 1, 0.5]
 GAMES_DEFAULT = {
     "enabled": True, "message": "", "minBet": 1.0, "maxBet": 100.0, "dailyLimit": 100, "cooldownSec": 2,
     "houseEdge": 3.0, "minLevel": 1, "rocketMaxMult": 20.0, "dailyWinCap": 1000.0,
-    "games": {"coin": True, "dice": True, "wheel": True, "rocket": True},
+    "bbMinutes": 5, "bbMult": 1.9, "bbMaxBet": 50.0,
+    "games": {"coin": True, "dice": True, "wheel": True, "rocket": True, "bullbear": True},
 }
 
 
@@ -1215,6 +1216,9 @@ def clean_games(raw):
         out["minLevel"] = max(1, min(int(raw.get("minLevel", 1)), MAX_LEVEL))
         out["rocketMaxMult"] = max(1.5, min(float(raw.get("rocketMaxMult", 20)), 1000.0))
         out["dailyWinCap"] = max(0.0, min(float(raw.get("dailyWinCap", 1000)), 1e9))
+        out["bbMinutes"] = max(1, min(int(raw.get("bbMinutes", 5)), 60))
+        out["bbMult"] = max(1.1, min(round(float(raw.get("bbMult", 1.9)), 2), 3.0))
+        out["bbMaxBet"] = max(out["minBet"], min(float(raw.get("bbMaxBet", 50)), 1000000.0))
         g = raw.get("games") or {}
         for k in GAME_NAMES:
             out["games"][k] = bool(g.get(k, True))
@@ -1230,6 +1234,7 @@ def game_mults(gs):
         "dice": {"under": round(36 / 15 * (1 - e), 2), "seven": round(6 * (1 - e), 2), "over": round(36 / 15 * (1 - e), 2)},
         "wheel": WHEEL,
         "rocket": {"max": gs["rocketMaxMult"], "edge": gs["houseEdge"]},
+        "bullbear": {"mult": gs["bbMult"], "minutes": gs["bbMinutes"], "maxBet": gs["bbMaxBet"]},
     }
 
 
@@ -1242,12 +1247,151 @@ def games_recent(cur, uid=None, limit=10):
     return [{"id": r[0], "game": r[1], "bet": float(r[2]), "payout": float(r[3]), "mult": float(r[4]), "at": r[5].isoformat(), "name": r[6]} for r in cur.fetchall()]
 
 
+def bb_prices():
+    res = candles("bitcoin", "1m")
+    rows = (res or {}).get("candles") or []
+    return rows
+
+
+def bb_settle_due(cur, uid=None, limit=20):
+    where = f"AND user_id = {int(uid)}" if uid else ""
+    cur.execute(
+        f"SELECT id, user_id, side, bet, mult, entry_price, EXTRACT(EPOCH FROM (ends_at - NOW())) FROM {SCHEMA}.games_bb_rounds "
+        f"WHERE ((status = 'active' AND ends_at <= NOW()) OR (status = 'settling' AND settled_at <= NOW() - INTERVAL '5 minutes')) {where} ORDER BY id LIMIT {int(limit)}"
+    )
+    due = cur.fetchall()
+    if not due:
+        return
+    rows = bb_prices()
+    gs = games_settings(cur)
+    now = time.time()
+    for rid, ruid, side, bet, mult, entry, remain in due:
+        bet, mult, entry = float(bet), float(mult), float(entry)
+        end_ms = (now + float(remain)) * 1000
+        exit_price = None
+        for c in rows:
+            if c[0] >= end_ms:
+                exit_price = c[1]
+                break
+        late = -float(remain) > 600
+        if exit_price is None and not late:
+            continue
+        cur.execute(
+            f"UPDATE {SCHEMA}.games_bb_rounds SET status = 'settling', settled_at = NOW() WHERE id = {rid} "
+            f"AND (status = 'active' OR (status = 'settling' AND settled_at <= NOW() - INTERVAL '5 minutes')) RETURNING id"
+        )
+        if not cur.fetchone():
+            continue
+        if exit_price is None or abs(exit_price - entry) < entry * 1e-9:
+            status, payout = "void", round(bet, 2)
+        else:
+            up = exit_price > entry
+            win = (side == "bull" and up) or (side == "bear" and not up)
+            status, payout = ("win", round(bet * mult, 2)) if win else ("lose", 0.0)
+        if payout > 0:
+            payout = round(min(payout, max(fund_total(cur), 0.0)), 2)
+            cur.execute(f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) VALUES ({ruid}, {payout}, 'game', 'Бык или медведь: выплата')")
+            cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({ruid}, -{payout}, 'game', 'Бык или медведь: выплата')")
+        det = q(json.dumps({"side": side, "entry": entry, "exit": exit_price, "status": status}))[:190]
+        cur.execute(
+            f"UPDATE {SCHEMA}.games_bb_rounds SET status = '{status}', exit_price = {sql_num(exit_price)}, payout = {payout}, settled_at = NOW() WHERE id = {rid}"
+        )
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.games_log (user_id, game, bet, payout, mult, detail) VALUES ({ruid}, 'bullbear', {bet}, {payout}, {mult if status == 'win' else 0}, '{det}')"
+        )
+
+
+def bb_state(cur, uid=None):
+    rows = bb_prices()
+    price = rows[-1][4] if rows else None
+    out = {"price": price, "active": None, "last": None}
+    if uid:
+        cur.execute(
+            f"SELECT id, side, bet, mult, entry_price, EXTRACT(EPOCH FROM (ends_at - NOW())) FROM {SCHEMA}.games_bb_rounds "
+            f"WHERE user_id = {int(uid)} AND status IN ('active', 'settling') ORDER BY id DESC LIMIT 1"
+        )
+        r = cur.fetchone()
+        if r:
+            out["active"] = {"id": r[0], "side": r[1], "bet": float(r[2]), "mult": float(r[3]), "entry": float(r[4]), "left": max(int(float(r[5])), 0), "overdue": float(r[5]) <= 0}
+        cur.execute(
+            f"SELECT id, side, bet, mult, entry_price, exit_price, payout, status FROM {SCHEMA}.games_bb_rounds "
+            f"WHERE user_id = {int(uid)} AND status IN ('win', 'lose', 'void') ORDER BY id DESC LIMIT 1"
+        )
+        r = cur.fetchone()
+        if r:
+            out["last"] = {"id": r[0], "side": r[1], "bet": float(r[2]), "mult": float(r[3]), "entry": float(r[4]), "exit": float(r[5]) if r[5] is not None else None, "payout": float(r[6] or 0), "status": r[7]}
+    return out
+
+
+def bb_start(cur, uid, body):
+    gs = games_settings(cur)
+    if not gs["enabled"]:
+        return 403, {"error": gs["message"] or "Мини-игры временно закрыты"}
+    if not gs["games"].get("bullbear"):
+        return 400, {"error": "Эта игра сейчас недоступна"}
+    side = body.get("side")
+    if side not in ("bull", "bear"):
+        return 400, {"error": "Выберите быка или медведя"}
+    try:
+        bet = round(float(body.get("bet")), 2)
+    except (TypeError, ValueError):
+        return 400, {"error": "Укажите ставку"}
+    cap = min(gs["maxBet"], gs["bbMaxBet"])
+    if bet < gs["minBet"] or bet > cap:
+        return 400, {"error": f"Ставка от {gs['minBet']:g} до {cap:g} TKA"}
+    level, admin = user_level(cur, uid)
+    if level < gs["minLevel"] and not admin:
+        return 403, {"error": f"Игры доступны со статуса «{TITLES[gs['minLevel'] - 1]}»"}
+    rows = bb_prices()
+    if not rows:
+        return 503, {"error": "Не удалось получить цену биткоина, попробуйте через минуту"}
+    entry = float(rows[-1][4])
+    mult = gs["bbMult"]
+    cur.execute(f"SELECT pg_advisory_lock({GAMES_LOCK})")
+    try:
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.games_bb_rounds WHERE user_id = {uid} AND status IN ('active', 'settling')")
+        if cur.fetchone():
+            return 400, {"error": "У вас уже идёт раунд, дождитесь результата"}
+        cur.execute(f"SELECT COALESCE(EXTRACT(EPOCH FROM (NOW() - MAX(created_at))), 99999) FROM {SCHEMA}.games_log WHERE user_id = {uid}")
+        if float(cur.fetchone()[0]) < gs["cooldownSec"]:
+            return 429, {"error": "Не так быстро, подождите секунду"}
+        cur.execute(
+            f"SELECT (SELECT COUNT(*) FROM {SCHEMA}.games_log WHERE user_id = {uid} AND created_at > NOW() - INTERVAL '1 day'), "
+            f"(SELECT COALESCE(SUM(payout - bet), 0) FROM {SCHEMA}.games_log WHERE user_id = {uid} AND created_at > NOW() - INTERVAL '1 day')"
+        )
+        n, net = cur.fetchone()
+        if gs["dailyLimit"] and int(n) >= gs["dailyLimit"]:
+            return 403, {"error": f"Лимит игр на сутки исчерпан ({gs['dailyLimit']}). Приходите завтра"}
+        if gs["dailyWinCap"] and float(net) >= gs["dailyWinCap"]:
+            return 403, {"error": "Вы достигли дневного лимита выигрыша. Продолжим завтра"}
+        cur.execute(f"SELECT COALESCE(SUM(bet * mult), 0) FROM {SCHEMA}.games_bb_rounds WHERE status IN ('active', 'settling')")
+        reserved = float(cur.fetchone()[0])
+        if fund_total(cur) - reserved < bet * (mult - 1) - 1e-9:
+            return 400, {"error": "Банк игр сейчас слишком мал для такой ставки. Попробуйте поставить меньше"}
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) "
+            f"SELECT {uid}, -{bet}, 'game', 'Бык или медведь: ставка' "
+            f"WHERE (SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.tka_ledger WHERE user_id = {uid}) >= {bet} RETURNING id"
+        )
+        if not cur.fetchone():
+            return 400, {"error": "Недостаточно TKA на кошельке"}
+        cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {bet}, 'game', 'Бык или медведь: ставка')")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.games_bb_rounds (user_id, side, bet, mult, entry_price, ends_at) "
+            f"VALUES ({uid}, '{side}', {bet}, {mult}, {entry!r}, NOW() + INTERVAL '{int(gs['bbMinutes'])} minutes')"
+        )
+    finally:
+        cur.execute(f"SELECT pg_advisory_unlock({GAMES_LOCK})")
+    return 200, {"ok": True}
+
+
 def games_config(cur, uid=None):
+    bb_settle_due(cur)
     gs = games_settings(cur)
     out = {
-        "settings": {k: gs[k] for k in ("enabled", "message", "minBet", "maxBet", "dailyLimit", "cooldownSec", "houseEdge", "minLevel", "rocketMaxMult", "dailyWinCap", "games")},
+        "settings": {k: gs[k] for k in ("enabled", "message", "minBet", "maxBet", "dailyLimit", "cooldownSec", "houseEdge", "minLevel", "rocketMaxMult", "dailyWinCap", "bbMinutes", "bbMult", "bbMaxBet", "games")},
         "mults": game_mults(gs), "names": GAME_NAMES, "bank": max(fund_total(cur), 0.0),
-        "titles": TITLES, "recent": games_recent(cur, None, 10), "me": None, "mine": [],
+        "titles": TITLES, "recent": games_recent(cur, None, 10), "me": None, "mine": [], "bb": bb_state(cur, uid),
     }
     if uid:
         cur.execute(
@@ -1266,7 +1410,7 @@ def games_play(cur, uid, body):
     if not gs["enabled"]:
         return 403, {"error": gs["message"] or "Мини-игры временно закрыты"}
     game = body.get("game")
-    if game not in GAME_NAMES or not gs["games"].get(game):
+    if game not in GAME_NAMES or game == "bullbear" or not gs["games"].get(game):
         return 400, {"error": "Эта игра сейчас недоступна"}
     try:
         bet = round(float(body.get("bet")), 2)
@@ -1364,12 +1508,16 @@ def games_play(cur, uid, body):
 
 
 def games_admin(cur):
+    bb_settle_due(cur)
     gs = games_settings(cur)
     cur.execute(f"SELECT COUNT(*), COUNT(DISTINCT user_id), COALESCE(SUM(bet), 0), COALESCE(SUM(payout), 0), COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 day') FROM {SCHEMA}.games_log")
     n, players, bets, pays, day = cur.fetchone()
     cur.execute(f"SELECT game, COUNT(*), COALESCE(SUM(bet), 0), COALESCE(SUM(payout), 0) FROM {SCHEMA}.games_log GROUP BY game ORDER BY game")
     per = [{"game": r[0], "count": int(r[1]), "bets": float(r[2]), "payouts": float(r[3])} for r in cur.fetchall()]
+    cur.execute(f"SELECT COUNT(*), COALESCE(SUM(bet), 0) FROM {SCHEMA}.games_bb_rounds WHERE status IN ('active', 'settling')")
+    ac, asum = cur.fetchone()
     return {
+        "bbActive": {"count": int(ac), "sum": float(asum)},
         "settings": gs, "names": GAME_NAMES, "bank": max(fund_total(cur), 0.0), "titles": TITLES, "wheel": WHEEL,
         "stats": {"count": int(n), "players": int(players), "bets": float(bets), "payouts": float(pays), "result": float(bets) - float(pays), "day": int(day)},
         "per": per, "recent": games_recent(cur, None, 25),
@@ -1539,6 +1687,11 @@ def handler(event, context):
             cfg = games_config(cur, uid)
             cfg["result"] = out
             return resp(200, cfg)
+        if act == "games_bb_start":
+            code, out = bb_start(cur, uid, body)
+            if code != 200:
+                return resp(code, out)
+            return resp(200, games_config(cur, uid))
         if act == "games_save":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})

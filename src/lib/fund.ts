@@ -239,6 +239,9 @@ export interface GamesSettings {
   minLevel: number;
   rocketMaxMult: number;
   dailyWinCap: number;
+  bbMinutes: number;
+  bbMult: number;
+  bbMaxBet: number;
   games: Record<string, boolean>;
 }
 
@@ -254,12 +257,17 @@ export interface GameRow {
 
 export interface GamesConfig {
   settings: GamesSettings;
-  mults: { coin: number; dice: { under: number; seven: number; over: number }; wheel: number[]; rocket: { max: number; edge: number } };
+  mults: { coin: number; dice: { under: number; seven: number; over: number }; wheel: number[]; rocket: { max: number; edge: number }; bullbear: { mult: number; minutes: number; maxBet: number } };
   names: Record<string, string>;
   bank: number;
   titles: string[];
   recent: GameRow[];
   mine: GameRow[];
+  bb?: {
+    price: number | null;
+    active: { id: number; side: "bull" | "bear"; bet: number; mult: number; entry: number; left: number; overdue: boolean } | null;
+    last: { id: number; side: "bull" | "bear"; bet: number; mult: number; entry: number; exit: number | null; payout: number; status: "win" | "lose" | "void" } | null;
+  };
   me: { balance: number; played: number; left: number | null; net: number; level: number; locked: boolean } | null;
   result?: { game: string; bet: number; payout: number; mult: number; win: boolean; profit: number; detail: Record<string, number | string> };
 }
