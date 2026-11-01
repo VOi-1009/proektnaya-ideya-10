@@ -59,6 +59,12 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <Icon name="X" size={16} />
         </Button>
       </div>
+      <div className="-mt-2 mb-1 flex justify-center">
+        <a href="/m" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors">
+          <Icon name="Download" size={11} />
+          Скачать МВ
+        </a>
+      </div>
       <div className="p-2">
         <div className="px-2 pt-1 pb-5 flex flex-col items-center gap-1.5">
           <span className="text-muted-foreground text-xs text-center">Перейти на трейнинг-биржу</span>
