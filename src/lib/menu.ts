@@ -15,6 +15,7 @@ export interface MenuItemCfg {
 export interface MenuSettings {
   items: MenuItemCfg[];
   menuTitle: string;
+  removed?: string[];
   v?: number;
   radarsFirst?: boolean;
 }
@@ -106,7 +107,8 @@ const defaultEntries = (radars?: Radar[], chats?: ChatRoomInfo[]): MenuEntry[] =
 };
 
 export const mergeMenu = (saved?: MenuSettings | null, radars?: Radar[], chats?: ChatRoomInfo[]): MenuEntry[] => {
-  const defaults = defaultEntries(radars, chats);
+  const gone = new Set(saved?.removed ?? []);
+  const defaults = defaultEntries(radars, chats).filter((e) => !gone.has(e.id));
   const byId = new Map(defaults.map((e) => [e.id, e]));
   const seen = new Set<string>();
   const out: MenuEntry[] = [];

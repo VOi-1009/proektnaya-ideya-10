@@ -6,7 +6,7 @@ import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
-DEFAULT = {"items": [], "menuTitle": ""}
+DEFAULT = {"items": [], "menuTitle": "", "removed": []}
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
@@ -60,8 +60,15 @@ def handle_menu(event: dict) -> dict:
                 "icon": icon,
                 "color": color if HEX.match(color) else "",
             })
+        removed = []
+        for rid in (body.get("removed") or [])[:200]:
+            rid = re.sub(r"[^a-zA-Z0-9_-]", "", str(rid))[:40]
+            if rid and rid != "welcome" and rid not in removed:
+                removed.append(rid)
+        items = [i for i in items if i["id"] not in removed]
         data = {
             "items": items,
+            "removed": removed,
             "menuTitle": str(body.get("menuTitle", "")).strip()[:40],
             "v": 2,
         }

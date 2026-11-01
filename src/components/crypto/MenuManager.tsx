@@ -93,12 +93,14 @@ const MenuManager = ({ token }: { token: string | null }) => {
   const { data: chats, isFetched: chatsReady } = useChatRooms();
   const [items, setItems] = useState<MenuEntry[] | null>(null);
   const [title, setTitle] = useState("");
+  const [removed, setRemoved] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (data && radarsReady && chatsReady && !items) {
       setItems(mergeMenu(data, radars, chats));
       setTitle(data.menuTitle ?? "");
+      setRemoved(data.removed ?? []);
     }
   }, [data, radars, chats, radarsReady, chatsReady, items]);
 
@@ -114,16 +116,34 @@ const MenuManager = ({ token }: { token: string | null }) => {
     setItems(next);
   };
 
+  const all = mergeMenu(null, radars, chats);
+  const removedEntries = removed.map((id) => all.find((e) => e.id === id)).filter((e): e is MenuEntry => !!e);
+
+  const drop = (idx: number) => {
+    const it = items[idx];
+    if (it.id === "welcome") return;
+    if (!window.confirm(`Убрать «${it.label || it.name}» из меню? Позже его можно вернуть кнопкой «Вернуть» ниже.`)) return;
+    setItems(items.filter((_, i) => i !== idx));
+    setRemoved([...removed.filter((r) => r !== it.id), it.id]);
+  };
+
+  const restore = (e: MenuEntry) => {
+    setRemoved(removed.filter((r) => r !== e.id));
+    setItems([...items, e]);
+  };
+
   const save = async () => {
     setSaving(true);
     try {
       const body = {
         menuTitle: title,
+        removed,
         items: items.map(({ id, label, hidden, icon, color }) => ({ id, label, hidden, icon, color })),
       };
       const { menu } = await menuRequest<{ menu: MenuSettings }>(token, body);
       qc.setQueryData(["menu-settings"], menu);
       setItems(mergeMenu(menu, radars, chats));
+      setRemoved(menu.removed ?? []);
       toast({ title: "Меню сохранено" });
     } catch (e) {
       toast({ title: "Не получилось сохранить", description: (e as Error).message, variant: "destructive" });
@@ -134,6 +154,7 @@ const MenuManager = ({ token }: { token: string | null }) => {
 
   const reset = () => {
     setTitle("");
+    setRemoved([]);
     setItems(mergeMenu(null, radars, chats));
   };
 
@@ -142,7 +163,7 @@ const MenuManager = ({ token }: { token: string | null }) => {
       <div>
         <h1 className="font-display text-2xl text-white">Меню слева</h1>
         <p className="text-muted-foreground text-sm max-w-2xl">
-          Весь список в одном месте: пункты, инструменты, радары и чаты. Меняйте порядок стрелками, название, иконку и цвет, скрывайте лишнее глазом. Пустое название — стандартное. Сами радары и чаты создаются во вкладках «Радары» и «Чаты».
+          Весь список в одном месте: пункты, инструменты, радары и чаты. Меняйте порядок стрелками, название, иконку и цвет, скрывайте лишнее глазом или удаляйте корзиной. Пустое название — стандартное. Сами радары и чаты создаются во вкладках «Радары» и «Чаты».
         </p>
       </div>
 
@@ -170,9 +191,32 @@ const MenuManager = ({ token }: { token: string | null }) => {
             <button type="button" onClick={() => patch(idx, { hidden: !it.hidden })} className="text-muted-foreground hover:text-white p-1.5" title={it.hidden ? "Показать" : "Скрыть"}>
               <Icon name={it.hidden ? "EyeOff" : "Eye"} size={18} />
             </button>
+            <button
+              type="button"
+              disabled={it.id === "welcome"}
+              onClick={() => drop(idx)}
+              className="text-muted-foreground hover:text-[#EA3943] p-1.5 disabled:opacity-30 disabled:hover:text-muted-foreground"
+              title={it.id === "welcome" ? "Главную удалить нельзя" : "Удалить из меню"}
+            >
+              <Icon name="Trash2" size={17} />
+            </button>
           </div>
         ))}
       </div>
+
+      {removedEntries.length > 0 && (
+        <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+          <h2 className="text-white font-semibold text-sm">Удалённые ({removedEntries.length})</h2>
+          <p className="text-[11px] text-muted-foreground">Эти пункты не показываются в меню. Сами страницы, радары и чаты остаются на сайте, удаляется только пункт меню.</p>
+          {removedEntries.map((e) => (
+            <div key={e.id} className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground flex-1 truncate">{e.name}</span>
+              <span className="hidden sm:block text-[10px] uppercase tracking-wider text-muted-foreground w-20">{KIND_LABEL[e.kind]}</span>
+              <Button size="sm" variant="outline" className="h-8 bg-transparent border-input hover:bg-hover hover:text-white" onClick={() => restore(e)}>Вернуть</Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex gap-2">
         <Button onClick={save} disabled={saving} className="font-semibold">
