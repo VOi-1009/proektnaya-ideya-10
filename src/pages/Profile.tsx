@@ -76,6 +76,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
+  const myCard = useUserCosmetics(profile?.id).card?.slug;
   const fileRef = useRef<HTMLInputElement>(null);
 
   const apply = (p: ProfileData) => {
@@ -186,7 +187,6 @@ const Profile = () => {
     );
   }
 
-  const myCard = useUserCosmetics(profile?.id).card?.slug;
   const s = profile?.status;
   const lvIdx = s ? s.level - 1 : 0;
   const from = LEVELS[lvIdx < LEVELS.length - 1 ? lvIdx : lvIdx - 1].color;

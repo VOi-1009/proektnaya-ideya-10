@@ -31,7 +31,8 @@ const AboutTraderka = ({ go }: { go: (ch: string) => void }) => (
                   onClick={(e) => {
                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
                     e.preventDefault();
-                    f.to ? window.location.assign(f.to) : go(f.id);
+                    if (f.to) window.location.assign(f.to);
+                    else go(f.id);
                   }}
                   className="group block"
                 >
