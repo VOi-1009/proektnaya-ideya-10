@@ -707,25 +707,39 @@ def ai_bot_id(cur):
 
 def ai_pick(s, ex, px, changes, held, free, open_count, level=1):
     if open_count >= s["maxPositions"]:
-        return None
+        return None, f"Лимит позиций: открыто {open_count} из {s['maxPositions']}"
     lev = max(1, min(int(s["leverage"]), allowed_leverage(ex, level)))
     bet = round(min(free * s["betPercent"] / 100, s["maxBet"]), 2)
     if bet < ex["minMargin"] or bet > free + 1e-9:
-        return None
+        return None, f"Не хватает свободных средств: ставка {bet:.2f}, минимум {ex['minMargin']:.2f}, свободно {free:.2f} USDT"
     cands = []
+    avail = 0
+    seen = 0
+    best_move = 0.0
+    wrong_dir = 0
     for c in COINS:
         if c in held or c in ex["disabledCoins"] or (s["coins"] and c not in s["coins"]) or coin_locked(ex, c, level):
             continue
+        avail += 1
         if not px.get(c) or c not in changes:
             continue
+        seen += 1
         ch = changes[c]
+        best_move = max(best_move, abs(ch))
         if abs(ch) < s["minMovePct"]:
             continue
         if s["strategy"] == "long_only" and ch <= 0:
+            wrong_dir += 1
             continue
         cands.append((abs(ch), c))
     if not cands:
-        return None
+        if avail == 0:
+            return None, "Нет доступных монет: все заняты, выключены, закрыты по статусу или не выбраны в настройках"
+        if seen == 0:
+            return None, "Нет данных о движении монет: сервис курсов не ответил"
+        if wrong_dir and best_move >= s["minMovePct"]:
+            return None, "Подходящих движений нет: стратегия «Только лонги», а монеты с сильным движением падают"
+        return None, f"Слабое движение монет: максимум {best_move:.2f}% за сутки при пороге {s['minMovePct']:.2f}%"
     cands.sort(reverse=True)
     coin = cands[0][1]
     ch = changes[coin]
@@ -741,7 +755,7 @@ def ai_pick(s, ex, px, changes, held, free, open_count, level=1):
     sign = 1 if side == "long" else -1
     sl = p * (1 - sign * sl_pct / 100) if sl_pct > 0 else None
     tp = p * (1 + sign * tp_pct / 100) if tp_pct > 0 else None
-    return {"coin": coin, "side": side, "leverage": lev, "margin": bet, "sl": sl, "tp": tp, "change": ch}
+    return {"coin": coin, "side": side, "leverage": lev, "margin": bet, "sl": sl, "tp": tp, "change": ch}, ""
 
 
 def fetch_changes():
@@ -903,9 +917,41 @@ def ai_claim_run(cur, interval_s, force):
     return bool(cur.fetchone())
 
 
+AI_LOG_KEY = "ai_trader_log"
+
+
+def ai_log_read(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{AI_LOG_KEY}'")
+    row = cur.fetchone()
+    try:
+        data = json.loads(row[0]) if row and row[0] else []
+    except ValueError:
+        data = []
+    return data if isinstance(data, list) else []
+
+
+def ai_log(cur, kind, text, dedupe_s=0):
+    now = int(time.time())
+    items = ai_log_read(cur)
+    if dedupe_s and items and items[0].get("text") == text and now - int(items[0].get("t", 0)) < dedupe_s:
+        return
+    items.insert(0, {"t": now, "kind": kind, "text": text[:240]})
+    raw = q(json.dumps(items[:40], ensure_ascii=False))
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{AI_LOG_KEY}', '{raw}', NOW()) "
+        f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+    )
+
+
 def ai_trader_step(cur, px, started=None, force=False):
     s = ai_settings(cur)
-    if not s["enabled"] or not px:
+    if not s["enabled"]:
+        return {"ran": False, "reason": "off"}
+    if not px:
+        try:
+            ai_log(cur, "skip", "Нет курсов: цены с биржи не загрузились, круг пропущен", 900)
+        except Exception as e:
+            print("ai log error:", e)
         return {"ran": False, "reason": "off"}
     if started is not None and time.time() - started > 2.5:
         return {"ran": False, "reason": "busy"}
@@ -929,17 +975,27 @@ def ai_trader_step(cur, px, started=None, force=False):
     except Exception as e:
         print("ai post error:", e)
     ex = exchange_settings(cur)
-    if ex["enabled"]:
+    note = ""
+    if not ex["enabled"]:
+        note = "Биржа выключена в настройках"
+    else:
         snap = ai_snapshot(cur, bot, px)
         held = {p["coinId"] for p in snap["positions"]}
-        if len(held) < s["maxPositions"] and snap["free"] >= ex["minMargin"]:
+        if len(held) >= s["maxPositions"]:
+            note = f"Лимит позиций: открыто {len(held)} из {s['maxPositions']}"
+        elif snap["free"] < ex["minMargin"]:
+            note = f"Не хватает свободных средств: свободно {snap['free']:.2f} USDT, минимум {ex['minMargin']:.2f}"
+        else:
             try:
                 changes = fetch_changes()
             except Exception as e:
                 print("ai changes error:", e)
                 changes = {}
+                note = "Нет данных о движении монет: сервис курсов не ответил"
             bot_level, _ = user_level(cur, bot)
-            plan = ai_pick(s, ex, px, changes, held, snap["free"], len(snap["positions"]), bot_level)
+            plan, why = ai_pick(s, ex, px, changes, held, snap["free"], len(snap["positions"]), bot_level)
+            if not plan:
+                note = note or why
             if plan:
                 fee = trade_fee(ex, plan["margin"], plan["leverage"])
                 total = round(plan["margin"] + fee, 4)
@@ -954,12 +1010,22 @@ def ai_trader_step(cur, px, started=None, force=False):
                         f"VALUES ({bot}, '{plan['coin']}', '{plan['side']}', {plan['leverage']}, {plan['margin']}, {size}, {p}, {sql_num(plan['sl'])}, {sql_num(plan['tp'])})"
                     )
                     opened = 1
+                    ai_log(cur, "open", f"Открыта позиция: {'лонг' if plan['side'] == 'long' else 'шорт'} {COIN_RU.get(plan['coin'], plan['coin'])} x{plan['leverage']}, ставка {plan['margin']:.2f} USDT, движение за сутки {plan['change']:+.2f}%")
+                else:
+                    note = "Не удалось списать ставку: на счёте не хватило средств"
+    try:
+        if closed:
+            ai_log(cur, "close", f"Закрыто по времени удержания: {closed}")
+        if not opened:
+            ai_log(cur, "skip", note or "Круг пропущен без причины")
+    except Exception as e:
+        print("ai log error:", e)
     return {"ran": True, "opened": opened, "closed": closed}
 
 
 def ai_admin_payload(cur, px):
     bot = ai_bot_id(cur)
-    out = {"settings": ai_settings(cur), "botId": bot, "name": "AiTKA", "strategies": AI_STRATEGIES, "account": None, "trades": [], "lastRun": None}
+    out = {"settings": ai_settings(cur), "botId": bot, "name": "AiTKA", "strategies": AI_STRATEGIES, "account": None, "trades": [], "lastRun": None, "log": ai_log_read(cur)[:30]}
     if not bot:
         return out
     out["account"] = ai_snapshot(cur, bot, px)

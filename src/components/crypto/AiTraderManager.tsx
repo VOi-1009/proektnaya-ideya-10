@@ -209,6 +209,23 @@ const AiTraderManager = ({ token }: { token: string | null }) => {
       </div>
 
       <div className="bg-card border border-border rounded-lg p-4">
+        <h3 className="text-white font-semibold text-sm mb-2 flex items-center gap-2"><Icon name="ScrollText" size={15} className="text-primary" /> Журнал кругов</h3>
+        {!data.log?.length ? (
+          <p className="text-sm text-muted-foreground">Записей пока нет: они появятся после следующего круга бота. Нажмите «Проверить рынок сейчас», чтобы увидеть первую запись.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {data.log.map((l, i) => (
+              <div key={`${l.t}-${i}`} className="flex items-start gap-2 py-1.5 text-sm">
+                <Icon name={l.kind === "open" ? "TrendingUp" : l.kind === "close" ? "CircleCheck" : "CirclePause"} size={14} className={`mt-0.5 flex-shrink-0 ${l.kind === "open" ? "text-[#16C784]" : l.kind === "close" ? "text-primary" : "text-muted-foreground"}`} />
+                <span className="text-[11px] text-muted-foreground font-mono w-28 flex-shrink-0 mt-0.5">{new Date(l.t * 1000).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                <span className={`flex-1 ${l.kind === "skip" ? "text-muted-foreground" : "text-white"}`}>{l.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-4">
         <h3 className="text-white font-semibold text-sm mb-2">Последние сделки</h3>
         {data.trades.length === 0 ? (
           <p className="text-sm text-muted-foreground">Сделок пока нет.</p>
