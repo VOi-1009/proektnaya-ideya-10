@@ -65,26 +65,6 @@ const MobileChart = (p: Props) => {
                 </defs>
                 <YAxis hide domain={["dataMin", "dataMax"]} />
                 <Area type="monotone" dataKey="p" stroke={color} strokeWidth={1.8} fill="url(#mcFill)" dot={false} isAnimationActive={false} />
-                {last > 0 && (
-                  <ReferenceLine
-                    y={last}
-                    ifOverflow="extendDomain"
-                    stroke={color}
-                    strokeDasharray="2 3"
-                    label={(lp: { viewBox?: { x: number; y: number; width: number } }) => {
-                      const vb = lp.viewBox;
-                      if (!vb) return <g />;
-                      const w = 64;
-                      const x = vb.x + vb.width - w;
-                      return (
-                        <g>
-                          <rect x={x} y={vb.y - 8} width={w} height={16} rx={3} fill={color} />
-                          <text x={x + w / 2} y={vb.y + 4} textAnchor="middle" fontSize={10} fontWeight={600} fill="#fff" fontFamily="monospace">{fmtPrice(last, p.coinId)}</text>
-                        </g>
-                      );
-                    }}
-                  />
-                )}
                 {entries.map((l, i) => (
                   <ReferenceLine key={i} y={l.price} ifOverflow="hidden" stroke={l.color} strokeDasharray="4 4" />
                 ))}
