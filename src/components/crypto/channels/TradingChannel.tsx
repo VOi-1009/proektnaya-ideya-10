@@ -192,7 +192,6 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
             ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
           ]}
         />
-        <TradeTabs st={st} tab={tab} setTab={setTab} busy={busy} send={send} shared={shared} share={share} leaders={[]} m={m} only={["positions", "orders"]} />
       <TradeForm
         coins={coins}
         coinId={coinId}
@@ -219,6 +218,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
         submit={submit}
         send={send}
       />
+        <TradeTabs st={st} tab={tab} setTab={setTab} busy={busy} send={send} shared={shared} share={share} leaders={[]} m={m} only={["positions", "orders"]} />
         <ExchangeCard st={st} busy={busy} send={send} token={token} />
       </div>
     );

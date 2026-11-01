@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Area, AreaChart, ReferenceLine, ResponsiveContainer, YAxis } from "recharts";
 import Icon from "@/components/ui/icon";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fmtPrice, useChart } from "@/lib/crypto";
+import { fmtPrice } from "@/lib/crypto";
+import { useAuth } from "@/lib/auth";
 import CandleChart from "../CandleChart";
-import { Line } from "../candle/chartUtils";
+import { Line, loadKlines } from "../candle/chartUtils";
 
 interface Props {
   coinId: string;
@@ -23,8 +25,14 @@ interface Props {
 
 const MobileChart = (p: Props) => {
   const [open, setOpen] = useState(false);
-  const { data } = useChart(p.coinId, 1, p.price);
-  const pts = (data ?? []).slice(-96);
+  const { token } = useAuth();
+  const { data } = useQuery({
+    queryKey: ["mini-klines", p.coinId, "1m", !!token],
+    queryFn: async () => (await loadKlines(p.coinId, "1m", token)).slice(-60).map((c) => ({ t: c.t, p: c.c })),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+  const pts = data ?? [];
   const first = pts[0]?.p ?? 0;
   const last = p.price || pts[pts.length - 1]?.p || 0;
   const pct = first ? ((last - first) / first) * 100 : 0;
@@ -38,7 +46,7 @@ const MobileChart = (p: Props) => {
         <div className="flex items-center gap-2">
           <span className="font-display text-white text-sm">График</span>
           <span className="font-mono text-white text-sm">{last ? fmtPrice(last, p.coinId) : "—"}</span>
-          <span className="font-mono text-xs" style={{ color }}>{up ? "+" : ""}{pct.toFixed(2).replace(".", ",")}% за сутки</span>
+          <span className="font-mono text-xs" style={{ color }}>{up ? "+" : ""}{pct.toFixed(2).replace(".", ",")}% за час · свечи 1м</span>
           <span className="ml-auto flex items-center gap-1 text-[11px] text-primary font-semibold">
             Открыть <Icon name="Maximize2" size={13} />
           </span>
