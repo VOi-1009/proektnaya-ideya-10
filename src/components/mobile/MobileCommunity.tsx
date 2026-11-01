@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { COIN_META } from "@/lib/crypto";
 import { nameCls } from "@/lib/status";
-import { CommunityPost, FeedResponse, MOODS, REACTIONS, communityRequest, timeAgo } from "@/lib/community";
+import { AuthorProfile, CommunityPost, FeedResponse, MOODS, REACTIONS, communityRequest, timeAgo } from "@/lib/community";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import ShopBadge from "@/components/crypto/ShopBadge";
@@ -29,6 +30,30 @@ const MobileCommunity = ({ onClose }: { onClose: () => void }) => {
   const [text, setText] = useState("");
   const [side, setSide] = useState<"" | "bull" | "bear">("");
   const [sending, setSending] = useState(false);
+  const [image, setImage] = useState<{ data: string; type: string } | null>(null);
+  const [coins, setCoins] = useState<string[]>([]);
+  const [coinOpen, setCoinOpen] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const { data: me } = useQuery({
+    queryKey: ["community-author", user?.id, token],
+    enabled: ready && !!user,
+    queryFn: () => communityRequest<{ author?: AuthorProfile }>(token, `&profile=${user?.id}`).then((d) => d.author ?? null),
+    staleTime: 30_000,
+  });
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) return toast({ title: "Подойдёт JPG, PNG или WEBP", variant: "destructive" });
+    if (f.size > 3 * 1024 * 1024) return toast({ title: "Картинка должна быть до 3 МБ", variant: "destructive" });
+    const rd = new FileReader();
+    rd.onload = () => setImage({ data: String(rd.result), type: f.type });
+    rd.readAsDataURL(f);
+  };
+
+  const toggleCoin = (id: string) => setCoins((c) => (c.includes(id) ? c.filter((x) => x !== id) : c.length < 5 ? [...c, id] : c));
 
   const query = (before?: number) => `&tab=${tab}${tab === "mood" && mood ? `&mood=${mood}` : ""}${before ? `&before=${before}` : ""}`;
 
@@ -70,13 +95,16 @@ const MobileCommunity = ({ onClose }: { onClose: () => void }) => {
   };
 
   const publish = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() && !image) return;
     setSending(true);
     try {
-      const d = await communityRequest<{ post: CommunityPost }>(token, "", { action: "post", body: text, sentiment: side, coins: [] });
+      const d = await communityRequest<{ post: CommunityPost }>(token, "", { action: "post", body: text, sentiment: side, coins, image: image?.data, contentType: image?.type });
       setPosts((l) => [d.post, ...l]);
       setText("");
       setSide("");
+      setCoins([]);
+      setImage(null);
+      setCoinOpen(false);
     } catch (e) {
       toast({ title: "Не опубликовано", description: (e as Error).message, variant: "destructive" });
     } finally {
@@ -141,6 +169,37 @@ const MobileCommunity = ({ onClose }: { onClose: () => void }) => {
         </div>
       )}
 
+      {user && me && (
+        <section className="rounded-xl border border-border bg-card p-3">
+          <div className="flex items-center gap-2.5">
+            <UserAvatar name={me.name} avatar={me.avatar} level={me.level} className="w-10 h-10 text-base" userId={me.id} />
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold text-white truncate">{me.name}</div>
+              <div className="text-[11px] text-muted-foreground truncate">{me.title}{me.place ? ` · место ${me.place} в рейтинге` : ""}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5 mt-2.5">
+            {[
+              ["Подписчики", me.followers],
+              ["Подписки", me.following],
+              ["Посты", me.posts],
+              ["Реакции", me.reactions],
+            ].map(([l, v]) => (
+              <div key={l} className="rounded-lg bg-rail/60 py-1.5 text-center min-w-0">
+                <div className="font-mono text-white text-sm leading-tight">{v}</div>
+                <div className="text-[10px] text-muted-foreground truncate px-0.5">{l}</div>
+              </div>
+            ))}
+          </div>
+          {(me.bulls > 0 || me.bears > 0) && (
+            <div className="flex justify-center gap-4 mt-2 text-[11px]">
+              <span className="text-[#22C55E]">Бычьих постов: {me.bulls}</span>
+              <span className="text-[#EA3943]">Медвежьих: {me.bears}</span>
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="rounded-xl border border-border bg-card p-3 space-y-2">
         {!user ? (
           <div className="flex items-center gap-3">
@@ -158,7 +217,41 @@ const MobileCommunity = ({ onClose }: { onClose: () => void }) => {
               placeholder="Что думаете о рынке?"
               className="w-full bg-transparent text-white placeholder:text-muted-foreground outline-none resize-none min-h-[64px] text-sm"
             />
-            <div className="flex items-center gap-2">
+            {image && (
+              <div className="relative inline-block">
+                <img src={image.data} alt="" className="max-h-40 rounded-lg border border-border" />
+                <button onClick={() => setImage(null)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center" aria-label="Убрать картинку">
+                  <Icon name="X" size={12} />
+                </button>
+              </div>
+            )}
+            {coins.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {coins.map((c) => (
+                  <button key={c} onClick={() => toggleCoin(c)} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-border text-white font-mono">
+                    ${COIN_META[c]?.short ?? c} <Icon name="X" size={10} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {coinOpen && (
+              <div className="rounded-lg border border-border bg-rail p-1.5 max-h-44 overflow-y-auto grid grid-cols-2 gap-1">
+                {Object.entries(COIN_META).map(([id, m]) => (
+                  <button key={id} onClick={() => toggleCoin(id)} className={`flex items-center justify-between rounded px-2 py-1.5 text-xs ${coins.includes(id) ? "bg-primary/15 text-white" : "text-muted-foreground"}`}>
+                    <span className="truncate">{m.ru}</span>
+                    <span className="font-mono text-[10px]">{coins.includes(id) ? "✓" : m.short}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={() => fileRef.current?.click()} className="w-8 h-8 rounded-full border border-border text-muted-foreground flex items-center justify-center" aria-label="Прикрепить картинку">
+                <Icon name="Image" size={15} />
+              </button>
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
+              <button onClick={() => setCoinOpen(!coinOpen)} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] border ${coinOpen || coins.length ? "border-primary text-white" : "border-border text-muted-foreground"}`}>
+                <Icon name="CircleDollarSign" size={12} /> Монета{coins.length ? ` (${coins.length})` : ""}
+              </button>
               {(["bull", "bear"] as const).map((k) => (
                 <button
                   key={k}
@@ -168,7 +261,7 @@ const MobileCommunity = ({ onClose }: { onClose: () => void }) => {
                   <Icon name={MOODS[k].icon} size={11} /> {MOODS[k].label}
                 </button>
               ))}
-              <Button size="sm" disabled={sending || !text.trim()} onClick={publish} className="ml-auto rounded-full font-semibold px-4">
+              <Button size="sm" disabled={sending || (!text.trim() && !image)} onClick={publish} className="ml-auto rounded-full font-semibold px-4">
                 {sending && <Icon name="Loader2" size={13} className="mr-1 animate-spin" />}
                 Опубликовать
               </Button>
