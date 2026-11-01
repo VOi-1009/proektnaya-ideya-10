@@ -22,6 +22,7 @@ from chat import handle_chat
 from donate import handle_donate
 from menu import handle_menu
 from aibot import handle_aibot
+from push import handle_push
 from plans import handle_plans
 from forum import handle_forum
 from visits import handle_visits
@@ -127,7 +128,7 @@ def load_profile(cur, user_id: int) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTKA (?resource=aibot), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits), настройки левого меню (?resource=menu)"""
+    """Личный кабинет (профиль, статус, аватар), статьи (?resource=articles) и пользователи онлайн/смена статусов (?resource=users), лайки новостей (?resource=reactions), опросы (?resource=polls), радары (?resource=radars), новости сайта (?resource=sitenews), цитаты из книг (?resource=quotes), чаты (?resource=chat&rooms=1, ?resource=chat&room=ID), управление чатами для админа, донаты (?resource=donate), ИИ-бот AiTKA (?resource=aibot), push-уведомления (?resource=push), подписки (?resource=plans), форум (?resource=forum), счётчик посетителей (?resource=visits), настройки левого меню (?resource=menu)"""
     method = event.get("httpMethod", "GET")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -157,6 +158,8 @@ def handler(event: dict, context) -> dict:
         return handle_donate(event)
     if resource == "aibot":
         return handle_aibot(event)
+    if resource == "push":
+        return handle_push(event)
     if resource == "plans":
         return handle_plans(event)
     if resource == "visits":

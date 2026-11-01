@@ -51,24 +51,6 @@ export interface AiSettings {
   chatterPhrases: string;
 }
 
-export interface AiMailSettings {
-  enabled: boolean;
-  daily: boolean;
-  digest: boolean;
-  fromName: string;
-  subjectPrefix: string;
-}
-
-export interface AiMailStats {
-  sent: number;
-  pending: number;
-  failed: number;
-  gold: number;
-  goldMailOn: number;
-  configured: boolean;
-  log: { id: number; email: string; status: string; error: string; createdAt: string; sentAt: string | null; title: string }[];
-}
-
 export interface AiLog {
   id: number;
   room: string;

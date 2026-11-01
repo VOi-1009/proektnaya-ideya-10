@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useGraphics } from "@/lib/graphics";
 import { MOBILE_SECTIONS, useMobileSettings } from "@/lib/fund";
 import MobileBlockView from "./MobileBlockView";
+import PushToggle from "./PushToggle";
 import InstallBanner from "./InstallBanner";
 import { chooseDesktop, chooseMobile } from "@/lib/mobile";
 import UserAvatar from "@/components/crypto/UserAvatar";
@@ -103,6 +104,7 @@ const MobileApp = () => {
         ) : (
           <>
             {s.app.install && <InstallBanner text={s.app.text} />}
+            {current?.id === first?.id && <PushToggle />}
             <h1 className="font-display text-lg text-white flex items-center gap-2">
               {info && <Icon name={current?.icon || info.icon} size={18} className="text-primary" />}
               {current?.label || info?.label}

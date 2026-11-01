@@ -446,6 +446,45 @@
       "method": "GET",
       "path": "/?resource=community&tab=follow",
       "expectedStatus": 401
+    },
+    {
+      "name": "Ключ push",
+      "method": "GET",
+      "path": "/?resource=push&key=1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Статистика push без прав",
+      "method": "GET",
+      "path": "/?resource=push&admin=1",
+      "expectedStatus": 403
+    },
+    {
+      "name": "Рассылка push без прав",
+      "method": "POST",
+      "path": "/?resource=push",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "action": "send",
+        "title": "x"
+      },
+      "expectedStatus": 403
+    },
+    {
+      "name": "Подписка с неверными данными",
+      "method": "POST",
+      "path": "/?resource=push",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "action": "subscribe",
+        "endpoint": "http://x",
+        "keys": {}
+      },
+      "expectedStatus": 400
     }
   ]
 }

@@ -123,7 +123,7 @@ def make_digest(cur, kind: str = "auto"):
         f"'{esc(json.dumps(links, ensure_ascii=False))}', '{kind}') RETURNING id"
     )
     pid = cur.fetchone()[0]
-    from aimail import enqueue_post
+    from push import enqueue_post
     enqueue_post(cur, pid, "auto")
     return pid
 
@@ -155,7 +155,7 @@ def maybe_daily(cur, s: dict) -> None:
     )
     row = cur.fetchone()
     if row:
-        from aimail import enqueue_post
+        from push import enqueue_post
         enqueue_post(cur, row[0], "daily")
 
 
@@ -317,8 +317,8 @@ def handle_aibot(event: dict) -> dict:
                 reactions = int(cur.fetchone()[0])
             cur.execute(f"SELECT {cols} FROM {SCHEMA}.ai_posts ORDER BY id DESC LIMIT 50")
             posts = [post_item(x) for x in cur.fetchall()]
-            from aimail import load_mail, mail_stats
-            return resp(200, {"mail": load_mail(cur), "mailStats": mail_stats(cur), "settings": s, "log": log, "stats": {"blocked7d": blocked, "reactions": reactions, "posts": len(posts)}, "posts": posts, "botId": bid})
+            from push import load_settings as load_push, stats as push_stats
+            return resp(200, {"push": load_push(cur), "pushStats": push_stats(cur), "settings": s, "log": log, "stats": {"blocked7d": blocked, "reactions": reactions, "posts": len(posts)}, "posts": posts, "botId": bid})
 
         if method == "GET" and qs.get("comments"):
             pid = int(re.sub(r"\D", "", str(qs.get("comments")))[:9] or 0)
@@ -330,10 +330,10 @@ def handle_aibot(event: dict) -> dict:
             maybe_chatter(cur, s)
             maybe_autopost(cur, s)
             try:
-                from aimail import process_queue
-                process_queue(cur, 4, 1.5)
+                from push import process_queue
+                process_queue(cur, 20, 2.0)
             except Exception as e:
-                print("mail error:", e)
+                print("push error:", e)
             cur.execute(f"SELECT {cols} FROM {SCHEMA}.ai_posts ORDER BY id DESC LIMIT 30")
             posts = [post_item(x) for x in cur.fetchall()]
             soc = social(cur, [p["id"] for p in posts], me)
@@ -431,9 +431,11 @@ def handle_aibot(event: dict) -> dict:
             cur.execute(f"INSERT INTO {SCHEMA}.ai_posts (title, body, kind) VALUES ('{esc(title)}', '{esc(text)}', 'manual') RETURNING {cols}")
             item = post_item(cur.fetchone())
             queued = 0
-            if body.get("sendMail"):
-                from aimail import enqueue_post
+            if body.get("sendPush"):
+                from push import enqueue_post, process_queue
                 queued = enqueue_post(cur, item["id"], "manual")
+                if queued:
+                    process_queue(cur, 30, 2.5)
             return resp(200, {"post": item, "queued": queued})
 
         if action == "digest":
@@ -455,37 +457,16 @@ def handle_aibot(event: dict) -> dict:
             )
             pid = cur.fetchone()[0]
             queued = 0
-            if body.get("sendMail"):
-                from aimail import enqueue_post
+            if body.get("sendPush"):
+                from push import enqueue_post, process_queue
                 queued = enqueue_post(cur, pid, "manual")
+                if queued:
+                    process_queue(cur, 30, 2.5)
             return resp(200, {"id": pid, "queued": queued})
-
-        if action == "mail-settings":
-            data = {
-                "enabled": bool(body.get("enabled", True)),
-                "daily": bool(body.get("daily", True)),
-                "digest": bool(body.get("digest", True)),
-                "fromName": re.sub(r"[\r\n<>]", "", str(body.get("fromName", "AiTKA"))).strip()[:60] or "AiTKA",
-                "subjectPrefix": re.sub(r"[\r\n]", "", str(body.get("subjectPrefix", "AiTKA"))).strip()[:60],
-            }
-            val = esc(json.dumps(data, ensure_ascii=False))
-            cur.execute(
-                f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('ai_mail', '{val}', NOW()) "
-                f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
-            )
-            return resp(200, {"mail": data})
-
-        if action == "mail-send":
-            from aimail import process_queue
-            return resp(200, process_queue(cur, 10, 3.5))
-
-        if action == "mail-retry":
-            cur.execute(f"UPDATE {SCHEMA}.ai_mail_queue SET status = 'pending', attempts = 0, error = '' WHERE status = 'failed'")
-            return resp(200, {"ok": True})
 
         if action == "delete-post":
             pid = int(body.get("id", 0) or 0)
-            cur.execute(f"DELETE FROM {SCHEMA}.ai_mail_queue WHERE post_id = {pid} AND status = 'pending'")
+            cur.execute(f"DELETE FROM {SCHEMA}.push_queue WHERE status = 'pending' AND message_id IN (SELECT id FROM {SCHEMA}.push_messages WHERE post_id = {pid})")
             cur.execute(f"DELETE FROM {SCHEMA}.ai_post_reactions WHERE post_id = {pid}")
             cur.execute(f"DELETE FROM {SCHEMA}.ai_post_comments WHERE post_id = {pid}")
             cur.execute(f"DELETE FROM {SCHEMA}.ai_posts WHERE id = {pid}")
