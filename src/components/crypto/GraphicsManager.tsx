@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { fundRequest } from "@/lib/fund";
-import { GraphicsSettings } from "@/lib/graphics";
+import { CARD_DEFAULTS, CARD_LABELS, CardKey, GraphicsSettings, PALETTE } from "@/lib/graphics";
 import { QUICK_EMOJI } from "@/lib/community";
 import ShopImagePicker, { PickedImage } from "./ShopImagePicker";
 
@@ -27,20 +27,22 @@ const GraphicsManager = ({ token }: { token: string | null }) => {
   const [removed, setRemoved] = useState<Partial<Record<ImgKey, boolean>>>({});
   const [emoji, setEmoji] = useState<string[] | null>(null);
   const [newEmoji, setNewEmoji] = useState("");
+  const [cards, setCards] = useState<Record<CardKey, string> | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (data && !emoji) setEmoji(data.emoji);
-  }, [data, emoji]);
+    if (data && !cards) setCards({ ...CARD_DEFAULTS, ...data.cardColors });
+  }, [data, emoji, cards]);
 
-  if (!data || !emoji) return <p className="text-muted-foreground text-sm">Загружаю…</p>;
+  if (!data || !emoji || !cards) return <p className="text-muted-foreground text-sm">Загружаю…</p>;
 
-  const dirty = Object.values(picked).some(Boolean) || Object.values(removed).some(Boolean) || JSON.stringify(emoji) !== JSON.stringify(data.emoji);
+  const dirty = Object.values(picked).some(Boolean) || Object.values(removed).some(Boolean) || JSON.stringify(emoji) !== JSON.stringify(data.emoji) || JSON.stringify(cards) !== JSON.stringify({ ...CARD_DEFAULTS, ...data.cardColors });
 
   const save = async () => {
     setBusy(true);
     try {
-      const body: Record<string, unknown> = { action: "graphics_save", emoji };
+      const body: Record<string, unknown> = { action: "graphics_save", emoji, cardColors: cards };
       for (const f of FIELDS) {
         const p = picked[f.key];
         if (p) {
@@ -54,6 +56,7 @@ const GraphicsManager = ({ token }: { token: string | null }) => {
       setPicked({});
       setRemoved({});
       setEmoji(r.settings.emoji);
+      setCards({ ...CARD_DEFAULTS, ...r.settings.cardColors });
       toast({ title: "Графика сохранена" });
     } catch (e) {
       toast({ title: "Не получилось", description: (e as Error).message, variant: "destructive" });
@@ -96,6 +99,34 @@ const GraphicsManager = ({ token }: { token: string | null }) => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="text-white font-semibold text-sm flex items-center gap-2"><Icon name="Palette" size={15} className="text-primary" /> Цвета карточек «Рыночной сводки»</h2>
+          <Button size="sm" variant="ghost" className="h-8" onClick={() => setCards({ ...CARD_DEFAULTS })}>Сбросить на стандартные</Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">Цветная полоска слева на каждой из 9 карточек, на сайте и в МВ. Выберите цвет из набора или задайте свой.</p>
+        <div className="divide-y divide-border">
+          {(Object.keys(CARD_LABELS) as CardKey[]).map((k) => (
+            <div key={k} className="flex items-center gap-3 py-2 flex-wrap">
+              <div className="w-1 h-7 rounded-full flex-shrink-0" style={{ background: cards[k] }} />
+              <div className="text-sm text-white w-48 flex-shrink-0">{CARD_LABELS[k]}</div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {PALETTE.map((p) => (
+                  <button
+                    key={p.hex}
+                    title={p.name}
+                    onClick={() => setCards({ ...cards, [k]: p.hex })}
+                    className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${cards[k].toLowerCase() === p.hex.toLowerCase() ? "border-white" : "border-transparent"}`}
+                    style={{ background: p.hex }}
+                  />
+                ))}
+                <input type="color" title="Свой цвет" value={cards[k]} onChange={(e) => setCards({ ...cards, [k]: e.target.value.toUpperCase() })} className="w-7 h-7 rounded bg-rail border border-border cursor-pointer p-0.5" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="bg-card border border-border rounded-lg p-4 space-y-3">

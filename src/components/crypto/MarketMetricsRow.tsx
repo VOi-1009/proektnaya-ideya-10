@@ -1,4 +1,5 @@
 import { useCmcMetrics } from "@/lib/cmcMetrics";
+import { useCardColors } from "@/lib/graphics";
 import { cardCls, labelCls, valueCls } from "./summaryCard";
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("ru-RU");
@@ -10,6 +11,7 @@ const LIQ_URL = "https://coinmarketcap.com/ru/charts/liquidations/";
 
 const MarketMetricsRow = ({ cols = "grid-cols-2", flat }: { cols?: string; flat?: boolean }) => {
   const { data } = useCmcMetrics();
+  const cc = useCardColors();
   const l = data?.liquidations;
   const share = (v?: number | null) => (l?.total && v != null ? Math.round((v / l.total) * 100) : null);
   const longPct = share(l?.longs);
@@ -21,7 +23,8 @@ const MarketMetricsRow = ({ cols = "grid-cols-2", flat }: { cols?: string; flat?
         href={LIQ_URL}
         target="_blank"
         rel="noreferrer"
-        className={cardCls("border-metric-sky", true)}
+        className={cardCls("", true)}
+        style={{ borderLeftColor: cc.liq }}
         title="Общий объём ликвидаций на фьючерсных биржах за последние 24 часа"
       >
         <div className={labelCls}>Объем ликвидаций 24h</div>
@@ -36,7 +39,7 @@ const MarketMetricsRow = ({ cols = "grid-cols-2", flat }: { cols?: string; flat?
         </div>
       </a>
 
-      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-metric-long", true)} title="Ликвидировано длинных позиций (лонгов) за 24 часа">
+      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("", true)} style={{ borderLeftColor: cc.long }} title="Ликвидировано длинных позиций (лонгов) за 24 часа">
         <div className={labelCls}>Лонг</div>
         <div className={valueCls}>
           {fmtUsd(l?.longs)}
@@ -44,7 +47,7 @@ const MarketMetricsRow = ({ cols = "grid-cols-2", flat }: { cols?: string; flat?
         </div>
       </a>
 
-      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("border-metric-short", true)} title="Ликвидировано коротких позиций (шортов) за 24 часа">
+      <a href={LIQ_URL} target="_blank" rel="noreferrer" className={cardCls("", true)} style={{ borderLeftColor: cc.short }} title="Ликвидировано коротких позиций (шортов) за 24 часа">
         <div className={labelCls}>Шорт</div>
         <div className={valueCls}>
           {fmtUsd(l?.shorts)}

@@ -1572,6 +1572,10 @@ def games_admin(cur):
 GFX_KEY = "graphics_settings"
 GFX_IMG_FIELDS = ("logo", "favicon", "appIcon")
 GFX_TYPES = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/svg+xml": "svg", "image/x-icon": "ico", "image/vnd.microsoft.icon": "ico"}
+GFX_CARD_DEFAULTS = {
+    "cap": "#FBBF24", "best": "#A3E635", "worst": "#D946EF", "volume": "#2DD4BF", "best7d": "#F472B6",
+    "liq": "#38BDF8", "long": "#22C55E", "short": "#EF4444", "outflow": "#38BDF8",
+}
 GFX_EMOJI_DEFAULT = ["😀", "😎", "🤔", "🙏", "💪", "💎", "🐂", "🐻", "💰", "📈", "📉", "🚀", "🔥", "😱", "🤝", "👀"]
 
 
@@ -1584,6 +1588,11 @@ def gfx_clean(raw):
     em = raw.get("emoji")
     lst = [str(e).strip()[:16] for e in em if str(e).strip()] if isinstance(em, list) else []
     out["emoji"] = lst[:48] or list(GFX_EMOJI_DEFAULT)
+    cc = raw.get("cardColors") if isinstance(raw.get("cardColors"), dict) else {}
+    out["cardColors"] = {
+        k: (cc.get(k) if isinstance(cc.get(k), str) and re.fullmatch(r"#[0-9a-fA-F]{6}", cc.get(k)) else d)
+        for k, d in GFX_CARD_DEFAULTS.items()
+    }
     return out
 
 
@@ -1890,6 +1899,8 @@ def handler(event, context):
                 return resp(400, {"error": str(e)})
             if "emoji" in body:
                 new["emoji"] = body.get("emoji")
+            if "cardColors" in body:
+                new["cardColors"] = body.get("cardColors")
             new = gfx_clean(new)
             val = qj(json.dumps(new, ensure_ascii=False))
             cur.execute(
