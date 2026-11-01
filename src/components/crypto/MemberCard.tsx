@@ -1,3 +1,5 @@
+import ShopBadge from "@/components/crypto/ShopBadge";
+import { CARD_BG, useUserCosmetics } from "@/lib/shop";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +51,8 @@ interface Member {
 
 const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void }) => {
   const { token, user } = useAuth();
+  const cardSlug = useUserCosmetics(id).card?.slug;
+  const cardBg = cardSlug ? CARD_BG[cardSlug] : undefined;
   const { data: m, isLoading, isError } = useQuery({
     queryKey: ["member", id],
     enabled: id !== null,
@@ -59,7 +63,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
   return (
     <Dialog open={id !== null} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="bg-card border-border max-w-md p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div className="h-20 bg-gradient-to-br from-primary/30 via-accent/10 to-transparent" />
+        <div className="h-20 bg-gradient-to-br from-primary/30 via-accent/10 to-transparent" style={cardBg ? { background: cardBg } : undefined} />
         <div className="px-5 pb-5 -mt-12">
           {isLoading || !m ? (
             isError ? (
@@ -87,6 +91,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                     dot="lg"
                     className="w-20 h-20 text-3xl"
                     iconSize={34}
+                    userId={m.id}
                   />
                 </div>
                 <div className="min-w-0 pb-1">
@@ -102,6 +107,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                       <SupporterBadge no={m.supporter} creator={m.creator} />
                       <FounderBadge no={m.founder} />
                       <FundBadge userId={m.id} />
+                      <ShopBadge userId={m.id} size={18} />
                       <span className={`text-xs ${m.online ? "text-green-400" : "text-muted-foreground"}`}>
                         {m.online ? "в сети" : "не в сети"}
                       </span>

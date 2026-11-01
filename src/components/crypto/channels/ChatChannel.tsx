@@ -1,3 +1,4 @@
+import ShopBadge from "@/components/crypto/ShopBadge";
 import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
@@ -87,7 +88,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
           items.map((m) => (
             <div key={m.id} className="flex gap-2.5 group">
               <button onClick={() => openMember(m.user.id)} className="flex-shrink-0 mt-0.5">
-                <MemberIcon name={m.user.name} level={m.user.level} avatar={m.user.avatar} className="w-8 h-8 text-xs" iconSize={15} />
+                <MemberIcon name={m.user.name} level={m.user.level} avatar={m.user.avatar} className="w-8 h-8 text-xs" iconSize={15} userId={m.user.id} />
               </button>
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
@@ -96,6 +97,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
                   </button>
                   <VerifiedBadge userId={m.user.id} className="self-center" />
                   <TopTraderBadge userId={m.user.id} size={14} className="self-center" />
+                  <ShopBadge userId={m.user.id} size={14} className="self-center" />
                   {m.user.isAi && <BotBadge ai compact className="self-center" />}
                   <SupporterBadge no={m.user.supporter} creator={m.user.creator} compact className="self-center" />
                   <FundBadge userId={m.user.id} compact className="self-center" />

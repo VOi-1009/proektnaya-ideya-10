@@ -8,9 +8,10 @@ interface Props {
   email?: string;
   avatar?: string;
   className?: string;
+  userId?: number | null;
 }
 
-const UserAvatar = ({ name, email, avatar, className = "w-8 h-8 text-sm", level, online, dot }: Props) => {
+const UserAvatar = ({ name, email, avatar, className = "w-8 h-8 text-sm", level, online, dot, userId }: Props) => {
   const letter = (name || email || "Г").trim()[0]?.toUpperCase() ?? "Г";
   const node = avatar ? (
     <img src={avatar} alt={name || "Аватар"} className={`rounded-full object-cover flex-shrink-0 ${className}`} />
@@ -21,7 +22,7 @@ const UserAvatar = ({ name, email, avatar, className = "w-8 h-8 text-sm", level,
   );
   if (level === undefined && online === undefined) return node;
   return (
-    <AvatarFrame level={level} online={online} dot={dot}>
+    <AvatarFrame userId={userId} level={level} online={online} dot={dot}>
       {node}
     </AvatarFrame>
   );

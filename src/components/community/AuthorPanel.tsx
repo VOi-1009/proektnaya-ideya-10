@@ -1,3 +1,5 @@
+import ShopBadge from "@/components/crypto/ShopBadge";
+import { CARD_BG, useUserCosmetics } from "@/lib/shop";
 import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundRoundBadge from "@/components/crypto/FundRoundBadge";
@@ -35,7 +37,9 @@ const Stat = ({ icon, value, label }: { icon: string; value: number | string; la
   </div>
 );
 
-const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollow, onCard, onLogin }: Props) => (
+const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollow, onCard, onLogin }: Props) => {
+  const cardSlug = useUserCosmetics(a?.id).card?.slug;
+  return (
   <aside className="w-full lg:w-72 flex-shrink-0 bg-card/60 border-y lg:border-y-0 lg:border-x border-border/60">
     <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
       {loading ? (
@@ -57,14 +61,15 @@ const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollo
         </div>
       ) : (
         <div className="pb-4">
-          <div className="h-14" style={{ background: `linear-gradient(90deg, ${statusColor(a.level)}55, ${statusColor(a.level)}15)` }} />
+          <div className="h-14" style={{ background: (cardSlug && CARD_BG[cardSlug]) || `linear-gradient(90deg, ${statusColor(a.level)}55, ${statusColor(a.level)}15)` }} />
           <div className="px-4 -mt-8">
-            <MemberIcon name={a.name} level={a.level} avatar={a.avatar} online={a.online} dot="md" className="w-16 h-16 text-2xl" iconSize={28} />
+            <MemberIcon name={a.name} level={a.level} avatar={a.avatar} online={a.online} dot="md" className="w-16 h-16 text-2xl" iconSize={28} userId={a.id} />
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <h2 className={`font-display text-lg leading-tight truncate max-w-full ${nameCls(a.level)}`}>{a.name}</h2>
               <VerifiedBadge userId={a.id} size={16} />
               <TopTraderBadge userId={a.id} size={18} />
               <FundRoundBadge userId={a.id} size={22} />
+              <ShopBadge userId={a.id} size={20} />
               {a.isMe && <span className="text-[10px] text-primary">это вы</span>}
             </div>
             <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
@@ -170,6 +175,7 @@ const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollo
       )}
     </div>
   </aside>
-);
+  );
+};
 
 export default AuthorPanel;

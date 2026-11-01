@@ -1,8 +1,10 @@
+import ShopBadge from "@/components/crypto/ShopBadge";
+import { HEADER_BG, THEME_STYLE, useUserCosmetics } from "@/lib/shop";
 import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import Icon from "@/components/ui/icon";
 import { COIN_META } from "@/lib/crypto";
-import { nameCls } from "@/lib/status";
+import { nameCls, statusColor } from "@/lib/status";
 import MemberIcon from "@/components/crypto/MemberIcon";
 import TeamBadge from "@/components/crypto/TeamBadge";
 import FundRoundBadge from "@/components/crypto/FundRoundBadge";
@@ -20,10 +22,22 @@ interface Props {
 
 const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor }: Props) => {
   const own = me === p.user.id;
+  const cos = useUserCosmetics(p.user.id);
+  const theme = cos.theme ? THEME_STYLE[cos.theme.slug] : undefined;
+  const head = cos.header ? HEADER_BG[cos.header.slug] : undefined;
   return (
-    <article className="rounded-xl border border-border bg-card p-4 flex gap-3">
+    <article
+      className="rounded-xl border border-border bg-card overflow-hidden"
+      style={theme ? { background: theme.background, borderColor: theme.borderColor } : undefined}
+    >
+      <div
+        className="h-2.5 w-full"
+        style={{ background: head ?? `linear-gradient(90deg, ${statusColor(p.user.level)}59, ${statusColor(p.user.level)}14 60%, transparent)` }}
+        aria-hidden="true"
+      />
+      <div className="p-4 flex gap-3">
       <button onClick={() => onAuthor(p.user.id)} className="flex-shrink-0 self-start" aria-label="Страница автора">
-        <MemberIcon name={p.user.name} level={p.user.level} avatar={p.user.avatar} className="w-10 h-10 text-base" iconSize={18} />
+        <MemberIcon name={p.user.name} level={p.user.level} avatar={p.user.avatar} className="w-10 h-10 text-base" iconSize={18} userId={p.user.id} />
       </button>
       <div className="flex-1 min-w-0">
         <header className="flex items-center gap-2 flex-wrap">
@@ -33,6 +47,7 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor 
           <VerifiedBadge userId={p.user.id} size={14} />
           <TopTraderBadge userId={p.user.id} size={16} />
           <FundRoundBadge userId={p.user.id} size={18} />
+          <ShopBadge userId={p.user.id} size={16} />
           <TeamBadge team={p.user.team} compact />
           <span className="text-muted-foreground text-xs">{p.user.title}</span>
           <span className="text-muted-foreground text-xs">· {timeAgo(p.createdAt)}</span>
@@ -88,6 +103,7 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor 
             );
           })}
         </footer>
+      </div>
       </div>
     </article>
   );

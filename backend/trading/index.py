@@ -24,6 +24,7 @@ _cache = {"at": 0.0, "data": {}}
 _kcache = {}
 _top = {"at": 0.0, "data": None}
 _feed = {"at": 0.0, "data": None}
+_cosm = {"at": 0.0, "data": None}
 SYM = {"bitcoin": "BTC", "ethereum": "ETH", "binancecoin": "BNB", "ripple": "XRP", "solana": "SOL", "dogecoin": "DOGE", "hyperliquid": "HYPE", "zcash": "ZEC", "tron": "TRX", "cardano": "ADA", "chainlink": "LINK", "stellar": "XLM", "avalanche-2": "AVAX", "sui": "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", "litecoin": "LTC"}
 OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "1h": "1H", "4h": "4H", "1d": "1D"}
 BYBIT_IV = {"1m": "1", "5m": "5", "15m": "15", "1h": "60", "4h": "240", "1d": "D"}
@@ -900,6 +901,212 @@ def ai_admin_payload(cur, px):
     return out
 
 
+
+SHOP_KINDS = {"header": "Шапки постов", "frame": "Рамки аватара", "card": "Шапки мини-карточки", "theme": "Темы сообщений", "badge": "Значки", "gift": "Подарки"}
+SHOP_EQUIP = {"header", "frame", "card", "theme", "badge"}
+SHOP_KEY = "shop_settings"
+SHOP_DEFAULT = {"enabled": True, "message": "", "giftDailyLimit": 5, "giftFeePercent": 0.0, "discountPercent": 0.0}
+SHOP_ITEM_COLS = "id, slug, kind, name, description, emoji, price, stock, sold, enabled, sort"
+
+
+def shop_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{SHOP_KEY}'")
+    row = cur.fetchone()
+    raw = {}
+    if row and row[0]:
+        try:
+            raw = json.loads(row[0])
+        except ValueError:
+            raw = {}
+    out = dict(SHOP_DEFAULT)
+    try:
+        out["enabled"] = bool(raw.get("enabled", True))
+        out["message"] = str(raw.get("message") or "")[:200]
+        out["giftDailyLimit"] = max(0, min(int(raw.get("giftDailyLimit", 5)), 100))
+        out["giftFeePercent"] = max(0.0, min(float(raw.get("giftFeePercent", 0)), 50.0))
+        out["discountPercent"] = max(0.0, min(float(raw.get("discountPercent", 0)), 90.0))
+    except (TypeError, ValueError):
+        pass
+    return out
+
+
+def shop_price(base, st):
+    return round(float(base) * (1 - st["discountPercent"] / 100), 2)
+
+
+def shop_item(r, st=None):
+    d = {"id": r[0], "slug": r[1], "kind": r[2], "name": r[3], "description": r[4], "emoji": r[5], "basePrice": float(r[6]),
+         "stock": r[7], "sold": int(r[8]), "enabled": bool(r[9]), "sort": int(r[10])}
+    d["price"] = shop_price(r[6], st) if st else d["basePrice"]
+    return d
+
+
+def shop_catalog(cur, uid, admin=False):
+    st = shop_settings(cur)
+    cond = "" if admin else "WHERE enabled"
+    cur.execute(f"SELECT {SHOP_ITEM_COLS} FROM {SCHEMA}.shop_items {cond} ORDER BY sort, id")
+    items = [shop_item(r, st) for r in cur.fetchall()]
+    owned, equipped = set(), {}
+    balance = 0.0
+    if uid:
+        cur.execute(f"SELECT item_id FROM {SCHEMA}.shop_purchases WHERE user_id = {int(uid)}")
+        owned = {int(r[0]) for r in cur.fetchall()}
+        cur.execute(f"SELECT kind, item_id FROM {SCHEMA}.shop_equipped WHERE user_id = {int(uid)}")
+        equipped = {r[0]: int(r[1]) for r in cur.fetchall()}
+        balance = tka_balance(cur, uid)
+    for it in items:
+        it["owned"] = it["id"] in owned and it["kind"] != "gift"
+        it["equipped"] = equipped.get(it["kind"]) == it["id"]
+        it["soldOut"] = it["stock"] is not None and it["sold"] >= it["stock"]
+    return {"items": items, "kinds": SHOP_KINDS, "settings": st, "balance": balance}
+
+
+def shop_cosmetics(cur):
+    now = time.time()
+    if _cosm["data"] is not None and now - _cosm["at"] < 60:
+        return _cosm["data"]
+    cur.execute(
+        f"SELECT e.user_id, e.kind, i.slug, i.emoji, i.name FROM {SCHEMA}.shop_equipped e JOIN {SCHEMA}.shop_items i ON i.id = e.item_id "
+        f"WHERE i.enabled ORDER BY e.user_id LIMIT 5000"
+    )
+    out = {}
+    for uid_, kind, slug, emoji, name in cur.fetchall():
+        out.setdefault(str(uid_), {})[kind] = {"slug": slug, "emoji": emoji, "name": name}
+    _cosm.update(at=now, data=out)
+    return out
+
+
+def shop_spend(cur, uid, amount, kind, note):
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) "
+        f"SELECT {int(uid)}, -{amount}, '{kind}', '{q(note)[:120]}' "
+        f"WHERE (SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.tka_ledger WHERE user_id = {int(uid)}) >= {amount} RETURNING id"
+    )
+    return bool(cur.fetchone())
+
+
+def shop_take_stock(cur, item_id):
+    cur.execute(
+        f"UPDATE {SCHEMA}.shop_items SET sold = sold + 1 WHERE id = {int(item_id)} AND enabled AND (stock IS NULL OR sold < stock) RETURNING id"
+    )
+    return bool(cur.fetchone())
+
+
+def shop_do(cur, uid, act, body):
+    st = shop_settings(cur)
+    try:
+        item_id = int(body.get("itemId"))
+    except (TypeError, ValueError):
+        return 400, {"error": "Товар не найден"}
+    cur.execute(f"SELECT {SHOP_ITEM_COLS} FROM {SCHEMA}.shop_items WHERE id = {item_id}")
+    row = cur.fetchone()
+    if not row:
+        return 404, {"error": "Товар не найден"}
+    item = shop_item(row, st)
+
+    if act == "shop_equip":
+        if item["kind"] not in SHOP_EQUIP:
+            return 400, {"error": "Этот товар нельзя надеть"}
+        if body.get("off"):
+            cur.execute(f"UPDATE {SCHEMA}.shop_equipped SET item_id = 0 WHERE user_id = {uid} AND kind = '{item['kind']}'")
+            return 200, {"ok": True}
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.shop_purchases WHERE user_id = {uid} AND item_id = {item_id}")
+        if not cur.fetchone():
+            return 403, {"error": "Сначала купите этот товар"}
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.shop_equipped (user_id, kind, item_id) VALUES ({uid}, '{item['kind']}', {item_id}) "
+            f"ON CONFLICT (user_id, kind) DO UPDATE SET item_id = EXCLUDED.item_id"
+        )
+        return 200, {"ok": True}
+
+    if not st["enabled"]:
+        return 403, {"error": st["message"] or "Магазин временно закрыт"}
+    if not item["enabled"]:
+        return 400, {"error": "Этот товар сейчас недоступен"}
+    price = item["price"]
+
+    if act == "shop_buy":
+        if item["kind"] == "gift":
+            return 400, {"error": "Подарок можно только подарить участнику"}
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.shop_purchases WHERE user_id = {uid} AND item_id = {item_id}")
+        if cur.fetchone():
+            return 400, {"error": "Этот товар у вас уже есть"}
+        if not shop_take_stock(cur, item_id):
+            return 400, {"error": "Товар закончился"}
+        if price > 0 and not shop_spend(cur, uid, price, "shop", f"Магазин: {item['name']}"):
+            cur.execute(f"UPDATE {SCHEMA}.shop_items SET sold = sold - 1 WHERE id = {item_id}")
+            return 400, {"error": "Недостаточно TKA на кошельке"}
+        cur.execute(f"INSERT INTO {SCHEMA}.shop_purchases (user_id, item_id, price, source) VALUES ({uid}, {item_id}, {price}, 'buy')")
+        if item["kind"] in SHOP_EQUIP:
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.shop_equipped (user_id, kind, item_id) VALUES ({uid}, '{item['kind']}', {item_id}) "
+                f"ON CONFLICT (user_id, kind) DO UPDATE SET item_id = EXCLUDED.item_id"
+            )
+        return 200, {"ok": True, "spent": price}
+
+    if act == "shop_gift":
+        try:
+            to = int(body.get("toUser"))
+        except (TypeError, ValueError):
+            return 400, {"error": "Выберите получателя"}
+        if to == uid:
+            return 400, {"error": "Себе дарить нельзя"}
+        cur.execute(f"SELECT COALESCE(NULLIF(name, ''), split_part(email, '@', 1)), is_bot FROM {SCHEMA}.users WHERE id = {to}")
+        rcp = cur.fetchone()
+        if not rcp or rcp[1]:
+            return 404, {"error": "Получатель не найден"}
+        if st["giftDailyLimit"] <= 0:
+            return 403, {"error": "Подарки сейчас отключены"}
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.shop_gifts WHERE from_user = {uid} AND created_at > NOW() - INTERVAL '1 day'")
+        if int(cur.fetchone()[0]) >= st["giftDailyLimit"]:
+            return 400, {"error": f"Можно дарить не больше {st['giftDailyLimit']} раз в сутки"}
+        if item["kind"] != "gift":
+            cur.execute(f"SELECT 1 FROM {SCHEMA}.shop_purchases WHERE user_id = {to} AND item_id = {item_id}")
+            if cur.fetchone():
+                return 400, {"error": "У получателя уже есть этот товар"}
+        if not shop_take_stock(cur, item_id):
+            return 400, {"error": "Товар закончился"}
+        total = round(price * (1 + st["giftFeePercent"] / 100), 2)
+        msg = str(body.get("message") or "").strip()[:140]
+        if total > 0 and not shop_spend(cur, uid, total, "shop", f"Подарок для {rcp[0]}: {item['name']}"):
+            cur.execute(f"UPDATE {SCHEMA}.shop_items SET sold = sold - 1 WHERE id = {item_id}")
+            return 400, {"error": "Недостаточно TKA на кошельке"}
+        cur.execute(f"INSERT INTO {SCHEMA}.shop_gifts (from_user, to_user, item_id, price, message) VALUES ({uid}, {to}, {item_id}, {total}, '{q(msg)}')")
+        if item["kind"] != "gift":
+            cur.execute(f"INSERT INTO {SCHEMA}.shop_purchases (user_id, item_id, price, source) VALUES ({to}, {item_id}, 0, 'gift') ON CONFLICT DO NOTHING")
+        return 200, {"ok": True, "spent": total, "to": rcp[0]}
+    return 400, {"error": "Неизвестное действие"}
+
+
+def shop_gifts_for(cur, uid):
+    cur.execute(
+        f"SELECT g.id, g.message, g.created_at, i.name, i.emoji, i.kind, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
+        f"FROM {SCHEMA}.shop_gifts g JOIN {SCHEMA}.shop_items i ON i.id = g.item_id JOIN {SCHEMA}.users u ON u.id = g.from_user "
+        f"WHERE g.to_user = {int(uid)} ORDER BY g.id DESC LIMIT 30"
+    )
+    return [{"id": r[0], "message": r[1], "at": r[2].isoformat(), "name": r[3], "emoji": r[4], "kind": r[5], "from": r[6]} for r in cur.fetchall()]
+
+
+def shop_admin(cur):
+    st = shop_settings(cur)
+    cur.execute(f"SELECT COUNT(*) FILTER (WHERE source = 'buy'), COALESCE(SUM(price) FILTER (WHERE source = 'buy'), 0), COUNT(*) FILTER (WHERE source = 'gift') FROM {SCHEMA}.shop_purchases")
+    buys, revenue, gifted = cur.fetchone()
+    cur.execute(f"SELECT COUNT(*), COALESCE(SUM(price), 0) FROM {SCHEMA}.shop_gifts")
+    gcnt, gsum = cur.fetchone()
+    cur.execute(
+        f"SELECT i.name, COUNT(p.id) AS n FROM {SCHEMA}.shop_items i JOIN {SCHEMA}.shop_purchases p ON p.item_id = i.id WHERE p.source = 'buy' "
+        f"GROUP BY i.id, i.name ORDER BY n DESC LIMIT 5"
+    )
+    top = [{"name": r[0], "count": int(r[1])} for r in cur.fetchall()]
+    cur.execute(
+        f"SELECT p.id, p.price, p.source, p.created_at, i.name, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
+        f"FROM {SCHEMA}.shop_purchases p JOIN {SCHEMA}.shop_items i ON i.id = p.item_id JOIN {SCHEMA}.users u ON u.id = p.user_id "
+        f"ORDER BY p.id DESC LIMIT 15"
+    )
+    recent = [{"id": r[0], "price": float(r[1]), "source": r[2], "at": r[3].isoformat(), "item": r[4], "user": r[5]} for r in cur.fetchall()]
+    return {"settings": st, "stats": {"buys": int(buys), "revenue": float(revenue), "gifts": int(gcnt), "giftsSum": float(gsum), "granted": int(gifted)}, "top": top, "recent": recent, "kinds": SHOP_KINDS}
+
+
 def handler(event, context):
     """Тренировочная биржа: виртуальный счёт, рыночные и лимитные ордера, плечо, шорт, рейтинг"""
     t0 = time.time()
@@ -924,6 +1131,10 @@ def handler(event, context):
             finish_due(cur)
             checked = tick(cur, px)
             return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
+        if method == "GET" and action == "shop_catalog":
+            return resp(200, shop_catalog(cur, opt_uid(cur, token)))
+        if method == "GET" and action == "shop_cosmetics":
+            return resp(200, {"users": shop_cosmetics(cur)})
         if method == "GET" and action == "exchange_settings":
             return resp(200, exchange_settings(cur))
         if method == "GET" and action == "top_feed":
@@ -983,6 +1194,15 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "shop_gifts":
+            return resp(200, {"gifts": shop_gifts_for(cur, uid)})
+        if method == "GET" and action == "shop_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            out = shop_admin(cur)
+            out.update(shop_catalog(cur, uid, admin=True))
+            out["settings"] = shop_settings(cur)
+            return resp(200, out)
         if method == "GET" and action == "ai_public":
             try:
                 ai_trader_step(cur, px, started=t0)
@@ -1029,6 +1249,92 @@ def handler(event, context):
             return resp(200, state(cur, uid, px))
         body = json.loads(event.get("body") or "{}")
         act = body.get("action")
+        if act in ("shop_buy", "shop_equip", "shop_gift"):
+            ensure_account(cur, uid)
+            code, out = shop_do(cur, uid, act, body)
+            if code != 200:
+                return resp(code, out)
+            _cosm["data"] = None
+            cat = shop_catalog(cur, uid)
+            cat["result"] = out
+            return resp(200, cat)
+        if act in ("shop_save", "shop_item_save", "shop_item_add", "shop_grant"):
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            if act == "shop_save":
+                try:
+                    new = {
+                        "enabled": bool(body.get("enabled")),
+                        "message": str(body.get("message") or "").strip()[:200],
+                        "giftDailyLimit": max(0, min(int(body.get("giftDailyLimit")), 100)),
+                        "giftFeePercent": max(0.0, min(float(body.get("giftFeePercent")), 50.0)),
+                        "discountPercent": max(0.0, min(float(body.get("discountPercent")), 90.0)),
+                    }
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Проверьте числа в настройках"})
+                val = qj(json.dumps(new, ensure_ascii=False))
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{SHOP_KEY}', '{val}', NOW()) "
+                    f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+                )
+            elif act == "shop_item_save":
+                try:
+                    iid = int(body.get("id"))
+                    price = max(0.0, min(round(float(body.get("price")), 2), 1000000.0))
+                    stock = body.get("stock")
+                    stock = "NULL" if stock in (None, "", 0, "0") else str(max(1, min(int(stock), 1000000)))
+                    sort = max(0, min(int(body.get("sort", 0)), 10000))
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Проверьте цену и количество"})
+                name = q(str(body.get("name") or "").strip()[:60])
+                desc = q(str(body.get("description") or "").strip()[:200])
+                if len(name) < 2:
+                    return resp(400, {"error": "Введите название товара"})
+                cur.execute(
+                    f"UPDATE {SCHEMA}.shop_items SET name = '{name}', description = '{desc}', price = {price}, stock = {stock}, sort = {sort}, "
+                    f"enabled = {'TRUE' if body.get('enabled') else 'FALSE'} WHERE id = {iid} RETURNING id"
+                )
+                if not cur.fetchone():
+                    return resp(404, {"error": "Товар не найден"})
+            elif act == "shop_item_add":
+                kind = body.get("kind")
+                if kind not in SHOP_KINDS or kind not in ("badge", "gift"):
+                    return resp(400, {"error": "Новые товары можно добавлять в «Значки» и «Подарки»"})
+                name = q(str(body.get("name") or "").strip()[:60])
+                emoji = str(body.get("emoji") or "").strip()[:8]
+                if len(name) < 2 or not emoji:
+                    return resp(400, {"error": "Нужны название и эмодзи"})
+                try:
+                    price = max(0.0, min(round(float(body.get("price")), 2), 1000000.0))
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Укажите цену"})
+                desc = q(str(body.get("description") or "").strip()[:200])
+                cur.execute(f"SELECT COALESCE(MAX(sort), 0) + 10 FROM {SCHEMA}.shop_items WHERE kind = '{kind}'")
+                nxt = cur.fetchone()[0]
+                slug = f"x_{kind[0]}_{int(time.time())}"
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.shop_items (slug, kind, name, description, emoji, price, sort) "
+                    f"VALUES ('{slug}', '{kind}', '{name}', '{desc}', '{q(emoji)}', {price}, {int(nxt)})"
+                )
+            else:
+                try:
+                    target = int(body.get("userId"))
+                    iid = int(body.get("itemId"))
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Укажите участника и товар"})
+                cur.execute(f"SELECT kind FROM {SCHEMA}.shop_items WHERE id = {iid}")
+                r = cur.fetchone()
+                if not r or r[0] == "gift":
+                    return resp(400, {"error": "Подарок-открытку выдать нельзя, выберите значок, рамку, шапку или тему"})
+                cur.execute(f"SELECT 1 FROM {SCHEMA}.users WHERE id = {target}")
+                if not cur.fetchone():
+                    return resp(404, {"error": "Участник не найден"})
+                cur.execute(f"INSERT INTO {SCHEMA}.shop_purchases (user_id, item_id, price, source) VALUES ({target}, {iid}, 0, 'gift') ON CONFLICT DO NOTHING")
+            _cosm["data"] = None
+            out = shop_admin(cur)
+            out.update(shop_catalog(cur, uid, admin=True))
+            out["settings"] = shop_settings(cur)
+            return resp(200, out)
         if act in ("ai_save", "ai_fund", "ai_run", "ai_close_all", "ai_reset"):
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})

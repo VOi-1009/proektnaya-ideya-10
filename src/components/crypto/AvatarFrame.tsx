@@ -1,6 +1,8 @@
+import { FRAME_STYLE, useUserCosmetics } from "@/lib/shop";
 import { statusColor } from "@/lib/status";
 
 interface Props {
+  userId?: number | null;
   level?: number;
   online?: boolean;
   dot?: "sm" | "md" | "lg";
@@ -13,11 +15,18 @@ const DOT = {
   lg: "bottom-1 right-1 w-4 h-4",
 };
 
-const AvatarFrame = ({ level, online, dot = "md", children }: Props) => (
-  <span
-    className="relative inline-flex rounded-full flex-shrink-0"
-    style={level ? { outline: `2px solid ${statusColor(level)}`, outlineOffset: "2px" } : undefined}
-  >
+const AvatarFrame = ({ userId, level, online, dot = "md", children }: Props) => {
+  const custom = useUserCosmetics(userId).frame;
+  const fs = custom ? FRAME_STYLE[custom.slug] : undefined;
+  const style: React.CSSProperties | undefined = fs
+    ? fs.background
+      ? { background: fs.background, padding: 3 }
+      : { outline: `3px solid ${fs.ring}`, outlineOffset: "2px", boxShadow: fs.boxShadow }
+    : level
+    ? { outline: `2px solid ${statusColor(level)}`, outlineOffset: "2px" }
+    : undefined;
+  return (
+  <span className="relative inline-flex rounded-full flex-shrink-0" style={style}>
     {children}
     {online !== undefined && (
       <span
@@ -28,6 +37,7 @@ const AvatarFrame = ({ level, online, dot = "md", children }: Props) => (
       />
     )}
   </span>
-);
+  );
+};
 
 export default AvatarFrame;

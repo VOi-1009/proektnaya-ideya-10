@@ -1,3 +1,5 @@
+import ShopBadge from "@/components/crypto/ShopBadge";
+import { CARD_BG, useUserCosmetics } from "@/lib/shop";
 import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import FundRoundBadge from "@/components/crypto/FundRoundBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
@@ -183,6 +185,7 @@ const Profile = () => {
     );
   }
 
+  const myCard = useUserCosmetics(profile?.id).card?.slug;
   const s = profile?.status;
   const lvIdx = s ? s.level - 1 : 0;
   const from = LEVELS[lvIdx < LEVELS.length - 1 ? lvIdx : lvIdx - 1].color;
@@ -205,10 +208,10 @@ const Profile = () => {
         ) : profile && s ? (
           <>
             <section className="relative overflow-hidden bg-card border border-border rounded-2xl animate-fade-in">
-              <div className="h-28 sm:h-36" style={{ background: `linear-gradient(90deg, ${from}66, ${to}55)` }} />
+              <div className="h-28 sm:h-36" style={{ background: (myCard && CARD_BG[myCard]) || `linear-gradient(90deg, ${from}66, ${to}55)` }} />
               <div className="px-5 sm:px-8 pb-6 -mt-14 sm:-mt-16 flex flex-col lg:flex-row gap-6 lg:items-end">
                 <div className="relative self-start flex-shrink-0">
-                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} level={s.level} online dot="lg" className="w-28 h-28 sm:w-32 sm:h-32 text-5xl" />
+                  <UserAvatar name={profile.name} email={profile.email} avatar={profile.avatar} level={s.level} online dot="lg" className="w-28 h-28 sm:w-32 sm:h-32 text-5xl" userId={profile.id} />
                   {canEditAvatar && (
                   <button
                     onClick={() => fileRef.current?.click()}
@@ -226,6 +229,7 @@ const Profile = () => {
                     <h1 className="font-display text-2xl sm:text-3xl text-white truncate">{profile.name || "Без имени"}</h1>
                     <VerifiedBadge userId={profile.id} size={20} />
                     <TopTraderBadge userId={profile.id} size={24} />
+                    <ShopBadge userId={profile.id} size={24} />
                     <FundRoundBadge userId={profile.id} size={30} />
                   </div>
                   {profile.headline && <div className="text-foreground mt-1">{profile.headline}</div>}
