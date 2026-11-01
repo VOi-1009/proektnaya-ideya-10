@@ -1,4 +1,5 @@
 import FundBadge from "@/components/crypto/FundBadge";
+import FundRoundBadge from "@/components/crypto/FundRoundBadge";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,6 +61,7 @@ const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollo
             <MemberIcon name={a.name} level={a.level} avatar={a.avatar} online={a.online} dot="md" className="w-16 h-16 text-2xl" iconSize={28} />
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <h2 className={`font-display text-lg leading-tight truncate max-w-full ${nameCls(a.level)}`}>{a.name}</h2>
+              <FundRoundBadge userId={a.id} size={22} />
               {a.isMe && <span className="text-[10px] text-primary">это вы</span>}
             </div>
             <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
