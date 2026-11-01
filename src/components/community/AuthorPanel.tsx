@@ -1,3 +1,4 @@
+import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundRoundBadge from "@/components/crypto/FundRoundBadge";
 import Icon from "@/components/ui/icon";
@@ -62,6 +63,7 @@ const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollo
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <h2 className={`font-display text-lg leading-tight truncate max-w-full ${nameCls(a.level)}`}>{a.name}</h2>
               <VerifiedBadge userId={a.id} size={16} />
+              <TopTraderBadge userId={a.id} size={18} />
               <FundRoundBadge userId={a.id} size={22} />
               {a.isMe && <span className="text-[10px] text-primary">это вы</span>}
             </div>

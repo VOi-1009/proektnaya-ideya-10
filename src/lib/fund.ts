@@ -186,3 +186,11 @@ export const useAiPublic = (token: string | null) =>
     refetchInterval: 60_000,
     queryFn: () => fundRequest<AiPublic>(token, "?action=ai_public"),
   });
+
+export const useTopTraders = () =>
+  useQuery<number[]>({
+    queryKey: ["top-traders"],
+    staleTime: 2 * 60_000,
+    refetchInterval: 5 * 60_000,
+    queryFn: async () => (await fundRequest<{ top: number[] }>(null, "?action=top_traders")).top,
+  });

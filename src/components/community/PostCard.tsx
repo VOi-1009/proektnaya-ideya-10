@@ -1,3 +1,4 @@
+import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import Icon from "@/components/ui/icon";
 import { COIN_META } from "@/lib/crypto";
@@ -30,6 +31,7 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor 
             {p.user.name}
           </button>
           <VerifiedBadge userId={p.user.id} size={14} />
+          <TopTraderBadge userId={p.user.id} size={16} />
           <FundRoundBadge userId={p.user.id} size={18} />
           <TeamBadge team={p.user.team} compact />
           <span className="text-muted-foreground text-xs">{p.user.title}</span>

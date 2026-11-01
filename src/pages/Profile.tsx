@@ -1,3 +1,4 @@
+import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import FundRoundBadge from "@/components/crypto/FundRoundBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import { useEffect, useRef, useState } from "react";
@@ -224,6 +225,7 @@ const Profile = () => {
                   <div className="flex items-center gap-2 min-w-0">
                     <h1 className="font-display text-2xl sm:text-3xl text-white truncate">{profile.name || "Без имени"}</h1>
                     <VerifiedBadge userId={profile.id} size={20} />
+                    <TopTraderBadge userId={profile.id} size={24} />
                     <FundRoundBadge userId={profile.id} size={30} />
                   </div>
                   {profile.headline && <div className="text-foreground mt-1">{profile.headline}</div>}

@@ -1,3 +1,4 @@
+import TopTraderBadge from "@/components/crypto/TopTraderBadge";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import { useEffect, useRef, useState } from "react";
@@ -94,6 +95,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
                     {m.user.name}
                   </button>
                   <VerifiedBadge userId={m.user.id} className="self-center" />
+                  <TopTraderBadge userId={m.user.id} size={14} className="self-center" />
                   {m.user.isAi && <BotBadge ai compact className="self-center" />}
                   <SupporterBadge no={m.user.supporter} creator={m.user.creator} compact className="self-center" />
                   <FundBadge userId={m.user.id} compact className="self-center" />

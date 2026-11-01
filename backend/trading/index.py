@@ -22,6 +22,7 @@ CORS = {
 }
 _cache = {"at": 0.0, "data": {}}
 _kcache = {}
+_top = {"at": 0.0, "data": None}
 SYM = {"bitcoin": "BTC", "ethereum": "ETH", "binancecoin": "BNB", "ripple": "XRP", "solana": "SOL", "dogecoin": "DOGE", "hyperliquid": "HYPE", "zcash": "ZEC", "tron": "TRX", "cardano": "ADA", "chainlink": "LINK", "stellar": "XLM", "avalanche-2": "AVAX", "sui": "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", "litecoin": "LTC"}
 OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "1h": "1H", "4h": "4H", "1d": "1D"}
 BYBIT_IV = {"1m": "1", "5m": "5", "15m": "15", "1h": "60", "4h": "240", "1d": "D"}
@@ -899,6 +900,14 @@ def handler(event, context):
             return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
         if method == "GET" and action == "exchange_settings":
             return resp(200, exchange_settings(cur))
+        if method == "GET" and action == "top_traders":
+            now = time.time()
+            if _top["data"] is not None and now - _top["at"] < 120:
+                return resp(200, {"top": _top["data"]})
+            rows = [r for r in leaderboard(cur, prices()) if r["pnl"] > 0][:3]
+            ids = [int(r["userId"]) for r in rows]
+            _top.update(at=now, data=ids)
+            return resp(200, {"top": ids})
         if method == "GET" and action == "fund":
             return resp(200, fund_state(cur, opt_uid(cur, token)))
         if method == "GET" and action == "fund_donors":
