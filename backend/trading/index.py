@@ -1544,7 +1544,7 @@ def games_admin(cur):
 
 MOBILE_KEY = "mobile_settings"
 MOBILE_SECTIONS = ["home", "market", "news", "trading", "games", "shop", "profile", "community", "fund"]
-MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link"]
+MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link", "market_summary"]
 MOBILE_DEFAULT = {
     "enabled": True,
     "message": "",

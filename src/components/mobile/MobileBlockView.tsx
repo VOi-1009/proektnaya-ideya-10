@@ -1,8 +1,24 @@
 import Icon from "@/components/ui/icon";
 import { Link } from "@/lib/router-compat";
 import { MobileBlock } from "@/lib/fund";
+import { useMarkets } from "@/lib/crypto";
+import MarketSummary from "@/components/crypto/home/MarketSummary";
+import { useNavigate } from "@/lib/router-compat";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const MarketSummaryBlock = () => {
+  const { data, isLoading } = useMarkets();
+  const navigate = useNavigate();
+  if (isLoading || !data) return <Skeleton className="h-64 w-full bg-card" />;
+  return (
+    <div className="rounded-xl border border-border bg-card p-2 flex flex-col gap-2">
+      <MarketSummary coins={data.coins} go={() => navigate("/")} cols={2} />
+    </div>
+  );
+};
 
 const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: boolean }) => {
+  if (b.kind === "market_summary") return <MarketSummaryBlock />;
   if (b.kind === "empty") {
     if (!preview) return null;
     return (
