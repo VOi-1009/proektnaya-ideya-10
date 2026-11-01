@@ -12,6 +12,7 @@ import UpcomingEvents from "../UpcomingEvents";
 import LiqBars from "../LiqBars";
 import LiqHistory from "../LiqHistory";
 import AchievementsMini from "../home/AchievementsMini";
+import FundMini from "../home/FundMini";
 import EtfNetFlow from "../EtfNetFlow";
 import SocialSentiment from "../SocialSentiment";
 import PuellStatus from "../PuellStatus";
@@ -112,7 +113,9 @@ const WelcomeChannel = ({ coins, go, openArticle }: Props) => {
         <div className="contents">
           <TopNewsBlock onAll={() => go("news")} />
           <div className="border-t lg:border-t-0 lg:border-l border-transparent flex flex-col">
-            <div className="flex-1 min-h-[100px]" />
+            <div className="flex-1 min-h-[100px]">
+              <FundMini onOpen={() => go("fund")} />
+            </div>
             <div className="flex-1 min-h-[260px]">
               <LiqHistory />
             </div>
