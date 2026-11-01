@@ -13,12 +13,17 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ConsentRouteImport } from './routes/consent'
+import { Route as GamesRouteImport } from './routes/games'
 import { Route as MRouteImport } from './routes/m'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as MarketRouteImport } from './routes/market'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TradingRouteImport } from './routes/trading'
 import { Route as ArticlesIdRouteImport } from './routes/articles.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +46,11 @@ const ConsentRoute = ConsentRouteImport.update({
   path: '/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MRoute = MRouteImport.update({
   id: '/m',
   path: '/m',
@@ -49,6 +59,16 @@ const MRoute = MRouteImport.update({
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
   id: '/manifest.webmanifest',
   path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketRoute = MarketRouteImport.update({
+  id: '/market',
+  path: '/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -66,9 +86,19 @@ const RatingRoute = RatingRouteImport.update({
   path: '/rating',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TradingRoute = TradingRouteImport.update({
+  id: '/trading',
+  path: '/trading',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArticlesIdRoute = ArticlesIdRouteImport.update({
@@ -82,12 +112,17 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/games': typeof GamesRoute
   '/m': typeof MRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/market': typeof MarketRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
+  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/trading': typeof TradingRoute
   '/articles/$id': typeof ArticlesIdRoute
 }
 export interface FileRoutesByTo {
@@ -95,12 +130,17 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/games': typeof GamesRoute
   '/m': typeof MRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/market': typeof MarketRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
+  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/trading': typeof TradingRoute
   '/articles/$id': typeof ArticlesIdRoute
 }
 export interface FileRoutesById {
@@ -109,12 +149,17 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/games': typeof GamesRoute
   '/m': typeof MRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/market': typeof MarketRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
+  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/trading': typeof TradingRoute
   '/articles/$id': typeof ArticlesIdRoute
 }
 export interface FileRouteTypes {
@@ -124,12 +169,17 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/games'
     | '/m'
     | '/manifest.webmanifest'
+    | '/market'
+    | '/news'
     | '/privacy'
     | '/profile'
     | '/rating'
+    | '/shop'
     | '/sitemap.xml'
+    | '/trading'
     | '/articles/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,12 +187,17 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/games'
     | '/m'
     | '/manifest.webmanifest'
+    | '/market'
+    | '/news'
     | '/privacy'
     | '/profile'
     | '/rating'
+    | '/shop'
     | '/sitemap.xml'
+    | '/trading'
     | '/articles/$id'
   id:
     | '__root__'
@@ -150,12 +205,17 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/games'
     | '/m'
     | '/manifest.webmanifest'
+    | '/market'
+    | '/news'
     | '/privacy'
     | '/profile'
     | '/rating'
+    | '/shop'
     | '/sitemap.xml'
+    | '/trading'
     | '/articles/$id'
   fileRoutesById: FileRoutesById
 }
@@ -164,12 +224,17 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CommunityRoute: typeof CommunityRoute
   ConsentRoute: typeof ConsentRoute
+  GamesRoute: typeof GamesRoute
   MRoute: typeof MRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
+  MarketRoute: typeof MarketRoute
+  NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RatingRoute: typeof RatingRoute
+  ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TradingRoute: typeof TradingRoute
   ArticlesIdRoute: typeof ArticlesIdRoute
 }
 
@@ -203,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/m': {
       id: '/m'
       path: '/m'
@@ -215,6 +287,20 @@ declare module '@tanstack/react-router' {
       path: '/manifest.webmanifest'
       fullPath: '/manifest.webmanifest'
       preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/market': {
+      id: '/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof MarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -238,11 +324,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RatingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trading': {
+      id: '/trading'
+      path: '/trading'
+      fullPath: '/trading'
+      preLoaderRoute: typeof TradingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/articles/$id': {
@@ -260,12 +360,17 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CommunityRoute: CommunityRoute,
   ConsentRoute: ConsentRoute,
+  GamesRoute: GamesRoute,
   MRoute: MRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
+  MarketRoute: MarketRoute,
+  NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RatingRoute: RatingRoute,
+  ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TradingRoute: TradingRoute,
   ArticlesIdRoute: ArticlesIdRoute,
 }
 export const routeTree = rootRouteImport

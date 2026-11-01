@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Coin } from "@/lib/crypto";
 import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
 import AboutTraderka from "./AboutTraderka";
+import type { SeoPage } from "@/lib/seoPages";
 import { ChatRoom } from "@/lib/chat";
 import { PriceAlertsApi } from "@/lib/alerts";
 import { GoFn } from "./homeConfig";
@@ -51,6 +52,7 @@ interface Props {
   articleId: number | null;
   setArticleId: (id: number | null) => void;
   setMobileSidebarOpen: (v: boolean) => void;
+  seo?: SeoPage;
 }
 
 const HomeMain = ({
@@ -69,6 +71,7 @@ const HomeMain = ({
   articleId,
   setArticleId,
   setMobileSidebarOpen,
+  seo,
 }: Props) => (
   <main className="flex-1 flex flex-col min-w-0 grain">
     <div className="h-12 flex items-center px-4 gap-2 bg-background/80 backdrop-blur">
@@ -97,6 +100,12 @@ const HomeMain = ({
 
     <div id="chat-scroll" className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin">
       <div key={channel}>
+        {seo && channel === seo.channel && (
+          <header className="mb-3 rounded-xl border border-border bg-card p-4">
+            <h1 className="font-display text-lg sm:text-xl text-white mb-1.5">{seo.h1}</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">{seo.intro}</p>
+          </header>
+        )}
         <Suspense fallback={<ChannelFallback />}>
         {isLoading ? (
           <div className="space-y-3">

@@ -21,9 +21,9 @@ export const chooseMobile = () => {
 
 const isPhone = () => /Android.+Mobile|iPhone|iPod|Windows Phone|Mobile Safari/i.test(navigator.userAgent) && window.innerWidth < 820;
 
-export const useMobileRedirect = () => {
+export const useMobileRedirect = (active = true) => {
   const { data } = useMobileSettings();
-  const on = !!data?.settings.enabled && !!data?.settings.redirect;
+  const on = active && !!data?.settings.enabled && !!data?.settings.redirect;
   useEffect(() => {
     if (!on) return;
     const q = new URLSearchParams(window.location.search);

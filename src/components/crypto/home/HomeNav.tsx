@@ -6,9 +6,10 @@ import { useGraphics } from "@/lib/graphics";
 
 interface Props {
   go: GoFn;
+  plainTitle?: boolean;
 }
 
-const HomeNav = ({ go }: Props) => {
+const HomeNav = ({ go, plainTitle }: Props) => {
   const { user, setAuthOpen } = useAuth();
   const navigate = useNavigate();
   const { data: gfx } = useGraphics();
@@ -24,7 +25,11 @@ const HomeNav = ({ go }: Props) => {
           </div>
         )}
         <div className="text-left">
-          <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADER<span className="text-primary">KA</span>.RU</h1>
+          {plainTitle ? (
+            <div className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADER<span className="text-primary">KA</span>.RU</div>
+          ) : (
+            <h1 className="font-display text-lg sm:text-xl text-white leading-none tracking-wide">TRADER<span className="text-primary">KA</span>.RU</h1>
+          )}
           <p className="text-xs text-muted-foreground hidden sm:block mt-1">Котировки, графики и новости.</p>
         </div>
       </button>

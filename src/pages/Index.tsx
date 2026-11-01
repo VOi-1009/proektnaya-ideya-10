@@ -6,17 +6,18 @@ import { getSeen, useNews } from "@/components/crypto/news";
 import { usePriceAlerts } from "@/lib/alerts";
 import { useChatRooms } from "@/lib/chat";
 import { useRadars } from "@/lib/radars";
+import { SEO_PAGES, seoByChannel } from "@/lib/seoPages";
 import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
 import HomeRightDrawer from "@/components/crypto/home/HomeRightDrawer";
 import { CHANNELS, PINNED } from "@/components/crypto/home/homeConfig";
 
-const Index = () => {
-  useMobileRedirect();
+const Index = ({ initialChannel }: { initialChannel?: string }) => {
+  useMobileRedirect(!initialChannel);
   const { data, isLoading, dataUpdatedAt } = useMarkets();
   const coins = data?.coins ?? [];
-  const [channel, setChannel] = useState("welcome");
+  const [channel, setChannel] = useState(initialChannel ?? "welcome");
   const [selected, setSelected] = useState("bitcoin");
   const [articleId, setArticleId] = useState<number | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -55,6 +56,11 @@ const Index = () => {
     setArticleId(null);
     if (coinId) setSelected(coinId);
     setMobileSidebarOpen(false);
+    const page = SEO_PAGES.find((p) => p.channel === ch);
+    const target = page ? page.path : "/";
+    if (window.location.pathname !== target) window.history.replaceState(null, "", target);
+    const base = page ? page.title : "TRADERKA.RU — крипто сообщество, курсы и новости бесплатно";
+    document.title = base;
     document.getElementById("chat-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -66,7 +72,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-body">
-      <HomeNav go={go} />
+      <HomeNav go={go} plainTitle={!!initialChannel} />
 
       {coins.length > 0 && <Ticker coins={coins} onPick={(id) => go("market", id)} />}
 
@@ -96,6 +102,7 @@ const Index = () => {
             articleId={articleId}
             setArticleId={setArticleId}
             setMobileSidebarOpen={setMobileSidebarOpen}
+          seo={seoByChannel(initialChannel)}
           />
         </div>
       </div>
