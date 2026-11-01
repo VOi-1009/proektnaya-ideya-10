@@ -159,6 +159,8 @@ export interface AiTraderData {
   botId: number | null;
   strategies: Record<string, string>;
   lastRun: number | null;
+  nextRun?: number | null;
+  cron?: boolean;
   log?: { t: number; kind: "skip" | "open" | "close"; text: string }[];
   account: {
     free: number;

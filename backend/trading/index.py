@@ -1037,6 +1037,9 @@ def ai_admin_payload(cur, px):
         out["lastRun"] = int(row[0]) if row else None
     except ValueError:
         out["lastRun"] = None
+    out["intervalMin"] = out["settings"]["intervalMin"]
+    out["nextRun"] = out["lastRun"] + out["settings"]["intervalMin"] * 60 if out["lastRun"] else None
+    out["cron"] = bool(os.environ.get("TRADING_CRON_SECRET"))
     return out
 
 
@@ -1804,7 +1807,7 @@ def handler(event, context):
                 return resp(503, {"error": "Курсы недоступны"})
             finish_due(cur)
             checked = tick(cur, px)
-            return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
+            return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px)})
         if method == "GET" and action == "mobile_settings":
             return resp(200, {"settings": mobile_settings(cur), "sections": MOBILE_SECTIONS})
         if method == "GET" and action == "graphics_settings":

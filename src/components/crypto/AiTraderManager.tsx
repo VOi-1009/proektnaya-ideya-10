@@ -58,6 +58,9 @@ const AiTraderManager = ({ token }: { token: string | null }) => {
   const acc = data.account;
   const set = <K extends keyof AiTraderSettings>(key: K, v: AiTraderSettings[K]) => setF({ ...f, [key]: v });
   const toggleCoin = (id: string) => set("coins", f.coins.includes(id) ? f.coins.filter((c) => c !== id) : [...f.coins, id]);
+  const fmtT = (t: number) => new Date(t * 1000).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const overdue = !!data.nextRun && data.nextRun * 1000 < Date.now();
+  const nextRun = !f.enabled ? "бот выключен" : !data.nextRun ? "при ближайшем запуске" : overdue ? `${fmtT(data.nextRun)} (ждёт запуска)` : fmtT(data.nextRun);
   const lastRun = data.lastRun ? new Date(data.lastRun * 1000).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "ещё не было";
 
   return (
@@ -167,6 +170,12 @@ const AiTraderManager = ({ token }: { token: string | null }) => {
           Проверить рынок сейчас
         </Button>
         <span className="text-[11px] text-muted-foreground">Последняя проверка: {lastRun}</span>
+        <span className={`text-[11px] ${overdue ? "text-[#FBBF24]" : "text-muted-foreground"}`}>Следующий круг: {nextRun}</span>
+      </div>
+      <div className={`rounded-lg border px-3 py-2 text-xs ${data.cron ? "border-[#16C784]/40 bg-[#16C784]/10 text-foreground" : "border-[#FBBF24]/40 bg-[#FBBF24]/10 text-foreground"}`}>
+        {data.cron
+          ? `Запуск по расписанию подключён: бот торгует сам каждые ${f.intervalMin} мин, даже когда на сайте никого нет.`
+          : "Запуск по расписанию не подключён: бот работает только когда кто-то заходит на сайт. Подключите внешний таймер (ключ TRADING_CRON_SECRET)."}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
