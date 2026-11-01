@@ -132,7 +132,7 @@ def usdt_gross(cur, uid):
 FUND_KEY = "fund_settings"
 FUND_DEFAULT = {
     "title": "Фонд TRADERKA",
-    "description": "В фонд идёт комиссия с каждого обмена TKA и виртуальных USDT. Из фонда будут призы и награды для участников.",
+    "description": "В фонд идёт комиссия с каждого обмена TKA и виртуальных USDT и с каждой сделки на бирже. Из фонда будут призы и награды для участников.",
     "goal": 0,
     "feePercent": 0.05,
 }
@@ -164,6 +164,38 @@ def fee_rate(cur):
     except (TypeError, ValueError):
         pct = FEE_RATE * 100
     return max(0.0, min(pct, 5.0)) / 100
+
+
+EX_KEY = "exchange_settings"
+EX_DEFAULT = {"enabled": True, "message": "", "maxLeverage": 100, "minMargin": 1.0, "feePercent": 0.05, "feeBase": "volume", "disabledCoins": []}
+
+
+def exchange_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{EX_KEY}'")
+    row = cur.fetchone()
+    raw = {}
+    if row and row[0]:
+        try:
+            raw = json.loads(row[0])
+        except ValueError:
+            raw = {}
+    out = dict(EX_DEFAULT)
+    try:
+        out["enabled"] = bool(raw.get("enabled", True))
+        out["message"] = str(raw.get("message") or "")[:200]
+        out["maxLeverage"] = max(1, min(int(raw.get("maxLeverage", MAX_LEV)), MAX_LEV))
+        out["minMargin"] = max(0.01, min(float(raw.get("minMargin", MIN_MARGIN)), 1000000.0))
+        out["feePercent"] = max(0.0, min(float(raw.get("feePercent", 0.05)), 1.0))
+        out["feeBase"] = "margin" if raw.get("feeBase") == "margin" else "volume"
+        out["disabledCoins"] = [c for c in (raw.get("disabledCoins") or []) if c in COINS]
+    except (TypeError, ValueError):
+        pass
+    return out
+
+
+def trade_fee(ex, margin, lev):
+    base = margin * lev if ex["feeBase"] == "volume" else margin
+    return round(base * ex["feePercent"] / 100, 4)
 
 
 def fund_total(cur):
@@ -317,8 +349,8 @@ def daily_state(cur, uid):
 
 
 def process(cur, user_id, px):
-    cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, sl, tp FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending'")
-    for oid, coin, side, lev, margin, lim, osl, otp in cur.fetchall():
+    cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, sl, tp, fee FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending'")
+    for oid, coin, side, lev, margin, lim, osl, otp, ofee in cur.fetchall():
         p = px.get(coin)
         if not p:
             continue
@@ -327,6 +359,8 @@ def process(cur, user_id, px):
             size = float(margin) * lev / lim
             cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) VALUES ({user_id}, '{coin}', '{side}', {lev}, {float(margin)}, {size}, {lim}, {sql_num(osl)}, {sql_num(otp)})")
             cur.execute(f"UPDATE {SCHEMA}.paper_orders SET status = 'filled', done_at = NOW() WHERE id = {oid}")
+            if float(ofee or 0) > 0:
+                cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({user_id}, {float(ofee)}, 'fee', 'Комиссия сделки (лимитный ордер)')")
     cur.execute(f"SELECT id, coin_id, side, margin, size, entry_price, sl, tp FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open'")
     for pid, coin, side, margin, size, entry, sl, tp in cur.fetchall():
         p = px.get(coin)
@@ -527,6 +561,8 @@ def handler(event, context):
                 return resp(503, {"error": "Курсы недоступны"})
             finish_due(cur)
             return resp(200, {"checked": tick(cur, px)})
+        if method == "GET" and action == "exchange_settings":
+            return resp(200, exchange_settings(cur))
         if method == "GET" and action == "fund":
             return resp(200, fund_state(cur, opt_uid(cur, token)))
         if method == "GET" and action == "fund_donors":
@@ -565,6 +601,16 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "exchange_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            cur.execute(f"SELECT COUNT(*) FILTER (WHERE status = 'open'), COUNT(*) FILTER (WHERE status = 'closed'), COUNT(DISTINCT user_id) FROM {SCHEMA}.paper_positions")
+            op, cl, tr = cur.fetchone()
+            cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.paper_orders WHERE status = 'pending'")
+            po = cur.fetchone()[0]
+            cur.execute(f"SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM {SCHEMA}.fund_ledger WHERE kind = 'fee' AND note LIKE 'Комиссия сделки%'")
+            fees, fcnt = cur.fetchone()
+            return resp(200, {"settings": exchange_settings(cur), "stats": {"open": int(op), "closed": int(cl), "traders": int(tr), "orders": int(po), "fees": float(fees), "feeOps": int(fcnt)}})
         if method == "GET" and action == "fund_admin":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
@@ -591,6 +637,27 @@ def handler(event, context):
             return resp(200, state(cur, uid, px))
         body = json.loads(event.get("body") or "{}")
         act = body.get("action")
+        if act == "exchange_save":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            try:
+                new = {
+                    "enabled": bool(body.get("enabled")),
+                    "message": str(body.get("message") or "").strip()[:200],
+                    "maxLeverage": max(1, min(int(body.get("maxLeverage")), MAX_LEV)),
+                    "minMargin": max(0.01, min(float(body.get("minMargin")), 1000000.0)),
+                    "feePercent": max(0.0, min(float(body.get("feePercent")), 1.0)),
+                    "feeBase": "margin" if body.get("feeBase") == "margin" else "volume",
+                    "disabledCoins": [c for c in (body.get("disabledCoins") or []) if c in COINS],
+                }
+            except (TypeError, ValueError):
+                return resp(400, {"error": "Проверьте плечо, минимальную ставку и комиссию"})
+            val = qj(json.dumps(new, ensure_ascii=False))
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{EX_KEY}', '{val}', NOW()) "
+                f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+            )
+            return resp(200, exchange_settings(cur))
         if act == "contest_join":
             try:
                 cid = int(body.get("id"))
@@ -760,10 +827,16 @@ def handler(event, context):
                 return resp(400, {"error": "Неверные параметры"})
             if coin not in COINS or side not in ("long", "short"):
                 return resp(400, {"error": "Неверная монета или направление"})
-            if lev < 1 or lev > MAX_LEV:
-                return resp(400, {"error": f"Плечо от 1 до {MAX_LEV}"})
-            if margin < MIN_MARGIN:
-                return resp(400, {"error": f"Минимальная ставка {int(MIN_MARGIN)} USDT (виртуальных)"})
+            ex = exchange_settings(cur)
+            if not ex["enabled"]:
+                return resp(403, {"error": ex["message"] or "Новые сделки временно приостановлены. Закрывать позиции можно"})
+            if coin in ex["disabledCoins"]:
+                return resp(400, {"error": "Торговля этой монетой временно отключена"})
+            if lev < 1 or lev > ex["maxLeverage"]:
+                return resp(400, {"error": f"Плечо от 1 до {ex['maxLeverage']}"})
+            if margin < ex["minMargin"]:
+                return resp(400, {"error": f"Минимальная ставка {ex['minMargin']:g} USDT (виртуальных)"})
+            fee = trade_fee(ex, margin, lev)
             sl = tp = None
             try:
                 if body.get("sl") not in (None, "", 0):
@@ -781,14 +854,16 @@ def handler(event, context):
             if (sl is not None and sl <= 0) or (tp is not None and tp <= 0):
                 return resp(400, {"error": "Уровни должны быть больше нуля"})
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
-            if margin > float(cur.fetchone()[0]) + 1e-9:
-                return resp(400, {"error": "Недостаточно средств на счёте"})
+            if margin + fee > float(cur.fetchone()[0]) + 1e-9:
+                return resp(400, {"error": f"Недостаточно средств на счёте: нужно {margin + fee:.2f} с учётом комиссии {fee:.2f}" if fee > 0 else "Недостаточно средств на счёте"})
             if act == "open":
                 p = px.get(coin)
                 if not p:
                     return resp(503, {"error": "Курс сейчас недоступен, попробуйте через минуту"})
                 size = margin * lev / p
                 cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {size}, {p}, {sql_num(sl)}, {sql_num(tp)})")
+                if fee > 0:
+                    cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {fee}, 'fee', 'Комиссия сделки')")
             else:
                 try:
                     lim = float(body.get("limit", 0))
@@ -796,8 +871,8 @@ def handler(event, context):
                     lim = 0
                 if lim <= 0:
                     return resp(400, {"error": "Укажите цену ордера"})
-                cur.execute(f"INSERT INTO {SCHEMA}.paper_orders (user_id, coin_id, side, leverage, margin, limit_price, sl, tp) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {lim}, {sql_num(sl)}, {sql_num(tp)})")
-            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {margin} WHERE user_id = {uid}")
+                cur.execute(f"INSERT INTO {SCHEMA}.paper_orders (user_id, coin_id, side, leverage, margin, limit_price, sl, tp, fee) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {lim}, {sql_num(sl)}, {sql_num(tp)}, {fee})")
+            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {margin + fee} WHERE user_id = {uid}")
             process(cur, uid, px)
         elif act == "close":
             pid = int(body.get("id", 0))
@@ -814,12 +889,12 @@ def handler(event, context):
             cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {margin + pnl} WHERE user_id = {uid}")
         elif act == "cancel":
             oid = int(body.get("id", 0))
-            cur.execute(f"SELECT margin FROM {SCHEMA}.paper_orders WHERE id = {oid} AND user_id = {uid} AND status = 'pending'")
+            cur.execute(f"SELECT margin, fee FROM {SCHEMA}.paper_orders WHERE id = {oid} AND user_id = {uid} AND status = 'pending'")
             r = cur.fetchone()
             if not r:
                 return resp(404, {"error": "Ордер не найден"})
             cur.execute(f"UPDATE {SCHEMA}.paper_orders SET status = 'cancelled', done_at = NOW() WHERE id = {oid}")
-            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {float(r[0])} WHERE user_id = {uid}")
+            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {float(r[0]) + float(r[1] or 0)} WHERE user_id = {uid}")
         else:
             return resp(400, {"error": "Неизвестное действие"})
         return resp(200, state(cur, uid, px))

@@ -103,3 +103,25 @@ export const useFundDonors = () =>
     staleTime: 5 * 60_000,
     queryFn: async () => (await fundRequest<{ donors: Record<string, number> }>(null, "?action=fund_donors")).donors,
   });
+
+export interface ExchangeSettings {
+  enabled: boolean;
+  message: string;
+  maxLeverage: number;
+  minMargin: number;
+  feePercent: number;
+  feeBase: "volume" | "margin";
+  disabledCoins: string[];
+}
+
+export const EX_DEFAULT: ExchangeSettings = { enabled: true, message: "", maxLeverage: 100, minMargin: 1, feePercent: 0.05, feeBase: "volume", disabledCoins: [] };
+
+export const useExchangeSettings = () =>
+  useQuery<ExchangeSettings>({
+    queryKey: ["exchange-settings"],
+    staleTime: 60_000,
+    queryFn: () => fundRequest<ExchangeSettings>(null, "?action=exchange_settings"),
+  });
+
+export const tradeFee = (ex: ExchangeSettings, margin: number, leverage: number) =>
+  Math.round((ex.feeBase === "volume" ? margin * leverage : margin) * ex.feePercent * 100) / 10000;

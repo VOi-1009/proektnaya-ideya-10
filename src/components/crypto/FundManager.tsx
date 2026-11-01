@@ -83,7 +83,7 @@ const FundManager = ({ token }: { token: string | null }) => {
       <div className="grid sm:grid-cols-4 gap-2">
         {[
           ["В фонде", `${fundFmt(st.total)} TKA`],
-          ["Обменов с комиссией", String(st.count)],
+          ["Операций с комиссией", String(st.count)],
           ["Участников внесли", String(st.donors)],
           ["Комиссия сейчас", `${(st.rate * 100).toFixed(2).replace(".", ",")}%`],
         ].map(([l, v]) => (

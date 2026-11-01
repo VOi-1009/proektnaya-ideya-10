@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
 import { Coin, fmtPrice } from "@/lib/crypto";
+import { EX_DEFAULT, tradeFee, useExchangeSettings } from "@/lib/fund";
 import { Send, State, name, usd } from "./shared";
 
 const riskOf = (l: number) =>
@@ -45,6 +46,10 @@ interface Props {
 
 const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, limit, setLimit, margin, setMargin, leverage, setLeverage, sl, setSl, tp, setTp, m, livePrice, liqPrice, st, busy, submit, send }: Props) => {
   const { user } = useAuth();
+  const { data: exData } = useExchangeSettings();
+  const ex = exData ?? EX_DEFAULT;
+  const fee = tradeFee(ex, m, leverage);
+  const blocked = !ex.enabled || ex.disabledCoins.includes(coinId);
   const risk = riskOf(leverage);
   const sideColor = side === "long" ? "#22C55E" : "#EA3943";
   const volume = m * leverage;
@@ -58,7 +63,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
           <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {coins.filter((c) => !c.kind).map((c) => (
+              {coins.filter((c) => !c.kind && !ex.disabledCoins.includes(c.id)).map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.symbol.toUpperCase()} · {name(c.id)}</SelectItem>
               ))}
             </SelectContent>
@@ -104,9 +109,9 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
               <label className="text-xs font-semibold" style={{ color: risk.color }}>Плечо · {risk.label}</label>
               <span className="font-display text-base leading-none" style={{ color: risk.color, textShadow: `0 0 12px ${risk.color}66` }}>x{leverage}</span>
             </div>
-            <Slider className="mt-1.5" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={100} step={1} value={[leverage]} onValueChange={(v) => setLeverage(v[0])} />
+            <Slider className="mt-1.5" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={ex.maxLeverage} step={1} value={[Math.min(leverage, ex.maxLeverage)]} onValueChange={(v) => setLeverage(v[0])} />
             <div className="flex justify-between mt-1">
-              {LEVERAGE_MARKS.map((l) => (
+              {LEVERAGE_MARKS.filter((l) => l <= ex.maxLeverage).map((l) => (
                 <button key={l} type="button" onClick={() => setLeverage(l)} className={`text-[10px] font-mono ${leverage === l ? "text-white" : "text-muted-foreground hover:text-white"}`}>
                   x{l}
                 </button>
@@ -146,10 +151,25 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
             <div className="text-[10px] text-muted-foreground mt-0.5">Виртуальные USDT: реальные деньги не тратятся и не выигрываются.</div>
           </div>
 
+          {ex.feePercent > 0 && (
+            <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+              <span>Комиссия {String(ex.feePercent).replace(".", ",")}% (идёт в фонд)</span>
+              <span className="font-mono text-white">{usd(fee)}</span>
+            </div>
+          )}
+          {!ex.enabled && (
+            <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2.5 py-1.5 text-xs text-foreground">
+              {ex.message || "Новые сделки временно приостановлены. Закрывать позиции можно."}
+            </div>
+          )}
+          {ex.enabled && ex.disabledCoins.includes(coinId) && (
+            <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2.5 py-1.5 text-xs text-foreground">Торговля этой монетой временно отключена.</div>
+          )}
+
           <Button
             className="w-full h-9 font-bold text-sm text-black hover:opacity-90"
             style={{ background: sideColor, color: side === "long" ? "#000" : "#fff", boxShadow: `0 0 18px ${sideColor}55` }}
-            disabled={busy || !user || m < 1}
+            disabled={busy || !user || m < ex.minMargin || blocked}
             onClick={submit}
           >
             {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
