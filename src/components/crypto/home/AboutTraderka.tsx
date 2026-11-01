@@ -12,6 +12,7 @@ const FEATURES: { id: string; icon: string; title: string; text: string; href: s
   { id: "converter", icon: "Calculator", title: "Калькуляторы трейдера", text: "Конвертер валют и монет, размер позиции, цена ликвидации, уровни Фибоначчи и пивоты в одном месте.", href: "/converter" },
   { id: "shop", icon: "Store", title: "Магазин и общий фонд", text: "Тратьте TKA на рамки, значки, темы и подарки. Комиссии идут в общий фонд сообщества для конкурсов и призов.", href: "/shop" },
   { id: "fund", icon: "Landmark", title: "Общий фонд и конкурсы", text: "Смотрите, сколько накоплено в фонде сообщества, на что идёт цель и кто получил призы.", href: "/fund" },
+  { id: "rules", icon: "Info", title: "О проекте и правила", text: "Как работают очки, статусы и монета TKA, правила общения и ответы на частые вопросы о сайте.", href: "/faq" },
 ];
 
 const AboutTraderka = ({ go }: { go: (ch: string) => void }) => (

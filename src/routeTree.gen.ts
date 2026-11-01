@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ConsentRouteImport } from './routes/consent'
 import { Route as ConverterRouteImport } from './routes/converter'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FundRouteImport } from './routes/fund'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as MRouteImport } from './routes/m'
@@ -51,6 +52,11 @@ const ConsentRoute = ConsentRouteImport.update({
 const ConverterRoute = ConverterRouteImport.update({
   id: '/converter',
   path: '/converter',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FundRoute = FundRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/converter': typeof ConverterRoute
+  '/faq': typeof FaqRoute
   '/fund': typeof FundRoute
   '/games': typeof GamesRoute
   '/m': typeof MRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/converter': typeof ConverterRoute
+  '/faq': typeof FaqRoute
   '/fund': typeof FundRoute
   '/games': typeof GamesRoute
   '/m': typeof MRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/converter': typeof ConverterRoute
+  '/faq': typeof FaqRoute
   '/fund': typeof FundRoute
   '/games': typeof GamesRoute
   '/m': typeof MRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/consent'
     | '/converter'
+    | '/faq'
     | '/fund'
     | '/games'
     | '/m'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/consent'
     | '/converter'
+    | '/faq'
     | '/fund'
     | '/games'
     | '/m'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/consent'
     | '/converter'
+    | '/faq'
     | '/fund'
     | '/games'
     | '/m'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ConsentRoute: typeof ConsentRoute
   ConverterRoute: typeof ConverterRoute
+  FaqRoute: typeof FaqRoute
   FundRoute: typeof FundRoute
   GamesRoute: typeof GamesRoute
   MRoute: typeof MRoute
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/converter'
       fullPath: '/converter'
       preLoaderRoute: typeof ConverterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fund': {
@@ -401,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ConsentRoute: ConsentRoute,
   ConverterRoute: ConverterRoute,
+  FaqRoute: FaqRoute,
   FundRoute: FundRoute,
   GamesRoute: GamesRoute,
   MRoute: MRoute,
