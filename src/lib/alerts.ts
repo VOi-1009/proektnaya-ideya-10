@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Coin, COIN_META, fmtPrice } from "@/lib/crypto";
+import { usePref } from "@/lib/prefs";
 
 export interface PriceAlert {
   id: string;
@@ -14,15 +15,6 @@ export interface PriceAlert {
 }
 
 const KEY = "traderka-alerts";
-
-const load = (): PriceAlert[] => {
-  try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? "[]");
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-};
 
 const beep = () => {
   try {
@@ -50,19 +42,12 @@ const beep = () => {
 export const notificationsSupported = () => typeof window !== "undefined" && "Notification" in window;
 
 export function usePriceAlerts(coins: Coin[], live: boolean) {
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [alerts, setAlerts] = usePref<PriceAlert[]>("alerts", [], {
+    legacyKey: KEY,
+    parse: (v) => (Array.isArray(v) ? (v as PriceAlert[]).slice(0, 100) : []),
+  });
   const alertsRef = useRef(alerts);
   alertsRef.current = alerts;
-
-  useEffect(() => {
-    setAlerts(load());
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem(KEY, JSON.stringify(alerts));
-  }, [alerts, loaded]);
 
   useEffect(() => {
     if (!live || !coins.length) return;
@@ -89,7 +74,7 @@ export function usePriceAlerts(coins: Coin[], live: boolean) {
         new Notification("TRADERKA.RU — цель достигнута", { body: text, tag: a.id });
       }
     });
-  }, [coins, live]);
+  }, [coins, live]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const add = useCallback((coinId: string, target: number, currentPrice: number) => {
     const a: PriceAlert = {
@@ -100,12 +85,12 @@ export function usePriceAlerts(coins: Coin[], live: boolean) {
       createdAt: Date.now(),
       createdPrice: currentPrice,
     };
-    setAlerts((list) => [a, ...list]);
+    setAlerts((list) => [a, ...list].slice(0, 100));
     return a;
-  }, []);
+  }, [setAlerts]);
 
-  const remove = useCallback((id: string) => setAlerts((list) => list.filter((a) => a.id !== id)), []);
-  const clearTriggered = useCallback(() => setAlerts((list) => list.filter((a) => !a.triggeredAt)), []);
+  const remove = useCallback((id: string) => setAlerts((list) => list.filter((a) => a.id !== id)), [setAlerts]);
+  const clearTriggered = useCallback(() => setAlerts((list) => list.filter((a) => !a.triggeredAt)), [setAlerts]);
 
   return { alerts, add, remove, clearTriggered };
 }

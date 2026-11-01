@@ -485,6 +485,25 @@
         "keys": {}
       },
       "expectedStatus": 400
+    },
+    {
+      "name": "Настройки участника без входа",
+      "method": "GET",
+      "path": "/?resource=prefs",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Запись настройки без входа",
+      "method": "POST",
+      "path": "/?resource=prefs",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "key": "my_coins",
+        "value": "[]"
+      },
+      "expectedStatus": 401
     }
   ]
 }

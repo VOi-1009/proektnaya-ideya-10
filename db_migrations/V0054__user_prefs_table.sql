@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS user_prefs (
+  user_id INTEGER NOT NULL,
+  key VARCHAR(40) NOT NULL,
+  value TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, key)
+);

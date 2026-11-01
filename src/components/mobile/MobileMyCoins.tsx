@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePref } from "@/lib/prefs";
 import { COIN_IDS, COIN_META, fmtPct, fmtPrice, useMarkets } from "@/lib/crypto";
 
 const FIXED = ["bitcoin", "ethereum"];
@@ -10,31 +11,13 @@ const CHOICES = COIN_IDS.filter((id) => !FIXED.includes(id));
 
 const MobileMyCoins = () => {
   const { data, isLoading } = useMarkets();
-  const [own, setOwn] = useState<string[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [own, setOwn] = usePref<string[]>("my_coins", [], {
+    legacyKey: KEY,
+    parse: (v) => (Array.isArray(v) ? v.filter((id): id is string => typeof id === "string" && CHOICES.includes(id)).slice(0, MAX_OWN) : []),
+  });
   const [edit, setEdit] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(KEY) || "[]");
-      if (Array.isArray(raw)) setOwn(raw.filter((id) => CHOICES.includes(id)).slice(0, MAX_OWN));
-    } catch {
-      setOwn([]);
-    }
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      localStorage.setItem(KEY, JSON.stringify(own));
-    } catch {
-      return;
-    }
-  }, [own, loaded]);
-
-  const toggle = (id: string) =>
-    setOwn((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= MAX_OWN ? cur : [...cur, id]));
+  const toggle = (id: string) => setOwn((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= MAX_OWN ? cur : [...cur, id]));
 
   if (isLoading || !data) return <Skeleton className="h-40 w-full bg-card" />;
 
