@@ -1,7 +1,9 @@
 import datetime
 import json
+import math
 import os
 import re
+import secrets
 import time
 import urllib.request
 
@@ -294,7 +296,7 @@ def fund_state(cur, uid=None):
         fees_exchange = fees_paid - fees_trades
     cur.execute(
         f"SELECT f.amount, f.kind, f.note, f.created_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1), '') "
-        f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id ORDER BY f.id DESC LIMIT 15"
+        f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id WHERE f.kind <> 'game' ORDER BY f.id DESC LIMIT 15"
     )
     last = [{"amount": float(r[0]), "kind": r[1], "note": r[2], "at": r[3].isoformat(), "user": r[4] or ""} for r in cur.fetchall()]
     cur.execute(
@@ -1176,6 +1178,204 @@ def shop_admin(cur):
     return {"settings": st, "stats": {"buys": int(buys), "revenue": float(revenue), "gifts": int(gcnt), "giftsSum": float(gsum), "granted": int(gifted)}, "top": top, "recent": recent, "kinds": SHOP_KINDS}
 
 
+_rng = secrets.SystemRandom()
+GAMES_KEY = "games_settings"
+GAMES_LOCK = 7101
+GAME_NAMES = {"coin": "Монетка", "dice": "Кости", "wheel": "Колесо удачи", "rocket": "Ракета"}
+WHEEL = [0, 1, 0.5, 2, 0, 0.5, 1.5, 0, 0.5, 3, 0, 0.5, 1, 0, 1.5, 0.5, 5, 0, 1, 0.5]
+GAMES_DEFAULT = {
+    "enabled": True, "message": "", "minBet": 1.0, "maxBet": 100.0, "dailyLimit": 100, "cooldownSec": 2,
+    "houseEdge": 3.0, "minLevel": 1, "rocketMaxMult": 20.0, "dailyWinCap": 1000.0,
+    "games": {"coin": True, "dice": True, "wheel": True, "rocket": True},
+}
+
+
+def games_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{GAMES_KEY}'")
+    row = cur.fetchone()
+    raw = {}
+    if row and row[0]:
+        try:
+            raw = json.loads(row[0])
+        except ValueError:
+            raw = {}
+    return clean_games(raw)
+
+
+def clean_games(raw):
+    out = json.loads(json.dumps(GAMES_DEFAULT))
+    try:
+        out["enabled"] = bool(raw.get("enabled", True))
+        out["message"] = str(raw.get("message") or "")[:200]
+        out["minBet"] = max(0.01, min(float(raw.get("minBet", 1)), 1000000.0))
+        out["maxBet"] = max(out["minBet"], min(float(raw.get("maxBet", 100)), 1000000.0))
+        out["dailyLimit"] = max(0, min(int(raw.get("dailyLimit", 100)), 100000))
+        out["cooldownSec"] = max(0, min(int(raw.get("cooldownSec", 2)), 60))
+        out["houseEdge"] = max(0.0, min(float(raw.get("houseEdge", 3)), 20.0))
+        out["minLevel"] = max(1, min(int(raw.get("minLevel", 1)), MAX_LEVEL))
+        out["rocketMaxMult"] = max(1.5, min(float(raw.get("rocketMaxMult", 20)), 1000.0))
+        out["dailyWinCap"] = max(0.0, min(float(raw.get("dailyWinCap", 1000)), 1e9))
+        g = raw.get("games") or {}
+        for k in GAME_NAMES:
+            out["games"][k] = bool(g.get(k, True))
+    except (TypeError, ValueError, AttributeError):
+        pass
+    return out
+
+
+def game_mults(gs):
+    e = gs["houseEdge"] / 100
+    return {
+        "coin": round(2 * (1 - e), 2),
+        "dice": {"under": round(36 / 15 * (1 - e), 2), "seven": round(6 * (1 - e), 2), "over": round(36 / 15 * (1 - e), 2)},
+        "wheel": WHEEL,
+        "rocket": {"max": gs["rocketMaxMult"], "edge": gs["houseEdge"]},
+    }
+
+
+def games_recent(cur, uid=None, limit=10):
+    where = f"WHERE g.user_id = {int(uid)}" if uid else ""
+    cur.execute(
+        f"SELECT g.id, g.game, g.bet, g.payout, g.mult, g.created_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
+        f"FROM {SCHEMA}.games_log g JOIN {SCHEMA}.users u ON u.id = g.user_id {where} ORDER BY g.id DESC LIMIT {int(limit)}"
+    )
+    return [{"id": r[0], "game": r[1], "bet": float(r[2]), "payout": float(r[3]), "mult": float(r[4]), "at": r[5].isoformat(), "name": r[6]} for r in cur.fetchall()]
+
+
+def games_config(cur, uid=None):
+    gs = games_settings(cur)
+    out = {
+        "settings": {k: gs[k] for k in ("enabled", "message", "minBet", "maxBet", "dailyLimit", "cooldownSec", "houseEdge", "minLevel", "rocketMaxMult", "dailyWinCap", "games")},
+        "mults": game_mults(gs), "names": GAME_NAMES, "bank": max(fund_total(cur), 0.0),
+        "titles": TITLES, "recent": games_recent(cur, None, 10), "me": None, "mine": [],
+    }
+    if uid:
+        cur.execute(
+            f"SELECT COUNT(*), COALESCE(SUM(payout - bet), 0) FROM {SCHEMA}.games_log WHERE user_id = {int(uid)} AND created_at > NOW() - INTERVAL '1 day'"
+        )
+        n, net = cur.fetchone()
+        lvl, adm = user_level(cur, uid)
+        left = None if gs["dailyLimit"] == 0 else max(gs["dailyLimit"] - int(n), 0)
+        out["me"] = {"balance": tka_balance(cur, uid), "played": int(n), "left": left, "net": float(net), "level": lvl, "locked": (lvl < gs["minLevel"] and not adm)}
+        out["mine"] = games_recent(cur, uid, 8)
+    return out
+
+
+def games_play(cur, uid, body):
+    gs = games_settings(cur)
+    if not gs["enabled"]:
+        return 403, {"error": gs["message"] or "Мини-игры временно закрыты"}
+    game = body.get("game")
+    if game not in GAME_NAMES or not gs["games"].get(game):
+        return 400, {"error": "Эта игра сейчас недоступна"}
+    try:
+        bet = round(float(body.get("bet")), 2)
+    except (TypeError, ValueError):
+        return 400, {"error": "Укажите ставку"}
+    if bet < gs["minBet"] or bet > gs["maxBet"]:
+        return 400, {"error": f"Ставка от {gs['minBet']:g} до {gs['maxBet']:g} TKA"}
+    level, admin = user_level(cur, uid)
+    if level < gs["minLevel"] and not admin:
+        return 403, {"error": f"Игры доступны со статуса «{TITLES[gs['minLevel'] - 1]}»"}
+    mults = game_mults(gs)
+    edge = gs["houseEdge"] / 100
+    choice = body.get("choice")
+    target = None
+    if game == "coin":
+        if choice not in ("heads", "tails"):
+            return 400, {"error": "Выберите орла или решку"}
+        top = mults["coin"]
+    elif game == "dice":
+        if choice not in ("under", "seven", "over"):
+            return 400, {"error": "Выберите вариант"}
+        top = mults["dice"][choice]
+    elif game == "wheel":
+        top = max(WHEEL)
+    else:
+        try:
+            target = round(float(body.get("target")), 2)
+        except (TypeError, ValueError):
+            return 400, {"error": "Укажите множитель"}
+        if target < 1.1 or target > gs["rocketMaxMult"]:
+            return 400, {"error": f"Множитель от 1,1 до {gs['rocketMaxMult']:g}"}
+        top = target
+
+    cur.execute(f"SELECT pg_advisory_lock({GAMES_LOCK})")
+    try:
+        cur.execute(f"SELECT COALESCE(EXTRACT(EPOCH FROM (NOW() - MAX(created_at))), 99999) FROM {SCHEMA}.games_log WHERE user_id = {uid}")
+        if float(cur.fetchone()[0]) < gs["cooldownSec"]:
+            return 429, {"error": "Не так быстро, подождите секунду"}
+        cur.execute(f"SELECT COUNT(*), COALESCE(SUM(payout - bet), 0) FROM {SCHEMA}.games_log WHERE user_id = {uid} AND created_at > NOW() - INTERVAL '1 day'")
+        n, net = cur.fetchone()
+        if gs["dailyLimit"] and int(n) >= gs["dailyLimit"]:
+            return 403, {"error": f"Лимит игр на сутки исчерпан ({gs['dailyLimit']}). Приходите завтра"}
+        if gs["dailyWinCap"] and float(net) >= gs["dailyWinCap"]:
+            return 403, {"error": "Вы достигли дневного лимита выигрыша. Продолжим завтра"}
+        if tka_balance(cur, uid) < bet:
+            return 400, {"error": "Недостаточно TKA на кошельке"}
+        if bet * top > fund_total(cur) + bet + 1e-9:
+            return 400, {"error": "Банк игр сейчас слишком мал для такой ставки. Попробуйте поставить меньше"}
+
+        detail = {}
+        if game == "coin":
+            res = _rng.choice(["heads", "tails"])
+            win = res == choice
+            mult = mults["coin"] if win else 0.0
+            detail = {"choice": choice, "result": res}
+        elif game == "dice":
+            d1, d2 = _rng.randint(1, 6), _rng.randint(1, 6)
+            sm = d1 + d2
+            win = (choice == "under" and sm < 7) or (choice == "over" and sm > 7) or (choice == "seven" and sm == 7)
+            mult = mults["dice"][choice] if win else 0.0
+            detail = {"choice": choice, "d1": d1, "d2": d2, "sum": sm}
+        elif game == "wheel":
+            idx = _rng.randrange(len(WHEEL))
+            mult = float(WHEEL[idx])
+            win = mult >= 1
+            detail = {"index": idx, "mult": mult}
+        else:
+            u = 1.0 - _rng.random()
+            raw = (1 - edge) / u
+            crash = 1.0 if raw < 1 else min(math.floor(raw * 100) / 100, 100000.0)
+            win = crash >= target
+            mult = target if win else 0.0
+            detail = {"target": target, "crash": crash}
+
+        payout = round(bet * mult, 2)
+        net_change = round(payout - bet, 2)
+        note = f"Мини-игра: {GAME_NAMES[game]}"
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) "
+            f"SELECT {uid}, {net_change}, 'game', '{note}' "
+            f"WHERE (SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.tka_ledger WHERE user_id = {uid}) >= {bet} RETURNING id"
+        )
+        if not cur.fetchone():
+            return 400, {"error": "Недостаточно TKA на кошельке"}
+        bank_change = round(bet - payout, 2)
+        if bank_change != 0:
+            cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {bank_change}, 'game', '{note}')")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.games_log (user_id, game, bet, payout, mult, detail) "
+            f"VALUES ({uid}, '{game}', {bet}, {payout}, {mult}, '{q(json.dumps(detail))[:190]}')"
+        )
+    finally:
+        cur.execute(f"SELECT pg_advisory_unlock({GAMES_LOCK})")
+    return 200, {"game": game, "bet": bet, "payout": payout, "mult": mult, "win": payout > bet, "profit": net_change, "detail": detail}
+
+
+def games_admin(cur):
+    gs = games_settings(cur)
+    cur.execute(f"SELECT COUNT(*), COUNT(DISTINCT user_id), COALESCE(SUM(bet), 0), COALESCE(SUM(payout), 0), COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 day') FROM {SCHEMA}.games_log")
+    n, players, bets, pays, day = cur.fetchone()
+    cur.execute(f"SELECT game, COUNT(*), COALESCE(SUM(bet), 0), COALESCE(SUM(payout), 0) FROM {SCHEMA}.games_log GROUP BY game ORDER BY game")
+    per = [{"game": r[0], "count": int(r[1]), "bets": float(r[2]), "payouts": float(r[3])} for r in cur.fetchall()]
+    return {
+        "settings": gs, "names": GAME_NAMES, "bank": max(fund_total(cur), 0.0), "titles": TITLES, "wheel": WHEEL,
+        "stats": {"count": int(n), "players": int(players), "bets": float(bets), "payouts": float(pays), "result": float(bets) - float(pays), "day": int(day)},
+        "per": per, "recent": games_recent(cur, None, 25),
+    }
+
+
 def handler(event, context):
     """Тренировочная биржа: виртуальный счёт, рыночные и лимитные ордера, плечо, шорт, рейтинг"""
     t0 = time.time()
@@ -1200,6 +1400,8 @@ def handler(event, context):
             finish_due(cur)
             checked = tick(cur, px)
             return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
+        if method == "GET" and action == "games_config":
+            return resp(200, games_config(cur, opt_uid(cur, token)))
         if method == "GET" and action == "shop_catalog":
             return resp(200, shop_catalog(cur, opt_uid(cur, token)))
         if method == "GET" and action == "shop_cosmetics":
@@ -1271,6 +1473,10 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "games_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            return resp(200, games_admin(cur))
         if method == "GET" and action == "shop_gifts":
             return resp(200, {"gifts": shop_gifts_for(cur, uid)})
         if method == "GET" and action == "shop_admin":
@@ -1305,7 +1511,7 @@ def handler(event, context):
                 return resp(403, {"error": "Доступ только для администратора"})
             cur.execute(
                 f"SELECT f.id, f.amount, f.kind, f.note, f.created_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
-                f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id ORDER BY f.id DESC LIMIT 40"
+                f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id WHERE f.kind <> 'game' ORDER BY f.id DESC LIMIT 40"
             )
             ops = [{"id": r[0], "amount": float(r[1]), "kind": r[2], "note": r[3], "at": r[4].isoformat(), "user": r[5] or ""} for r in cur.fetchall()]
             return resp(200, {"state": fund_state(cur, uid), "settings": fund_settings(cur), "ops": ops})
@@ -1326,6 +1532,23 @@ def handler(event, context):
             return resp(200, state(cur, uid, px))
         body = json.loads(event.get("body") or "{}")
         act = body.get("action")
+        if act == "games_play":
+            code, out = games_play(cur, uid, body)
+            if code != 200:
+                return resp(code, out)
+            cfg = games_config(cur, uid)
+            cfg["result"] = out
+            return resp(200, cfg)
+        if act == "games_save":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            new = clean_games(body)
+            val = qj(json.dumps(new, ensure_ascii=False))
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{GAMES_KEY}', '{val}', NOW()) "
+                f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+            )
+            return resp(200, games_admin(cur))
         if act in ("shop_buy", "shop_equip", "shop_gift"):
             ensure_account(cur, uid)
             code, out = shop_do(cur, uid, act, body)

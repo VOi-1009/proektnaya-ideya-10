@@ -35,6 +35,7 @@ import FundManager from "@/components/crypto/FundManager";
 import ContestsManager from "@/components/crypto/ContestsManager";
 import ExchangeManager from "@/components/crypto/ExchangeManager";
 import ShopManager from "@/components/crypto/ShopManager";
+import GamesManager from "@/components/crypto/GamesManager";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -45,7 +46,7 @@ const Admin = () => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<number | "new" | null>(null);
-  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "quotes" | "donate" | "aibot" | "chats" | "forum" | "menu" | "fund" | "contests" | "exchange" | "shop">("articles");
+  const [tab, setTab] = useState<"visits" | "articles" | "categories" | "users" | "blocks" | "side" | "polls" | "radars" | "sitenews" | "quotes" | "donate" | "aibot" | "chats" | "forum" | "menu" | "fund" | "contests" | "exchange" | "shop" | "games">("articles");
   const { data: categories } = useCategories();
   const [form, setForm] = useState(EMPTY);
   const [cover, setCover] = useState<{ url: string; data?: string; type?: string }>({ url: "" });
@@ -214,6 +215,7 @@ const Admin = () => {
                 ["donate", "Донаты", "Heart"],
                 ["exchange", "БИРЖА", "CandlestickChart"],
                 ["shop", "Магазин", "Store"],
+                ["games", "Игры", "Gamepad2"],
                 ["fund", "Фонд", "Landmark"],
                 ["contests", "Конкурсы", "Trophy"],
                 ["menu", "Меню слева", "PanelLeft"],
@@ -256,6 +258,8 @@ const Admin = () => {
           <AiBotManager token={token} />
         ) : editing === null && tab === "menu" ? (
           <MenuManager token={token} />
+        ) : editing === null && tab === "games" ? (
+          <GamesManager token={token} />
         ) : editing === null && tab === "shop" ? (
           <ShopManager token={token} />
         ) : editing === null && tab === "exchange" ? (

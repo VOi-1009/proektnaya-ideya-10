@@ -227,3 +227,46 @@ export const useTopFeed = () =>
     refetchInterval: 90_000,
     queryFn: () => fundRequest(null, "?action=top_feed"),
   });
+
+export interface GamesSettings {
+  enabled: boolean;
+  message: string;
+  minBet: number;
+  maxBet: number;
+  dailyLimit: number;
+  cooldownSec: number;
+  houseEdge: number;
+  minLevel: number;
+  rocketMaxMult: number;
+  dailyWinCap: number;
+  games: Record<string, boolean>;
+}
+
+export interface GameRow {
+  id: number;
+  game: string;
+  bet: number;
+  payout: number;
+  mult: number;
+  at: string;
+  name: string;
+}
+
+export interface GamesConfig {
+  settings: GamesSettings;
+  mults: { coin: number; dice: { under: number; seven: number; over: number }; wheel: number[]; rocket: { max: number; edge: number } };
+  names: Record<string, string>;
+  bank: number;
+  titles: string[];
+  recent: GameRow[];
+  mine: GameRow[];
+  me: { balance: number; played: number; left: number | null; net: number; level: number; locked: boolean } | null;
+  result?: { game: string; bet: number; payout: number; mult: number; win: boolean; profit: number; detail: Record<string, number | string> };
+}
+
+export const useGamesConfig = (token: string | null) =>
+  useQuery<GamesConfig>({
+    queryKey: ["games-config", token],
+    staleTime: 20_000,
+    queryFn: () => fundRequest<GamesConfig>(token, "?action=games_config"),
+  });

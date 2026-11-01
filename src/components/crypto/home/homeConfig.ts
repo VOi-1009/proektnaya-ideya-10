@@ -10,6 +10,7 @@ export const CHANNELS = [
   { id: "rating", name: "рейтинг", topic: "Топ-50 участников по очкам активности", icon: "Trophy" },
   { id: "fund", name: "фонд", topic: "Общий фонд сообщества: комиссия с обменов, цели и выплаты", icon: "Landmark" },
   { id: "shop", name: "магазин", topic: "Рамки, шапки, темы, значки и подарки за TKA", icon: "Store" },
+  { id: "games", name: "мини-игры", topic: "Простые игры на TKA: монетка, кости, колесо удачи и ракета", icon: "Gamepad2" },
   { id: "alerts", name: "уведомления", topic: "Оповещения о достижении целевой цены", icon: "Hash" },
   { id: "trading", name: "тренировочная-биржа", short: "Биржа", topic: "Игровая монета TKA, реальные курсы, плечо, шорт и рейтинг трейдеров", icon: "Hash" },
   { id: "portfolio", name: "мой-портфель", topic: "Стоимость ваших монет, прибыль и убыток", icon: "Hash" },
