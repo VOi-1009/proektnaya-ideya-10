@@ -73,6 +73,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     const t = token;
+    if (t && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+        const sub = await reg?.pushManager.getSubscription();
+        if (sub) {
+          await fetch(`${PROFILE_URL}?resource=push`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": t },
+            body: JSON.stringify({ action: "unlink", endpoint: sub.endpoint }),
+          });
+        }
+      } catch {
+        /* отвязка не критична */
+      }
+    }
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);

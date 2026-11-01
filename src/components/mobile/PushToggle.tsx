@@ -33,7 +33,7 @@ const PushToggle = () => {
       <div className="flex-1 min-w-0">
         <div className="text-white text-sm font-semibold leading-snug">Уведомления от AiTKA</div>
         <p className="text-xs text-muted-foreground leading-snug mt-0.5">
-          {blocked ? HINT[state] : on ? "Включены: новые посты и сводки придут на это устройство." : "Узнавайте о новых постах и сводках рынка сразу, даже когда сайт закрыт."}
+          {blocked ? HINT[state] : on ? "Включены: посты AiTKA, сводки, а ещё личные: закрытие вашей сделки и сработавшая цена." : "Узнавайте о постах AiTKA, закрытии своих сделок и сработавших ценах, даже когда сайт закрыт."}
         </p>
       </div>
       {!blocked && (

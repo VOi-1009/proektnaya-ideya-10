@@ -64,12 +64,15 @@ const PushManager = ({ token }: { token: string | null }) => {
       <div className="grid sm:grid-cols-2 gap-3">
         <Toggle label="Ежедневная сводка (00:05)" hint="Bitcoin, Ethereum, Brent, Gold" checked={s.daily} onChange={(v) => setS({ ...s, daily: v })} />
         <Toggle label="Дайджесты и публикации AiTKA" hint="Автодайджесты, движения рынка и публикации, отправленные вручную" checked={s.digest} onChange={(v) => setS({ ...s, digest: v })} />
+        <Toggle label="Личные: закрытие сделки" hint="Участнику, когда сработал стоп-лосс, тейк-профит или была ликвидация" checked={s.trades} onChange={(v) => setS({ ...s, trades: v })} />
+        <Toggle label="Личные: сработала цена" hint="Участнику, когда монета дошла до его цели по цене" checked={s.alerts} onChange={(v) => setS({ ...s, alerts: v })} />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
           ["Подписчиков", data.subscribers],
           ["Из них с аккаунтом", data.withAccount],
+          ["Личных за 7 дней", data.personal7d],
           ["Доставлено", data.sent],
           ["В очереди", data.pending],
           ["Ошибок", data.failed],

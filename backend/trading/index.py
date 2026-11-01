@@ -505,7 +505,22 @@ def tick(cur, px):
     for u in ids:
         process(cur, int(u), px)
         grant_awards(cur, int(u))
-    return len(ids)
+    pushed = 0
+    try:
+        from personal_push import check_price_alerts, notify_closed
+
+        t_end = time.time() + 2.5
+        cur.execute(
+            f"SELECT DISTINCT user_id FROM {SCHEMA}.paper_positions WHERE status = 'closed' "
+            f"AND close_reason IN ('stop', 'take', 'liquidation') AND closed_at > NOW() - INTERVAL '10 minutes' "
+            f"AND user_id IN (SELECT user_id FROM {SCHEMA}.push_subscriptions WHERE user_id IS NOT NULL)"
+        )
+        for (u,) in cur.fetchall():
+            pushed += notify_closed(cur, int(u), t_end)
+        pushed += check_price_alerts(cur, px, t_end)
+    except Exception as e:
+        print("personal push error:", e)
+    return len(ids), pushed
 
 
 def build_stats(cur, user_id, equity, reset_at):
@@ -1842,8 +1857,8 @@ def handler(event, context):
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             finish_due(cur)
-            checked = tick(cur, px)
-            return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px)})
+            checked, pushed = tick(cur, px)
+            return resp(200, {"checked": checked, "pushed": pushed, "ai": ai_trader_step(cur, px)})
         if method == "GET" and action == "mobile_settings":
             return resp(200, {"settings": mobile_settings(cur), "sections": MOBILE_SECTIONS})
         if method == "GET" and action == "graphics_settings":

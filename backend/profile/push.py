@@ -9,7 +9,7 @@ import psycopg2
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
-DEFAULT_PUSH = {"enabled": True, "daily": True, "digest": True}
+DEFAULT_PUSH = {"enabled": True, "daily": True, "digest": True, "trades": True, "alerts": True}
 SETTINGS_KEY = "ai_push"
 VAPID_KEY = "push_vapid"
 SITE = os.environ.get("SITE_URL") or "https://traderka.ru"
@@ -192,9 +192,11 @@ def stats(cur) -> dict:
          "sent": int(r[6]), "pending": int(r[7]), "failed": int(r[8])}
         for r in cur.fetchall()
     ]
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.push_sent WHERE created_at > NOW() - INTERVAL '7 days'")
+    personal = int(cur.fetchone()[0])
     return {
         "subscribers": int(s[0]), "withAccount": int(s[1]), "sent": c.get("sent", 0), "pending": c.get("pending", 0),
-        "failed": c.get("failed", 0), "messages": messages,
+        "failed": c.get("failed", 0), "personal7d": personal, "messages": messages,
     }
 
 
@@ -229,6 +231,12 @@ def handle_push(event: dict) -> dict:
             return resp(405, {"error": "Метод не поддерживается"})
         body = json.loads(event.get("body") or "{}")
         action = body.get("action")
+
+        if action == "unlink":
+            endpoint = str(body.get("endpoint", ""))[:1000]
+            if me and endpoint:
+                cur.execute(f"UPDATE {SCHEMA}.push_subscriptions SET user_id = NULL WHERE endpoint = '{esc(endpoint)}' AND user_id = {me}")
+            return resp(200, {"ok": True})
 
         if action in ("subscribe", "unsubscribe"):
             endpoint = str(body.get("endpoint", ""))[:1000]

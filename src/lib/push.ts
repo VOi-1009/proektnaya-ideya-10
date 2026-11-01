@@ -15,7 +15,8 @@ export const pushRequest = async <T,>(token: string | null, query = "", body?: o
 };
 
 export interface PushStats {
-  settings: { enabled: boolean; daily: boolean; digest: boolean };
+  settings: { enabled: boolean; daily: boolean; digest: boolean; trades: boolean; alerts: boolean };
+  personal7d: number;
   subscribers: number;
   withAccount: number;
   sent: number;
@@ -56,6 +57,18 @@ export const usePush = () => {
   useEffect(() => {
     detect();
   }, [detect]);
+
+  useEffect(() => {
+    if (state !== "on" || !token) return;
+    navigator.serviceWorker
+      .getRegistration("/sw.js")
+      .then((reg) => reg?.pushManager.getSubscription())
+      .then((sub) => {
+        const j = sub?.toJSON();
+        if (j?.endpoint && j.keys) pushRequest(token, "", { action: "subscribe", endpoint: j.endpoint, keys: j.keys }).catch(() => undefined);
+      })
+      .catch(() => undefined);
+  }, [state, token]);
 
   const enable = async () => {
     setBusy(true);
