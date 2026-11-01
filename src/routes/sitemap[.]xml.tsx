@@ -26,6 +26,8 @@ export const Route = createFileRoute("/sitemap.xml")({
           url(`${SITE}/trading`, "weekly", "0.8"),
           url(`${SITE}/games`, "weekly", "0.7"),
           url(`${SITE}/shop`, "weekly", "0.6"),
+          url(`${SITE}/fund`, "daily", "0.6"),
+          url(`${SITE}/converter`, "weekly", "0.7"),
           ...articles.map((a) => url(`${SITE}/articles/${a.id}`, "weekly", "0.7", a.updatedAt)),
         ];
         const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items.join("\n")}\n</urlset>\n`;

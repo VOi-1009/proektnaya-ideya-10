@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ConsentRouteImport } from './routes/consent'
+import { Route as ConverterRouteImport } from './routes/converter'
+import { Route as FundRouteImport } from './routes/fund'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as MRouteImport } from './routes/m'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
@@ -44,6 +46,16 @@ const CommunityRoute = CommunityRouteImport.update({
 const ConsentRoute = ConsentRouteImport.update({
   id: '/consent',
   path: '/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConverterRoute = ConverterRouteImport.update({
+  id: '/converter',
+  path: '/converter',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FundRoute = FundRouteImport.update({
+  id: '/fund',
+  path: '/fund',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesRoute = GamesRouteImport.update({
@@ -112,6 +124,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/converter': typeof ConverterRoute
+  '/fund': typeof FundRoute
   '/games': typeof GamesRoute
   '/m': typeof MRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
@@ -130,6 +144,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/converter': typeof ConverterRoute
+  '/fund': typeof FundRoute
   '/games': typeof GamesRoute
   '/m': typeof MRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
@@ -149,6 +165,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/converter': typeof ConverterRoute
+  '/fund': typeof FundRoute
   '/games': typeof GamesRoute
   '/m': typeof MRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
@@ -169,6 +187,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/converter'
+    | '/fund'
     | '/games'
     | '/m'
     | '/manifest.webmanifest'
@@ -187,6 +207,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/converter'
+    | '/fund'
     | '/games'
     | '/m'
     | '/manifest.webmanifest'
@@ -205,6 +227,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/converter'
+    | '/fund'
     | '/games'
     | '/m'
     | '/manifest.webmanifest'
@@ -224,6 +248,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CommunityRoute: typeof CommunityRoute
   ConsentRoute: typeof ConsentRoute
+  ConverterRoute: typeof ConverterRoute
+  FundRoute: typeof FundRoute
   GamesRoute: typeof GamesRoute
   MRoute: typeof MRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
@@ -266,6 +292,20 @@ declare module '@tanstack/react-router' {
       path: '/consent'
       fullPath: '/consent'
       preLoaderRoute: typeof ConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/converter': {
+      id: '/converter'
+      path: '/converter'
+      fullPath: '/converter'
+      preLoaderRoute: typeof ConverterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fund': {
+      id: '/fund'
+      path: '/fund'
+      fullPath: '/fund'
+      preLoaderRoute: typeof FundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games': {
@@ -360,6 +400,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CommunityRoute: CommunityRoute,
   ConsentRoute: ConsentRoute,
+  ConverterRoute: ConverterRoute,
+  FundRoute: FundRoute,
   GamesRoute: GamesRoute,
   MRoute: MRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
