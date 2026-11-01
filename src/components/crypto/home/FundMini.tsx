@@ -50,7 +50,7 @@ const FundMini = ({ onOpen }: { onOpen: () => void }) => {
         </div>
       </div>
       {(top || op) && (
-        <div className="text-[10px] text-muted-foreground leading-snug truncate">
+        <div className="text-[10px] text-muted-foreground leading-snug truncate text-center">
           {top ? <>Больше всех вложил <span className="text-white">{top.name}</span>, {short(top.amount)} TKA</> : <>Последнее: {op.note}</>}
         </div>
       )}
