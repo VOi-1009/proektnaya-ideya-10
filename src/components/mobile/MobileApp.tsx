@@ -11,7 +11,7 @@ import UserAvatar from "@/components/crypto/UserAvatar";
 import MobileProfile from "./MobileProfile";
 
 const MobileApp = () => {
-  const { user, setAuthOpen, logout } = useAuth();
+  const { user, setAuthOpen } = useAuth();
   const { data, isLoading } = useMobileSettings();
   const { data: gfx } = useGraphics();
   const [tab, setTabRaw] = useState("");
@@ -79,14 +79,10 @@ const MobileApp = () => {
         ) : (
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black text-lg">Т</div>
         )}
-        <div className="flex items-center justify-end gap-3">
-          <button
-            onClick={() => (user ? logout() : setAuthOpen(true))}
-            className={user ? "text-xs text-muted-foreground hover:text-white flex items-center gap-1 border border-border rounded-md px-2 py-1" : "text-xs text-primary-foreground bg-primary font-semibold rounded-md px-3 py-1"}
-          >
-            {user && <Icon name="LogOut" size={12} />}
-            {user ? "Выйти" : "Войти"}
-          </button>
+        <div className="flex items-center justify-end">
+          <a href="/community" aria-label="Сообщество" title="Сообщество" className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-white active:bg-hover/60">
+            <Icon name="Users" size={22} />
+          </a>
         </div>
       </header>
 
