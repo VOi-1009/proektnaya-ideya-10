@@ -25,7 +25,7 @@ const AuthDialog = () => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setErr("Укажите корректную почту");
     if (password.length < 6) return setErr("Пароль должен быть не короче 6 символов");
     if (mode === "register" && !team) return setErr("Выберите команду: Быки или Медведи");
-    if (!agree) return setErr("Подтвердите согласие на обработку персональных данных");
+    if (mode === "register" && !agree) return setErr("Подтвердите согласие на обработку персональных данных");
     setErr("");
     setLoading(true);
     try {
@@ -91,6 +91,7 @@ const AuthDialog = () => {
               <p className="text-[11px] text-muted-foreground mt-1.5">Сменить можно раз в месяц или за 100 ТКА.</p>
             </div>
           )}
+          {mode === "register" && (
           <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer leading-snug">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[hsl(var(--primary))]" />
             <span>
@@ -98,8 +99,9 @@ const AuthDialog = () => {
               <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">политику обработки данных</a>
             </span>
           </label>
+          )}
           {err && <div className="text-down text-sm">{err}</div>}
-          <Button type="submit" disabled={loading || !agree} className="w-full h-10 font-semibold">
+          <Button type="submit" disabled={loading || (mode === "register" && !agree)} className="w-full h-10 font-semibold">
             {loading && <Icon name="Loader2" size={16} className="mr-2 animate-spin" />}
             {mode === "login" ? "Войти" : "Создать аккаунт"}
           </Button>
