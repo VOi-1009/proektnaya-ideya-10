@@ -48,3 +48,39 @@ export const useFund = (token: string | null) =>
     refetchInterval: 60_000,
     queryFn: () => fundRequest<Fund>(token, "?action=fund"),
   });
+
+export interface Contest {
+  id: number;
+  title: string;
+  description: string;
+  kind: "random" | "trader";
+  prize: number;
+  status: "active" | "finished" | "cancelled";
+  startsAt: string;
+  endsAt: string;
+  winnerId: number | null;
+  winner: string;
+  entries: number;
+  joined: boolean;
+}
+
+export const CONTEST_KIND: Record<string, string> = {
+  random: "Розыгрыш среди участников",
+  trader: "Лучший трейдер",
+};
+
+export const CONTEST_KIND_HINT: Record<string, string> = {
+  random: "Победитель выбирается случайно среди записавшихся.",
+  trader: "Побеждает участник с наибольшей прибылью по закрытым сделкам на бирже за время конкурса (в виртуальных USDT).",
+};
+
+export const useContests = (token: string | null) =>
+  useQuery<{ contests: Contest[]; available: number }>({
+    queryKey: ["contests", token],
+    staleTime: 20_000,
+    refetchInterval: 60_000,
+    queryFn: () => fundRequest(token, "?action=contests"),
+  });
+
+export const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });

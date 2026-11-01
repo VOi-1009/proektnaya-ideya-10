@@ -3,8 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TkaIcon from "../TkaIcon";
 import { useAuth } from "@/lib/auth";
 import { fundFmt, useFund } from "@/lib/fund";
+import ContestsList from "../ContestsList";
 
-const KIND: Record<string, string> = { fee: "Комиссия обмена", deposit: "Пополнение", adjust: "Корректировка", payout: "Выплата участнику" };
+const KIND: Record<string, string> = { fee: "Комиссия обмена", deposit: "Пополнение", adjust: "Корректировка", payout: "Выплата участнику", contest: "Приз конкурса" };
 
 const FundChannel = () => {
   const { token } = useAuth();
@@ -52,6 +53,8 @@ const FundChannel = () => {
           </div>
         </div>
       </section>
+
+      <ContestsList />
 
       <div className="grid sm:grid-cols-2 gap-4">
         <section className="rounded-xl border border-border bg-card p-4">

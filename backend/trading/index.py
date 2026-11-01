@@ -193,6 +193,76 @@ def fund_state(cur, uid=None):
     }
 
 
+ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z$")
+CONTEST_KINDS = {"random": "Розыгрыш среди участников", "trader": "Лучший трейдер (по прибыли в виртуальных USDT)"}
+
+
+def finish_contest(cur, cid, force=False):
+    cond = "" if force else "AND ends_at <= NOW()"
+    cur.execute(f"UPDATE {SCHEMA}.contests SET status = 'finished', finished_at = NOW() WHERE id = {int(cid)} AND status = 'active' {cond} RETURNING title, kind, prize, starts_at")
+    row = cur.fetchone()
+    if not row:
+        return None
+    title, kind, prize, starts = row
+    prize = float(prize)
+    winner = None
+    if kind == "trader":
+        cur.execute(
+            f"SELECT e.user_id, COALESCE(SUM(p.pnl), 0) AS s FROM {SCHEMA}.contest_entries e "
+            f"LEFT JOIN {SCHEMA}.paper_positions p ON p.user_id = e.user_id AND p.status = 'closed' AND COALESCE(p.close_reason, '') <> 'reset' "
+            f"AND p.closed_at >= '{starts.isoformat()}'::timestamptz WHERE e.contest_id = {int(cid)} GROUP BY e.user_id ORDER BY s DESC, e.user_id LIMIT 1"
+        )
+        r = cur.fetchone()
+        if r and float(r[1]) > 0:
+            winner = int(r[0])
+    else:
+        cur.execute(f"SELECT user_id FROM {SCHEMA}.contest_entries WHERE contest_id = {int(cid)} ORDER BY random() LIMIT 1")
+        r = cur.fetchone()
+        if r:
+            winner = int(r[0])
+    if winner:
+        cur.execute(f"UPDATE {SCHEMA}.contests SET winner_id = {winner} WHERE id = {int(cid)}")
+        note = q(f"Приз конкурса «{title}»")[:120]
+        cur.execute(f"INSERT INTO {SCHEMA}.tka_ledger (user_id, amount, kind, note) VALUES ({winner}, {prize}, 'gift', '{note}')")
+    else:
+        note = q(f"Возврат приза: конкурс «{title}» без победителя")[:120]
+        cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES (0, {prize}, 'deposit', '{note}')")
+    return {"winner": winner}
+
+
+def finish_due(cur):
+    cur.execute(f"SELECT id FROM {SCHEMA}.contests WHERE status = 'active' AND ends_at <= NOW()")
+    for (cid,) in cur.fetchall():
+        finish_contest(cur, cid)
+
+
+def contests_list(cur, uid):
+    finish_due(cur)
+    me = int(uid or 0)
+    cur.execute(
+        f"SELECT c.id, c.title, c.description, c.kind, c.prize, c.status, c.starts_at, c.ends_at, c.winner_id, "
+        f"COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)), "
+        f"(SELECT COUNT(*) FROM {SCHEMA}.contest_entries e WHERE e.contest_id = c.id), "
+        f"EXISTS(SELECT 1 FROM {SCHEMA}.contest_entries e WHERE e.contest_id = c.id AND e.user_id = {me}) "
+        f"FROM {SCHEMA}.contests c LEFT JOIN {SCHEMA}.users u ON u.id = c.winner_id "
+        f"ORDER BY (c.status = 'active') DESC, CASE WHEN c.status = 'active' THEN c.ends_at END ASC, c.id DESC LIMIT 30"
+    )
+    return [
+        {"id": r[0], "title": r[1], "description": r[2], "kind": r[3], "prize": float(r[4]), "status": r[5],
+         "startsAt": r[6].isoformat(), "endsAt": r[7].isoformat(), "winnerId": r[8], "winner": r[9] or "",
+         "entries": int(r[10]), "joined": bool(r[11])}
+        for r in cur.fetchall()
+    ]
+
+
+def opt_uid(cur, token):
+    if not token:
+        return None
+    cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
+    r = cur.fetchone()
+    return int(r[0]) if r else None
+
+
 def is_admin(cur, uid):
     cur.execute(f"SELECT is_admin FROM {SCHEMA}.users WHERE id = {int(uid)}")
     r = cur.fetchone()
@@ -434,14 +504,12 @@ def handler(event, context):
                 return resp(403, {"error": "Доступ запрещён"})
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
+            finish_due(cur)
             return resp(200, {"checked": tick(cur, px)})
         if method == "GET" and action == "fund":
-            fuid = None
-            if token:
-                cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
-                frow = cur.fetchone()
-                fuid = int(frow[0]) if frow else None
-            return resp(200, fund_state(cur, fuid))
+            return resp(200, fund_state(cur, opt_uid(cur, token)))
+        if method == "GET" and action == "contests":
+            return resp(200, {"contests": contests_list(cur, opt_uid(cur, token)), "available": max(fund_total(cur), 0)})
         if not token:
             return resp(401, {"error": "Биржа доступна только зарегистрированным пользователям. Войдите или зарегистрируйтесь"})
         cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
@@ -480,6 +548,7 @@ def handler(event, context):
             ops = [{"id": r[0], "amount": float(r[1]), "kind": r[2], "note": r[3], "at": r[4].isoformat(), "user": r[5] or ""} for r in cur.fetchall()]
             return resp(200, {"state": fund_state(cur, uid), "settings": fund_settings(cur), "ops": ops})
         if method == "GET" and action == "wallet":
+            finish_due(cur)
             ensure_account(cur, uid)
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
             free = float(cur.fetchone()[0])
@@ -495,6 +564,70 @@ def handler(event, context):
             return resp(200, state(cur, uid, px))
         body = json.loads(event.get("body") or "{}")
         act = body.get("action")
+        if act == "contest_join":
+            try:
+                cid = int(body.get("id"))
+            except (TypeError, ValueError):
+                return resp(400, {"error": "Конкурс не найден"})
+            finish_due(cur)
+            cur.execute(f"SELECT 1 FROM {SCHEMA}.contests WHERE id = {cid} AND status = 'active' AND ends_at > NOW()")
+            if not cur.fetchone():
+                return resp(400, {"error": "Конкурс уже закончился"})
+            cur.execute(f"INSERT INTO {SCHEMA}.contest_entries (contest_id, user_id) VALUES ({cid}, {uid}) ON CONFLICT DO NOTHING RETURNING user_id")
+            if not cur.fetchone():
+                return resp(400, {"error": "Вы уже участвуете в этом конкурсе"})
+            return resp(200, {"contests": contests_list(cur, uid)})
+        if act in ("contest_create", "contest_cancel", "contest_finish"):
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            if act == "contest_create":
+                title = str(body.get("title") or "").strip()[:120]
+                if len(title) < 3:
+                    return resp(400, {"error": "Введите название конкурса"})
+                kind = body.get("kind")
+                if kind not in CONTEST_KINDS:
+                    return resp(400, {"error": "Выберите тип конкурса"})
+                try:
+                    prize = round(float(body.get("prize")), 2)
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Укажите приз"})
+                if prize < 1:
+                    return resp(400, {"error": "Приз не меньше 1 TKA"})
+                ends = str(body.get("endsAt") or "")
+                if not ISO_RE.match(ends):
+                    return resp(400, {"error": "Укажите дату окончания"})
+                cur.execute(f"SELECT '{ends}'::timestamptz > NOW() + INTERVAL '5 minutes', '{ends}'::timestamptz < NOW() + INTERVAL '90 days'")
+                ok_future, ok_far = cur.fetchone()
+                if not ok_future:
+                    return resp(400, {"error": "Окончание должно быть не раньше чем через 5 минут"})
+                if not ok_far:
+                    return resp(400, {"error": "Конкурс не может идти дольше 90 дней"})
+                if fund_total(cur) < prize:
+                    return resp(400, {"error": "В фонде недостаточно средств для такого приза"})
+                desc = q(str(body.get("description") or "").strip()[:600])
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.contests (title, description, kind, prize, ends_at, created_by) "
+                    f"VALUES ('{q(title)}', '{desc}', '{kind}', {prize}, '{ends}'::timestamptz, {uid}) RETURNING id"
+                )
+                cid = cur.fetchone()[0]
+                note = q(f"Приз конкурса «{title}» зарезервирован")[:120]
+                cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, -{prize}, 'contest', '{note}')")
+            else:
+                try:
+                    cid = int(body.get("id"))
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Конкурс не найден"})
+                if act == "contest_finish":
+                    if finish_contest(cur, cid, True) is None:
+                        return resp(404, {"error": "Конкурс не найден или уже завершён"})
+                else:
+                    cur.execute(f"UPDATE {SCHEMA}.contests SET status = 'cancelled', finished_at = NOW() WHERE id = {cid} AND status = 'active' RETURNING title, prize")
+                    r = cur.fetchone()
+                    if not r:
+                        return resp(404, {"error": "Конкурс не найден или уже завершён"})
+                    note = q(f"Возврат приза: конкурс «{r[0]}» отменён")[:120]
+                    cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {float(r[1])}, 'deposit', '{note}')")
+            return resp(200, {"contests": contests_list(cur, uid), "available": max(fund_total(cur), 0)})
         if act in ("fund_settings", "fund_adjust", "fund_payout"):
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
