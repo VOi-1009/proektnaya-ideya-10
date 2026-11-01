@@ -1549,6 +1549,7 @@ MOBILE_DEFAULT = {
     "enabled": True,
     "message": "",
     "redirect": False,
+    "app": {"install": True, "name": "TRADERKA — крипто сообщество", "shortName": "TRADERKA", "color": "#1f2024", "accent": "#F97316", "text": "Установите приложение на экран телефона"},
     "title": "TRADERKA",
     "bigButtons": True,
     "tabs": [
@@ -1573,6 +1574,16 @@ def clean_mobile(raw):
     out["enabled"] = bool(raw.get("enabled", True))
     out["message"] = str(raw.get("message") or "")[:200]
     out["redirect"] = bool(raw.get("redirect", False))
+    app = raw.get("app") if isinstance(raw.get("app"), dict) else {}
+    hexc = lambda v, d: v if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v) else d
+    out["app"] = {
+        "install": bool(app.get("install", True)),
+        "name": str(app.get("name") or out["app"]["name"])[:45].strip() or out["app"]["name"],
+        "shortName": str(app.get("shortName") or out["app"]["shortName"])[:12].strip() or out["app"]["shortName"],
+        "color": hexc(app.get("color"), out["app"]["color"]),
+        "accent": hexc(app.get("accent"), out["app"]["accent"]),
+        "text": str(app.get("text") or out["app"]["text"])[:100].strip() or out["app"]["text"],
+    }
     out["title"] = str(raw.get("title") or "TRADERKA")[:30].strip() or "TRADERKA"
     out["bigButtons"] = bool(raw.get("bigButtons", True))
     tabs = []

@@ -300,6 +300,7 @@ export interface MobileSettings {
   enabled: boolean;
   message: string;
   redirect: boolean;
+  app: { install: boolean; name: string; shortName: string; color: string; accent: string; text: string };
   title: string;
   bigButtons: boolean;
   tabs: MobileTab[];

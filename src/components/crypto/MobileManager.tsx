@@ -31,6 +31,7 @@ const MobileManager = ({ token }: { token: string | null }) => {
   if (!data || !f) return <p className="text-muted-foreground text-sm">Загружаю…</p>;
 
   const set = <K extends keyof MobileSettings>(k: K, v: MobileSettings[K]) => setF({ ...f, [k]: v });
+  const setApp = (patch: Partial<MobileSettings["app"]>) => set("app", { ...f.app, ...patch });
   const setTab = (id: string, patch: Partial<MobileTab>) => set("tabs", f.tabs.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   const moveTab = (i: number, d: number) => {
     const j = i + d;
@@ -145,6 +146,40 @@ const MobileManager = ({ token }: { token: string | null }) => {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="text-white font-semibold text-sm flex items-center gap-2"><Icon name="Download" size={15} className="text-primary" /> Приложение на телефон</h2>
+          <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+            <Switch checked={f.app.install} onCheckedChange={(v) => setApp({ install: v })} />
+            Предлагать установку
+          </label>
+        </div>
+        <p className="text-[11px] text-muted-foreground max-w-2xl">
+          МВ можно установить на экран телефона как приложение: свой значок, запуск без адресной строки. Устанавливается прямо из браузера, магазины приложений не нужны. Изменения названия и цвета подхватятся при следующей установке.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="space-y-1 block">
+            <span className="text-xs text-muted-foreground">Полное название</span>
+            <input className={inputCls} maxLength={45} value={f.app.name} onChange={(e) => setApp({ name: e.target.value })} />
+          </label>
+          <label className="space-y-1 block">
+            <span className="text-xs text-muted-foreground">Короткое название под значком (до 12 знаков)</span>
+            <input className={inputCls} maxLength={12} value={f.app.shortName} onChange={(e) => setApp({ shortName: e.target.value })} />
+          </label>
+          <label className="space-y-1 block sm:col-span-2">
+            <span className="text-xs text-muted-foreground">Текст приглашения в МВ</span>
+            <input className={inputCls} maxLength={100} value={f.app.text} onChange={(e) => setApp({ text: e.target.value })} />
+          </label>
+          <label className="space-y-1 block">
+            <span className="text-xs text-muted-foreground">Цвет фона при запуске</span>
+            <div className="flex gap-2">
+              <input type="color" className="h-9 w-12 rounded bg-rail border border-border cursor-pointer" value={f.app.color} onChange={(e) => setApp({ color: e.target.value })} />
+              <input className={`${inputCls} font-mono`} maxLength={7} value={f.app.color} onChange={(e) => setApp({ color: e.target.value })} />
+            </div>
+          </label>
         </div>
       </div>
 

@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ConsentRouteImport } from './routes/consent'
 import { Route as MRouteImport } from './routes/m'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
@@ -43,6 +44,11 @@ const ConsentRoute = ConsentRouteImport.update({
 const MRoute = MRouteImport.update({
   id: '/m',
   path: '/m',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/m': typeof MRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/m': typeof MRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/m': typeof MRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/consent'
     | '/m'
+    | '/manifest.webmanifest'
     | '/privacy'
     | '/profile'
     | '/rating'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/consent'
     | '/m'
+    | '/manifest.webmanifest'
     | '/privacy'
     | '/profile'
     | '/rating'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/consent'
     | '/m'
+    | '/manifest.webmanifest'
     | '/privacy'
     | '/profile'
     | '/rating'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ConsentRoute: typeof ConsentRoute
   MRoute: typeof MRoute
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RatingRoute: typeof RatingRoute
@@ -195,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/m'
       fullPath: '/m'
       preLoaderRoute: typeof MRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ConsentRoute: ConsentRoute,
   MRoute: MRoute,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RatingRoute: RatingRoute,

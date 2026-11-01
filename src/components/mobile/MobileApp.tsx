@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { fundFmt, MOBILE_SECTIONS, useMobileSettings } from "@/lib/fund";
 import { useWallet } from "@/lib/tka";
 import MobileBlockView from "./MobileBlockView";
+import InstallBanner from "./InstallBanner";
 import { chooseDesktop, chooseMobile } from "@/lib/mobile";
 import TkaIcon from "@/components/crypto/TkaIcon";
 
@@ -64,6 +65,7 @@ const MobileApp = () => {
         <a href="/?full=1" onClick={() => chooseDesktop()} className="text-[11px] text-muted-foreground hover:text-white inline-flex items-center gap-1">
           <Icon name="Monitor" size={12} /> Полная версия сайта
         </a>
+        {s.app.install && <InstallBanner text={s.app.text} />}
         <h1 className="font-display text-lg text-white flex items-center gap-2">
           {info && <Icon name={current?.icon || info.icon} size={18} className="text-primary" />}
           {current?.label || info?.label}
