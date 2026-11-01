@@ -195,6 +195,22 @@ const Admin = () => {
     );
   }
 
+  const switcher = (items: readonly (readonly [string, string, string])[]) => (
+    <div className="inline-flex flex-wrap gap-1 bg-card border border-border rounded-lg p-1">
+      {items.map(([id, label, icon]) => (
+        <button
+          key={id}
+          onClick={() => setTab(id as typeof tab)}
+          className={`px-3 py-1.5 rounded-md text-sm inline-flex items-center gap-2 transition-colors ${tab === id ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"}`}
+        >
+          <Icon name={icon} size={14} />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+  const blocksSwitch = switcher([["blocks", "Блоки главной", "LayoutPanelLeft"], ["side", "Боковые блоки", "PanelRight"], ["menu", "Меню слева", "PanelLeft"]]);
+
   const artSwitch = (
     <div className="inline-flex gap-1 bg-card border border-border rounded-lg p-1">
       {([["articles", "Статьи", "FileText"], ["categories", "Рубрики", "FolderTree"]] as const).map(([id, label, icon]) => (
@@ -221,8 +237,7 @@ const Admin = () => {
               [
                 ["visits", "Посетители", "Activity"],
                 ["articles", "Статьи", "FileText"],
-                ["blocks", "Блоки главной", "LayoutPanelLeft"],
-                ["side", "Боковые блоки", "PanelRight"],
+                ["blocks", "БЛОКИ", "LayoutPanelLeft"],
                 ["users", "Пользователи", "Users"],
                 ["polls", "Опросы", "ListChecks"],
                 ["radars", "Радары", "Radar"],
@@ -236,7 +251,6 @@ const Admin = () => {
                 ["graphics", "Графика", "Image"],
                 ["fund", "Фонд", "Landmark"],
                 ["contests", "Конкурсы", "Trophy"],
-                ["menu", "Меню слева", "PanelLeft"],
                 ["chats", "Чаты", "MessageCircle"],
                 ["forum", "Форум", "MessagesSquare"],
                 ["aibot", "AiTKA", "Sparkles"],
@@ -246,7 +260,7 @@ const Admin = () => {
                 key={id}
                 onClick={() => setTab(id)}
                 className={`px-4 py-2 rounded-md text-sm inline-flex items-center gap-2 transition-colors whitespace-nowrap lg:w-full ${
-                  (tab === id || (id === "articles" && tab === "categories")) ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
+                  (tab === id || (id === "articles" && tab === "categories") || (id === "blocks" && (tab === "side" || tab === "menu"))) ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-white"
                 }`}
               >
                 <Icon name={icon} size={16} />
@@ -257,9 +271,15 @@ const Admin = () => {
         )}
         <div className="flex-1 min-w-0 space-y-5">
         {editing === null && tab === "blocks" ? (
-          <BlocksManager key="main" token={token} placement="main" />
+          <>
+            {blocksSwitch}
+            <BlocksManager key="main" token={token} placement="main" />
+          </>
         ) : editing === null && tab === "side" ? (
-          <BlocksManager key="side" token={token} placement="side" />
+          <>
+            {blocksSwitch}
+            <BlocksManager key="side" token={token} placement="side" />
+          </>
         ) : editing === null && tab === "radars" ? (
           <RadarsManager token={token} />
         ) : editing === null && tab === "quotes" ? (
@@ -275,7 +295,10 @@ const Admin = () => {
         ) : editing === null && tab === "aibot" ? (
           <AiBotManager token={token} />
         ) : editing === null && tab === "menu" ? (
-          <MenuManager token={token} />
+          <>
+            {blocksSwitch}
+            <MenuManager token={token} />
+          </>
         ) : editing === null && tab === "graphics" ? (
           <GraphicsManager token={token} />
         ) : editing === null && tab === "mobile" ? (
