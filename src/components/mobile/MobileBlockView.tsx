@@ -4,6 +4,7 @@ import { MobileBlock } from "@/lib/fund";
 import { useMarkets } from "@/lib/crypto";
 import MarketSummary from "@/components/crypto/home/MarketSummary";
 import { useNavigate } from "@/lib/router-compat";
+import BullBearMini from "./BullBearMini";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MarketSummaryBlock = () => {
@@ -19,6 +20,7 @@ const MarketSummaryBlock = () => {
 
 const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: boolean }) => {
   if (b.kind === "market_summary") return <MarketSummaryBlock />;
+  if (b.kind === "bullbear") return <BullBearMini />;
   if (b.kind === "empty") {
     if (!preview) return null;
     return (
