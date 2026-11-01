@@ -9,6 +9,7 @@ import MobileBlockView from "./MobileBlockView";
 import InstallBanner from "./InstallBanner";
 import { chooseDesktop, chooseMobile } from "@/lib/mobile";
 import TkaIcon from "@/components/crypto/TkaIcon";
+import UserAvatar from "@/components/crypto/UserAvatar";
 
 const MobileApp = () => {
   const { user, setAuthOpen, logout } = useAuth();
@@ -54,18 +55,28 @@ const MobileApp = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-30 bg-card border-b border-border px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {gfx?.logo ? (
-            <img src={gfx.logo} alt="" className="w-8 h-8 rounded-lg object-contain" />
-          ) : (
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black">Т</div>
-          )}
-          <span className="font-display text-base text-white tracking-wide">{s.title}</span>
+      <header className="sticky top-0 z-30 bg-card border-b border-border px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="flex items-center justify-start">
+          <button
+            onClick={() => (user ? setTab("profile") : setAuthOpen(true))}
+            aria-label={user ? "Мой профиль" : "Войти"}
+            className="rounded-full"
+          >
+            {user ? (
+              <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="sm" className="w-9 h-9 text-base" userId={user.id} />
+            ) : (
+              <UserAvatar className="w-9 h-9 text-base" />
+            )}
+          </button>
         </div>
-        <div className="flex items-center gap-3">
+        {gfx?.logo ? (
+          <img src={gfx.logo} alt="TRADERKA" className="w-9 h-9 rounded-lg object-contain" />
+        ) : (
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black text-lg">Т</div>
+        )}
+        <div className="flex items-center justify-end gap-3">
           {user && (
-            <button onClick={() => setTab("profile")} className="text-xs text-muted-foreground flex items-center gap-1.5" aria-label="Профиль">
+            <button onClick={() => setTab("profile")} className="text-xs text-muted-foreground flex items-center gap-1.5" aria-label="Кошелёк">
               <TkaIcon size={16} /> <WalletValue />
             </button>
           )}
