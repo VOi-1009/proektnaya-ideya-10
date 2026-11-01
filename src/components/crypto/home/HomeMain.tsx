@@ -4,6 +4,7 @@ import { Suspense, lazy } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Coin } from "@/lib/crypto";
 import WelcomeChannel from "@/components/crypto/channels/WelcomeChannel";
+import AboutTraderka from "./AboutTraderka";
 import { ChatRoom } from "@/lib/chat";
 import { PriceAlertsApi } from "@/lib/alerts";
 import { GoFn } from "./homeConfig";
@@ -102,6 +103,7 @@ const HomeMain = ({
             <Skeleton className="h-56 w-full bg-card" />
             <Skeleton className="h-24 w-full bg-card" />
             <Skeleton className="h-24 w-2/3 bg-card" />
+            {channel === "welcome" && <AboutTraderka go={go} />}
           </div>
         ) : channel === "welcome" ? (
           <WelcomeChannel
