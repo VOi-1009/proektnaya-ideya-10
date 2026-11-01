@@ -142,6 +142,22 @@ const AiTraderManager = ({ token }: { token: string | null }) => {
         </div>
       </div>
 
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <h3 className="text-white font-semibold text-sm flex items-center gap-2"><Icon name="Users" size={15} className="text-primary" /> Публикации в сообществе</h3>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <Switch checked={f.postToCommunity} onCheckedChange={(v) => set("postToCommunity", v)} className="mt-0.5" />
+          <span>
+            <span className="text-sm text-white block">Публиковать итоги сделок в сообществе</span>
+            <span className="text-xs text-muted-foreground">Сделка с результатом от 3% к ставке публикуется сразу, остальные собираются, и публикуется самая заметная.</span>
+          </span>
+        </label>
+        {f.postToCommunity && (
+          <div className="max-w-xs">
+            <Num label="Не реже чем раз в N закрытых сделок" value={f.postEvery} min={1} max={50} onChange={(v) => set("postEvery", v)} />
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-wrap gap-2 items-center">
         <Button disabled={busy} className="font-semibold" onClick={() => run({ action: "ai_save", ...f }, "Настройки AiTKA сохранены")}>
           {busy && <Icon name="Loader2" size={16} className="mr-1.5 animate-spin" />}

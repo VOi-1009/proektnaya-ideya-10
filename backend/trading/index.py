@@ -556,10 +556,11 @@ def leaderboard(cur, px):
 AI_KEY = "ai_trader"
 AI_RUN_KEY = "ai_trader_run"
 AI_STRATEGIES = {"trend": "По тренду", "reversal": "Против движения", "long_only": "Только лонги"}
+AI_POST_MIN_PCT = 3.0
 AI_DEFAULT = {
     "enabled": False, "startBalance": 1000.0, "betPercent": 5.0, "maxBet": 200.0, "leverage": 3, "maxPositions": 3,
     "stopLossPct": 3.0, "takeProfitPct": 6.0, "holdHours": 6, "minMovePct": 1.5, "intervalMin": 15,
-    "strategy": "trend", "coins": [],
+    "strategy": "trend", "coins": [], "postToCommunity": True, "postEvery": 3,
 }
 
 
@@ -579,6 +580,8 @@ def clean_ai(raw):
         out["intervalMin"] = max(5, min(int(raw.get("intervalMin", 15)), 720))
         out["strategy"] = raw.get("strategy") if raw.get("strategy") in AI_STRATEGIES else "trend"
         out["coins"] = [c for c in (raw.get("coins") or []) if c in COINS]
+        out["postToCommunity"] = bool(raw.get("postToCommunity", True))
+        out["postEvery"] = max(1, min(int(raw.get("postEvery", 3)), 50))
     except (TypeError, ValueError):
         pass
     return out
@@ -651,6 +654,85 @@ def fetch_changes():
     with urllib.request.urlopen(req, timeout=2) as r:
         d = json.loads(r.read())
     return {k: float(v["usd_24h_change"]) for k, v in d.items() if v.get("usd_24h_change") is not None}
+
+
+COIN_RU = {"bitcoin": "Bitcoin", "ethereum": "Ethereum", "binancecoin": "BNB", "ripple": "XRP", "solana": "Solana", "dogecoin": "Dogecoin", "hyperliquid": "Hyperliquid", "zcash": "Zcash", "tron": "TRON", "cardano": "Cardano", "chainlink": "Chainlink", "stellar": "Stellar", "avalanche-2": "Avalanche", "sui": "Sui", "shiba-inu": "Shiba Inu", "the-open-network": "Gram", "hedera-hashgraph": "Hedera", "litecoin": "Litecoin"}
+REASON_RU = {"stop": "сработал стоп-лосс", "take": "сработал тейк-профит", "manual": "закрыта вручную", "liquidation": "ликвидация", "time": "вышло время удержания"}
+
+
+def fmt_px(v):
+    v = float(v)
+    if v >= 1000:
+        return f"${v:,.0f}".replace(",", " ")
+    if v >= 1:
+        return f"${v:,.2f}".replace(",", " ").replace(".", ",")
+    return f"${v:.5f}".replace(".", ",")
+
+
+def ai_post_results(cur, bot, s):
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.paper_positions WHERE user_id = {bot} AND status = 'closed' AND NOT ai_posted AND COALESCE(close_reason, '') <> 'reset'")
+    pending = int(cur.fetchone()[0])
+    if pending == 0:
+        return 0
+    cur.execute(
+        f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, close_reason FROM {SCHEMA}.paper_positions "
+        f"WHERE user_id = {bot} AND status = 'closed' AND NOT ai_posted AND COALESCE(close_reason, '') <> 'reset' ORDER BY closed_at, id LIMIT 50"
+    )
+    rows = cur.fetchall()
+    big = [r for r in rows if float(r[4]) > 0 and abs(float(r[7]) / float(r[4]) * 100) >= AI_POST_MIN_PCT]
+    if s["postToCommunity"] and (big or len(rows) >= s["postEvery"]):
+        pick = max(big or rows, key=lambda r: abs(float(r[7])))
+        pid, coin, side, lev, margin, entry, close, pnl, reason = pick
+        pnl, margin = float(pnl), float(margin)
+        pct = pnl / margin * 100 if margin else 0.0
+        sign = "+" if pnl >= 0 else "−"
+        text = (
+            f"{'Закрыла в плюс' if pnl >= 0 else 'Закрыла в минус'} на тренировочной бирже: {COIN_RU.get(coin, coin)}, "
+            f"{'лонг' if side == 'long' else 'шорт'} x{lev}. Вход {fmt_px(entry)} → выход {fmt_px(close)} "
+            f"({REASON_RU.get(reason, 'закрыта')}). Результат: {sign}{abs(pnl):.2f} виртуальных USDT ({sign}{abs(pct):.1f}% от суммы сделки). "
+            f"Это учебная игра, не инвестиционная рекомендация."
+        )
+        mood = ("bull" if side == "long" else "bear") if pnl >= 0 else ""
+        key = f"aitrade-{pid}"
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.community_posts (user_id, body, sentiment, coins, move_key) VALUES ({bot}, '{q(text)}', '{mood}', '{q(coin)}', '{key}') "
+            f"ON CONFLICT DO NOTHING"
+        )
+        ids = ", ".join(str(r[0]) for r in rows)
+        cur.execute(f"UPDATE {SCHEMA}.paper_positions SET ai_posted = TRUE WHERE id IN ({ids})")
+        return 1
+    if not s["postToCommunity"]:
+        ids = ", ".join(str(r[0]) for r in rows)
+        cur.execute(f"UPDATE {SCHEMA}.paper_positions SET ai_posted = TRUE WHERE id IN ({ids})")
+    return 0
+
+
+def ai_public(cur, px):
+    bot = ai_bot_id(cur)
+    s = ai_settings(cur)
+    out = {"enabled": s["enabled"], "strategy": AI_STRATEGIES.get(s["strategy"], ""), "leverage": s["leverage"], "equity": None, "pnl": 0.0, "pnlPct": 0.0, "winRate": 0.0, "trades": 0, "open": [], "closed": []}
+    if not bot:
+        return out
+    snap = ai_snapshot(cur, bot, px)
+    out["equity"] = snap["equity"]
+    out["pnl"] = snap["pnl"]
+    out["pnlPct"] = snap["pnlPct"]
+    out["open"] = [{"id": p["id"], "coinId": p["coinId"], "side": p["side"], "leverage": p["leverage"], "margin": p["margin"], "entry": p["entry"], "price": p["price"], "pnl": p["pnl"], "at": p["openedAt"]} for p in snap["positions"]]
+    cur.execute(
+        f"SELECT COUNT(*), COUNT(*) FILTER (WHERE pnl > 0) FROM {SCHEMA}.paper_positions WHERE user_id = {bot} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset'"
+    )
+    n, wins = cur.fetchone()
+    out["trades"] = int(n)
+    out["winRate"] = (int(wins) / int(n) * 100) if n else 0.0
+    cur.execute(
+        f"SELECT id, coin_id, side, leverage, margin, entry_price, close_price, pnl, close_reason, closed_at FROM {SCHEMA}.paper_positions "
+        f"WHERE user_id = {bot} AND status = 'closed' AND COALESCE(close_reason, '') <> 'reset' ORDER BY closed_at DESC, id DESC LIMIT 12"
+    )
+    out["closed"] = [
+        {"id": r[0], "coinId": r[1], "side": r[2], "leverage": r[3], "margin": float(r[4]), "entry": float(r[5]), "close": float(r[6]), "pnl": float(r[7]), "reason": r[8], "at": r[9].isoformat()}
+        for r in cur.fetchall()
+    ]
+    return out
 
 
 def ai_account(cur, bot):
@@ -742,6 +824,10 @@ def ai_trader_step(cur, px, started=None, force=False):
     for row in cur.fetchall():
         if ai_close(cur, bot, row, px, "time"):
             closed += 1
+    try:
+        ai_post_results(cur, bot, s)
+    except Exception as e:
+        print("ai post error:", e)
     ex = exchange_settings(cur)
     if ex["enabled"]:
         snap = ai_snapshot(cur, bot, px)
@@ -855,6 +941,12 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "ai_public":
+            try:
+                ai_trader_step(cur, px, started=t0)
+            except Exception as e:
+                print("ai trader error:", e)
+            return resp(200, ai_public(cur, px))
         if method == "GET" and action == "ai_admin":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})

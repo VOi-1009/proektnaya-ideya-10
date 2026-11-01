@@ -143,6 +143,8 @@ export interface AiTraderSettings {
   intervalMin: number;
   strategy: "trend" | "reversal" | "long_only";
   coins: string[];
+  postToCommunity: boolean;
+  postEvery: number;
 }
 
 export interface AiTraderData {
@@ -162,3 +164,25 @@ export interface AiTraderData {
   } | null;
   trades: { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; close: number; pnl: number; reason: string; closedAt: string }[];
 }
+
+export interface AiPublic {
+  enabled: boolean;
+  strategy: string;
+  leverage: number;
+  equity: number | null;
+  pnl: number;
+  pnlPct: number;
+  winRate: number;
+  trades: number;
+  open: { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; price: number; pnl: number; at: string }[];
+  closed: { id: number; coinId: string; side: "long" | "short"; leverage: number; margin: number; entry: number; close: number; pnl: number; reason: string; at: string }[];
+}
+
+export const useAiPublic = (token: string | null) =>
+  useQuery<AiPublic>({
+    queryKey: ["ai-public", token],
+    enabled: !!token,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    queryFn: () => fundRequest<AiPublic>(token, "?action=ai_public"),
+  });
