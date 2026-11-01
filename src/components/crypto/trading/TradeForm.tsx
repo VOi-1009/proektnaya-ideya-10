@@ -45,11 +45,15 @@ interface Props {
 }
 
 const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, limit, setLimit, margin, setMargin, leverage, setLeverage, sl, setSl, tp, setTp, m, livePrice, liqPrice, st, busy, submit, send }: Props) => {
-  const { user } = useAuth();
-  const { data: exData } = useExchangeSettings();
+  const { user, token } = useAuth();
+  const { data: exData } = useExchangeSettings(token);
   const ex = exData ?? EX_DEFAULT;
   const fee = tradeFee(ex, m, leverage);
-  const blocked = !ex.enabled || ex.disabledCoins.includes(coinId);
+  const cap = Math.min(ex.maxLeverage, ex.myMaxLeverage ?? ex.maxLeverage);
+  const lockedCoins = ex.lockedCoins ?? {};
+  const titles = ex.titles ?? [];
+  const nextTier = (ex.levelRules && ex.leverageTiers ? ex.leverageTiers : []).find(([, lev]) => lev > cap);
+  const blocked = !ex.enabled || ex.disabledCoins.includes(coinId) || !!lockedCoins[coinId];
   const risk = riskOf(leverage);
   const sideColor = side === "long" ? "#22C55E" : "#EA3943";
   const volume = m * leverage;
@@ -64,7 +68,9 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               {coins.filter((c) => !c.kind && !ex.disabledCoins.includes(c.id)).map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.symbol.toUpperCase()} · {name(c.id)}</SelectItem>
+                <SelectItem key={c.id} value={c.id} disabled={!!lockedCoins[c.id]}>
+                  {c.symbol.toUpperCase()} · {name(c.id)}{lockedCoins[c.id] ? ` · со статуса «${titles[lockedCoins[c.id] - 1] ?? lockedCoins[c.id]}»` : ""}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -109,9 +115,9 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
               <label className="text-xs font-semibold" style={{ color: risk.color }}>Плечо · {risk.label}</label>
               <span className="font-display text-base leading-none" style={{ color: risk.color, textShadow: `0 0 12px ${risk.color}66` }}>x{leverage}</span>
             </div>
-            <Slider className="mt-1.5" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={ex.maxLeverage} step={1} value={[Math.min(leverage, ex.maxLeverage)]} onValueChange={(v) => setLeverage(v[0])} />
+            <Slider className="mt-1.5" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={cap} step={1} value={[Math.min(leverage, cap)]} onValueChange={(v) => setLeverage(v[0])} />
             <div className="flex justify-between mt-1">
-              {LEVERAGE_MARKS.filter((l) => l <= ex.maxLeverage).map((l) => (
+              {LEVERAGE_MARKS.filter((l) => l <= cap).map((l) => (
                 <button key={l} type="button" onClick={() => setLeverage(l)} className={`text-[10px] font-mono ${leverage === l ? "text-white" : "text-muted-foreground hover:text-white"}`}>
                   x{l}
                 </button>
@@ -124,6 +130,11 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
               </p>
             )}
           </div>
+          {ex.levelRules && nextTier && (
+            <p className="text-[10px] text-muted-foreground -mt-1 leading-snug">
+              Ваше плечо до x{cap}. До x{nextTier[1]} — со статуса «{titles[nextTier[0] - 1] ?? nextTier[0]}».
+            </p>
+          )}
 
           {liqPrice > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2.5 py-1.5 text-xs">

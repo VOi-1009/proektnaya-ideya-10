@@ -7,6 +7,8 @@ import urllib.request
 
 import psycopg2
 
+from status import level_for, points_sql, MAX_LEVEL, TITLES
+
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "public")
 START = 1000.0
 MAX_LEV = 100
@@ -170,7 +172,12 @@ def fee_rate(cur):
 
 
 EX_KEY = "exchange_settings"
-EX_DEFAULT = {"enabled": True, "message": "", "maxLeverage": 100, "minMargin": 1.0, "feePercent": 0.05, "feeBase": "volume", "disabledCoins": []}
+EX_DEFAULT = {
+    "enabled": True, "message": "", "maxLeverage": 100, "minMargin": 1.0, "feePercent": 0.05, "feeBase": "volume", "disabledCoins": [],
+    "levelRules": True,
+    "leverageTiers": [[1, 5], [2, 10], [3, 20], [4, 30], [5, 50], [7, 75], [9, 100]],
+    "coinMinLevel": {},
+}
 
 
 def exchange_settings(cur):
@@ -191,9 +198,70 @@ def exchange_settings(cur):
         out["feePercent"] = max(0.0, min(float(raw.get("feePercent", 0.05)), 1.0))
         out["feeBase"] = "margin" if raw.get("feeBase") == "margin" else "volume"
         out["disabledCoins"] = [c for c in (raw.get("disabledCoins") or []) if c in COINS]
+        out["levelRules"] = bool(raw.get("levelRules", True))
+        out["leverageTiers"] = clean_tiers(raw.get("leverageTiers"), out["maxLeverage"])
+        out["coinMinLevel"] = clean_coin_levels(raw.get("coinMinLevel"))
     except (TypeError, ValueError):
         pass
     return out
+
+
+def clean_tiers(raw, cap):
+    if not isinstance(raw, list) or not raw:
+        raw = EX_DEFAULT["leverageTiers"]
+    seen = {}
+    for item in raw:
+        try:
+            lv, lev = int(item[0]), int(item[1])
+        except (TypeError, ValueError, IndexError):
+            continue
+        if 1 <= lv <= MAX_LEVEL and 1 <= lev <= MAX_LEV:
+            seen[lv] = lev
+    seen.setdefault(1, 1)
+    out, best = [], 0
+    for lv in sorted(seen):
+        best = max(best, seen[lv])
+        out.append([lv, best])
+    return out
+
+
+def clean_coin_levels(raw):
+    out = {}
+    if isinstance(raw, dict):
+        for c, lv in raw.items():
+            try:
+                lv = int(lv)
+            except (TypeError, ValueError):
+                continue
+            if c in COINS and 2 <= lv <= MAX_LEVEL:
+                out[c] = lv
+    return out
+
+
+def user_level(cur, uid):
+    cur.execute(f"SELECT {points_sql(SCHEMA)}, u.status_override, u.is_admin FROM {SCHEMA}.users u WHERE u.id = {int(uid)}")
+    r = cur.fetchone()
+    if not r:
+        return 1, False
+    st = level_for(int(r[0]), r[1])
+    return int(st["level"]), bool(r[2])
+
+
+def allowed_leverage(ex, level, admin=False):
+    if admin or not ex["levelRules"]:
+        return ex["maxLeverage"]
+    best = 1
+    for lv, lev in ex["leverageTiers"]:
+        if level >= lv:
+            best = lev
+    return min(best, ex["maxLeverage"])
+
+
+def coin_locked(ex, coin, level, admin=False):
+    if admin or not ex["levelRules"]:
+        return 0
+    need = ex["coinMinLevel"].get(coin, 0)
+    return need if need > level else 0
 
 
 def trade_fee(ex, margin, lev):
@@ -633,16 +701,16 @@ def ai_bot_id(cur):
     return int(r[0]) if r else None
 
 
-def ai_pick(s, ex, px, changes, held, free, open_count):
+def ai_pick(s, ex, px, changes, held, free, open_count, level=1):
     if open_count >= s["maxPositions"]:
         return None
-    lev = max(1, min(int(s["leverage"]), int(ex["maxLeverage"])))
+    lev = max(1, min(int(s["leverage"]), allowed_leverage(ex, level)))
     bet = round(min(free * s["betPercent"] / 100, s["maxBet"]), 2)
     if bet < ex["minMargin"] or bet > free + 1e-9:
         return None
     cands = []
     for c in COINS:
-        if c in held or c in ex["disabledCoins"] or (s["coins"] and c not in s["coins"]):
+        if c in held or c in ex["disabledCoins"] or (s["coins"] and c not in s["coins"]) or coin_locked(ex, c, level):
             continue
         if not px.get(c) or c not in changes:
             continue
@@ -866,7 +934,8 @@ def ai_trader_step(cur, px, started=None, force=False):
             except Exception as e:
                 print("ai changes error:", e)
                 changes = {}
-            plan = ai_pick(s, ex, px, changes, held, snap["free"], len(snap["positions"]))
+            bot_level, _ = user_level(cur, bot)
+            plan = ai_pick(s, ex, px, changes, held, snap["free"], len(snap["positions"]), bot_level)
             if plan:
                 fee = trade_fee(ex, plan["margin"], plan["leverage"])
                 total = round(plan["margin"] + fee, 4)
@@ -1136,7 +1205,15 @@ def handler(event, context):
         if method == "GET" and action == "shop_cosmetics":
             return resp(200, {"users": shop_cosmetics(cur)})
         if method == "GET" and action == "exchange_settings":
-            return resp(200, exchange_settings(cur))
+            ex = exchange_settings(cur)
+            uid_x = opt_uid(cur, token)
+            lvl, adm = user_level(cur, uid_x) if uid_x else (1, False)
+            ex = dict(ex)
+            ex["myLevel"] = lvl
+            ex["myMaxLeverage"] = allowed_leverage(ex, lvl, adm)
+            ex["lockedCoins"] = {c: need for c in COINS if (need := coin_locked(ex, c, lvl, adm))}
+            ex["titles"] = TITLES
+            return resp(200, ex)
         if method == "GET" and action == "top_feed":
             now = time.time()
             if _feed["data"] is not None and now - _feed["at"] < 60:
@@ -1388,6 +1465,9 @@ def handler(event, context):
                     "feePercent": max(0.0, min(float(body.get("feePercent")), 1.0)),
                     "feeBase": "margin" if body.get("feeBase") == "margin" else "volume",
                     "disabledCoins": [c for c in (body.get("disabledCoins") or []) if c in COINS],
+                    "levelRules": bool(body.get("levelRules", True)),
+                    "leverageTiers": clean_tiers(body.get("leverageTiers"), MAX_LEV),
+                    "coinMinLevel": clean_coin_levels(body.get("coinMinLevel")),
                 }
             except (TypeError, ValueError):
                 return resp(400, {"error": "Проверьте плечо, минимальную ставку и комиссию"})
@@ -1571,8 +1651,13 @@ def handler(event, context):
                 return resp(403, {"error": ex["message"] or "Новые сделки временно приостановлены. Закрывать позиции можно"})
             if coin in ex["disabledCoins"]:
                 return resp(400, {"error": "Торговля этой монетой временно отключена"})
-            if lev < 1 or lev > ex["maxLeverage"]:
-                return resp(400, {"error": f"Плечо от 1 до {ex['maxLeverage']}"})
+            my_level, my_admin = user_level(cur, uid)
+            need_lv = coin_locked(ex, coin, my_level, my_admin)
+            if need_lv:
+                return resp(403, {"error": f"Эта монета доступна со статуса «{TITLES[need_lv - 1]}»"})
+            lev_cap = allowed_leverage(ex, my_level, my_admin)
+            if lev < 1 or lev > lev_cap:
+                return resp(400, {"error": f"С вашим статусом плечо от 1 до {lev_cap}"})
             if margin < ex["minMargin"]:
                 return resp(400, {"error": f"Минимальная ставка {ex['minMargin']:g} USDT (виртуальных)"})
             fee = trade_fee(ex, margin, lev)

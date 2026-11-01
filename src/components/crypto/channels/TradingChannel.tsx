@@ -24,7 +24,7 @@ interface Props { coins: Coin[]; go?: (ch: string) => void }
 const TradingChannel = ({ coins, go }: Props) => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
-  const { data: exData } = useExchangeSettings();
+  const { data: exData } = useExchangeSettings(token);
   const exSettings = exData ?? EX_DEFAULT;
   const [coinId, setCoinId] = useState("bitcoin");
   const [side, setSide] = useState<"long" | "short">("long");
@@ -61,15 +61,18 @@ const TradingChannel = ({ coins, go }: Props) => {
     refetchInterval: 60_000,
   });
 
-  useEffect(() => {
-    if (leverage > exSettings.maxLeverage) setLeverage(exSettings.maxLeverage);
-  }, [exSettings.maxLeverage, leverage]);
+  const myCap = Math.min(exSettings.maxLeverage, exSettings.myMaxLeverage ?? exSettings.maxLeverage);
+  const locked = exSettings.lockedCoins ?? {};
 
   useEffect(() => {
-    if (!exSettings.disabledCoins.includes(coinId)) return;
-    const next = coins.find((c) => !c.kind && !exSettings.disabledCoins.includes(c.id));
+    if (leverage > myCap) setLeverage(myCap);
+  }, [myCap, leverage]);
+
+  useEffect(() => {
+    if (!exSettings.disabledCoins.includes(coinId) && !locked[coinId]) return;
+    const next = coins.find((c) => !c.kind && !exSettings.disabledCoins.includes(c.id) && !locked[c.id]);
     if (next) setCoinId(next.id);
-  }, [exSettings.disabledCoins, coinId, coins]);
+  }, [exSettings.disabledCoins, locked, coinId, coins]);
 
   const livePrice = st?.prices[coinId] ?? coins.find((c) => c.id === coinId)?.current_price ?? 0;
 
@@ -180,7 +183,7 @@ const TradingChannel = ({ coins, go }: Props) => {
             closeProfit={coinPnl >= 0}
             onCloseAll={closeAll}
             closeDisabled={busy}
-            quickDisabled={busy || !user || m < 1 || !exSettings.enabled || exSettings.disabledCoins.includes(coinId)}
+            quickDisabled={busy || !user || m < 1 || !exSettings.enabled || exSettings.disabledCoins.includes(coinId) || !!locked[coinId]}
             quickInfo={`${usd(m)} · x${leverage}`}
             onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}
             lines={[

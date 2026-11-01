@@ -1,5 +1,6 @@
 import { GoFn } from "./homeConfig";
 import UserAvatar from "@/components/crypto/UserAvatar";
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "@/lib/router-compat";
 
@@ -23,18 +24,20 @@ const HomeNav = ({ go }: Props) => {
         </div>
       </button>
     </div>
-    <button
-      onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
-      className="px-4 sm:px-6 flex-shrink-0"
-      title={user ? "Личный кабинет" : "Войти"}
-      aria-label={user ? "Личный кабинет" : "Войти"}
-    >
-      {user ? (
-        <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" className="w-11 h-11 text-lg" />
-      ) : (
-        <UserAvatar className="w-11 h-11 text-lg" />
-      )}
-    </button>
+    <div className="px-4 sm:px-6 flex-shrink-0 flex items-center gap-2">
+      {user && <VerifiedBadge userId={user.id} size={18} />}
+      <button
+        onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
+        title={user ? "Личный кабинет" : "Войти"}
+        aria-label={user ? "Личный кабинет" : "Войти"}
+      >
+        {user ? (
+          <UserAvatar name={user.name} email={user.email} avatar={user.avatar} level={user.level} online dot="md" className="w-11 h-11 text-lg" userId={user.id} />
+        ) : (
+          <UserAvatar className="w-11 h-11 text-lg" />
+        )}
+      </button>
+    </div>
   </nav>
   );
 };

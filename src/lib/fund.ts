@@ -108,6 +108,13 @@ export const useFundDonors = () =>
   });
 
 export interface ExchangeSettings {
+  levelRules?: boolean;
+  leverageTiers?: [number, number][];
+  coinMinLevel?: Record<string, number>;
+  myLevel?: number;
+  myMaxLeverage?: number;
+  lockedCoins?: Record<string, number>;
+  titles?: string[];
   enabled: boolean;
   message: string;
   maxLeverage: number;
@@ -117,13 +124,13 @@ export interface ExchangeSettings {
   disabledCoins: string[];
 }
 
-export const EX_DEFAULT: ExchangeSettings = { enabled: true, message: "", maxLeverage: 100, minMargin: 1, feePercent: 0.05, feeBase: "volume", disabledCoins: [] };
+export const EX_DEFAULT: ExchangeSettings = { enabled: true, message: "", maxLeverage: 100, minMargin: 1, feePercent: 0.05, feeBase: "volume", disabledCoins: [], levelRules: false };
 
-export const useExchangeSettings = () =>
+export const useExchangeSettings = (token: string | null = null) =>
   useQuery<ExchangeSettings>({
-    queryKey: ["exchange-settings"],
+    queryKey: ["exchange-settings", token],
     staleTime: 60_000,
-    queryFn: () => fundRequest<ExchangeSettings>(null, "?action=exchange_settings"),
+    queryFn: () => fundRequest<ExchangeSettings>(token, "?action=exchange_settings"),
   });
 
 export const tradeFee = (ex: ExchangeSettings, margin: number, leverage: number) =>
