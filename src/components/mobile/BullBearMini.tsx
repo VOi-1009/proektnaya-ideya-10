@@ -35,11 +35,17 @@ const BullBearMini = () => {
   });
   const shown = live ?? data?.bb?.price ?? null;
   const prev = useRef<number | null>(null);
+  const hist = useRef<{ t: number; p: number }[]>([]);
   const [dir, setDir] = useState<"up" | "down">("up");
+  const [minPct, setMinPct] = useState<number | null>(null);
   useEffect(() => {
     if (shown === null) return;
     if (prev.current !== null && shown !== prev.current) setDir(shown > prev.current ? "up" : "down");
     prev.current = shown;
+    const now = Date.now();
+    hist.current = [...hist.current.filter((h) => now - h.t <= 60_000), { t: now, p: shown }];
+    const base = hist.current[0];
+    setMinPct(hist.current.length > 1 && base.p ? ((shown - base.p) / base.p) * 100 : null);
   }, [shown]);
   const activeId = data?.bb?.active?.id;
   const activeLeft = data?.bb?.active?.left ?? 0;
@@ -107,7 +113,13 @@ const BullBearMini = () => {
         {shown !== null && (
           <div className="flex items-baseline gap-1.5">
             <span className="text-[11px] text-muted-foreground">BTC</span>
+            <Icon name={dir === "up" ? "ArrowUp" : "ArrowDown"} size={22} className={dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"} />
             <span className={`font-mono font-bold text-3xl leading-tight tabular-nums transition-colors ${dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"}`}>{usd(shown)}</span>
+          </div>
+        )}
+        {minPct !== null && (
+          <div className={`text-xs font-mono ${minPct >= 0 ? "text-[#22C55E]" : "text-[#EA3943]"}`}>
+            {minPct >= 0 ? "+" : "−"}{Math.abs(minPct).toFixed(3).replace(".", ",")}% за минуту
           </div>
         )}
       </div>
@@ -128,9 +140,9 @@ const BullBearMini = () => {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground flex-shrink-0">Ставка, TKA</span>
-            <Input type="number" min={st.minBet} max={st.maxBet} value={bet} onChange={(e) => setBet(e.target.value)} className="h-9" />
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-xs text-muted-foreground">Ставка, TKA</span>
+            <Input type="number" min={st.minBet} max={st.maxBet} value={bet} onChange={(e) => setBet(e.target.value)} className="h-10 text-center text-base font-mono" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button disabled={disabled} onClick={() => start("bull")} className="rounded-xl border border-[#22C55E]/50 bg-[#22C55E]/10 active:bg-[#22C55E]/20 disabled:opacity-50 p-2 flex flex-col items-center gap-0.5">
