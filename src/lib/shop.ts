@@ -10,6 +10,7 @@ export interface ShopItem {
   name: string;
   description: string;
   emoji: string;
+  imageUrl: string;
   basePrice: number;
   price: number;
   stock: number | null;
@@ -40,6 +41,7 @@ export interface ShopCatalog {
 export interface Cosmetic {
   slug: string;
   emoji: string;
+  imageUrl?: string;
   name: string;
 }
 export type Cosmetics = Partial<Record<"header" | "frame" | "card" | "theme" | "badge", Cosmetic>>;

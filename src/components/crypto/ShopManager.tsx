@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { fundFmt, fundRequest } from "@/lib/fund";
 import { ShopCatalog, ShopItem, ShopSettings } from "@/lib/shop";
+import ShopImagePicker, { PickedImage } from "./ShopImagePicker";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -18,12 +19,20 @@ interface AdminData extends ShopCatalog {
 
 const SRC: Record<string, string> = { buy: "покупка", gift: "подарок" };
 
-const Row = ({ it, onSave, busy }: { it: ShopItem; onSave: (v: ShopItem) => void; busy: boolean }) => {
+const Row = ({ it, onSave, busy }: { it: ShopItem; onSave: (v: ShopItem, img: PickedImage | null, removeImage: boolean) => void; busy: boolean }) => {
   const [v, setV] = useState(it);
-  useEffect(() => setV(it), [it]);
-  const dirty = JSON.stringify([v.name, v.description, v.basePrice, v.stock, v.sort, v.enabled]) !== JSON.stringify([it.name, it.description, it.basePrice, it.stock, it.sort, it.enabled]);
+  const [img, setImg] = useState<PickedImage | null>(null);
+  const [removed, setRemoved] = useState(false);
+  useEffect(() => {
+    setV(it);
+    setImg(null);
+    setRemoved(false);
+  }, [it]);
+  const withImage = it.kind === "badge" || it.kind === "gift";
+  const dirty = !!img || removed || JSON.stringify([v.name, v.description, v.basePrice, v.stock, v.sort, v.enabled]) !== JSON.stringify([it.name, it.description, it.basePrice, it.stock, it.sort, it.enabled]);
   return (
-    <div className="grid grid-cols-[1fr_88px_88px_64px_auto_auto] gap-2 items-center py-2">
+    <div className={`grid ${withImage ? "grid-cols-[auto_1fr_88px_88px_64px_auto_auto]" : "grid-cols-[1fr_88px_88px_64px_auto_auto]"} gap-2 items-center py-2`}>
+      {withImage && <ShopImagePicker current={it.imageUrl} emoji={it.emoji} picked={img} removed={removed} onPick={(p) => { setImg(p); setRemoved(false); }} onRemove={() => setRemoved(true)} />}
       <div className="min-w-0 space-y-1">
         <input className={`${inputCls} h-8`} value={v.name} maxLength={60} onChange={(e) => setV({ ...v, name: e.target.value })} />
         <input className={`${inputCls} h-8 text-xs`} value={v.description} maxLength={200} onChange={(e) => setV({ ...v, description: e.target.value })} />
@@ -32,7 +41,7 @@ const Row = ({ it, onSave, busy }: { it: ShopItem; onSave: (v: ShopItem) => void
       <input className={`${inputCls} h-8`} type="number" min={0} placeholder="∞" value={v.stock ?? ""} title="Сколько всего штук (пусто — без ограничения)" onChange={(e) => setV({ ...v, stock: e.target.value === "" ? null : Number(e.target.value) })} />
       <input className={`${inputCls} h-8 px-2`} type="number" min={0} value={v.sort} title="Порядок" onChange={(e) => setV({ ...v, sort: Number(e.target.value) })} />
       <Switch checked={v.enabled} onCheckedChange={(c) => setV({ ...v, enabled: c })} />
-      <Button size="sm" variant={dirty ? "default" : "ghost"} className="h-8" disabled={busy || !dirty} onClick={() => onSave(v)}>
+      <Button size="sm" variant={dirty ? "default" : "ghost"} className="h-8" disabled={busy || !dirty} onClick={() => onSave(v, img, removed)}>
         {it.sold > 0 && !dirty ? `продано ${it.sold}` : "Сохранить"}
       </Button>
     </div>
@@ -49,6 +58,7 @@ const ShopManager = ({ token }: { token: string | null }) => {
   const [f, setF] = useState<ShopSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [add, setAdd] = useState({ kind: "badge", name: "", emoji: "", price: "", description: "" });
+  const [addImg, setAddImg] = useState<PickedImage | null>(null);
   const [grant, setGrant] = useState({ userId: "", itemId: "" });
 
   useEffect(() => {
@@ -132,17 +142,21 @@ const ShopManager = ({ token }: { token: string | null }) => {
         <div className="space-y-4">
           <div className="bg-card border border-border rounded-lg p-4 space-y-3">
             <h2 className="text-white font-semibold text-sm flex items-center gap-2"><Icon name="PlusCircle" size={15} className="text-primary" /> Новый значок или подарок</h2>
+            <div className="flex items-center gap-3">
+              <ShopImagePicker picked={addImg} onPick={setAddImg} size={56} />
+              <p className="text-[11px] text-muted-foreground">Нажмите на квадрат, чтобы выбрать картинку (PNG, JPG, WEBP, GIF). Она уменьшится сама. Если картинки нет, можно указать эмодзи.</p>
+            </div>
             <div className="grid grid-cols-[110px_60px_1fr_90px] gap-2">
               <select className={inputCls} value={add.kind} onChange={(e) => setAdd({ ...add, kind: e.target.value })}>
                 <option value="badge">Значок</option>
                 <option value="gift">Подарок</option>
               </select>
-              <input className={`${inputCls} text-center px-1`} maxLength={8} placeholder="😀" value={add.emoji} onChange={(e) => setAdd({ ...add, emoji: e.target.value })} />
+              <input className={`${inputCls} text-center px-1`} maxLength={8} placeholder="или 😀" value={add.emoji} onChange={(e) => setAdd({ ...add, emoji: e.target.value })} />
               <input className={inputCls} maxLength={60} placeholder="Название" value={add.name} onChange={(e) => setAdd({ ...add, name: e.target.value })} />
               <input className={inputCls} type="number" min={0} placeholder="Цена" value={add.price} onChange={(e) => setAdd({ ...add, price: e.target.value })} />
             </div>
             <input className={inputCls} maxLength={200} placeholder="Описание (необязательно)" value={add.description} onChange={(e) => setAdd({ ...add, description: e.target.value })} />
-            <Button variant="secondary" disabled={busy || add.name.trim().length < 2 || !add.emoji.trim() || add.price === ""} onClick={() => run({ action: "shop_item_add", ...add, price: Number(add.price) }, "Товар добавлен", () => setAdd({ kind: "badge", name: "", emoji: "", price: "", description: "" }))}>
+            <Button variant="secondary" disabled={busy || add.name.trim().length < 2 || !(add.emoji.trim() || addImg) || add.price === ""} onClick={() => run({ action: "shop_item_add", ...add, price: Number(add.price), imageData: addImg?.data, imageType: addImg?.type }, "Товар добавлен", () => { setAdd({ kind: "badge", name: "", emoji: "", price: "", description: "" }); setAddImg(null); })}>
               Добавить
             </Button>
           </div>
@@ -180,7 +194,7 @@ const ShopManager = ({ token }: { token: string | null }) => {
                     key={it.id}
                     it={it}
                     busy={busy}
-                    onSave={(v) => run({ action: "shop_item_save", id: v.id, name: v.name, description: v.description, price: v.basePrice, stock: v.stock, sort: v.sort, enabled: v.enabled }, `Сохранено: ${v.name}`)}
+                    onSave={(v, img, removeImage) => run({ action: "shop_item_save", id: v.id, name: v.name, description: v.description, price: v.basePrice, stock: v.stock, sort: v.sort, enabled: v.enabled, imageData: img?.data, imageType: img?.type, removeImage }, `Сохранено: ${v.name}`)}
                   />
                 ))}
               </div>

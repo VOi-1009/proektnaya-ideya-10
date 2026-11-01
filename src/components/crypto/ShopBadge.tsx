@@ -8,7 +8,7 @@ interface Props {
 
 const ShopBadge = ({ userId, size = 16, className = "" }: Props) => {
   const c = useUserCosmetics(userId).badge;
-  if (!c?.emoji) return null;
+  if (!c?.emoji && !c?.imageUrl) return null;
   return (
     <span
       title={c.name}
@@ -16,7 +16,7 @@ const ShopBadge = ({ userId, size = 16, className = "" }: Props) => {
       className={`inline-flex items-center justify-center flex-shrink-0 leading-none ${className}`}
       style={{ fontSize: Math.round(size * 0.85), width: size, height: size }}
     >
-      {c.emoji}
+      {c.imageUrl ? <img src={c.imageUrl} alt={c.name} className="w-full h-full object-contain" loading="lazy" /> : c.emoji}
     </span>
   );
 };

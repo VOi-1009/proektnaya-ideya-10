@@ -52,6 +52,7 @@ const Preview = ({ item }: { item: ShopItem }) => {
       </div>
     );
   }
+  if (item.imageUrl) return <div className="h-14 flex items-center justify-center"><img src={item.imageUrl} alt={item.name} className="h-14 w-14 object-contain" loading="lazy" /></div>;
   return <div className="h-14 flex items-center justify-center text-4xl leading-none">{item.emoji}</div>;
 };
 

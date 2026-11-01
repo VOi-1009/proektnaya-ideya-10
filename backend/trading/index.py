@@ -1,3 +1,4 @@
+import base64
 import datetime
 import json
 import math
@@ -6,6 +7,7 @@ import re
 import secrets
 import time
 import urllib.request
+import uuid
 
 import psycopg2
 
@@ -977,7 +979,7 @@ SHOP_KINDS = {"header": "Шапки постов", "frame": "Рамки ават
 SHOP_EQUIP = {"header", "frame", "card", "theme", "badge"}
 SHOP_KEY = "shop_settings"
 SHOP_DEFAULT = {"enabled": True, "message": "", "giftDailyLimit": 5, "giftFeePercent": 0.0, "discountPercent": 0.0}
-SHOP_ITEM_COLS = "id, slug, kind, name, description, emoji, price, stock, sold, enabled, sort"
+SHOP_ITEM_COLS = "id, slug, kind, name, description, emoji, price, stock, sold, enabled, sort, image_url"
 
 
 def shop_settings(cur):
@@ -1007,7 +1009,7 @@ def shop_price(base, st):
 
 def shop_item(r, st=None):
     d = {"id": r[0], "slug": r[1], "kind": r[2], "name": r[3], "description": r[4], "emoji": r[5], "basePrice": float(r[6]),
-         "stock": r[7], "sold": int(r[8]), "enabled": bool(r[9]), "sort": int(r[10])}
+         "stock": r[7], "sold": int(r[8]), "enabled": bool(r[9]), "sort": int(r[10]), "imageUrl": r[11]}
     d["price"] = shop_price(r[6], st) if st else d["basePrice"]
     return d
 
@@ -1037,14 +1039,39 @@ def shop_cosmetics(cur):
     if _cosm["data"] is not None and now - _cosm["at"] < 60:
         return _cosm["data"]
     cur.execute(
-        f"SELECT e.user_id, e.kind, i.slug, i.emoji, i.name FROM {SCHEMA}.shop_equipped e JOIN {SCHEMA}.shop_items i ON i.id = e.item_id "
+        f"SELECT e.user_id, e.kind, i.slug, i.emoji, i.name, i.image_url FROM {SCHEMA}.shop_equipped e JOIN {SCHEMA}.shop_items i ON i.id = e.item_id "
         f"WHERE i.enabled ORDER BY e.user_id LIMIT 5000"
     )
     out = {}
-    for uid_, kind, slug, emoji, name in cur.fetchall():
-        out.setdefault(str(uid_), {})[kind] = {"slug": slug, "emoji": emoji, "name": name}
+    for uid_, kind, slug, emoji, name, img in cur.fetchall():
+        out.setdefault(str(uid_), {})[kind] = {"slug": slug, "emoji": emoji, "name": name, "imageUrl": img}
     _cosm.update(at=now, data=out)
     return out
+
+
+SHOP_IMG_TYPES = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif"}
+
+
+def shop_upload(body):
+    data = body.get("imageData")
+    if not data:
+        return None
+    ctype = str(body.get("imageType") or "")
+    if ctype not in SHOP_IMG_TYPES:
+        raise ValueError("Картинка: подойдёт PNG, JPG, WEBP или GIF")
+    raw = base64.b64decode(str(data).split(",")[-1])
+    if len(raw) > 1024 * 1024:
+        raise ValueError("Картинка должна быть до 1 МБ")
+    import boto3
+    key = f"shop/{uuid.uuid4().hex}.{SHOP_IMG_TYPES[ctype]}"
+    s3 = boto3.client(
+        "s3",
+        endpoint_url="https://bucket.poehali.dev",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    s3.put_object(Bucket="files", Key=key, Body=raw, ContentType=ctype)
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
 
 
 def shop_spend(cur, uid, amount, kind, note):
@@ -1151,11 +1178,11 @@ def shop_do(cur, uid, act, body):
 
 def shop_gifts_for(cur, uid):
     cur.execute(
-        f"SELECT g.id, g.message, g.created_at, i.name, i.emoji, i.kind, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
+        f"SELECT g.id, g.message, g.created_at, i.name, i.emoji, i.kind, i.image_url, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
         f"FROM {SCHEMA}.shop_gifts g JOIN {SCHEMA}.shop_items i ON i.id = g.item_id JOIN {SCHEMA}.users u ON u.id = g.from_user "
         f"WHERE g.to_user = {int(uid)} ORDER BY g.id DESC LIMIT 30"
     )
-    return [{"id": r[0], "message": r[1], "at": r[2].isoformat(), "name": r[3], "emoji": r[4], "kind": r[5], "from": r[6]} for r in cur.fetchall()]
+    return [{"id": r[0], "message": r[1], "at": r[2].isoformat(), "name": r[3], "emoji": r[4], "kind": r[5], "imageUrl": r[6], "from": r[7]} for r in cur.fetchall()]
 
 
 def shop_admin(cur):
@@ -1864,8 +1891,20 @@ def handler(event, context):
                 desc = q(str(body.get("description") or "").strip()[:200])
                 if len(name) < 2:
                     return resp(400, {"error": "Введите название товара"})
+                try:
+                    new_img = shop_upload(body)
+                except ValueError as e:
+                    return resp(400, {"error": str(e)})
+                img_sql = ""
+                if new_img:
+                    img_sql = f"image_url = '{q(new_img)}', "
+                elif body.get("removeImage"):
+                    img_sql = "image_url = '', "
+                emo_sql = ""
+                if "emoji" in body:
+                    emo_sql = f"emoji = '{q(str(body.get('emoji') or '').strip()[:8])}', "
                 cur.execute(
-                    f"UPDATE {SCHEMA}.shop_items SET name = '{name}', description = '{desc}', price = {price}, stock = {stock}, sort = {sort}, "
+                    f"UPDATE {SCHEMA}.shop_items SET {img_sql}{emo_sql}name = '{name}', description = '{desc}', price = {price}, stock = {stock}, sort = {sort}, "
                     f"enabled = {'TRUE' if body.get('enabled') else 'FALSE'} WHERE id = {iid} RETURNING id"
                 )
                 if not cur.fetchone():
@@ -1876,8 +1915,12 @@ def handler(event, context):
                     return resp(400, {"error": "Новые товары можно добавлять в «Значки» и «Подарки»"})
                 name = q(str(body.get("name") or "").strip()[:60])
                 emoji = str(body.get("emoji") or "").strip()[:8]
-                if len(name) < 2 or not emoji:
-                    return resp(400, {"error": "Нужны название и эмодзи"})
+                try:
+                    image_url = shop_upload(body) or ""
+                except ValueError as e:
+                    return resp(400, {"error": str(e)})
+                if len(name) < 2 or not (emoji or image_url):
+                    return resp(400, {"error": "Нужны название и картинка или эмодзи"})
                 try:
                     price = max(0.0, min(round(float(body.get("price")), 2), 1000000.0))
                 except (TypeError, ValueError):
@@ -1887,8 +1930,8 @@ def handler(event, context):
                 nxt = cur.fetchone()[0]
                 slug = f"x_{kind[0]}_{int(time.time())}"
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.shop_items (slug, kind, name, description, emoji, price, sort) "
-                    f"VALUES ('{slug}', '{kind}', '{name}', '{desc}', '{q(emoji)}', {price}, {int(nxt)})"
+                    f"INSERT INTO {SCHEMA}.shop_items (slug, kind, name, description, emoji, image_url, price, sort) "
+                    f"VALUES ('{slug}', '{kind}', '{name}', '{desc}', '{q(emoji)}', '{q(image_url)}', {price}, {int(nxt)})"
                 )
             else:
                 try:
