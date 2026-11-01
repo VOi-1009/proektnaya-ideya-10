@@ -78,7 +78,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
           <PopoverTrigger asChild>
             <button onClick={onDownload} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors">
               <Icon name="Download" size={11} />
-              Скачать МВ
+              Скачать Мобильное приложение
             </button>
           </PopoverTrigger>
           <PopoverContent side="bottom" align="center" className="w-48 p-3 flex flex-col items-center gap-2">
