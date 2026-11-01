@@ -13,6 +13,7 @@ import TradeForm from "../trading/TradeForm";
 import ExchangeCard from "../trading/ExchangeCard";
 import FundCard from "../trading/FundCard";
 import AiTraderCard from "../trading/AiTraderCard";
+import TopTradesFeed from "../trading/TopTradesFeed";
 import VirtualNote from "../trading/VirtualNote";
 import { EX_DEFAULT, useExchangeSettings } from "@/lib/fund";
 import TradeTabs from "../trading/TradeTabs";
@@ -206,6 +207,7 @@ const TradingChannel = ({ coins, go }: Props) => {
           leaders={leaders?.leaders ?? []}
           m={m}
         />
+        <TopTradesFeed />
         </div>
         <div className="space-y-4 min-w-0">
         <ExchangeCard st={st} busy={busy} send={send} token={token} />

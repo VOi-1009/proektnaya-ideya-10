@@ -194,3 +194,29 @@ export const useTopTraders = () =>
     refetchInterval: 5 * 60_000,
     queryFn: async () => (await fundRequest<{ top: number[] }>(null, "?action=top_traders")).top,
   });
+
+export interface TopFeedItem {
+  id: number;
+  userId: number;
+  name: string;
+  coinId: string;
+  side: "long" | "short";
+  leverage: number;
+  margin: number;
+  entry: number;
+  close: number;
+  pnl: number;
+  pct: number;
+  reason: string;
+  at: string;
+  isAi: boolean;
+  place: number;
+}
+
+export const useTopFeed = () =>
+  useQuery<{ feed: TopFeedItem[]; tops: number[] }>({
+    queryKey: ["top-feed"],
+    staleTime: 60_000,
+    refetchInterval: 90_000,
+    queryFn: () => fundRequest(null, "?action=top_feed"),
+  });

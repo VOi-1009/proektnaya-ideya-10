@@ -23,6 +23,7 @@ CORS = {
 _cache = {"at": 0.0, "data": {}}
 _kcache = {}
 _top = {"at": 0.0, "data": None}
+_feed = {"at": 0.0, "data": None}
 SYM = {"bitcoin": "BTC", "ethereum": "ETH", "binancecoin": "BNB", "ripple": "XRP", "solana": "SOL", "dogecoin": "DOGE", "hyperliquid": "HYPE", "zcash": "ZEC", "tron": "TRX", "cardano": "ADA", "chainlink": "LINK", "stellar": "XLM", "avalanche-2": "AVAX", "sui": "SUI", "shiba-inu": "SHIB", "the-open-network": "TON", "hedera-hashgraph": "HBAR", "litecoin": "LTC"}
 OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "1h": "1H", "4h": "4H", "1d": "1D"}
 BYBIT_IV = {"1m": "1", "5m": "5", "15m": "15", "1h": "60", "4h": "240", "1d": "D"}
@@ -492,6 +493,31 @@ def public_trades(cur, uid, px):
     return out
 
 
+def top_trades_feed(cur, limit=20):
+    cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_ai")
+    ai_ids = {int(r[0]) for r in cur.fetchall()}
+    tops = [int(r["userId"]) for r in leaderboard(cur, prices()) if r["pnl"] > 0][:3]
+    if not tops:
+        return {"feed": [], "tops": []}
+    ids = ", ".join(str(i) for i in tops)
+    cur.execute(
+        f"SELECT p.id, p.user_id, p.coin_id, p.side, p.leverage, p.margin, p.entry_price, p.close_price, p.pnl, p.close_reason, p.closed_at, "
+        f"COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1)) "
+        f"FROM {SCHEMA}.paper_positions p JOIN {SCHEMA}.users u ON u.id = p.user_id "
+        f"WHERE p.user_id IN ({ids}) AND p.status = 'closed' AND COALESCE(p.close_reason, '') <> 'reset' "
+        f"ORDER BY p.closed_at DESC, p.id DESC LIMIT {int(limit)}"
+    )
+    feed = []
+    for r in cur.fetchall():
+        margin, pnl = float(r[5]), float(r[8] or 0)
+        feed.append({
+            "id": r[0], "userId": r[1], "name": r[11], "coinId": r[2], "side": r[3], "leverage": r[4], "margin": margin,
+            "entry": float(r[6]), "close": float(r[7] or 0), "pnl": pnl, "pct": pnl / margin * 100 if margin else 0.0,
+            "reason": r[9], "at": r[10].isoformat(), "isAi": r[1] in ai_ids, "place": tops.index(r[1]) + 1,
+        })
+    return {"feed": feed, "tops": tops}
+
+
 def state(cur, user_id, px):
     ensure_account(cur, user_id)
     process(cur, user_id, px)
@@ -900,6 +926,13 @@ def handler(event, context):
             return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
         if method == "GET" and action == "exchange_settings":
             return resp(200, exchange_settings(cur))
+        if method == "GET" and action == "top_feed":
+            now = time.time()
+            if _feed["data"] is not None and now - _feed["at"] < 60:
+                return resp(200, _feed["data"])
+            data = top_trades_feed(cur)
+            _feed.update(at=now, data=data)
+            return resp(200, data)
         if method == "GET" and action == "top_traders":
             now = time.time()
             if _top["data"] is not None and now - _top["at"] < 120:
