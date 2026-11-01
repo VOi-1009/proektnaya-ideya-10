@@ -37,7 +37,7 @@ const HomeSidebar = ({ channel, go, activeAlerts, unreadOf, mobileSidebarOpen, s
   const { data: radars } = useRadars();
   const { data: chatRooms } = useChatRooms();
   const { data: menuCfg } = useMenuSettings();
-  const items = mergeMenu(menuCfg, radars, chatRooms).filter((i) => !i.hidden);
+  const items = mergeMenu(menuCfg, radars, chatRooms).filter((i) => !i.hidden && i.id !== "trading");
 
   const open = (it: MenuEntry) => {
     if (it.id === "community") return navigate("/community");
