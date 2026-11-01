@@ -21,6 +21,7 @@ import FundBadge from "@/components/crypto/FundBadge";
 import FundBadges from "@/components/crypto/FundBadges";
 import ProfileSummary from "@/components/crypto/ProfileSummary";
 import TradingStats from "@/components/crypto/TradingStats";
+import GamesStats from "@/components/crypto/GamesStats";
 import ProfileRewards from "@/components/crypto/ProfileRewards";
 import FounderBadge from "@/components/crypto/FounderBadge";
 import SupporterBadge from "@/components/crypto/SupporterBadge";
@@ -451,6 +452,7 @@ const Profile = () => {
               <ProfileSummary token={token} streak={profile.stats.streak ?? 0} bestStreak={profile.stats.bestStreak ?? 0} days={profile.stats.days} />
               <FundBadges token={token} />
               <TradingStats token={token} />
+              <GamesStats token={token} />
               <ProfileRewards level={s.level} achievements={profile.achievements} special={profile.special} founder={profile.founder} foundersTaken={profile.foundersTaken} promo={profile.promo} streak={profile.stats.streak ?? 0} />
               </div>
             </div>

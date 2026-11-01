@@ -1507,6 +1507,24 @@ def games_play(cur, uid, body):
     return 200, {"game": game, "bet": bet, "payout": payout, "mult": mult, "win": payout > bet, "profit": net_change, "detail": detail}
 
 
+def games_user_stats(cur, uid):
+    cur.execute(
+        f"SELECT COUNT(*), COUNT(*) FILTER (WHERE payout > bet), COALESCE(SUM(bet), 0), COALESCE(SUM(payout), 0), "
+        f"COALESCE(MAX(payout - bet), 0) FROM {SCHEMA}.games_log WHERE user_id = {int(uid)}"
+    )
+    n, wins, bets, pays, best = cur.fetchone()
+    cur.execute(
+        f"SELECT game, COUNT(*) AS c FROM {SCHEMA}.games_log WHERE user_id = {int(uid)} GROUP BY game ORDER BY c DESC LIMIT 1"
+    )
+    fav = cur.fetchone()
+    n = int(n)
+    return {
+        "played": n, "wins": int(wins), "winRate": round(int(wins) / n * 100, 1) if n else 0.0,
+        "bets": float(bets), "payouts": float(pays), "net": round(float(pays) - float(bets), 2), "best": float(best),
+        "favorite": GAME_NAMES.get(fav[0], "") if fav else "",
+    }
+
+
 def games_admin(cur):
     bb_settle_due(cur)
     gs = games_settings(cur)
@@ -1607,6 +1625,10 @@ def handler(event, context):
             if not uid_q.isdigit():
                 return resp(400, {"error": "Не указан участник"})
             return resp(200, {"trades": public_trades(cur, int(uid_q), px)})
+        if method == "GET" and action == "games_stats":
+            uid_q = str(qs.get("userId", ""))
+            target = int(uid_q) if uid_q.isdigit() else uid
+            return resp(200, {"stats": games_user_stats(cur, target)})
         if method == "GET" and action == "profile":
             uid_q = str(qs.get("userId", ""))
             if not uid_q.isdigit():

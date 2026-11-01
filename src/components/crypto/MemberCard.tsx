@@ -1,3 +1,4 @@
+import GamesStats from "@/components/crypto/GamesStats";
 import ShopBadge from "@/components/crypto/ShopBadge";
 import { CARD_BG, useUserCosmetics } from "@/lib/shop";
 import VerifiedBadge from "@/components/crypto/VerifiedBadge";
@@ -166,6 +167,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
 
               {m.founder && <RareAchievements founder={m.founder} compact />}
               {user && <TradingStats token={token} userId={m.id} />}
+              {user && <GamesStats token={token} userId={m.id} compact />}
               <SpecialAchievements items={m.special} compact />
             </div>
           )}
