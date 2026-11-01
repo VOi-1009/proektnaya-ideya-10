@@ -10,12 +10,19 @@ import InstallBanner from "./InstallBanner";
 import { chooseDesktop, chooseMobile } from "@/lib/mobile";
 import TkaIcon from "@/components/crypto/TkaIcon";
 import UserAvatar from "@/components/crypto/UserAvatar";
+import MobileProfile from "./MobileProfile";
 
 const MobileApp = () => {
   const { user, setAuthOpen, logout } = useAuth();
   const { data, isLoading } = useMobileSettings();
   const { data: gfx } = useGraphics();
-  const [tab, setTab] = useState("");
+  const [tab, setTabRaw] = useState("");
+  const [page, setPage] = useState<"" | "me">("");
+  const setTab = (id: string) => {
+    setPage("");
+    setTabRaw(id);
+    window.scrollTo({ top: 0 });
+  };
   const s = data?.settings;
   const tabs = (s?.tabs ?? []).filter((t) => t.enabled);
   const first = tabs.find((t) => t.id === "home") ?? tabs[0];
@@ -58,7 +65,7 @@ const MobileApp = () => {
       <header className="sticky top-0 z-30 bg-card border-b border-border px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
         <div className="flex items-center justify-start">
           <button
-            onClick={() => (user ? setTab("profile") : setAuthOpen(true))}
+            onClick={() => (user ? setPage(page === "me" ? "" : "me") : setAuthOpen(true))}
             aria-label={user ? "Мой профиль" : "Войти"}
             className="rounded-full"
           >
@@ -94,22 +101,28 @@ const MobileApp = () => {
         <a href="/?full=1" onClick={() => chooseDesktop()} className="text-[11px] text-muted-foreground hover:text-white inline-flex items-center gap-1">
           <Icon name="Monitor" size={12} /> Полная версия сайта
         </a>
-        {s.app.install && <InstallBanner text={s.app.text} />}
-        <h1 className="font-display text-lg text-white flex items-center gap-2">
-          {info && <Icon name={current?.icon || info.icon} size={18} className="text-primary" />}
-          {current?.label || info?.label}
-        </h1>
-        {blocks.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border text-center text-xs text-muted-foreground py-10">Здесь пока ничего нет</div>
+        {page === "me" ? (
+          <MobileProfile onClose={() => setPage("")} onWallet={() => setTab(tabs.find((t) => t.id === "profile")?.id ?? first?.id ?? "")} />
         ) : (
-          blocks.map((b) => <MobileBlockView key={b.id} block={b} preview />)
+          <>
+            {s.app.install && <InstallBanner text={s.app.text} />}
+            <h1 className="font-display text-lg text-white flex items-center gap-2">
+              {info && <Icon name={current?.icon || info.icon} size={18} className="text-primary" />}
+              {current?.label || info?.label}
+            </h1>
+            {blocks.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border text-center text-xs text-muted-foreground py-10">Здесь пока ничего нет</div>
+            ) : (
+              blocks.map((b) => <MobileBlockView key={b.id} block={b} preview />)
+            )}
+          </>
         )}
       </main>
 
       <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border grid items-end" style={{ gridTemplateColumns: `repeat(${Math.max(tabs.length, 1)}, minmax(0, 1fr))` }}>
         {tabs.map((t, i) => {
           const center = tabs.length % 2 === 1 && tabs.length >= 3 && i === (tabs.length - 1) / 2;
-          const active = current?.id === t.id;
+          const active = page !== "me" && current?.id === t.id;
           const icon = t.icon || MOBILE_SECTIONS[t.id]?.icon || "Circle";
           const label = t.label || MOBILE_SECTIONS[t.id]?.label;
           if (center) {

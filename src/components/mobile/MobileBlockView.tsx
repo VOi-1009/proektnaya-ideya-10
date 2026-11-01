@@ -5,6 +5,7 @@ import { useMarkets } from "@/lib/crypto";
 import MarketSummary from "@/components/crypto/home/MarketSummary";
 import { useNavigate } from "@/lib/router-compat";
 import BullBearMini from "./BullBearMini";
+import WalletView from "./WalletView";
 import TradingChannel from "@/components/crypto/channels/TradingChannel";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -29,6 +30,7 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
   if (b.kind === "market_summary") return <MarketSummaryBlock />;
   if (b.kind === "bullbear") return <BullBearMini />;
   if (b.kind === "exchange") return <ExchangeBlock />;
+  if (b.kind === "wallet") return <WalletView />;
   if (b.kind === "empty") {
     if (!preview) return null;
     return (

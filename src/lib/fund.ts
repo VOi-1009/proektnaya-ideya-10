@@ -289,7 +289,7 @@ export interface MobileTab {
 export interface MobileBlock {
   id: string;
   tab: string;
-  kind: "empty" | "text" | "banner" | "link" | "market_summary" | "bullbear" | "exchange";
+  kind: "empty" | "text" | "banner" | "link" | "market_summary" | "bullbear" | "exchange" | "wallet";
   title: string;
   text: string;
   url: string;

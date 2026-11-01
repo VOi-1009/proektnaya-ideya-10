@@ -10,7 +10,7 @@ import MobileBlockView from "@/components/mobile/MobileBlockView";
 const inputCls =
   "w-full bg-rail rounded px-3 h-9 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
 
-const KINDS: Record<string, string> = { empty: "Пустой (заполним позже)", text: "Текст", banner: "Баннер", link: "Ссылка", market_summary: "Рыночная сводка", bullbear: "Игра «Бык или медведь»", exchange: "Биржа: график, сделки, обменник" };
+const KINDS: Record<string, string> = { empty: "Пустой (заполним позже)", text: "Текст", banner: "Баннер", link: "Ссылка", market_summary: "Рыночная сводка", bullbear: "Игра «Бык или медведь»", exchange: "Биржа: график, сделки, обменник", wallet: "Кошелёк: TKA и данные биржи" };
 type Data = { settings: MobileSettings; sections: string[] };
 
 const MobileManager = ({ token }: { token: string | null }) => {
@@ -211,7 +211,7 @@ const MobileManager = ({ token }: { token: string | null }) => {
                   <Switch checked={b.enabled} onCheckedChange={(v) => setBlock(b.id, { enabled: v })} />
                   <button className="text-muted-foreground hover:text-[#EA3943]" onClick={() => set("blocks", f.blocks.filter((x) => x.id !== b.id))} aria-label="Удалить блок"><Icon name="Trash2" size={15} /></button>
                 </div>
-                {b.kind !== "empty" && b.kind !== "market_summary" && b.kind !== "bullbear" && b.kind !== "exchange" && (
+                {b.kind !== "empty" && b.kind !== "market_summary" && b.kind !== "bullbear" && b.kind !== "exchange" && b.kind !== "wallet" && (
                   <>
                     <input className={inputCls} maxLength={60} placeholder="Заголовок" value={b.title} onChange={(e) => setBlock(b.id, { title: e.target.value })} />
                     <textarea className={`${inputCls} h-20 py-2 resize-none`} maxLength={400} placeholder="Текст" value={b.text} onChange={(e) => setBlock(b.id, { text: e.target.value })} />
