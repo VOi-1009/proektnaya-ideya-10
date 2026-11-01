@@ -26,6 +26,20 @@ const FundBadges = ({ token }: { token: string | null }) => {
               {fundFmt(mine)} <span className="text-xs text-primary font-semibold">TKA</span>
             </div>
           </div>
+          <div className="rounded-lg bg-rail/50 px-2.5 py-2 space-y-1">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground">Заплачено комиссий в фонд</span>
+              <span className="font-mono text-white">{fundFmt(data.feesPaid ?? 0)} TKA</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-muted-foreground">со сделок на бирже</span>
+              <span className="font-mono text-muted-foreground">{fundFmt(data.feesTrades ?? 0)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-muted-foreground">с обменов TKA и USDT</span>
+              <span className="font-mono text-muted-foreground">{fundFmt(data.feesExchange ?? 0)}</span>
+            </div>
+          </div>
           <div className="grid grid-cols-4 gap-2">
             {BADGES.map((b) => {
               const done = mine >= b.need;

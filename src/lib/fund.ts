@@ -14,6 +14,9 @@ export interface Fund {
   count: number;
   donors: number;
   mine: number;
+  feesPaid?: number;
+  feesTrades?: number;
+  feesExchange?: number;
   rate: number;
   title: string;
   description: string;

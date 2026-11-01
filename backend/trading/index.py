@@ -208,9 +208,19 @@ def fund_state(cur, uid=None):
     cur.execute(f"SELECT COUNT(*) FILTER (WHERE kind = 'fee'), COUNT(DISTINCT user_id) FROM {SCHEMA}.fund_ledger WHERE kind IN ('fee', 'donation')")
     cnt, donors = cur.fetchone()
     mine = 0.0
+    fees_paid = 0.0
+    fees_trades = 0.0
+    fees_exchange = 0.0
     if uid:
-        cur.execute(f"SELECT COALESCE(SUM(amount), 0) FROM {SCHEMA}.fund_ledger WHERE kind IN ('fee', 'donation') AND user_id = {int(uid)}")
-        mine = float(cur.fetchone()[0])
+        cur.execute(
+            f"SELECT COALESCE(SUM(amount) FILTER (WHERE kind IN ('fee', 'donation')), 0), "
+            f"COALESCE(SUM(amount) FILTER (WHERE kind = 'fee'), 0), "
+            f"COALESCE(SUM(amount) FILTER (WHERE kind = 'fee' AND note LIKE 'Комиссия сделки%'), 0) "
+            f"FROM {SCHEMA}.fund_ledger WHERE user_id = {int(uid)}"
+        )
+        r_ = cur.fetchone()
+        mine, fees_paid, fees_trades = float(r_[0]), float(r_[1]), float(r_[2])
+        fees_exchange = fees_paid - fees_trades
     cur.execute(
         f"SELECT f.amount, f.kind, f.note, f.created_at, COALESCE(NULLIF(u.name, ''), split_part(u.email, '@', 1), '') "
         f"FROM {SCHEMA}.fund_ledger f LEFT JOIN {SCHEMA}.users u ON u.id = f.user_id ORDER BY f.id DESC LIMIT 15"
@@ -241,7 +251,7 @@ def fund_state(cur, uid=None):
     winners = [{"id": r[0], "title": r[1], "prize": float(r[2]), "at": r[3].isoformat() if r[3] else None, "name": r[4], "userId": r[5], "avatar": r[6] or ""} for r in cur.fetchall()]
     return {
         "chart": chart, "winners": winners,
-        "total": fund_total(cur), "count": int(cnt), "donors": int(donors), "mine": mine, "rate": fee_rate(cur),
+        "total": fund_total(cur), "count": int(cnt), "donors": int(donors), "mine": mine, "feesPaid": fees_paid, "feesTrades": fees_trades, "feesExchange": fees_exchange, "rate": fee_rate(cur),
         "title": st["title"], "description": st["description"], "goal": float(st["goal"] or 0), "last": last, "top": top,
     }
 
