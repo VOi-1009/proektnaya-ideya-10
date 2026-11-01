@@ -1628,7 +1628,7 @@ def gfx_upload(data, ctype):
 
 MOBILE_KEY = "mobile_settings"
 MOBILE_SECTIONS = ["home", "market", "news", "trading", "games", "shop", "profile", "community", "fund"]
-MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link", "market_summary", "bullbear", "exchange", "wallet", "image"]
+MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link", "market_summary", "bullbear", "exchange", "wallet", "image", "trades"]
 MOBILE_DEFAULT = {
     "enabled": True,
     "message": "",

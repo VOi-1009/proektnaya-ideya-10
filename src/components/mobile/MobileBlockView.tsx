@@ -57,6 +57,14 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
     return b.url.startsWith("/") ? <Link to={b.url} className="block">{img}</Link> : <a href={b.url} target="_blank" rel="noreferrer" className="block">{img}</a>;
   }
   if (b.kind === "empty") {
+    if (!preview) return null;
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-card/40 min-h-[96px] flex items-center justify-center text-xs text-muted-foreground">
+        Пустой блок
+      </div>
+    );
+  }
+  if (b.kind === "trades") {
     return <MobileTradesTicker />;
   }
   const body = (
