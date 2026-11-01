@@ -1909,6 +1909,14 @@ def handler(event, context):
                 f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
             )
             return resp(200, {"settings": new})
+        if act == "mobile_image":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            try:
+                url = gfx_upload(body.get("imageData") or "", str(body.get("imageType") or ""))
+            except ValueError as e:
+                return resp(400, {"error": str(e)})
+            return resp(200, {"url": url})
         if act == "mobile_save":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})

@@ -22,6 +22,7 @@ const MobileManager = ({ token }: { token: string | null }) => {
   });
   const [f, setF] = useState<MobileSettings | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploadingId, setUploadingId] = useState("");
   const [open, setOpen] = useState<string>("home");
 
   useEffect(() => {
@@ -45,6 +46,25 @@ const MobileManager = ({ token }: { token: string | null }) => {
     set("tabs", [...f.tabs, { id, label: MOBILE_SECTIONS[id].label, icon: MOBILE_SECTIONS[id].icon, enabled: true }]);
   };
   const setBlock = (id: string, patch: Partial<MobileBlock>) => set("blocks", f.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  const uploadImage = (id: string, file?: File) => {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) return toast({ title: "Подойдёт PNG, JPG, WEBP или GIF", variant: "destructive" });
+    if (file.size > 1024 * 1024) return toast({ title: "Картинка должна быть до 1 МБ", description: "Сожмите её или вставьте ссылку", variant: "destructive" });
+    const rd = new FileReader();
+    rd.onload = async () => {
+      setUploadingId(id);
+      try {
+        const r = await fundRequest<{ url: string }>(token, "", { action: "mobile_image", imageData: rd.result, imageType: file.type });
+        setBlock(id, { image: r.url });
+        toast({ title: "Картинка загружена", description: "Нажмите «Сохранить», чтобы применить" });
+      } catch (e) {
+        toast({ title: "Не загрузилось", description: (e as Error).message, variant: "destructive" });
+      } finally {
+        setUploadingId("");
+      }
+    };
+    rd.readAsDataURL(file);
+  };
   const addBlock = (tab: string) =>
     set("blocks", [...f.blocks, { id: `b${Date.now().toString(36)}`, tab, kind: "empty", title: "", text: "", url: "", enabled: true }]);
   const moveBlock = (id: string, d: number) => {
@@ -213,7 +233,16 @@ const MobileManager = ({ token }: { token: string | null }) => {
                 </div>
                 {b.kind === "image" && (
                   <>
-                    <input className={inputCls} maxLength={500} placeholder="Ссылка на картинку: https://…" value={b.image ?? ""} onChange={(e) => setBlock(b.id, { image: e.target.value })} />
+                    <div className="flex items-center gap-2">
+                      {b.image && <img src={b.image} alt="" className="w-16 h-16 rounded-lg object-cover border border-border flex-shrink-0" />}
+                      <label className="inline-flex items-center gap-1.5 h-9 px-3 rounded bg-primary text-primary-foreground text-sm font-semibold cursor-pointer hover:brightness-110">
+                        <Icon name={uploadingId === b.id ? "Loader2" : "Upload"} size={15} className={uploadingId === b.id ? "animate-spin" : ""} />
+                        {b.image ? "Заменить картинку" : "Загрузить картинку"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={uploadingId === b.id} onChange={(e) => { uploadImage(b.id, e.target.files?.[0]); e.target.value = ""; }} />
+                      </label>
+                      {b.image && <button className="text-xs text-muted-foreground hover:text-white" onClick={() => setBlock(b.id, { image: "" })}>Убрать</button>}
+                    </div>
+                    <input className={inputCls} maxLength={500} placeholder="Или ссылка на картинку: https://…" value={b.image ?? ""} onChange={(e) => setBlock(b.id, { image: e.target.value })} />
                     <input className={inputCls} maxLength={300} placeholder="Ссылка при нажатии (необязательно): /community или https://…" value={b.url} onChange={(e) => setBlock(b.id, { url: e.target.value })} />
                   </>
                 )}
