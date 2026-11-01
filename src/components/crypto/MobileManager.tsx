@@ -242,6 +242,18 @@ const MobileManager = ({ token }: { token: string | null }) => {
                       </label>
                       {b.image && <button className="text-xs text-muted-foreground hover:text-white" onClick={() => setBlock(b.id, { image: "" })}>Убрать</button>}
                     </div>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 text-sm text-white cursor-pointer flex-shrink-0">
+                        <Switch checked={(b.fade ?? 0) > 0} onCheckedChange={(v) => setBlock(b.id, { fade: v ? 50 : 0 })} />
+                        Туман снизу
+                      </label>
+                      {(b.fade ?? 0) > 0 && (
+                        <>
+                          <input type="range" min={10} max={100} step={5} value={b.fade ?? 50} onChange={(e) => setBlock(b.id, { fade: Number(e.target.value) })} className="flex-1 accent-[hsl(var(--primary))]" />
+                          <span className="text-xs font-mono text-muted-foreground w-10 text-right">{b.fade}%</span>
+                        </>
+                      )}
+                    </div>
                     <input className={inputCls} maxLength={500} placeholder="Или ссылка на картинку: https://…" value={b.image ?? ""} onChange={(e) => setBlock(b.id, { image: e.target.value })} />
                     <input className={inputCls} maxLength={300} placeholder="Ссылка при нажатии (необязательно): /community или https://…" value={b.url} onChange={(e) => setBlock(b.id, { url: e.target.value })} />
                   </>

@@ -1695,6 +1695,7 @@ def clean_mobile(raw):
         blocks.append({
             "id": bid, "tab": b["tab"], "kind": b.get("kind") if b.get("kind") in MOBILE_BLOCK_KINDS else "empty",
             "title": str(b.get("title") or "")[:60], "text": str(b.get("text") or "")[:400], "url": url, "enabled": bool(b.get("enabled", True)),
+            "fade": (lambda v: max(0, min(int(v), 100)) if str(v).lstrip("-").isdigit() else 0)(b.get("fade", 0)),
             "image": (lambda v: v if (v.startswith("https://") or (v.startswith("/") and not v.startswith("//"))) else "")(str(b.get("image") or "").strip()[:500]),
         })
     if "blocks" in raw:

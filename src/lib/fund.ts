@@ -294,6 +294,7 @@ export interface MobileBlock {
   text: string;
   url: string;
   image?: string;
+  fade?: number;
   enabled: boolean;
 }
 
