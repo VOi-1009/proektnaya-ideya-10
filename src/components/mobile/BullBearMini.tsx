@@ -111,8 +111,9 @@ const BullBearMini = () => {
           <h3 className="text-white font-semibold text-base">Бык или медведь</h3>
         </div>
         {shown !== null && (
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[11px] text-muted-foreground">BTC</span>
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-lg leading-none flex-shrink-0" style={{ background: "#F7931A" }} aria-label="Bitcoin">₿</span>
+            <span className="font-mono font-bold text-3xl leading-tight text-white">BTC</span>
             <Icon name={dir === "up" ? "ArrowUp" : "ArrowDown"} size={22} className={dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"} />
             <span className={`font-mono font-bold text-3xl leading-tight tabular-nums transition-colors ${dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"}`}>{usd(shown)}</span>
           </div>
