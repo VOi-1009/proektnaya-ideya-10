@@ -19,9 +19,9 @@ import { EX_DEFAULT, useExchangeSettings } from "@/lib/fund";
 import TradeTabs from "../trading/TradeTabs";
 import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
-interface Props { coins: Coin[]; go?: (ch: string) => void }
+interface Props { coins: Coin[]; go?: (ch: string) => void; compact?: boolean }
 
-const TradingChannel = ({ coins, go }: Props) => {
+const TradingChannel = ({ coins, go, compact }: Props) => {
   const { user, token, ready, setAuthOpen } = useAuth();
   const qc = useQueryClient();
   const { data: exData } = useExchangeSettings(token);
@@ -159,6 +159,70 @@ const TradingChannel = ({ coins, go }: Props) => {
 
   if (ready && !user) {
     return <GuestCard setAuthOpen={setAuthOpen} />;
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        <VirtualNote variant="banner" />
+        <div className="grid grid-cols-2 gap-2">
+          <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
+          <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
+        </div>
+      <section className="rounded-xl border border-border bg-card p-4 min-w-0">
+        <CandleChart
+          coinId={coinId}
+          price={livePrice}
+          liqPrice={liqPrice}
+          closeInfo={coinPositions.length ? `${usd(coinPnl, true)}${coinPositions.length > 1 ? ` · ${coinPositions.length} шт.` : ""}` : undefined}
+          closeProfit={coinPnl >= 0}
+          onCloseAll={closeAll}
+          closeDisabled={busy}
+          quickDisabled={busy || !user || m < 1 || !exSettings.enabled || exSettings.disabledCoins.includes(coinId) || !!locked[coinId]}
+          quickInfo={`${usd(m)} · x${leverage}`}
+          onQuick={(sd) => send({ action: "open", coinId, side: sd, leverage, margin: m, sl: Number(sl) || null, tp: Number(tp) || null }, "Позиция открыта")}
+          lines={[
+            ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.entry, label: `${p.side === "long" ? "Лонг" : "Шорт"} x${p.leverage}`, color: p.side === "long" ? "#16C784" : "#EA3943" })) ?? []),
+            ...(st?.orders.filter((o) => o.coinId === coinId).map((o) => ({ price: o.limit, label: "Ордер", color: "hsl(var(--accent))" })) ?? []),
+            ...(st?.positions.filter((p) => p.coinId === coinId && p.sl).map((p) => ({ price: p.sl as number, label: "Стоп-лосс", color: "#EA3943" })) ?? []),
+            ...(st?.positions.filter((p) => p.coinId === coinId && p.tp).map((p) => ({ price: p.tp as number, label: "Тейк-профит", color: "#22C55E" })) ?? []),
+            ...(st?.positions.filter((p) => p.coinId === coinId).map((p) => ({ price: p.liq, label: "Ликвидация", color: "#EA3943" })) ?? []),
+            ...(liqPrice > 0 ? [{ price: liqPrice, label: "Ликвидация (черновик)", color: "#EA3943" }] : []),
+            ...(Number(sl) > 0 ? [{ price: Number(sl), label: "Стоп (черновик)", color: "#EA3943" }] : []),
+            ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
+          ]}
+        />
+      </section>
+        <TradeTabs st={st} tab={tab} setTab={setTab} busy={busy} send={send} shared={shared} share={share} leaders={[]} m={m} only={["positions", "orders"]} />
+      <TradeForm
+        coins={coins}
+        coinId={coinId}
+        setCoinId={setCoinId}
+        side={side}
+        setSide={setSide}
+        mode={mode}
+        setMode={setMode}
+        limit={limit}
+        setLimit={setLimit}
+        margin={margin}
+        setMargin={setMargin}
+        leverage={leverage}
+        setLeverage={setLeverage}
+        sl={sl}
+        setSl={setSl}
+        tp={tp}
+        setTp={setTp}
+        m={m}
+        livePrice={livePrice}
+        liqPrice={liqPrice}
+        st={st}
+        busy={busy}
+        submit={submit}
+        send={send}
+      />
+        <ExchangeCard st={st} busy={busy} send={send} token={token} />
+      </div>
+    );
   }
 
   return (

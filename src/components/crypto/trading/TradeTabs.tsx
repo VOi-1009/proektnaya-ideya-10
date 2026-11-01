@@ -15,15 +15,16 @@ interface Props {
   share: (t: Trade) => void;
   leaders: Leader[];
   m: number;
+  only?: Tab[];
 }
 
-const TradeTabs = ({ st, tab, setTab, busy, send, shared, share, leaders, m }: Props) => {
+const TradeTabs = ({ st, tab, setTab, busy, send, shared, share, leaders, m, only }: Props) => {
   const { user } = useAuth();
 
   return (
         <section className="rounded-xl border border-border bg-card p-4 min-w-0">
           <div className="flex gap-1 mb-3 flex-wrap">
-            {([["positions", `Позиции${st?.positions.length ? ` (${st.positions.length})` : ""}`], ["orders", `Ордера${st?.orders.length ? ` (${st.orders.length})` : ""}`], ["history", "История"], ["leaders", "Рейтинг"]] as const).map(([k, l]) => (
+            {([["positions", `Позиции${st?.positions.length ? ` (${st.positions.length})` : ""}`], ["orders", `Ордера${st?.orders.length ? ` (${st.orders.length})` : ""}`], ["history", "История"], ["leaders", "Рейтинг"]] as const).filter(([k]) => !only || only.includes(k)).map(([k, l]) => (
               <Button key={k} size="sm" variant={tab === k ? "secondary" : "ghost"} onClick={() => setTab(k)}>{l}</Button>
             ))}
           </div>
