@@ -75,17 +75,36 @@ const MobileApp = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border grid" style={{ gridTemplateColumns: `repeat(${Math.max(tabs.length, 1)}, minmax(0, 1fr))` }}>
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex flex-col items-center justify-center gap-0.5 ${s.bigButtons ? "py-3" : "py-2"} text-[11px] transition-colors ${current?.id === t.id ? "text-primary" : "text-muted-foreground"}`}
-          >
-            <Icon name={t.icon || MOBILE_SECTIONS[t.id]?.icon || "Circle"} size={s.bigButtons ? 22 : 18} fallback="Circle" />
-            <span className="truncate max-w-full px-1">{t.label || MOBILE_SECTIONS[t.id]?.label}</span>
-          </button>
-        ))}
+      <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border grid items-end" style={{ gridTemplateColumns: `repeat(${Math.max(tabs.length, 1)}, minmax(0, 1fr))` }}>
+        {tabs.map((t, i) => {
+          const center = tabs.length % 2 === 1 && tabs.length >= 3 && i === (tabs.length - 1) / 2;
+          const active = current?.id === t.id;
+          const icon = t.icon || MOBILE_SECTIONS[t.id]?.icon || "Circle";
+          const label = t.label || MOBILE_SECTIONS[t.id]?.label;
+          if (center) {
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)} className="flex flex-col items-center justify-end gap-0.5 pb-1.5 text-[11px] font-semibold" aria-label={label}>
+                <span
+                  className={`-mt-6 w-14 h-14 rounded-full flex items-center justify-center bg-primary text-white ring-4 ring-card transition-transform active:scale-95 ${active ? "scale-105" : ""}`}
+                  style={{ boxShadow: "0 0 18px 4px hsl(var(--primary) / 0.65), 0 0 36px 8px hsl(var(--primary) / 0.3)" }}
+                >
+                  <Icon name={icon} size={28} fallback="Circle" />
+                </span>
+                <span className={`truncate max-w-full px-1 ${active ? "text-primary" : "text-white"}`}>{label}</span>
+              </button>
+            );
+          }
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex flex-col items-center justify-center gap-0.5 ${s.bigButtons ? "py-3" : "py-2"} text-[11px] transition-colors ${active ? "text-primary" : "text-muted-foreground"}`}
+            >
+              <Icon name={icon} size={s.bigButtons ? 22 : 18} fallback="Circle" />
+              <span className="truncate max-w-full px-1">{label}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
