@@ -86,9 +86,15 @@ const MobileApp = () => {
             onClick={() => { setPage(page === "community" ? "" : "community"); window.scrollTo({ top: 0 }); }}
             aria-label="Сообщество"
             title="Сообщество"
-            className={`w-9 h-9 rounded-full flex items-center justify-center active:bg-hover/60 ${page === "community" ? "text-primary" : "text-muted-foreground hover:text-white"}`}
+            className="relative w-9 h-9 rounded-full overflow-hidden flex items-center justify-center active:scale-95 transition-transform shadow-[0_0_12px_hsl(var(--primary)/0.65)]"
           >
-            <Icon name="Users" size={22} />
+            <span
+              aria-hidden
+              className="absolute inset-[-50%] animate-[spin_1.4s_linear_infinite] motion-reduce:animate-none"
+              style={{ background: "conic-gradient(from 0deg, hsl(var(--primary) / 0.28) 0%, hsl(var(--primary) / 0.28) 55%, #FFB347 80%, #FFFFFF 98%, hsl(var(--primary) / 0.28) 100%)" }}
+            />
+            <span aria-hidden className={`absolute inset-[3px] rounded-full ${page === "community" ? "bg-white" : "bg-primary"}`} />
+            <Icon name="Users" size={18} className={`relative ${page === "community" ? "text-primary" : "text-white"}`} />
           </button>
         </div>
       </header>
