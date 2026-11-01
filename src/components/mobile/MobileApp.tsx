@@ -10,7 +10,7 @@ import { chooseDesktop, chooseMobile } from "@/lib/mobile";
 import TkaIcon from "@/components/crypto/TkaIcon";
 
 const MobileApp = () => {
-  const { user, setAuthOpen } = useAuth();
+  const { user, setAuthOpen, logout } = useAuth();
   const { data, isLoading } = useMobileSettings();
   const [tab, setTab] = useState("");
   const s = data?.settings;
@@ -56,9 +56,20 @@ const MobileApp = () => {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black">Т</div>
           <span className="font-display text-base text-white tracking-wide">{s.title}</span>
         </div>
-        <button onClick={() => (user ? setTab("profile") : setAuthOpen(true))} className="text-xs text-muted-foreground flex items-center gap-1.5" aria-label="Профиль">
-          {user ? <><TkaIcon size={16} /> <WalletValue /></> : <span className="text-primary font-semibold">Войти</span>}
-        </button>
+        <div className="flex items-center gap-3">
+          {user && (
+            <button onClick={() => setTab("profile")} className="text-xs text-muted-foreground flex items-center gap-1.5" aria-label="Профиль">
+              <TkaIcon size={16} /> <WalletValue />
+            </button>
+          )}
+          <button
+            onClick={() => (user ? logout() : setAuthOpen(true))}
+            className={user ? "text-xs text-muted-foreground hover:text-white flex items-center gap-1 border border-border rounded-md px-2 py-1" : "text-xs text-primary-foreground bg-primary font-semibold rounded-md px-3 py-1"}
+          >
+            {user && <Icon name="LogOut" size={12} />}
+            {user ? "Выйти" : "Войти"}
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 p-4 pb-24 space-y-3">
