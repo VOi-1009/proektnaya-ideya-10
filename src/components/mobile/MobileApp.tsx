@@ -1,0 +1,92 @@
+import { useEffect, useState } from "react";
+import Icon from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/lib/auth";
+import { fundFmt, MOBILE_SECTIONS, useMobileSettings } from "@/lib/fund";
+import { useWallet } from "@/lib/tka";
+import MobileBlockView from "./MobileBlockView";
+import TkaIcon from "@/components/crypto/TkaIcon";
+
+const MobileApp = () => {
+  const { user, setAuthOpen } = useAuth();
+  const { data, isLoading } = useMobileSettings();
+  const [tab, setTab] = useState("");
+  const s = data?.settings;
+  const tabs = (s?.tabs ?? []).filter((t) => t.enabled);
+  const current = tabs.find((t) => t.id === tab) ?? tabs[0];
+
+  useEffect(() => {
+    if (!tab && tabs[0]) setTab(tabs[0].id);
+  }, [tab, tabs]);
+
+  if (isLoading || !s) {
+    return (
+      <div className="min-h-screen bg-background p-4 space-y-3">
+        <Skeleton className="h-12 w-full bg-card" />
+        <Skeleton className="h-24 w-full bg-card" />
+        <Skeleton className="h-24 w-full bg-card" />
+      </div>
+    );
+  }
+
+  if (!s.enabled) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 p-6 text-center">
+        <Icon name="Smartphone" size={36} className="text-primary" />
+        <h1 className="font-display text-xl text-white">Мобильная версия закрыта</h1>
+        <p className="text-sm text-muted-foreground max-w-xs">{s.message || "Скоро откроем. Пока можно пользоваться полной версией сайта."}</p>
+        <a href="/" className="text-primary text-sm hover:underline">Открыть полную версию</a>
+      </div>
+    );
+  }
+
+  const blocks = s.blocks.filter((b) => b.tab === current?.id && b.enabled);
+  const info = current ? MOBILE_SECTIONS[current.id] : undefined;
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="sticky top-0 z-30 bg-card border-b border-border px-4 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black">Т</div>
+          <span className="font-display text-base text-white tracking-wide">{s.title}</span>
+        </div>
+        <button onClick={() => (user ? setTab("profile") : setAuthOpen(true))} className="text-xs text-muted-foreground flex items-center gap-1.5" aria-label="Профиль">
+          {user ? <><TkaIcon size={16} /> <WalletValue /></> : <span className="text-primary font-semibold">Войти</span>}
+        </button>
+      </header>
+
+      <main className="flex-1 p-4 pb-24 space-y-3">
+        <h1 className="font-display text-lg text-white flex items-center gap-2">
+          {info && <Icon name={current?.icon || info.icon} size={18} className="text-primary" />}
+          {current?.label || info?.label}
+        </h1>
+        {blocks.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border text-center text-xs text-muted-foreground py-10">Здесь пока ничего нет</div>
+        ) : (
+          blocks.map((b) => <MobileBlockView key={b.id} block={b} preview />)
+        )}
+      </main>
+
+      <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border grid" style={{ gridTemplateColumns: `repeat(${Math.max(tabs.length, 1)}, minmax(0, 1fr))` }}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex flex-col items-center justify-center gap-0.5 ${s.bigButtons ? "py-3" : "py-2"} text-[11px] transition-colors ${current?.id === t.id ? "text-primary" : "text-muted-foreground"}`}
+          >
+            <Icon name={t.icon || MOBILE_SECTIONS[t.id]?.icon || "Circle"} size={s.bigButtons ? 22 : 18} fallback="Circle" />
+            <span className="truncate max-w-full px-1">{t.label || MOBILE_SECTIONS[t.id]?.label}</span>
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+};
+
+const WalletValue = () => {
+  const { token } = useAuth();
+  const { data } = useWallet(token);
+  return <span className="font-mono text-white">{data ? fundFmt(data.free) : "—"}</span>;
+};
+
+export default MobileApp;

@@ -1542,6 +1542,80 @@ def games_admin(cur):
     }
 
 
+MOBILE_KEY = "mobile_settings"
+MOBILE_SECTIONS = ["home", "market", "news", "trading", "games", "shop", "profile", "community", "fund"]
+MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link"]
+MOBILE_DEFAULT = {
+    "enabled": True,
+    "message": "",
+    "title": "TRADERKA",
+    "bigButtons": True,
+    "tabs": [
+        {"id": "home", "label": "Главная", "icon": "Home", "enabled": True},
+        {"id": "market", "label": "Котировки", "icon": "LineChart", "enabled": True},
+        {"id": "news", "label": "Новости", "icon": "Newspaper", "enabled": True},
+        {"id": "games", "label": "Игры", "icon": "Gamepad2", "enabled": True},
+        {"id": "profile", "label": "Профиль", "icon": "UserRound", "enabled": True},
+    ],
+    "blocks": [
+        {"id": "b1", "tab": "home", "kind": "empty", "title": "", "text": "", "url": "", "enabled": True},
+        {"id": "b2", "tab": "home", "kind": "empty", "title": "", "text": "", "url": "", "enabled": True},
+        {"id": "b3", "tab": "home", "kind": "empty", "title": "", "text": "", "url": "", "enabled": True},
+    ],
+}
+
+
+def clean_mobile(raw):
+    out = json.loads(json.dumps(MOBILE_DEFAULT))
+    if not isinstance(raw, dict):
+        return out
+    out["enabled"] = bool(raw.get("enabled", True))
+    out["message"] = str(raw.get("message") or "")[:200]
+    out["title"] = str(raw.get("title") or "TRADERKA")[:30].strip() or "TRADERKA"
+    out["bigButtons"] = bool(raw.get("bigButtons", True))
+    tabs = []
+    seen = set()
+    for t in raw.get("tabs") or []:
+        if not isinstance(t, dict) or t.get("id") not in MOBILE_SECTIONS or t["id"] in seen:
+            continue
+        seen.add(t["id"])
+        icon = re.sub(r"[^A-Za-z0-9]", "", str(t.get("icon") or ""))[:30]
+        tabs.append({"id": t["id"], "label": str(t.get("label") or "")[:16].strip(), "icon": icon, "enabled": bool(t.get("enabled", True))})
+    if tabs:
+        out["tabs"] = tabs[:6]
+    blocks = []
+    ids = set()
+    for b in (raw.get("blocks") or [])[:60]:
+        if not isinstance(b, dict):
+            continue
+        bid = re.sub(r"[^A-Za-z0-9_-]", "", str(b.get("id") or ""))[:20] or f"b{len(blocks) + 1}"
+        if bid in ids or b.get("tab") not in MOBILE_SECTIONS:
+            continue
+        ids.add(bid)
+        url = str(b.get("url") or "").strip()[:300]
+        if url and not (url.startswith("/") or url.startswith("https://")):
+            url = ""
+        blocks.append({
+            "id": bid, "tab": b["tab"], "kind": b.get("kind") if b.get("kind") in MOBILE_BLOCK_KINDS else "empty",
+            "title": str(b.get("title") or "")[:60], "text": str(b.get("text") or "")[:400], "url": url, "enabled": bool(b.get("enabled", True)),
+        })
+    if "blocks" in raw:
+        out["blocks"] = blocks
+    return out
+
+
+def mobile_settings(cur):
+    cur.execute(f"SELECT value FROM {SCHEMA}.site_settings WHERE key = '{MOBILE_KEY}'")
+    row = cur.fetchone()
+    raw = {}
+    if row and row[0]:
+        try:
+            raw = json.loads(row[0])
+        except ValueError:
+            raw = {}
+    return clean_mobile(raw)
+
+
 def handler(event, context):
     """Тренировочная биржа: виртуальный счёт, рыночные и лимитные ордера, плечо, шорт, рейтинг"""
     t0 = time.time()
@@ -1566,6 +1640,8 @@ def handler(event, context):
             finish_due(cur)
             checked = tick(cur, px)
             return resp(200, {"checked": checked, "ai": ai_trader_step(cur, px, force=True)})
+        if method == "GET" and action == "mobile_settings":
+            return resp(200, {"settings": mobile_settings(cur), "sections": MOBILE_SECTIONS})
         if method == "GET" and action == "games_config":
             return resp(200, games_config(cur, opt_uid(cur, token)))
         if method == "GET" and action == "shop_catalog":
@@ -1709,6 +1785,16 @@ def handler(event, context):
             cfg = games_config(cur, uid)
             cfg["result"] = out
             return resp(200, cfg)
+        if act == "mobile_save":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            new = clean_mobile(body)
+            val = qj(json.dumps(new, ensure_ascii=False))
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.site_settings (key, value, updated_at) VALUES ('{MOBILE_KEY}', '{val}', NOW()) "
+                f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+            )
+            return resp(200, {"settings": new, "sections": MOBILE_SECTIONS})
         if act == "games_bb_start":
             code, out = bb_start(cur, uid, body)
             if code != 200:

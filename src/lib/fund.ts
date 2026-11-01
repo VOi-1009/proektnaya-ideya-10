@@ -278,3 +278,48 @@ export const useGamesConfig = (token: string | null) =>
     staleTime: 20_000,
     queryFn: () => fundRequest<GamesConfig>(token, "?action=games_config"),
   });
+
+export interface MobileTab {
+  id: string;
+  label: string;
+  icon: string;
+  enabled: boolean;
+}
+
+export interface MobileBlock {
+  id: string;
+  tab: string;
+  kind: "empty" | "text" | "banner" | "link";
+  title: string;
+  text: string;
+  url: string;
+  enabled: boolean;
+}
+
+export interface MobileSettings {
+  enabled: boolean;
+  message: string;
+  title: string;
+  bigButtons: boolean;
+  tabs: MobileTab[];
+  blocks: MobileBlock[];
+}
+
+export const MOBILE_SECTIONS: Record<string, { label: string; icon: string }> = {
+  home: { label: "Главная", icon: "Home" },
+  market: { label: "Котировки", icon: "LineChart" },
+  news: { label: "Новости", icon: "Newspaper" },
+  trading: { label: "Биржа", icon: "CandlestickChart" },
+  games: { label: "Игры", icon: "Gamepad2" },
+  shop: { label: "Магазин", icon: "Store" },
+  profile: { label: "Профиль", icon: "UserRound" },
+  community: { label: "Сообщество", icon: "Users" },
+  fund: { label: "Фонд", icon: "Landmark" },
+};
+
+export const useMobileSettings = () =>
+  useQuery<{ settings: MobileSettings; sections: string[] }>({
+    queryKey: ["mobile-settings"],
+    staleTime: 60_000,
+    queryFn: () => fundRequest<{ settings: MobileSettings; sections: string[] }>(null, "?action=mobile_settings"),
+  });

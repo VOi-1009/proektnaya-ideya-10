@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ConsentRouteImport } from './routes/consent'
+import { Route as MRouteImport } from './routes/m'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
@@ -37,6 +38,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const ConsentRoute = ConsentRouteImport.update({
   id: '/consent',
   path: '/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MRoute = MRouteImport.update({
+  id: '/m',
+  path: '/m',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/m': typeof MRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/m': typeof MRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
+  '/m': typeof MRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/rating': typeof RatingRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/m'
     | '/privacy'
     | '/profile'
     | '/rating'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/m'
     | '/privacy'
     | '/profile'
     | '/rating'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/community'
     | '/consent'
+    | '/m'
     | '/privacy'
     | '/profile'
     | '/rating'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CommunityRoute: typeof CommunityRoute
   ConsentRoute: typeof ConsentRoute
+  MRoute: typeof MRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RatingRoute: typeof RatingRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/consent'
       fullPath: '/consent'
       preLoaderRoute: typeof ConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m': {
+      id: '/m'
+      path: '/m'
+      fullPath: '/m'
+      preLoaderRoute: typeof MRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CommunityRoute: CommunityRoute,
   ConsentRoute: ConsentRoute,
+  MRoute: MRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RatingRoute: RatingRoute,
