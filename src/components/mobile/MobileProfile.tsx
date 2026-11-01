@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 import { PROFILE_URL, useAuth } from "@/lib/auth";
 import { LEVELS } from "@/lib/status";
 import { Achievement } from "@/components/crypto/Achievements";
@@ -25,6 +26,9 @@ interface Data {
   avatar: string;
   bio: string;
   city: string;
+  favoriteCoin: string;
+  interests?: string;
+  experience?: string;
   createdAt: string;
   headline?: string;
   stats: { days: number; streak?: number; bestStreak?: number };
@@ -41,9 +45,88 @@ interface Data {
 }
 
 const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: () => void }) => {
-  const { token, ready, user, setAuthOpen, logout } = useAuth();
+  const { token, ready, user, setAuthOpen, logout, patchUser } = useAuth();
   const [p, setP] = useState<Data | null>(null);
   const [err, setErr] = useState("");
+  const [edit, setEdit] = useState(false);
+  const [form, setForm] = useState({ name: "", city: "" });
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const call = async (body: object) => {
+    const r = await fetch(PROFILE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Auth-Token": token ?? "" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error ?? "Не удалось связаться с сервером");
+    return d.profile as Data;
+  };
+
+  const applied = (d: Data) => {
+    setP(d);
+    patchUser({ name: d.name, avatar: d.avatar, level: d.status.level, statusTitle: d.status.title });
+  };
+
+  const save = async () => {
+    if (!p) return;
+    const name = form.name.trim();
+    if (name.length < 2) return toast({ title: "Введите имя от 2 знаков", variant: "destructive" });
+    setBusy(true);
+    try {
+      applied(await call({
+        action: "update",
+        name,
+        city: form.city.trim(),
+        bio: p.bio,
+        favoriteCoin: p.favoriteCoin,
+        headline: p.headline ?? "",
+        interests: p.interests ?? "",
+        experience: p.experience ?? "",
+        contacts: p.contacts ?? {},
+      }));
+      setEdit(false);
+      toast({ title: "Профиль сохранён" });
+    } catch (e) {
+      toast({ title: "Не сохранилось", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return toast({ title: "Подойдёт JPG, PNG или WEBP", variant: "destructive" });
+    if (file.size > 3 * 1024 * 1024) return toast({ title: "Картинка должна быть до 3 МБ", variant: "destructive" });
+    const reader = new FileReader();
+    reader.onload = async () => {
+      setBusy(true);
+      try {
+        applied(await call({ action: "avatar", contentType: file.type, data: reader.result }));
+        toast({ title: "Аватар обновлён" });
+      } catch (er) {
+        toast({ title: "Не получилось", description: (er as Error).message, variant: "destructive" });
+      } finally {
+        setBusy(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeAvatar = async () => {
+    setBusy(true);
+    try {
+      applied(await call({ action: "remove-avatar" }));
+      toast({ title: "Аватар удалён" });
+    } catch (er) {
+      toast({ title: "Не получилось", description: (er as Error).message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!ready || !token) return;
@@ -89,6 +172,7 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
   const s = p.status;
   const lv = LEVELS[Math.min(Math.max(s.level - 1, 0), LEVELS.length - 1)];
   const progress = s.next ? ((s.points - s.current) / (s.next - s.current)) * 100 : 100;
+  const canEditAvatar = s.level < 11 || p.id === 2;
   const since = new Date(p.createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 
   return (
@@ -96,7 +180,20 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
       {head}
       <section className="rounded-xl border border-border bg-card p-4 space-y-3">
         <div className="flex items-center gap-3">
-          <UserAvatar name={p.name} email={p.email} avatar={p.avatar} level={s.level} online dot="md" className="w-16 h-16 text-2xl" userId={p.id} />
+          <div className="relative flex-shrink-0">
+            <UserAvatar name={p.name} email={p.email} avatar={p.avatar} level={s.level} online dot="md" className="w-16 h-16 text-2xl" userId={p.id} />
+            {edit && canEditAvatar && (
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={busy}
+                aria-label="Сменить аватар"
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow disabled:opacity-60"
+              >
+                <Icon name={busy ? "Loader2" : "Camera"} size={14} className={busy ? "animate-spin" : ""} />
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 min-w-0">
               <h2 className="font-display text-lg text-white truncate">{p.name || "Без имени"}</h2>
@@ -110,6 +207,29 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
             </div>
           </div>
         </div>
+        {edit && (
+          <div className="rounded-lg bg-rail p-3 space-y-2">
+            <label className="block">
+              <span className="text-[11px] text-muted-foreground mb-1 block">Имя или ник</span>
+              <input className="w-full bg-hover rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary" maxLength={60} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="text-[11px] text-muted-foreground mb-1 block">Город</span>
+              <input className="w-full bg-hover rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary" maxLength={100} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Необязательно" />
+            </label>
+            {p.avatar && canEditAvatar && (
+              <button onClick={removeAvatar} disabled={busy} className="text-[11px] text-muted-foreground hover:text-down">Удалить аватар</button>
+            )}
+            {!canEditAvatar && <p className="text-[11px] text-muted-foreground">Для вашего статуса аватар не меняется.</p>}
+            <div className="flex gap-2 pt-1">
+              <Button onClick={save} disabled={busy} className="flex-1 font-semibold">
+                {busy && <Icon name="Loader2" size={15} className="mr-1.5 animate-spin" />}
+                Сохранить
+              </Button>
+              <Button variant="ghost" onClick={() => setEdit(false)} disabled={busy}>Отмена</Button>
+            </div>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${lv.cls}`}>
             <Icon name={lv.icon} size={13} /> {s.title}
@@ -141,9 +261,12 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
         <button onClick={onWallet} className="rounded-xl border border-border bg-card py-3 text-sm text-white font-semibold flex items-center justify-center gap-1.5 active:bg-hover/40">
           <Icon name="Wallet" size={15} className="text-primary" /> Кошелёк
         </button>
-        <a href="/profile" className="rounded-xl border border-border bg-card py-3 text-sm text-white font-semibold flex items-center justify-center gap-1.5 active:bg-hover/40">
-          <Icon name="Settings" size={15} className="text-primary" /> Редактировать
-        </a>
+        <button
+          onClick={() => { setForm({ name: p.name, city: p.city }); setEdit(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          className="rounded-xl border border-border bg-card py-3 text-sm text-white font-semibold flex items-center justify-center gap-1.5 active:bg-hover/40"
+        >
+          <Icon name="Pencil" size={15} className="text-primary" /> Редактировать
+        </button>
       </div>
       <button onClick={() => { logout(); onClose(); }} className="w-full text-center text-xs text-muted-foreground hover:text-white py-2">Выйти из аккаунта</button>
     </div>

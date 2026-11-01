@@ -3,12 +3,10 @@ import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 import { useGraphics } from "@/lib/graphics";
-import { fundFmt, MOBILE_SECTIONS, useMobileSettings } from "@/lib/fund";
-import { useWallet } from "@/lib/tka";
+import { MOBILE_SECTIONS, useMobileSettings } from "@/lib/fund";
 import MobileBlockView from "./MobileBlockView";
 import InstallBanner from "./InstallBanner";
 import { chooseDesktop, chooseMobile } from "@/lib/mobile";
-import TkaIcon from "@/components/crypto/TkaIcon";
 import UserAvatar from "@/components/crypto/UserAvatar";
 import MobileProfile from "./MobileProfile";
 
@@ -82,11 +80,6 @@ const MobileApp = () => {
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-display font-black text-lg">Т</div>
         )}
         <div className="flex items-center justify-end gap-3">
-          {user && (
-            <button onClick={() => setTab("profile")} className="text-xs text-muted-foreground flex items-center gap-1.5" aria-label="Кошелёк">
-              <TkaIcon size={16} /> <WalletValue />
-            </button>
-          )}
           <button
             onClick={() => (user ? logout() : setAuthOpen(true))}
             className={user ? "text-xs text-muted-foreground hover:text-white flex items-center gap-1 border border-border rounded-md px-2 py-1" : "text-xs text-primary-foreground bg-primary font-semibold rounded-md px-3 py-1"}
@@ -152,12 +145,6 @@ const MobileApp = () => {
       </nav>
     </div>
   );
-};
-
-const WalletValue = () => {
-  const { token } = useAuth();
-  const { data } = useWallet(token);
-  return <span className="font-mono text-white">{data ? fundFmt(data.free) : "—"}</span>;
 };
 
 export default MobileApp;
