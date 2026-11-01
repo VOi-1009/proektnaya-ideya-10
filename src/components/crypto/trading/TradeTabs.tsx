@@ -1,3 +1,4 @@
+import VirtualNote from "./VirtualNote";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { fmtPrice } from "@/lib/crypto";
@@ -83,6 +84,7 @@ const TradeTabs = ({ st, tab, setTab, busy, send, shared, share, leaders, m }: P
 
           {tab === "leaders" && (
             <>
+          <VirtualNote className="mb-2">Суммы в рейтинге указаны в виртуальных USDT. Это результат учебной игры, а не реальной торговли.</VirtualNote>
           <LeadersBoard
             leaders={leaders}
             me={user?.id}

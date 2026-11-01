@@ -12,6 +12,7 @@ import GuestCard from "../trading/GuestCard";
 import TradeForm from "../trading/TradeForm";
 import ExchangeCard from "../trading/ExchangeCard";
 import FundCard from "../trading/FundCard";
+import VirtualNote from "../trading/VirtualNote";
 import TradeTabs from "../trading/TradeTabs";
 import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
@@ -80,7 +81,7 @@ const TradingChannel = ({ coins }: Props) => {
   const [shared, setShared] = useState<number[]>([]);
   const share = async (t: Trade) => {
     const dir = t.side === "long" ? "Лонг" : "Шорт";
-    const text = `${t.pnl >= 0 ? "Закрыл в плюс" : "Закрыл в минус"} на тренировочной бирже: ${name(t.coinId)}, ${dir} x${t.leverage}. Вход ${fmtPrice(t.entry, t.coinId)} → выход ${fmtPrice(t.close, t.coinId)}. Результат: ${usd(t.pnl, true)} (${((t.pnl / t.margin) * 100).toFixed(1)}% от суммы сделки).`;
+    const text = `${t.pnl >= 0 ? "Закрыл в плюс" : "Закрыл в минус"} на тренировочной бирже: ${name(t.coinId)}, ${dir} x${t.leverage}. Вход ${fmtPrice(t.entry, t.coinId)} → выход ${fmtPrice(t.close, t.coinId)}. Результат: ${usd(t.pnl, true)} (виртуальные, ${((t.pnl / t.margin) * 100).toFixed(1)}% от суммы сделки).`;
     try {
       let image: string | undefined;
       try {
@@ -144,6 +145,7 @@ const TradingChannel = ({ coins }: Props) => {
 
   return (
     <div className="space-y-4 pb-4">
+      <VirtualNote variant="banner" />
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
         <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
         <Stat label="В сделках" value={st ? usd(st.locked) : "—"} />

@@ -143,6 +143,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
             <span className="text-muted-foreground">В игре на </span>
             <span className="font-mono text-sm font-semibold" style={{ color: risk.color }}>{usd(volume)}</span>
             {leverage > 1 && <span className="text-muted-foreground"> · ставка {usd(m)} умножена в {leverage} раз</span>}
+            <div className="text-[10px] text-muted-foreground mt-0.5">Виртуальные USDT: реальные деньги не тратятся и не выигрываются.</div>
           </div>
 
           <Button

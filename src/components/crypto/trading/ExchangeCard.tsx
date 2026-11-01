@@ -7,6 +7,7 @@ import TkaIcon from "@/components/crypto/TkaIcon";
 import { useAuth } from "@/lib/auth";
 import { TRADING_URL, Wallet } from "@/lib/tka";
 import { Send, State } from "./shared";
+import VirtualNote from "./VirtualNote";
 
 const FEE = 0.0005;
 const fmt = (v: number, d = 2) => v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -88,7 +89,11 @@ const ExchangeCard = ({ st, busy, send, token }: { st: State | undefined; busy: 
       >
         {dir === "in" ? "Обменять на USDT (виртуальные)" : "Обменять на TKA"}
       </Button>
-      {dir === "out" && <p className="text-[10px] text-muted-foreground">Обменять можно только свободные USDT: деньги в сделках и ордерах не участвуют.</p>}
+      <VirtualNote>
+        {dir === "in"
+          ? "Вы получаете виртуальные USDT: они нужны только для игры на бирже и не имеют реальной стоимости."
+          : "Обменять можно только свободные виртуальные USDT: деньги в сделках и ордерах не участвуют."}
+      </VirtualNote>
       {dir === "in" && user && wallet && tkaFree < 1 && <p className="text-[10px] text-muted-foreground">Нужны TKA: забирайте ежедневный бонус и получайте награды за достижения.</p>}
     </section>
   );

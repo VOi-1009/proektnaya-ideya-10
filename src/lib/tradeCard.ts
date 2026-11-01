@@ -62,7 +62,7 @@ export const renderTradeCard = (d: TradeCardData): string => {
   }
   c.fillStyle = "#8A8F98";
   c.font = `400 24px ${font}`;
-  c.fillText("Тренировочная биржа", lx + 20, 78);
+  c.fillText("Тренировочная биржа · виртуальные USDT", lx + 20, 78);
 
   c.fillStyle = d.coinColor;
   c.beginPath();
