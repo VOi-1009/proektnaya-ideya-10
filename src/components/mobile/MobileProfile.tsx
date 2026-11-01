@@ -18,6 +18,9 @@ import ProfileRewards from "@/components/crypto/ProfileRewards";
 import GamesStats from "@/components/crypto/GamesStats";
 import FundBadges from "@/components/crypto/FundBadges";
 import ContactLinks from "@/components/crypto/ContactLinks";
+import TeamCard, { TeamInfo } from "@/components/crypto/TeamCard";
+import { COIN_META } from "@/lib/crypto";
+import { Team } from "@/lib/status";
 
 interface Data {
   id: number;
@@ -39,7 +42,7 @@ interface Data {
   supporter?: number | null;
   creator?: boolean;
   promo?: string;
-  team?: { team?: string };
+  team?: TeamInfo;
   contacts?: Record<string, string>;
   status: { level: number; title: string; points: number; current: number; next: number | null; nextTitle: string | null };
 }
@@ -49,7 +52,7 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
   const [p, setP] = useState<Data | null>(null);
   const [err, setErr] = useState("");
   const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState({ name: "", city: "" });
+  const [form, setForm] = useState({ name: "", city: "", favoriteCoin: "" });
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -80,7 +83,7 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
         name,
         city: form.city.trim(),
         bio: p.bio,
-        favoriteCoin: p.favoriteCoin,
+        favoriteCoin: form.favoriteCoin,
         headline: p.headline ?? "",
         interests: p.interests ?? "",
         experience: p.experience ?? "",
@@ -114,6 +117,10 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const changeTeam = async (team: Team, pay: boolean) => {
+    applied(await call({ action: "set-team", team, pay }));
   };
 
   const removeAvatar = async () => {
@@ -217,6 +224,15 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
               <span className="text-[11px] text-muted-foreground mb-1 block">Город</span>
               <input className="w-full bg-hover rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary" maxLength={100} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Необязательно" />
             </label>
+            <label className="block">
+              <span className="text-[11px] text-muted-foreground mb-1 block">Любимая монета</span>
+              <select className="w-full bg-hover rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary" value={form.favoriteCoin} onChange={(e) => setForm({ ...form, favoriteCoin: e.target.value })}>
+                <option value="">Не выбрана</option>
+                {Object.entries(COIN_META).map(([id, m]) => (
+                  <option key={id} value={id}>{m.ru} ({m.short})</option>
+                ))}
+              </select>
+            </label>
             {p.avatar && canEditAvatar && (
               <button onClick={removeAvatar} disabled={busy} className="text-[11px] text-muted-foreground hover:text-down">Удалить аватар</button>
             )}
@@ -252,6 +268,8 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
         <ContactLinks contacts={p.contacts} />
       </section>
 
+      {edit && p.team && <TeamCard info={p.team} onChange={changeTeam} />}
+
       <ProfileSummary token={token} streak={p.stats.streak ?? 0} bestStreak={p.stats.bestStreak ?? 0} days={p.stats.days} />
       <ProfileRewards level={s.level} achievements={p.achievements} special={p.special} founder={p.founder} foundersTaken={p.foundersTaken} promo={p.promo} streak={p.stats.streak ?? 0} />
       <GamesStats token={token} />
@@ -262,12 +280,17 @@ const MobileProfile = ({ onClose, onWallet }: { onClose: () => void; onWallet: (
           <Icon name="Wallet" size={15} className="text-primary" /> Кошелёк
         </button>
         <button
-          onClick={() => { setForm({ name: p.name, city: p.city }); setEdit(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          onClick={() => { setForm({ name: p.name, city: p.city, favoriteCoin: p.favoriteCoin ?? "" }); setEdit(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           className="rounded-xl border border-border bg-card py-3 text-sm text-white font-semibold flex items-center justify-center gap-1.5 active:bg-hover/40"
         >
           <Icon name="Pencil" size={15} className="text-primary" /> Редактировать
         </button>
       </div>
+      {user?.isAdmin && (
+        <a href="/admin" className="w-full rounded-xl border border-primary/40 bg-primary/10 py-3 text-sm text-primary font-semibold flex items-center justify-center gap-1.5 active:bg-primary/20">
+          <Icon name="ShieldCheck" size={15} /> Админ-панель
+        </a>
+      )}
       <button onClick={() => { logout(); onClose(); }} className="w-full text-center text-xs text-muted-foreground hover:text-white py-2">Выйти из аккаунта</button>
     </div>
   );
