@@ -9,9 +9,9 @@ import ChartToolbar from "./candle/ChartToolbar";
 import ChartFooter from "./candle/ChartFooter";
 import IndicatorPanes from "./candle/IndicatorPanes";
 
-interface Props { coinId: string; price: number; lines?: Line[]; liqPrice?: number; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean }
+interface Props { coinId: string; price: number; lines?: Line[]; liqPrice?: number; onQuick?: (side: "long" | "short") => void; quickInfo?: string; quickDisabled?: boolean; closeInfo?: string; closeProfit?: boolean; onCloseAll?: () => void; closeDisabled?: boolean; plotClass?: string }
 
-const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, quickDisabled, closeInfo, closeProfit, onCloseAll, closeDisabled }: Props) => {
+const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, quickDisabled, closeInfo, closeProfit, onCloseAll, closeDisabled, plotClass }: Props) => {
   const { token } = useAuth();
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
@@ -217,10 +217,10 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
         onDoubleClick={() => { setView(null); setYZoom(1); setYShift(0); setAutoFit(false); }}
       >
         {isLoading || !data ? (
-          <Skeleton className={`w-full bg-rail ${full ? "h-[60vh]" : "h-[460px] sm:h-[600px]"}`} />
+          <Skeleton className={`w-full bg-rail ${plotClass ?? (full ? "h-[60vh]" : "h-[460px] sm:h-[600px]")}`} />
         ) : (
           <>
-          <div ref={plotRef} className={`relative ${full ? "h-[calc(100vh-190px)] min-h-[320px]" : "h-[460px] sm:h-[600px]"}`}>
+          <div ref={plotRef} className={`relative ${plotClass ?? (full ? "h-[calc(100vh-190px)] min-h-[320px]" : "h-[460px] sm:h-[600px]")}`}>
           <div
             ref={axisRef}
             title="Тяните вверх и вниз или крутите колесо — растяжение шкалы цены. Двойной клик — сброс"

@@ -17,6 +17,7 @@ import TopTradesFeed from "../trading/TopTradesFeed";
 import VirtualNote from "../trading/VirtualNote";
 import { EX_DEFAULT, useExchangeSettings } from "@/lib/fund";
 import TradeTabs from "../trading/TradeTabs";
+import MobileChart from "../trading/MobileChart";
 import { Leader, State, Tab, Trade, TRADING_API, name, tone, usd } from "../trading/shared";
 
 interface Props { coins: Coin[]; go?: (ch: string) => void; compact?: boolean }
@@ -169,8 +170,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
           <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
           <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
         </div>
-      <section className="rounded-xl border border-border bg-card p-4 min-w-0">
-        <CandleChart
+      <MobileChart
           coinId={coinId}
           price={livePrice}
           liqPrice={liqPrice}
@@ -192,7 +192,6 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
             ...(Number(tp) > 0 ? [{ price: Number(tp), label: "Тейк (черновик)", color: "#22C55E" }] : []),
           ]}
         />
-      </section>
         <TradeTabs st={st} tab={tab} setTab={setTab} busy={busy} send={send} shared={shared} share={share} leaders={[]} m={m} only={["positions", "orders"]} />
       <TradeForm
         coins={coins}
