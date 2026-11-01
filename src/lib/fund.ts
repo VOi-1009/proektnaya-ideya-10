@@ -87,3 +87,19 @@ export const useContests = (token: string | null) =>
 
 export const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+
+export const FUND_TIERS = [
+  { id: "first", title: "Первый взнос", need: 0.01, icon: "Sprout", color: "from-emerald-300 to-green-600" },
+  { id: "backer", title: "Вкладчик", need: 1, icon: "PiggyBank", color: "from-sky-300 to-blue-600" },
+  { id: "patron", title: "Меценат", need: 10, icon: "HeartHandshake", color: "from-pink-300 to-rose-600" },
+  { id: "pillar", title: "Столп фонда", need: 50, icon: "Landmark", color: "from-amber-300 via-yellow-400 to-orange-500" },
+];
+
+export const fundTierOf = (amount: number) => [...FUND_TIERS].reverse().find((t) => amount >= t.need) ?? null;
+
+export const useFundDonors = () =>
+  useQuery<Record<string, number>>({
+    queryKey: ["fund-donors"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => (await fundRequest<{ donors: Record<string, number> }>(null, "?action=fund_donors")).donors,
+  });

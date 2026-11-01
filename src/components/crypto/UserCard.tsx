@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <StatusBadge level={u.level} compact />
                       <SupporterBadge no={u.supporter} creator={u.creator} />
+                      <FundBadge userId={u.id} />
                       {u.isAdmin && <span className="text-xs text-primary">администратор</span>}
                       {isMe && <span className="text-xs text-muted-foreground">это вы</span>}
                     </div>

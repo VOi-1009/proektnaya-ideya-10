@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import { Link } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
@@ -98,6 +99,7 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
       </div>
       <SupporterBadge no={r.supporter} creator={r.creator} compact className="hidden sm:inline-flex" />
       <FounderBadge no={r.founder} compact className="hidden sm:inline-flex" />
+      <FundBadge userId={r.id} compact className="hidden sm:inline-flex" />
       <StatusBadge level={r.level} compact className="hidden sm:inline-flex" />
       <div className="text-right w-20 flex-shrink-0">
         <div className="text-white font-mono tabular text-sm">

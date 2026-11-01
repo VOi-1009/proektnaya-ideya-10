@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
@@ -123,6 +124,7 @@ const AiPostSocial = ({ post }: { post: AiPost }) => {
                     </button>
                     {c.user.isAi && <BotBadge ai compact />}
                     <SupporterBadge no={c.user.supporter} creator={c.user.creator} compact />
+                    <FundBadge userId={c.user.id} compact />
                     <span className="text-muted-foreground/70 font-mono text-[10px]">{fmt(c.createdAt)}</span>
                     {c.canDelete && (
                       <button

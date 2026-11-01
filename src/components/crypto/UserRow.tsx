@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { LEVELS, nameCls } from "@/lib/status";
@@ -46,6 +47,7 @@ const UserRow = ({ u, myId, busyId, setBot, setCardId, setLevel, setToDelete }: 
             <StatusBadge level={u.level} compact />
             <SupporterBadge no={u.supporter} creator={u.creator} compact />
             <FounderBadge no={u.founder} compact />
+            <FundBadge userId={u.id} compact />
             {u.id === myId && <span className="text-xs text-muted-foreground">(вы)</span>}
           </div>
           <div className="text-muted-foreground text-xs flex flex-wrap gap-x-3">

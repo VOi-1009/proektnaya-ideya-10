@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -34,6 +35,7 @@ const ProfileMiniCard = () => {
           {user && <StatusBadge level={user.level} compact />}
           {user && <SupporterBadge no={user.supporter} creator={user.creator} compact />}
           {user && <FounderBadge no={user.founder} compact />}
+          {user && <FundBadge userId={user.id} compact />}
         </div>
         <div className="text-muted-foreground text-xs truncate hover:text-primary">
           {user ? "Личный кабинет →" : "Войдите в аккаунт"}

@@ -529,6 +529,12 @@ def handler(event, context):
             return resp(200, {"checked": tick(cur, px)})
         if method == "GET" and action == "fund":
             return resp(200, fund_state(cur, opt_uid(cur, token)))
+        if method == "GET" and action == "fund_donors":
+            cur.execute(
+                f"SELECT user_id, SUM(amount) FROM {SCHEMA}.fund_ledger WHERE kind IN ('fee', 'donation') AND user_id > 0 "
+                f"GROUP BY user_id HAVING SUM(amount) > 0 ORDER BY SUM(amount) DESC LIMIT 2000"
+            )
+            return resp(200, {"donors": {str(r[0]): round(float(r[1]), 2) for r in cur.fetchall()}})
         if method == "GET" and action == "contests":
             return resp(200, {"contests": contests_list(cur, opt_uid(cur, token)), "available": max(fund_total(cur), 0)})
         if not token:

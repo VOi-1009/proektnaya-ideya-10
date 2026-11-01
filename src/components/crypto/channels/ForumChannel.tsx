@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
@@ -127,6 +128,7 @@ const Author = ({ u, small }: { u: ForumTopicItem["user"]; small?: boolean }) =>
       </button>
       {u.isAi && <BotBadge ai compact />}
       <SupporterBadge no={u.supporter} creator={u.creator} compact />
+      <FundBadge userId={u.id} compact />
     </span>
   );
 };

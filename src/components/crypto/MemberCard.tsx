@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -98,6 +99,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                       {m.isAi && <BotBadge ai />}
                       <SupporterBadge no={m.supporter} creator={m.creator} />
                       <FounderBadge no={m.founder} />
+                      <FundBadge userId={m.id} />
                       <span className={`text-xs ${m.online ? "text-green-400" : "text-muted-foreground"}`}>
                         {m.online ? "в сети" : "не в сети"}
                       </span>

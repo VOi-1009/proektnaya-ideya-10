@@ -1,3 +1,4 @@
+import FundBadge from "@/components/crypto/FundBadge";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
@@ -93,6 +94,7 @@ const ChatRoomView = ({ room }: { room: ChatRoom }) => {
                   </button>
                   {m.user.isAi && <BotBadge ai compact className="self-center" />}
                   <SupporterBadge no={m.user.supporter} creator={m.user.creator} compact className="self-center" />
+                  <FundBadge userId={m.user.id} compact className="self-center" />
                   <span className={`text-[9px] ${levelInfo(m.user.level).text}`}>{levelInfo(m.user.level).title}</span>
                   <span className="text-muted-foreground text-[10px] font-mono">{time(m.createdAt)}</span>
                 </div>
