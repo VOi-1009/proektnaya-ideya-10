@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +18,29 @@ const BullBearMini = () => {
   const [bet, setBet] = useState("5");
   const [busy, setBusy] = useState(false);
   const [left, setLeft] = useState(0);
+  const { data: live } = useQuery<number | null>({
+    queryKey: ["btc-live-3s"],
+    queryFn: async () => {
+      try {
+        const r = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
+        if (!r.ok) return null;
+        const d = (await r.json()) as { price?: string };
+        return d.price ? Number(d.price) : null;
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 3000,
+    staleTime: 0,
+  });
+  const shown = live ?? data?.bb?.price ?? null;
+  const prev = useRef<number | null>(null);
+  const [dir, setDir] = useState<"up" | "down">("up");
+  useEffect(() => {
+    if (shown === null) return;
+    if (prev.current !== null && shown !== prev.current) setDir(shown > prev.current ? "up" : "down");
+    prev.current = shown;
+  }, [shown]);
   const activeId = data?.bb?.active?.id;
   const activeLeft = data?.bb?.active?.left ?? 0;
 
@@ -76,10 +99,17 @@ const BullBearMini = () => {
 
   return (
     <div className="rounded-xl border border-border bg-card p-3 space-y-2.5">
-      <div className="flex items-center gap-2">
-        <Icon name="TrendingUp" size={16} className="text-primary" />
-        <h3 className="text-white font-semibold text-sm">Бык или медведь</h3>
-        {bb?.price && <span className="ml-auto text-[11px] text-muted-foreground">BTC <span className="font-mono text-white">{usd(bb.price)}</span></span>}
+      <div className="flex flex-col items-center text-center gap-0.5">
+        <div className="flex items-center gap-2">
+          <Icon name="TrendingUp" size={16} className="text-primary" />
+          <h3 className="text-white font-semibold text-base">Бык или медведь</h3>
+        </div>
+        {shown !== null && (
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[11px] text-muted-foreground">BTC</span>
+            <span className={`font-mono font-bold text-3xl leading-tight tabular-nums transition-colors ${dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"}`}>{usd(shown)}</span>
+          </div>
+        )}
       </div>
 
       {closed ? (
