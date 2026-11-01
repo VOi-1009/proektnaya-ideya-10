@@ -27,6 +27,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   const yDrag = useRef<{ y: number; z: number } | null>(null);
   const drag = useRef<{ x: number; start: number; y: number; shift: number } | null>(null);
   const total = useRef(0);
+  const [hoverY, setHoverY] = useState<number | null>(null);
   const MIN = 10;
   const { data: line } = useChart(coinId, days, price);
   const { data, isLoading } = useQuery<Candle[]>({
@@ -222,7 +223,15 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
           <Skeleton className={`w-full bg-rail ${plotClass ?? (full ? "h-[60vh]" : "h-[460px] sm:h-[600px]")}`} />
         ) : (
           <>
-          <div ref={plotRef} className={`relative ${plotClass ?? (full ? "h-[calc(100vh-190px)] min-h-[320px]" : "h-[460px] sm:h-[600px]")}`}>
+          <div
+            ref={plotRef}
+            className={`relative ${plotClass ?? (full ? "h-[calc(100vh-190px)] min-h-[320px]" : "h-[460px] sm:h-[600px]")}`}
+            onMouseMove={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setHoverY(e.clientY - r.top);
+            }}
+            onMouseLeave={() => setHoverY(null)}
+          >
           <div
             ref={axisRef}
             title="Тяните вверх и вниз или крутите колесо — растяжение шкалы цены. Двойной клик — сброс"
@@ -241,6 +250,21 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
             <div className="absolute inset-y-0 right-0 w-full rounded bg-white/0 group-hover:bg-white/5 transition-colors" />
             {!autoFit && (yZoom !== 1 || yShift !== 0) && <span className="absolute top-1 right-1 text-[10px] font-mono text-primary">{yZoom !== 1 ? `×${yZoom.toFixed(1)}` : "сдвиг"}</span>}
           </div>
+          {hoverY !== null && (() => {
+            const h = plotRef.current?.getBoundingClientRect().height ?? 0;
+            const top = 8;
+            const inner = h - top - 30;
+            if (inner <= 0 || hoverY < top || hoverY > top + inner) return null;
+            const val = domain[1] - ((hoverY - top) / inner) * (domain[1] - domain[0]);
+            return (
+              <div className="absolute left-0 right-0 z-20 pointer-events-none" style={{ top: hoverY }}>
+                <div className="absolute left-0 right-[72px] border-t border-dashed border-muted-foreground/70" />
+                <div className="absolute right-0 w-[72px] -translate-y-1/2 rounded-[3px] bg-muted-foreground/90 text-background text-[11px] font-mono font-semibold text-center py-px">
+                  {fmtPrice(val, coinId)}
+                </div>
+              </div>
+            );
+          })()}
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
               <CartesianGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.09} strokeWidth={1} />
