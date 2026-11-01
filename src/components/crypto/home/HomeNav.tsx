@@ -1,6 +1,5 @@
 import { GoFn } from "./homeConfig";
 import UserAvatar from "@/components/crypto/UserAvatar";
-import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "@/lib/router-compat";
 
@@ -25,7 +24,6 @@ const HomeNav = ({ go }: Props) => {
       </button>
     </div>
     <div className="px-4 sm:px-6 flex-shrink-0 flex items-center gap-2">
-      {user && <VerifiedBadge userId={user.id} size={18} />}
       <button
         onClick={() => (user ? navigate("/profile") : setAuthOpen(true))}
         title={user ? "Личный кабинет" : "Войти"}
