@@ -36,10 +36,12 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
     const mask = f > 0 ? `linear-gradient(to bottom, #000 ${Math.round(100 - f)}%, transparent 100%)` : undefined;
     const img = (
       <div
-        className={`w-full min-h-[140px] flex items-center justify-center bg-gradient-to-b from-primary/20 via-card to-card ${f > 0 ? "" : "rounded-xl border border-border"}`}
+        className={`w-full min-h-[140px] flex items-center justify-center ${f > 0 ? "" : "rounded-xl border border-border"}`}
         style={mask ? { WebkitMaskImage: mask, maskImage: mask } : undefined}
       >
-        <div className="font-display text-4xl text-white leading-none tracking-wide">TRADER<span className="text-primary">KA</span>.RU</div>
+        <div className="font-display text-4xl text-white leading-none tracking-wide text-center px-4">
+          {b.title ? b.title : <>TRADER<span className="text-primary">KA</span>.RU</>}
+        </div>
       </div>
     );
     if (!b.url) return img;
