@@ -34,6 +34,7 @@ import ExchangeManager from "@/components/crypto/ExchangeManager";
 import ShopManager from "@/components/crypto/ShopManager";
 import GamesManager from "@/components/crypto/GamesManager";
 import MobileManager from "@/components/crypto/MobileManager";
+import PushManager from "@/components/crypto/PushManager";
 import GraphicsManager from "@/components/crypto/GraphicsManager";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { AdminSidebar, AdminTab, TabSwitcher } from "@/components/admin/AdminTabs";
@@ -222,6 +223,8 @@ const Admin = () => {
           <ForumManager token={token} />
         ) : editing === null && tab === "aibot" ? (
           <AiBotManager token={token} />
+        ) : editing === null && tab === "push" ? (
+          <PushManager token={token} />
         ) : editing === null && tab === "menu" ? (
           <>
             {blocksSwitch}

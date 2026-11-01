@@ -13,6 +13,7 @@ export type AdminTab =
   | "quotes"
   | "donate"
   | "aibot"
+  | "push"
   | "chats"
   | "forum"
   | "menu"
@@ -52,6 +53,7 @@ export const AdminSidebar = ({ tab, setTab }: SidebarProps) => (
         ["chats", "Чаты", "MessageCircle"],
         ["forum", "Форум", "MessagesSquare"],
         ["aibot", "AiTKA", "Sparkles"],
+        ["push", "Пуш-уведомления", "BellRing"],
       ] as const
     ).map(([id, label, icon]) => (
       <button
