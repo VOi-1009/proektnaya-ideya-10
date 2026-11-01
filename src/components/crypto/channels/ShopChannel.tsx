@@ -10,7 +10,7 @@ import { fundRequest } from "@/lib/fund";
 import { CARD_BG, FRAME_STYLE, HEADER_BG, KIND_ICON, ShopCatalog, ShopItem, ShopKind, THEME_STYLE, shopFmt, useShopCatalog } from "@/lib/shop";
 import TkaIcon from "../TkaIcon";
 
-const ORDER: ShopKind[] = ["header", "frame", "card", "theme", "badge", "gift"];
+const ORDER: ShopKind[] = ["header", "frame", "card", "theme", "badge", "gift", "misc"];
 
 const Preview = ({ item }: { item: ShopItem }) => {
   if (item.kind === "header")
@@ -65,6 +65,8 @@ const ShopChannel = () => {
   const [gift, setGift] = useState<ShopItem | null>(null);
   const [toUser, setToUser] = useState("");
   const [msg, setMsg] = useState("");
+  const [promoItem, setPromoItem] = useState<ShopItem | null>(null);
+  const [code, setCode] = useState("");
 
   const act = async (body: Record<string, unknown>, ok: string, id: number) => {
     setBusy(id);
@@ -99,6 +101,16 @@ const ShopChannel = () => {
       setGift(null);
       setToUser("");
       setMsg("");
+    }
+  };
+
+  const changePromo = async () => {
+    if (!promoItem) return;
+    const ok = await act({ action: "shop_promo", itemId: promoItem.id, code }, `Промокод изменён на ${code.trim().toUpperCase()}`, promoItem.id);
+    if (ok) {
+      setPromoItem(null);
+      setCode("");
+      qc.invalidateQueries({ queryKey: ["profile"] });
     }
   };
 
@@ -146,6 +158,7 @@ const ShopChannel = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {items.map((it) => {
           const isGift = it.kind === "gift";
+          const isMisc = it.kind === "misc";
           const sale = it.price < it.basePrice;
           return (
             <article key={it.id} className={`rounded-xl border bg-card p-3 flex flex-col gap-2 ${it.equipped ? "border-primary" : "border-border"}`}>
@@ -165,7 +178,16 @@ const ShopChannel = () => {
                   {it.stock !== null && <span className="ml-auto text-[10px] text-muted-foreground">{Math.max(it.stock - it.sold, 0)} шт.</span>}
                 </div>
                 <div className="flex gap-1.5">
-                  {isGift ? (
+                  {isMisc ? (
+                    <Button
+                      size="sm"
+                      className="flex-1 h-8 text-xs"
+                      disabled={!st.enabled || it.soldOut || busy === it.id}
+                      onClick={() => (user ? setPromoItem(it) : setAuthOpen(true))}
+                    >
+                      <Icon name="Ticket" size={13} className="mr-1" /> Сменить промокод
+                    </Button>
+                  ) : isGift ? (
                     <Button size="sm" className="flex-1 h-8 text-xs" disabled={!st.enabled || it.soldOut} onClick={() => (user ? setGift(it) : setAuthOpen(true))}>
                       <Icon name="Gift" size={13} className="mr-1" /> Подарить
                     </Button>
@@ -195,6 +217,35 @@ const ShopChannel = () => {
           );
         })}
       </div>
+
+      {promoItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setPromoItem(null)}>
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <Icon name="Ticket" size={18} className="text-primary" />
+              <h3 className="text-white font-semibold">Смена личного промокода</h3>
+              <button className="ml-auto text-muted-foreground hover:text-white" onClick={() => setPromoItem(null)} aria-label="Закрыть">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+            <div className="rounded-lg bg-rail px-3 py-2 text-sm">
+              <span className="text-xs text-muted-foreground block">Сейчас</span>
+              <span className="font-mono text-white">{data.promo || "промокода пока нет"}</span>
+            </div>
+            <label className="space-y-1 block">
+              <span className="text-xs text-muted-foreground">Новый промокод: 4–16 латинских букв и цифр</span>
+              <Input maxLength={16} value={code} onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())} placeholder="Например, TRADER777" className="font-mono" />
+            </label>
+            <p className="text-[11px] text-muted-foreground">
+              Спишется {shopFmt(promoItem.price)} TKA. Вернуть старый код бесплатно нельзя, а занятые коды выбрать не получится.
+            </p>
+            <Button className="w-full font-semibold" disabled={busy === promoItem.id || code.length < 4 || !data.promo} onClick={changePromo}>
+              Сменить за {shopFmt(promoItem.price)} TKA
+            </Button>
+            {!data.promo && <p className="text-[11px] text-muted-foreground">Личный промокод появляется после поддержки проекта, поэтому менять пока нечего.</p>}
+          </div>
+        </div>
+      )}
 
       {gift && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setGift(null)}>

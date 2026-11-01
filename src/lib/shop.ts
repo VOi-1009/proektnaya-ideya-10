@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fundRequest } from "@/lib/fund";
 
-export type ShopKind = "header" | "frame" | "card" | "theme" | "badge" | "gift";
+export type ShopKind = "header" | "frame" | "card" | "theme" | "badge" | "gift" | "misc";
 
 export interface ShopItem {
   id: number;
@@ -35,7 +35,8 @@ export interface ShopCatalog {
   kinds: Record<string, string>;
   settings: ShopSettings;
   balance: number;
-  result?: { ok: boolean; spent?: number; to?: string };
+  promo?: string;
+  result?: { ok: boolean; spent?: number; to?: string; promo?: string };
 }
 
 export interface Cosmetic {
@@ -78,7 +79,7 @@ export const THEME_STYLE: Record<string, { background: string; borderColor: stri
   t_gold: { background: "linear-gradient(135deg, rgba(250,204,21,0.16), rgba(245,158,11,0.04))", borderColor: "rgba(250,204,21,0.5)" },
 };
 
-export const KIND_ICON: Record<string, string> = { header: "PanelTop", frame: "CircleDot", card: "IdCard", theme: "Palette", badge: "Award", gift: "Gift" };
+export const KIND_ICON: Record<string, string> = { header: "PanelTop", frame: "CircleDot", card: "IdCard", theme: "Palette", badge: "Award", gift: "Gift", misc: "Shapes" };
 
 export const shopFmt = (v: number) => v.toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 

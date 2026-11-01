@@ -82,7 +82,7 @@ const ShopManager = ({ token }: { token: string | null }) => {
   };
 
   if (!data || !f) return <p className="text-muted-foreground text-sm">Загружаю…</p>;
-  const grantable = data.items.filter((i) => i.kind !== "gift");
+  const grantable = data.items.filter((i) => i.kind !== "gift" && i.kind !== "misc");
 
   return (
     <div className="space-y-4 animate-fade-in">

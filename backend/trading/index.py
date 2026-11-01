@@ -1044,7 +1044,7 @@ def ai_admin_payload(cur, px):
 
 
 
-SHOP_KINDS = {"header": "Шапки постов", "frame": "Рамки аватара", "card": "Шапки мини-карточки", "theme": "Темы сообщений", "badge": "Значки", "gift": "Подарки"}
+SHOP_KINDS = {"header": "Шапки постов", "frame": "Рамки аватара", "card": "Шапки мини-карточки", "theme": "Темы сообщений", "badge": "Значки", "gift": "Подарки", "misc": "Разное"}
 SHOP_EQUIP = {"header", "frame", "card", "theme", "badge"}
 SHOP_KEY = "shop_settings"
 SHOP_DEFAULT = {"enabled": True, "message": "", "giftDailyLimit": 5, "giftFeePercent": 0.0, "discountPercent": 0.0}
@@ -1090,17 +1090,21 @@ def shop_catalog(cur, uid, admin=False):
     items = [shop_item(r, st) for r in cur.fetchall()]
     owned, equipped = set(), {}
     balance = 0.0
+    promo = ""
     if uid:
+        cur.execute(f"SELECT COALESCE(promo_code, '') FROM {SCHEMA}.users WHERE id = {int(uid)}")
+        pr = cur.fetchone()
+        promo = pr[0] if pr else ""
         cur.execute(f"SELECT item_id FROM {SCHEMA}.shop_purchases WHERE user_id = {int(uid)}")
         owned = {int(r[0]) for r in cur.fetchall()}
         cur.execute(f"SELECT kind, item_id FROM {SCHEMA}.shop_equipped WHERE user_id = {int(uid)}")
         equipped = {r[0]: int(r[1]) for r in cur.fetchall()}
         balance = tka_balance(cur, uid)
     for it in items:
-        it["owned"] = it["id"] in owned and it["kind"] != "gift"
+        it["owned"] = it["id"] in owned and it["kind"] not in ("gift", "misc")
         it["equipped"] = equipped.get(it["kind"]) == it["id"]
         it["soldOut"] = it["stock"] is not None and it["sold"] >= it["stock"]
-    return {"items": items, "kinds": SHOP_KINDS, "settings": st, "balance": balance}
+    return {"items": items, "kinds": SHOP_KINDS, "settings": st, "balance": balance, "promo": promo}
 
 
 def shop_cosmetics(cur):
@@ -1192,9 +1196,41 @@ def shop_do(cur, uid, act, body):
         return 400, {"error": "Этот товар сейчас недоступен"}
     price = item["price"]
 
+    if act == "shop_promo":
+        if item["kind"] != "misc" or item["slug"] != "m_promo":
+            return 400, {"error": "Этот товар не меняет промокод"}
+        code = re.sub(r"\s+", "", str(body.get("code") or "")).upper()
+        if not re.fullmatch(r"[A-Z0-9]{4,16}", code):
+            return 400, {"error": "Промокод: от 4 до 16 символов, только латинские буквы и цифры"}
+        if re.fullmatch(r"BAA\d+", code):
+            return 400, {"error": "Коды вида BAA и цифры зарезервированы за поддержавшими проект"}
+        cur.execute(f"SELECT COALESCE(promo_code, '') FROM {SCHEMA}.users WHERE id = {uid}")
+        old = (cur.fetchone() or [""])[0]
+        if not old:
+            return 400, {"error": "Личный промокод появляется после поддержки проекта, менять пока нечего"}
+        if old.upper() == code:
+            return 400, {"error": "Это ваш текущий промокод"}
+        cur.execute(
+            f"UPDATE {SCHEMA}.users SET promo_code = '{code}' WHERE id = {uid} AND NOT EXISTS "
+            f"(SELECT 1 FROM {SCHEMA}.users x WHERE UPPER(x.promo_code) = '{code}' AND x.id <> {uid}) RETURNING id"
+        )
+        if not cur.fetchone():
+            return 400, {"error": "Этот промокод уже занят, выберите другой"}
+        if price > 0 and not shop_spend(cur, uid, price, "shop", f"Магазин: промокод {code}"):
+            cur.execute(f"UPDATE {SCHEMA}.users SET promo_code = '{q(old)}' WHERE id = {uid}")
+            return 400, {"error": "Недостаточно TKA на кошельке"}
+        cur.execute(f"UPDATE {SCHEMA}.shop_items SET sold = sold + 1 WHERE id = {item_id}")
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.shop_purchases (user_id, item_id, price, source) VALUES ({uid}, {item_id}, {price}, 'buy') "
+            f"ON CONFLICT (user_id, item_id) DO UPDATE SET price = {SCHEMA}.shop_purchases.price + EXCLUDED.price, created_at = NOW()"
+        )
+        return 200, {"ok": True, "spent": price, "promo": code}
+
     if act == "shop_buy":
         if item["kind"] == "gift":
             return 400, {"error": "Подарок можно только подарить участнику"}
+        if item["kind"] == "misc":
+            return 400, {"error": "Этот товар оформляется через его кнопку в магазине"}
         cur.execute(f"SELECT 1 FROM {SCHEMA}.shop_purchases WHERE user_id = {uid} AND item_id = {item_id}")
         if cur.fetchone():
             return 400, {"error": "Этот товар у вас уже есть"}
@@ -1212,6 +1248,8 @@ def shop_do(cur, uid, act, body):
         return 200, {"ok": True, "spent": price}
 
     if act == "shop_gift":
+        if item["kind"] == "misc":
+            return 400, {"error": "Этот товар нельзя подарить"}
         try:
             to = int(body.get("toUser"))
         except (TypeError, ValueError):
@@ -2012,7 +2050,7 @@ def handler(event, context):
                 f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
             )
             return resp(200, games_admin(cur))
-        if act in ("shop_buy", "shop_equip", "shop_gift"):
+        if act in ("shop_buy", "shop_equip", "shop_gift", "shop_promo"):
             ensure_account(cur, uid)
             code, out = shop_do(cur, uid, act, body)
             if code != 200:
@@ -2103,8 +2141,8 @@ def handler(event, context):
                     return resp(400, {"error": "Укажите участника и товар"})
                 cur.execute(f"SELECT kind FROM {SCHEMA}.shop_items WHERE id = {iid}")
                 r = cur.fetchone()
-                if not r or r[0] == "gift":
-                    return resp(400, {"error": "Подарок-открытку выдать нельзя, выберите значок, рамку, шапку или тему"})
+                if not r or r[0] in ("gift", "misc"):
+                    return resp(400, {"error": "Подарок-открытку и товары из «Разного» выдать нельзя, выберите значок, рамку, шапку или тему"})
                 cur.execute(f"SELECT 1 FROM {SCHEMA}.users WHERE id = {target}")
                 if not cur.fetchone():
                     return resp(404, {"error": "Участник не найден"})
