@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
@@ -95,6 +96,7 @@ const MemberCard = ({ id, onClose }: { id: number | null; onClose: () => void })
                   </DialogTitle>
                   <DialogDescription asChild>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <VerifiedBadge userId={m.id} size={16} />
                       <StatusBadge level={m.level} compact />
                       {m.isAi && <BotBadge ai />}
                       <SupporterBadge no={m.supporter} creator={m.creator} />

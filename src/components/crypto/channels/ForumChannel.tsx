@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -126,6 +127,7 @@ const Author = ({ u, small }: { u: ForumTopicItem["user"]; small?: boolean }) =>
       <button onClick={() => openMember(u.id)} className={`font-semibold hover:underline ${small ? "text-xs text-white/90" : "text-sm text-white"}`}>
         {u.name}
       </button>
+      <VerifiedBadge userId={u.id} />
       {u.isAi && <BotBadge ai compact />}
       <SupporterBadge no={u.supporter} creator={u.creator} compact />
       <FundBadge userId={u.id} compact />

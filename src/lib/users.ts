@@ -27,6 +27,7 @@ export interface AdminUser extends OnlineUser {
   favoriteCoin: string;
   isAdmin: boolean;
   promo: string;
+  verified?: boolean;
   autoTitle: string;
   next: number | null;
   nextTitle: string | null;
@@ -52,4 +53,11 @@ export const useOnline = (token: string | null) =>
     refetchInterval: 3 * 60_000,
     refetchIntervalInBackground: false,
     staleTime: 2 * 60_000,
+  });
+
+export const useVerifiedIds = () =>
+  useQuery<Set<number>>({
+    queryKey: ["verified-ids"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => new Set((await usersRequest<{ ids: number[] }>(null, "&verified=1")).ids),
   });

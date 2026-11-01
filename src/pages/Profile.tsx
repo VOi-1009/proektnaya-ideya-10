@@ -1,3 +1,5 @@
+import FundRoundBadge from "@/components/crypto/FundRoundBadge";
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
@@ -218,7 +220,11 @@ const Profile = () => {
                   <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="font-display text-2xl sm:text-3xl text-white truncate">{profile.name || "Без имени"}</h1>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h1 className="font-display text-2xl sm:text-3xl text-white truncate">{profile.name || "Без имени"}</h1>
+                    <VerifiedBadge userId={profile.id} size={20} />
+                    <FundRoundBadge userId={profile.id} size={30} />
+                  </div>
                   {profile.headline && <div className="text-foreground mt-1">{profile.headline}</div>}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground text-sm mt-1">
                     {profile.email && (
@@ -245,7 +251,6 @@ const Profile = () => {
                     <TeamBadge team={profile.team?.team} />
                     <SupporterBadge no={profile.supporter} creator={profile.creator} />
                     <FounderBadge no={profile.founder} />
-                    <FundBadge userId={profile.id} />
                   </div>
                   <ContactLinks contacts={profile.contacts} className="mt-4" />
                   {profile.avatar && canEditAvatar && (

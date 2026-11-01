@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -122,6 +123,7 @@ const AiPostSocial = ({ post }: { post: AiPost }) => {
                     <button onClick={() => openMember(c.user.id)} className="text-white font-semibold hover:underline">
                       {c.user.name}
                     </button>
+                    <VerifiedBadge userId={c.user.id} />
                     {c.user.isAi && <BotBadge ai compact />}
                     <SupporterBadge no={c.user.supporter} creator={c.user.creator} compact />
                     <FundBadge userId={c.user.id} compact />

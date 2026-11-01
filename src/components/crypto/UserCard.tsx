@@ -1,5 +1,6 @@
 import FundBadge from "@/components/crypto/FundBadge";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -33,6 +34,7 @@ interface Props {
 
 const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete }: Props) => {
   const [amount, setAmount] = useState("");
+  const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
 
   const gift = async (value: number) => {
@@ -61,6 +63,21 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
       const { user } = await usersRequest<{ user: AdminUser }>(token, "", { action: "set-supporter", userId: u.id, on });
       onChange(user);
       toast({ title: on ? `${user.name} поддержал проект` : "Отметка снята", description: on && user.promo ? `Промокод: ${user.promo}` : undefined });
+    } catch (e) {
+      toast({ title: "Не получилось", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const setVerified = async (on: boolean) => {
+    if (!u) return;
+    setBusy(true);
+    try {
+      const { user } = await usersRequest<{ user: AdminUser }>(token, "", { action: "set-verified", userId: u.id, on });
+      onChange(user);
+      qc.invalidateQueries({ queryKey: ["verified-ids"] });
+      toast({ title: on ? `${user.name}: аккаунт подтверждён` : "Подтверждение снято" });
     } catch (e) {
       toast({ title: "Не получилось", description: (e as Error).message, variant: "destructive" });
     } finally {
@@ -109,6 +126,19 @@ const UserCard = ({ user: u, token, isMe, onClose, onChange, onStatus, onDelete 
               ))}
             </div>
             {u.bio && <p className="text-sm text-muted-foreground bg-rail/60 rounded-lg px-3 py-2">{u.bio}</p>}
+
+            {!u.isBot && (
+              <section className="bg-sky-500/5 border border-sky-500/20 rounded-lg p-3 flex items-center gap-3">
+                <span className="w-[18px] h-[18px] rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0">
+                  <Icon name="Check" size={12} strokeWidth={3.5} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-semibold">Аккаунт подтверждён</div>
+                  <div className="text-xs text-muted-foreground">Маленькая галочка рядом с ником на всём сайте</div>
+                </div>
+                <Switch checked={!!u.verified} disabled={busy} onCheckedChange={setVerified} />
+              </section>
+            )}
 
             {!u.isBot && (
               <section className="bg-emerald-400/5 border border-emerald-400/20 rounded-lg p-3 flex items-center gap-3">

@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const ProfileMiniCard = () => {
       >
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-white text-sm font-medium truncate">{user ? user.name || user.email : "Гость"}</span>
+          {user && <VerifiedBadge userId={user.id} />}
           {user && <StatusBadge level={user.level} compact />}
           {user && <SupporterBadge no={user.supporter} creator={user.creator} compact />}
           {user && <FounderBadge no={user.founder} compact />}

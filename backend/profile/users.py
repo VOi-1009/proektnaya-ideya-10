@@ -119,7 +119,7 @@ def handle_users(event: dict) -> dict:
                 me, is_admin = int(r[0]), bool(r[1])
 
         pts = points_sql(SCHEMA)
-        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no, u.supporter_no, u.is_creator, u.promo_code, u.is_ai FROM {SCHEMA}.users u"
+        base = f"SELECT u.id, u.name, u.email, {pts}, u.status_override, u.last_seen_at, u.created_at, u.is_bot, u.city, u.avatar_url, u.bonus_points, u.bio, u.favorite_coin, u.is_admin, u.founder_no, u.supporter_no, u.is_creator, u.promo_code, u.is_ai, u.is_verified FROM {SCHEMA}.users u"
 
         def to_user(r, full=False) -> dict:
             st = level_for(int(r[3]), r[4])
@@ -146,10 +146,14 @@ def handle_users(event: dict) -> dict:
                     "manual": st["manual"],
                     "lastSeen": r[5].isoformat() if r[5] else None,
                     "createdAt": r[6].isoformat(),
+                    "verified": bool(r[19]),
                 })
             return u
 
         if method == "GET":
+            if qs.get("verified") == "1":
+                cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_verified ORDER BY id LIMIT 5000")
+                return resp(200, {"ids": [int(r[0]) for r in cur.fetchall()]})
             if qs.get("admin") == "1":
                 if not is_admin:
                     return resp(403, {"error": "Доступ только для администратора"})
@@ -305,6 +309,14 @@ def handle_users(event: dict) -> dict:
             cur.execute(
                 f"UPDATE {SCHEMA}.users SET bonus_points = GREATEST(bonus_points + {amount}, 0) WHERE id = {uid} RETURNING id"
             )
+            if not cur.fetchone():
+                return resp(404, {"error": "Пользователь не найден"})
+            cur.execute(f"{base} WHERE u.id = {uid}")
+            return resp(200, {"user": to_user(cur.fetchone(), True)})
+
+        if action == "set-verified":
+            uid = int(body.get("userId", 0) or 0)
+            cur.execute(f"UPDATE {SCHEMA}.users SET is_verified = {'TRUE' if body.get('on') else 'FALSE'} WHERE id = {uid} RETURNING id")
             if not cur.fetchone():
                 return resp(404, {"error": "Пользователь не найден"})
             cur.execute(f"{base} WHERE u.id = {uid}")

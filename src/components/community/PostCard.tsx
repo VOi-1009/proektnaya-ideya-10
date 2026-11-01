@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import Icon from "@/components/ui/icon";
 import { COIN_META } from "@/lib/crypto";
 import { nameCls } from "@/lib/status";
@@ -28,6 +29,7 @@ const PostCard = ({ post: p, me, isAdmin, onReact, onFollow, onRemove, onAuthor 
           <button onClick={() => onAuthor(p.user.id)} className={`text-sm font-semibold hover:underline truncate ${nameCls(p.user.level)}`}>
             {p.user.name}
           </button>
+          <VerifiedBadge userId={p.user.id} size={14} />
           <FundRoundBadge userId={p.user.id} size={18} />
           <TeamBadge team={p.user.team} compact />
           <span className="text-muted-foreground text-xs">{p.user.title}</span>

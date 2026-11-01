@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import { Link } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
@@ -97,6 +98,7 @@ const Row = ({ r, me }: { r: RatingRow; me: boolean }) => {
           {r.city && <span className="truncate">{r.city}</span>}
         </div>
       </div>
+      <VerifiedBadge userId={r.id} className="hidden sm:inline-flex" />
       <SupporterBadge no={r.supporter} creator={r.creator} compact className="hidden sm:inline-flex" />
       <FounderBadge no={r.founder} compact className="hidden sm:inline-flex" />
       <FundBadge userId={r.id} compact className="hidden sm:inline-flex" />

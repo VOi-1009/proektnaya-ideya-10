@@ -1,3 +1,4 @@
+import VerifiedBadge from "@/components/crypto/VerifiedBadge";
 import FundBadge from "@/components/crypto/FundBadge";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const UserRow = ({ u, myId, busyId, setBot, setCardId, setLevel, setToDelete }: 
           <div className="flex items-center gap-2 min-w-0">
             {u.isAi ? <BotBadge ai compact /> : u.isBot && <Icon name="Bot" size={14} className="text-muted-foreground flex-shrink-0" />}
             <span className={`text-sm font-medium truncate group-hover:underline ${nameCls(u.level)}`}>{u.name}</span>
+            <VerifiedBadge userId={u.id} />
             <StatusBadge level={u.level} compact />
             <SupporterBadge no={u.supporter} creator={u.creator} compact />
             <FounderBadge no={u.founder} compact />
