@@ -9,6 +9,7 @@ import { useRadars } from "@/lib/radars";
 import HomeNav from "@/components/crypto/home/HomeNav";
 import HomeSidebar from "@/components/crypto/home/HomeSidebar";
 import HomeMain from "@/components/crypto/home/HomeMain";
+import HomeRightDrawer from "@/components/crypto/home/HomeRightDrawer";
 import { CHANNELS, PINNED } from "@/components/crypto/home/homeConfig";
 
 const Index = () => {
@@ -98,6 +99,7 @@ const Index = () => {
           />
         </div>
       </div>
+      <HomeRightDrawer />
     </div>
   );
 };
