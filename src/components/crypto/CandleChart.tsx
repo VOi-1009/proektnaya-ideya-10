@@ -42,6 +42,8 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
+  const lastC = data?.[data.length - 1];
+  const priceColor = lastC && lastC.c < lastC.o ? "#EA3943" : "#22C55E";
   const ivMs = INTERVALS.find((i) => i.v === interval)?.ms ?? 3_600_000;
 
   total.current = data?.length ?? 0;
@@ -280,6 +282,26 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
               {on.bb && <RLine type="monotone" dataKey="bbL" stroke="#A78BFA" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} activeDot={false} />}
               {on.ma20 && <RLine type="monotone" dataKey="ma20" stroke="#FACC15" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
               {on.ma50 && <RLine type="monotone" dataKey="ma50" stroke="#38BDF8" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
+              {price > 0 && (
+                <ReferenceLine
+                  y={price}
+                  ifOverflow="hidden"
+                  stroke={priceColor}
+                  strokeDasharray="2 3"
+                  strokeWidth={1}
+                  label={(lp: { viewBox?: { x: number; y: number; width: number } }) => {
+                    const vb = lp.viewBox;
+                    if (!vb) return <g />;
+                    const x = vb.x + vb.width;
+                    return (
+                      <g>
+                        <rect x={x} y={vb.y - 9} width={72} height={18} rx={3} fill={priceColor} />
+                        <text x={x + 36} y={vb.y + 4} textAnchor="middle" fontSize={11} fontWeight={600} fill="#fff" fontFamily="monospace">{fmtPrice(price, coinId)}</text>
+                      </g>
+                    );
+                  }}
+                />
+              )}
               {lines.map((l, i) => (
                 <ReferenceLine key={i} y={l.price} ifOverflow="hidden" stroke={l.color} strokeDasharray="4 4" label={{ value: l.label, fill: l.color, fontSize: 10, position: "insideTopLeft" }} />
               ))}
