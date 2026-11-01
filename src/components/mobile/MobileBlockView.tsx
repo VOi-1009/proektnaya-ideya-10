@@ -6,6 +6,7 @@ import MarketSummary from "@/components/crypto/home/MarketSummary";
 import { useNavigate } from "@/lib/router-compat";
 import BullBearMini from "./BullBearMini";
 import MobileTradesTicker from "./MobileTradesTicker";
+import MobileMyCoins from "./MobileMyCoins";
 import WalletView from "./WalletView";
 import TradingChannel from "@/components/crypto/channels/TradingChannel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,6 +65,7 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
       </div>
     );
   }
+  if (b.kind === "my_coins") return <MobileMyCoins />;
   if (b.kind === "trades") {
     return <MobileTradesTicker />;
   }
