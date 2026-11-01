@@ -1,4 +1,3 @@
-import FundBadge from "@/components/crypto/FundBadge";
 import FundRoundBadge from "@/components/crypto/FundRoundBadge";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -69,7 +68,6 @@ const AuthorPanel = ({ author: a, loading, loggedIn, filterOn, onFilter, onFollo
               <TeamBadge team={a.team} compact />
               <SupporterBadge no={a.supporter} creator={a.creator} compact />
               <FounderBadge no={a.founder} compact />
-              <FundBadge userId={a.id} compact />
               <span className={`text-[11px] ${a.online ? "text-white" : "text-muted-foreground"}`}>{a.online ? "в сети" : "не в сети"}</span>
             </div>
             {a.headline && <p className="text-sm text-white mt-2">{a.headline}</p>}
