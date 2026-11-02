@@ -20,8 +20,8 @@ const TkaWalletCard = ({ token }: { token: string | null }) => {
         <div className="space-y-3">
           <div>
             <div className="font-display text-3xl text-white leading-none">{tka(data.total)}</div>
-            <div className="text-xs text-muted-foreground mt-1.5">
-              на бирже <span className="text-white font-mono">{(data.usdt?.total ?? 0).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT</span> (виртуальные)
+            <div className="text-sm text-muted-foreground mt-1.5">
+              на бирже <span className="text-white font-mono text-base">{(data.usdt?.total ?? 0).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT</span> (виртуальные)
             </div>
           </div>
           <div>
