@@ -112,7 +112,7 @@ const BullBearMini = () => {
         </div>
         {shown !== null && (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-2">
               <img src="/coins/bitcoin.png" alt="Bitcoin" width={32} height={32} className="w-8 h-8 rounded-full flex-shrink-0" />
               <span className="font-mono font-bold text-3xl leading-tight text-white">BTC</span>
             </div>
