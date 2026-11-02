@@ -201,7 +201,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   }, [full]);
 
   return (
-    <div className={full ? "fixed inset-0 z-[100] bg-[#080A0D] p-3 sm:p-4 overflow-y-auto flex flex-col" : "rounded-xl bg-[#080A0D] p-2"}>
+    <div className={full ? "fixed inset-0 z-[100] bg-[#080A0D] p-3 sm:p-4 overflow-y-auto flex flex-col" : "rounded-xl bg-[#22262C] p-2"}>
       <ChartToolbar
         coinId={coinId}
         price={price}
