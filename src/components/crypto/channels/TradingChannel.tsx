@@ -173,8 +173,8 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
     return (
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
-          <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
-          <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
+          <Stat label="Свободно" value={st ? usd(st.balance) : "—"} tint="from-primary/20" />
+          <Stat label="Капитал" value={st ? usd(st.equity) : "—"} tint="from-accent/20" />
         </div>
       <MobileChart
           coinId={coinId}
@@ -329,8 +329,8 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
   );
 };
 
-const Stat = ({ label, value, sub, cls = "" }: { label: string; value: string; sub?: string; cls?: string }) => (
-  <div className="rounded-lg border border-border bg-card px-2.5 py-1.5 min-w-0">
+const Stat = ({ label, value, sub, cls = "", tint }: { label: string; value: string; sub?: string; cls?: string; tint?: string }) => (
+  <div className={`rounded-lg border border-border bg-card px-2.5 py-1.5 min-w-0 ${tint ? `bg-gradient-to-l ${tint} to-card` : ""}`}>
     <div className="text-[11px] leading-tight text-muted-foreground truncate">{label}</div>
     <div className="flex items-baseline gap-1.5 flex-wrap">
       <span className={`font-display text-sm sm:text-base leading-tight text-white ${cls}`}>{value}</span>
