@@ -6,7 +6,7 @@ import func2url from "../../../backend/func2url.json";
 
 interface Stats { trades: number; wins: number; winRate: number; avgPnl: number; avgPct: number; best: number; bestPct: number; worst: number; worstPct: number; totalPnl: number; curve: { t: string; v: number }[] }
 
-import { tka as usd } from "@/lib/tka";
+import { usd } from "./trading/shared";
 const tone = (v: number) => (v >= 0 ? "text-[#22C55E]" : "text-[#EA3943]");
 
 const Cell = ({ label, value, sub, cls = "text-white" }: { label: string; value: string; sub?: string; cls?: string }) => (
