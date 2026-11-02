@@ -14,7 +14,6 @@ import ExchangeCard from "../trading/ExchangeCard";
 import FundCard from "../trading/FundCard";
 import AiTraderCard from "../trading/AiTraderCard";
 import TopTradesFeed from "../trading/TopTradesFeed";
-import VirtualNote from "../trading/VirtualNote";
 import { EX_DEFAULT, useExchangeSettings } from "@/lib/fund";
 import TradeTabs from "../trading/TradeTabs";
 import MobileChart from "../trading/MobileChart";
@@ -173,7 +172,6 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
   if (compact) {
     return (
       <div className="space-y-3">
-        <VirtualNote variant="banner" />
         <div className="grid grid-cols-2 gap-2">
           <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
           <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
@@ -234,7 +232,6 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
 
   return (
     <div className="space-y-4 pb-4">
-      <VirtualNote variant="banner" />
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
         <Stat label="Свободно" value={st ? usd(st.balance) : "—"} />
         <Stat label="В сделках" value={st ? usd(st.locked) : "—"} />
