@@ -176,9 +176,9 @@ export function useMarkets() {
         return { coins: visible([...fallbackCoins().filter((c) => !c.kind), ...(await listed), ...(await commodities)]), live: false };
       }
     },
-    refetchInterval: 3 * 60_000,
+    refetchInterval: 5 * 60_000,
     refetchIntervalInBackground: false,
-    staleTime: 2 * 60_000,
+    staleTime: 4 * 60_000,
   });
 }
 

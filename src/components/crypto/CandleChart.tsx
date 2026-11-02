@@ -30,7 +30,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   const [hoverY, setHoverY] = useState<number | null>(null);
   const MIN = 10;
   const { data: line } = useChart(coinId, days, price);
-  const { data, isLoading } = useQuery<Candle[]>({
+  const { data: raw, isLoading } = useQuery<Candle[]>({
     queryKey: ["klines", coinId, interval, line?.length ?? 0, !!token],
     queryFn: async () => {
       try {
@@ -43,6 +43,14 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
+  const data = useMemo(() => {
+    if (!raw?.length || !(price > 0)) return raw;
+    const last = raw[raw.length - 1];
+    if (Math.abs(price / last.c - 1) > 0.2) return raw;
+    const h = Math.max(last.h, price);
+    const l = Math.min(last.l, price);
+    return [...raw.slice(0, -1), { ...last, c: price, h, l, range: [l, h] as [number, number] }];
+  }, [raw, price]);
   const lastC = data?.[data.length - 1];
   const priceColor = lastC && lastC.c < lastC.o ? "#EA3943" : "#22C55E";
   const ivMs = INTERVALS.find((i) => i.v === interval)?.ms ?? 3_600_000;

@@ -97,7 +97,7 @@ def resp(status, body):
 
 def okx_tickers():
     now = time.time()
-    if _okx["data"] and now - _okx["at"] < 20:
+    if _okx["data"] and now - _okx["at"] < 3:
         return _okx["data"]
     try:
         rows = http_json("https://www.okx.com/api/v5/market/tickers?instType=SPOT").get("data") or []
@@ -119,7 +119,7 @@ def okx_tickers():
 
 def prices():
     now = time.time()
-    if _cache["data"] and now - _cache["at"] < 20:
+    if _cache["data"] and now - _cache["at"] < 3:
         return _cache["data"]
     data = {coin: t["price"] for coin, t in okx_tickers().items()}
     missing = [c for c in COINS if c not in data]
@@ -2143,6 +2143,8 @@ def handler(event, context):
                 print("listings run error:", e)
             checked, pushed = tick(cur, px)
             return resp(200, {"checked": checked, "pushed": pushed, "ai": ai_trader_step(cur, px)})
+        if method == "GET" and action == "prices":
+            return resp(200, {"prices": with_listings(cur, prices())})
         if method == "GET" and action == "mobile_settings":
             return resp(200, {"settings": mobile_settings(cur), "sections": MOBILE_SECTIONS})
         if method == "GET" and action == "graphics_settings":

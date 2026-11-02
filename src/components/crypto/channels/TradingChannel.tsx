@@ -62,6 +62,14 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
     refetchInterval: 60_000,
   });
 
+  const { data: fast } = useQuery<{ prices: Record<string, number> }>({
+    queryKey: ["trading-prices"],
+    queryFn: () => call("GET", "?action=prices"),
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
+    staleTime: 4_000,
+  });
+
   const myCap = Math.min(exSettings.maxLeverage, exSettings.myMaxLeverage ?? exSettings.maxLeverage);
   const locked = exSettings.lockedCoins ?? {};
 
@@ -75,7 +83,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
     if (next) setCoinId(next.id);
   }, [exSettings.disabledCoins, locked, coinId, coins]);
 
-  const livePrice = st?.prices[coinId] ?? coins.find((c) => c.id === coinId)?.current_price ?? 0;
+  const livePrice = fast?.prices[coinId] ?? st?.prices[coinId] ?? coins.find((c) => c.id === coinId)?.current_price ?? 0;
 
   useEffect(() => {
     if (mode === "limit" && !limit && livePrice) setLimit(String(livePrice));
