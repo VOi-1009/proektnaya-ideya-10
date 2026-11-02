@@ -12,6 +12,8 @@ import ReferralCard from "@/components/crypto/referral/ReferralCard";
 import TournamentsChannel from "@/components/crypto/channels/TournamentsChannel";
 import WalletView from "./WalletView";
 import TradingChannel from "@/components/crypto/channels/TradingChannel";
+import StakingCard from "@/components/crypto/trading/StakingCard";
+import PremarketCard from "@/components/crypto/PremarketCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MarketSummaryBlock = () => {
@@ -68,6 +70,8 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
       </div>
     );
   }
+  if (b.kind === "staking") return <StakingCard />;
+  if (b.kind === "premarket") return <PremarketCard />;
   if (b.kind === "my_coins") return <MobileMyCoins />;
   if (b.kind === "wallet_mini") return <MobileWalletMini />;
   if (b.kind === "referral") return <ReferralCard compact donate />;

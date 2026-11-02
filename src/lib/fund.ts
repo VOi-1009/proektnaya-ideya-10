@@ -293,7 +293,7 @@ export interface MobileTab {
 export interface MobileBlock {
   id: string;
   tab: string;
-  kind: "empty" | "text" | "banner" | "link" | "market_summary" | "bullbear" | "exchange" | "wallet" | "image" | "trades" | "my_coins" | "wallet_mini" | "referral" | "tournaments";
+  kind: "empty" | "text" | "banner" | "link" | "market_summary" | "bullbear" | "exchange" | "wallet" | "image" | "trades" | "my_coins" | "wallet_mini" | "referral" | "tournaments" | "staking" | "premarket";
   title: string;
   text: string;
   url: string;
