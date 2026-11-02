@@ -31,7 +31,7 @@ def iso(dt) -> str:
 COLS = (
     "id, slug, symbol, name, description, color, icon_url, status, listing_at, start_price, price, day_open, day_open_at, "
     "high_24h, low_24h, volume_24h, total_supply, volatility, drift, liquidity, spread_pct, tick_size, max_leverage, min_level, "
-    "allow_short, min_margin, max_margin, fee_percent, anchor_coin, anchor_beta, halted, sort, last_tick_at"
+    "allow_short, min_margin, max_margin, fee_percent, anchor_coin, anchor_beta, halted, sort, last_tick_at, funding_rate"
 )
 
 
@@ -42,7 +42,7 @@ def row(r) -> dict:
         "high24h": f(r[13]), "low24h": f(r[14]), "volume24h": f(r[15]), "totalSupply": f(r[16]), "volatility": f(r[17]), "drift": f(r[18]),
         "liquidity": f(r[19]), "spreadPct": f(r[20]), "tickSize": f(r[21]), "maxLeverage": int(r[22]), "minLevel": int(r[23]),
         "allowShort": bool(r[24]), "minMargin": f(r[25]), "maxMargin": f(r[26]), "feePercent": f(r[27], -1), "anchorCoin": r[28],
-        "anchorBeta": f(r[29], 1), "halted": bool(r[30]), "sort": int(r[31]), "lastTickAt": iso(r[32]),
+        "anchorBeta": f(r[29], 1), "halted": bool(r[30]), "sort": int(r[31]), "lastTickAt": iso(r[32]), "fundingRate": f(r[33]),
     }
 
 
@@ -424,6 +424,7 @@ def clean_input(body: dict, creating: bool) -> dict:
         "min_margin": max(0.01, f(body.get("minMargin"), 1.0)),
         "max_margin": max(0.0, f(body.get("maxMargin"))),
         "fee_percent": f(body.get("feePercent"), -1),
+        "funding_rate": max(-1.0, min(f(body.get("fundingRate")), 1.0)),
         "anchor_coin": str(body.get("anchorCoin") or "")[:40],
         "anchor_beta": max(0.0, min(f(body.get("anchorBeta"), 1.0), 5.0)),
         "sort": int(f(body.get("sort"))),

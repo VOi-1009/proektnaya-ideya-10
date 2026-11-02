@@ -39,7 +39,7 @@ const toServer = (v: string) => (v ? new Date(v).toISOString().slice(0, 19) : ""
 const EMPTY = {
   name: "", symbol: "", description: "", color: "#F97316", startPrice: "1", totalSupply: "1000000000", status: "draft", listingAt: "",
   volatility: "1.5", drift: "0", liquidity: "100000", spreadPct: "0.2", tickSize: "0", maxLeverage: "5", minLevel: "1", allowShort: true,
-  minMargin: "1", maxMargin: "0", feePercent: "-1", anchorCoin: "", anchorBeta: "1", sort: "0",
+  minMargin: "1", maxMargin: "0", feePercent: "-1", fundingRate: "0", anchorCoin: "", anchorBeta: "1", sort: "0",
 };
 
 const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
@@ -98,7 +98,7 @@ const ListingManager = ({ token }: { token: string | null }) => {
   const payload = () => ({
     ...form, startPrice: Number(form.startPrice), totalSupply: Number(form.totalSupply), volatility: Number(form.volatility), drift: Number(form.drift),
     liquidity: Number(form.liquidity), spreadPct: Number(form.spreadPct), tickSize: Number(form.tickSize), maxLeverage: Number(form.maxLeverage),
-    minLevel: Number(form.minLevel), minMargin: Number(form.minMargin), maxMargin: Number(form.maxMargin), feePercent: Number(form.feePercent),
+    minLevel: Number(form.minLevel), minMargin: Number(form.minMargin), maxMargin: Number(form.maxMargin), feePercent: Number(form.feePercent), fundingRate: Number(form.fundingRate),
     anchorBeta: Number(form.anchorBeta), sort: Number(form.sort), listingAt: toServer(form.listingAt),
     iconData: icon?.data, iconType: icon?.type, removeIcon: iconRemoved,
   });
@@ -112,7 +112,7 @@ const ListingManager = ({ token }: { token: string | null }) => {
       name: l.name, symbol: l.symbol, description: l.description, color: l.color, startPrice: String(l.startPrice), totalSupply: String(l.totalSupply),
       status: l.status, listingAt: localInput(l.listingAt), volatility: String(l.volatility), drift: String(l.drift), liquidity: String(l.liquidity),
       spreadPct: String(l.spreadPct), tickSize: String(l.tickSize), maxLeverage: String(l.maxLeverage), minLevel: String(l.minLevel), allowShort: l.allowShort,
-      minMargin: String(l.minMargin), maxMargin: String(l.maxMargin), feePercent: String(l.feePercent), anchorCoin: l.anchorCoin, anchorBeta: String(l.anchorBeta), sort: String(l.sort),
+      minMargin: String(l.minMargin), maxMargin: String(l.maxMargin), feePercent: String(l.feePercent), fundingRate: String(l.fundingRate ?? 0), anchorCoin: l.anchorCoin, anchorBeta: String(l.anchorBeta), sort: String(l.sort),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -190,6 +190,7 @@ const ListingManager = ({ token }: { token: string | null }) => {
             <Field label="Ставка от, USDT"><input className={inputCls} type="number" min={0} step="any" value={form.minMargin} onChange={(e) => set("minMargin", e.target.value)} /></Field>
             <Field label="Ставка до, USDT" hint="0 — без ограничения"><input className={inputCls} type="number" min={0} step="any" value={form.maxMargin} onChange={(e) => set("maxMargin", e.target.value)} /></Field>
             <Field label="Комиссия, %" hint="-1 — как на всей бирже"><input className={inputCls} type="number" min={-1} max={5} step="any" value={form.feePercent} onChange={(e) => set("feePercent", e.target.value)} /></Field>
+            <Field label="Ставка финансирования, % / 8ч" hint="Плюс: лонги платят шортам, минус: наоборот. 0 — выключено"><input className={inputCls} type="number" min={-1} max={1} step="any" value={form.fundingRate} onChange={(e) => set("fundingRate", e.target.value)} /></Field>
             <label className="flex items-center gap-2 pt-6 text-sm text-white cursor-pointer">
               <Switch checked={form.allowShort} onCheckedChange={(v) => set("allowShort", v)} /> Разрешить шорт
             </label>

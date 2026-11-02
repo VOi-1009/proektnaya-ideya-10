@@ -218,11 +218,11 @@ def listing_admin_do(cur, uid, act, body):
             cur.execute(
                 f"INSERT INTO {SCHEMA}.listings (slug, symbol, name, description, color, icon_url, status, listing_at, start_price, price, day_open, day_open_at, "
                 f"high_24h, low_24h, total_supply, volatility, drift, liquidity, spread_pct, tick_size, max_leverage, min_level, allow_short, min_margin, "
-                f"max_margin, fee_percent, anchor_coin, anchor_beta, sort, created_by, last_tick_at) VALUES ('{d['slug']}', '{d['symbol']}', '{q(d['name'])}', "
+                f"max_margin, fee_percent, funding_rate, anchor_coin, anchor_beta, sort, created_by, last_tick_at) VALUES ('{d['slug']}', '{d['symbol']}', '{q(d['name'])}', "
                 f"'{q(d['description'])}', '{d['color']}', '{q(icon or '')}', '{d['status']}', {at}, {d['start_price']}, {d['start_price']}, {d['start_price']}, "
                 f"NOW(), {d['start_price']}, {d['start_price']}, {d['total_supply']}, {d['volatility']}, {d['drift']}, {d['liquidity']}, {d['spread_pct']}, "
                 f"{d['tick_size']}, {d['max_leverage']}, {d['min_level']}, {'TRUE' if d['allow_short'] else 'FALSE'}, {d['min_margin']}, {d['max_margin']}, "
-                f"{d['fee_percent']}, '{q(d['anchor_coin'])}', {d['anchor_beta']}, {d['sort']}, {int(uid)}, NOW()) RETURNING id"
+                f"{d['fee_percent']}, {d['funding_rate']}, '{q(d['anchor_coin'])}', {d['anchor_beta']}, {d['sort']}, {int(uid)}, NOW()) RETURNING id"
             )
             new_id = cur.fetchone()[0]
             if running:
@@ -241,7 +241,7 @@ def listing_admin_do(cur, uid, act, body):
                 f"UPDATE {SCHEMA}.listings SET name = '{q(d['name'])}', description = '{q(d['description'])}', color = '{d['color']}', listing_at = {at}, "
                 f"total_supply = {d['total_supply']}, volatility = {d['volatility']}, drift = {d['drift']}, liquidity = {d['liquidity']}, spread_pct = {d['spread_pct']}, "
                 f"tick_size = {d['tick_size']}, max_leverage = {d['max_leverage']}, min_level = {d['min_level']}, allow_short = {'TRUE' if d['allow_short'] else 'FALSE'}, "
-                f"min_margin = {d['min_margin']}, max_margin = {d['max_margin']}, fee_percent = {d['fee_percent']}, anchor_coin = '{q(d['anchor_coin'])}', "
+                f"min_margin = {d['min_margin']}, max_margin = {d['max_margin']}, fee_percent = {d['fee_percent']}, funding_rate = {d['funding_rate']}, anchor_coin = '{q(d['anchor_coin'])}', "
                 f"anchor_beta = {d['anchor_beta']}, sort = {d['sort']}{icon_sql}{price_sql} WHERE id = {lid}"
             )
         ls.drop_cache()
@@ -675,7 +675,26 @@ def daily_state(cur, uid):
     }
 
 
+def apply_funding(cur, user_id, px):
+    cur.execute(f"SELECT slug, funding_rate FROM {SCHEMA}.listings WHERE funding_rate <> 0 AND status IN ('trading', 'halted')")
+    rates = {r[0]: float(r[1]) for r in cur.fetchall()}
+    if not rates:
+        return
+    cur.execute(f"SELECT id, coin_id, side, size, COALESCE(funding_at, opened_at), EXTRACT(EPOCH FROM (NOW() - COALESCE(funding_at, opened_at))) FROM {SCHEMA}.paper_positions WHERE user_id = {user_id} AND status = 'open'")
+    for pid, coin, side, size, base, secs in cur.fetchall():
+        rate = rates.get(coin)
+        p = px.get(coin)
+        n = int(float(secs) // 28800)
+        if not rate or not p or n < 1:
+            continue
+        pay = n * rate / 100 * float(size) * p
+        pay = pay if side == "long" else -pay
+        cur.execute(f"UPDATE {SCHEMA}.paper_positions SET funding_at = '{base.isoformat()}'::timestamp + INTERVAL '{n * 8} hours' WHERE id = {pid}")
+        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = GREATEST(balance - {pay}, 0) WHERE user_id = {user_id}")
+
+
 def process(cur, user_id, px):
+    apply_funding(cur, user_id, px)
     cur.execute(f"SELECT id, coin_id, side, leverage, margin, limit_price, sl, tp, fee FROM {SCHEMA}.paper_orders WHERE user_id = {user_id} AND status = 'pending'")
     for oid, coin, side, lev, margin, lim, osl, otp, ofee in cur.fetchall():
         p = px.get(coin)

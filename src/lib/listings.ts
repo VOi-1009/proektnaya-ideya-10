@@ -31,6 +31,7 @@ export interface ListingItem {
   minMargin: number;
   maxMargin: number;
   feePercent: number;
+  fundingRate?: number;
   anchorCoin: string;
   anchorBeta: number;
   halted: boolean;
