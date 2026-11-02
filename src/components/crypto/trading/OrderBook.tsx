@@ -17,11 +17,11 @@ const Side = ({ rows, coinId, color, max, reverse }: { rows: number[][]; coinId:
   </div>
 );
 
-const OrderBook = ({ slug }: { slug: string }) => {
+const OrderBook = ({ slug, compact }: { slug: string; compact?: boolean }) => {
   const { data } = useListingBook(slug);
   if (!data) return <Skeleton className="h-64 w-full bg-rail" />;
-  const asks = data.asks.slice(0, 8);
-  const bids = data.bids.slice(0, 8);
+  const asks = data.asks.slice(0, compact ? 5 : 8);
+  const bids = data.bids.slice(0, compact ? 5 : 8);
   const max = Math.max(asks[asks.length - 1]?.[2] ?? 1, bids[bids.length - 1]?.[2] ?? 1, 1);
   const spread = data.bestAsk && data.bestBid ? ((data.bestAsk - data.bestBid) / data.mid) * 100 : 0;
 
@@ -38,7 +38,7 @@ const OrderBook = ({ slug }: { slug: string }) => {
         <span className="text-[10px] text-muted-foreground">разница {spread.toFixed(2).replace(".", ",")}%</span>
       </div>
       <Side rows={bids} coinId={slug} color="#16C784" max={max} />
-      {data.trades.length > 0 && (
+      {!compact && data.trades.length > 0 && (
         <div className="pt-2">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 mb-1">Последние сделки</div>
           {data.trades.slice(0, 8).map((t, i) => (

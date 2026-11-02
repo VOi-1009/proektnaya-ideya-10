@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { Coin, fmtPrice, isListed } from "@/lib/crypto";
 import OrderBook from "./OrderBook";
 import { EX_DEFAULT, tradeFee, useExchangeSettings } from "@/lib/fund";
+import { useState } from "react";
 import { Send, State, name, usd } from "./shared";
 
 const riskOf = (l: number) =>
@@ -60,143 +61,105 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
   const sideColor = side === "long" ? "#22C55E" : "#EA3943";
   const volume = m * leverage;
 
+  const [more, setMore] = useState(false);
+  const listed = isListed(coinId);
+
   return (
-        <section className="rounded-xl border border-border bg-card p-3 space-y-2 lg:sticky lg:top-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
-          <h3 className="font-display text-sm text-white flex items-center gap-2">
-            <Icon name="Flame" size={15} className="text-primary" /> Новая сделка
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-accent flex items-center gap-1">USDT <span className="normal-case tracking-normal text-muted-foreground">(виртуальные)</span></span>
-          </h3>
-          <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
-            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {coins.filter((c) => !c.kind && !ex.disabledCoins.includes(c.id)).map((c) => (
-                <SelectItem key={c.id} value={c.id} disabled={!!lockedCoins[c.id] || !!ex.listed?.[c.id]?.halted}>
-                  {c.symbol.toUpperCase()} · {c.listing ? c.name : name(c.id)}{c.listing ? " · NEW" : ""}
-                  {ex.listed?.[c.id]?.halted ? " · торги остановлены" : lockedCoins[c.id] ? ` · со статуса «${titles[lockedCoins[c.id] - 1] ?? lockedCoins[c.id]}»` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="text-xs text-muted-foreground">Курс сейчас: <span className="text-accent font-mono">{livePrice ? fmtPrice(livePrice, coinId) : "—"}</span></div>
-          {listedCfg && (
-            <div className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[11px] leading-snug text-foreground space-y-0.5">
-              <div className="font-semibold text-primary">Новая монета: условия</div>
-              <div>Плечо до x{listedCfg.maxLeverage} · ставка от {listedCfg.minMargin} {listedCfg.maxMargin ? `до ${listedCfg.maxMargin}` : ""} USDT{!listedCfg.allowShort ? " · шорт недоступен" : ""}</div>
-              <div className="text-muted-foreground">Сделка исполняется по стакану заявок: крупная сумма берёт заявки по всё худшим ценам, поэтому средняя цена входа может отличаться от курса.</div>
-            </div>
-          )}
-          {isListed(coinId) && <OrderBook slug={coinId} />}
+    <div className="grid grid-cols-[1.2fr_1fr] gap-2 items-start">
+      <section className="rounded-xl border border-border bg-card p-2.5 space-y-2 min-w-0">
+        <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
+          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {coins.filter((c) => !c.kind && !ex.disabledCoins.includes(c.id)).map((c) => (
+              <SelectItem key={c.id} value={c.id} disabled={!!lockedCoins[c.id] || !!ex.listed?.[c.id]?.halted}>
+                {c.symbol.toUpperCase()} · {c.listing ? c.name : name(c.id)}{c.listing ? " · NEW" : ""}
+                {ex.listed?.[c.id]?.halted ? " · торги остановлены" : lockedCoins[c.id] ? ` · со статуса «${titles[lockedCoins[c.id] - 1] ?? lockedCoins[c.id]}»` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+          <span>Курс</span>
+          <span className="text-accent font-mono">{livePrice ? fmtPrice(livePrice, coinId) : "—"}</span>
+        </div>
 
-          <div className="grid grid-cols-2 gap-1.5">
-            <Button size="sm" variant={side === "long" ? "default" : "outline"} onClick={() => setSide("long")} className={side === "long" ? "h-8 bg-[#22C55E] hover:bg-[#22C55E]/90 text-black shadow-[0_0_14px_rgba(34,197,94,0.45)]" : "h-8 border-[#22C55E]/40 text-[#22C55E] hover:bg-[#22C55E]/10 hover:text-[#22C55E]"}>
-              <Icon name="TrendingUp" size={14} className="mr-1" /> Лонг
-            </Button>
-            <Button size="sm" variant={side === "short" ? "default" : "outline"} onClick={() => setSide("short")} className={side === "short" ? "h-8 bg-[#EA3943] hover:bg-[#EA3943]/90 text-white shadow-[0_0_14px_rgba(234,57,67,0.45)]" : "h-8 border-[#EA3943]/40 text-[#EA3943] hover:bg-[#EA3943]/10 hover:text-[#EA3943]"}>
-              <Icon name="TrendingDown" size={14} className="mr-1" /> Шорт
-            </Button>
+        <div className="grid grid-cols-2 gap-1">
+          <Button size="sm" onClick={() => setSide("long")} className={`h-8 ${side === "long" ? "bg-[#22C55E] hover:bg-[#22C55E]/90 text-black" : "bg-rail text-[#22C55E] hover:bg-rail"}`}>Лонг</Button>
+          <Button size="sm" onClick={() => setSide("short")} className={`h-8 ${side === "short" ? "bg-[#EA3943] hover:bg-[#EA3943]/90 text-white" : "bg-rail text-[#EA3943] hover:bg-rail"}`}>Шорт</Button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-1">
+          <Button size="sm" className="h-7 text-xs" variant={mode === "market" ? "secondary" : "ghost"} onClick={() => setMode("market")}>Рынок</Button>
+          <Button size="sm" className="h-7 text-xs" variant={mode === "limit" ? "secondary" : "ghost"} onClick={() => setMode("limit")}>Лимит</Button>
+        </div>
+
+        {mode === "limit" && (
+          <Input type="number" className="h-8 text-sm" placeholder="Цена, $" value={limit} onChange={(e) => setLimit(e.target.value)} />
+        )}
+
+        <div className="space-y-1">
+          <Input type="number" className="h-8 text-sm" placeholder="Ставка, USDT" value={margin} onChange={(e) => setMargin(e.target.value)} />
+          <div className="grid grid-cols-3 gap-1">
+            {[25, 50, 100].map((p) => (
+              <Button key={p} size="sm" variant="ghost" className="h-6 px-1 text-[11px] bg-rail/60" onClick={() => st && setMargin(String(Math.floor((st.balance * p) / 100)))}>{p}%</Button>
+            ))}
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-1.5">
-            <Button size="sm" className="h-7" variant={mode === "market" ? "secondary" : "ghost"} onClick={() => setMode("market")}>По рынку</Button>
-            <Button size="sm" className="h-7" variant={mode === "limit" ? "secondary" : "ghost"} onClick={() => setMode("limit")}>Лимитный</Button>
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold" style={{ color: risk.color }}>Плечо</span>
+            <span className="font-display text-sm leading-none" style={{ color: risk.color }}>x{leverage}</span>
           </div>
+          <Slider className="mt-1.5" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={cap} step={1} value={[Math.min(leverage, cap)]} onValueChange={(v) => setLeverage(v[0])} />
+        </div>
 
-          {mode === "limit" && (
-            <div>
-              <label className="text-xs font-semibold text-accent">Ловим цену, $</label>
-              <Input type="number" className="h-8 text-sm" value={limit} onChange={(e) => setLimit(e.target.value)} />
-              <p className="text-xs text-muted-foreground mt-1">{side === "long" ? "Ждём просадку: лонг сработает, как только курс опустится до этой цены." : "Ждём отскок: шорт сработает, как только курс поднимется до этой цены."}</p>
-            </div>
-          )}
-
-          <div>
-            <label className="text-xs font-semibold text-accent flex items-center gap-1">Ставка, USDT <span className="font-normal text-muted-foreground">(виртуальные)</span></label>
-            <div className="flex gap-1.5">
-              <Input type="number" className="h-8 text-sm flex-1 min-w-0" value={margin} onChange={(e) => setMargin(e.target.value)} />
-              <div className="flex gap-0.5">
-              {[25, 50, 100].map((p) => (
-                <Button key={p} size="sm" variant="ghost" className="h-8 px-1.5 text-xs" onClick={() => st && setMargin(String(Math.floor((st.balance * p) / 100)))}>{p}%</Button>
-              ))}
-              </div>
-            </div>
+        <button type="button" onClick={() => setMore((v) => !v)} className="w-full flex items-center justify-between text-[11px] text-muted-foreground">
+          <span>Стоп и тейк</span>
+          <Icon name={more ? "ChevronUp" : "ChevronDown"} size={13} />
+        </button>
+        {more && (
+          <div className="grid grid-cols-2 gap-1">
+            <Input type="number" className="h-8 text-xs" placeholder="Стоп, $" value={sl} onChange={(e) => setSl(e.target.value)} />
+            <Input type="number" className="h-8 text-xs" placeholder="Тейк, $" value={tp} onChange={(e) => setTp(e.target.value)} />
           </div>
+        )}
 
-          <div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold" style={{ color: risk.color }}>Плечо · {risk.label}</label>
-              <span className="font-display text-base leading-none" style={{ color: risk.color, textShadow: `0 0 12px ${risk.color}66` }}>x{leverage}</span>
-            </div>
-            <Slider className="mt-1.5" style={{ "--primary": risk.hsl } as React.CSSProperties} min={1} max={cap} step={1} value={[Math.min(leverage, cap)]} onValueChange={(v) => setLeverage(v[0])} />
-            <div className="flex justify-between mt-1">
-              {LEVERAGE_MARKS.filter((l) => l <= cap).map((l) => (
-                <button key={l} type="button" onClick={() => setLeverage(l)} className={`text-[10px] font-mono ${leverage === l ? "text-white" : "text-muted-foreground hover:text-white"}`}>
-                  x{l}
-                </button>
-              ))}
-            </div>
-            {leverage >= 10 && (
-              <p className="text-[11px] leading-snug mt-1 font-medium" style={{ color: risk.color }}>
-                {leverage >= 75 ? "Ва-банк! Один неверный тик — и ставка сгорит: хватит движения против вас всего на " : leverage >= 40 ? "Кровь кипит: ликвидация уже при движении против вас на " : "Риск растёт: ликвидация при движении против вас на "}
-                {(95 / leverage).toFixed(1)}%.
-              </p>
-            )}
+        {liqPrice > 0 && (
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-[#EA3943]">Ликвидация</span>
+            <span className="font-mono text-white">{fmtPrice(liqPrice, coinId)}</span>
           </div>
-          {ex.levelRules && nextTier && (
-            <p className="text-[10px] text-muted-foreground -mt-1 leading-snug">
-              Ваше плечо до x{cap}. До x{nextTier[1]} — со статуса «{titles[nextTier[0] - 1] ?? nextTier[0]}».
-            </p>
-          )}
-
-          {liqPrice > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2.5 py-1.5 text-xs">
-              <span className="flex items-center gap-1.5 text-[#EA3943] font-semibold"><Icon name="Skull" size={14} fallback="Flame" /> Цена ликвидации</span>
-              <span className="font-mono text-sm text-white">{fmtPrice(liqPrice, coinId)} <span className="text-[#EA3943]">({side === "long" ? "−" : "+"}{(95 / leverage).toFixed(1)}%)</span></span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-1.5">
-            <div>
-              <label className="text-xs font-semibold text-[#EA3943]">Стоп-лосс, $</label>
-              <Input type="number" className="h-8 text-sm" placeholder="не задан" value={sl} onChange={(e) => setSl(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-[#22C55E]">Тейк-профит, $</label>
-              <Input type="number" className="h-8 text-sm" placeholder="не задан" value={tp} onChange={(e) => setTp(e.target.value)} />
-            </div>
+        )}
+        {ex.feePercent > 0 && (
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Комиссия {String(ex.feePercent).replace(".", ",")}%</span>
+            <span className="font-mono text-white">{usd(fee)}</span>
           </div>
-          <p className="text-[11px] leading-snug text-muted-foreground -mt-0.5">{side === "long" ? "Лонг: стоп страхует ниже входа, тейк фиксирует прибыль выше." : "Шорт: стоп страхует выше входа, тейк фиксирует прибыль ниже."}</p>
+        )}
+        {!ex.enabled && <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2 py-1 text-[11px] text-foreground">{ex.message || "Новые сделки временно приостановлены."}</div>}
+        {ex.enabled && ex.disabledCoins.includes(coinId) && <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2 py-1 text-[11px] text-foreground">Торговля этой монетой отключена.</div>}
+        {listedCfg && <div className="text-[10px] leading-snug text-muted-foreground">Новая монета: плечо до x{listedCfg.maxLeverage}, ставка от {listedCfg.minMargin}{listedCfg.maxMargin ? ` до ${listedCfg.maxMargin}` : ""} USDT{!listedCfg.allowShort ? ", шорт недоступен" : ""}.</div>}
 
-          <div className="rounded-lg border px-2.5 py-1.5 text-xs" style={{ borderColor: `${risk.color}55`, background: `${risk.color}12` }}>
-            <span className="text-muted-foreground">В игре на </span>
-            <span className="font-mono text-sm font-semibold" style={{ color: risk.color }}>{usd(volume)}</span>
-            {leverage > 1 && <span className="text-muted-foreground"> · ставка {usd(m)} умножена в {leverage} раз</span>}
-            <div className="text-[10px] text-muted-foreground mt-0.5">Виртуальные USDT: реальные деньги не тратятся и не выигрываются.</div>
-          </div>
+        <Button
+          className="w-full h-9 font-bold text-sm hover:opacity-90"
+          style={{ background: sideColor, color: side === "long" ? "#000" : "#fff" }}
+          disabled={busy || !user || m < ex.minMargin || blocked}
+          onClick={submit}
+        >
+          {mode === "market" ? (side === "long" ? "Купить / Лонг" : "Продать / Шорт") : "Выставить ордер"}
+        </Button>
+      </section>
 
-          {ex.feePercent > 0 && (
-            <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-              <span>Комиссия {String(ex.feePercent).replace(".", ",")}% (идёт в фонд)</span>
-              <span className="font-mono text-white">{usd(fee)}</span>
-            </div>
-          )}
-          {!ex.enabled && (
-            <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2.5 py-1.5 text-xs text-foreground">
-              {ex.message || "Новые сделки временно приостановлены. Закрывать позиции можно."}
-            </div>
-          )}
-          {ex.enabled && ex.disabledCoins.includes(coinId) && (
-            <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2.5 py-1.5 text-xs text-foreground">Торговля этой монетой временно отключена.</div>
-          )}
-
-          <Button
-            className="w-full h-9 font-bold text-sm text-black hover:opacity-90"
-            style={{ background: sideColor, color: side === "long" ? "#000" : "#fff", boxShadow: `0 0 18px ${sideColor}55` }}
-            disabled={busy || !user || m < ex.minMargin || blocked}
-            onClick={submit}
-          >
-            {mode === "market" ? "Открыть позицию" : "Выставить ордер"}
-          </Button>
-        </section>
+      <section className="rounded-xl border border-border bg-card p-2.5 min-w-0">
+        <h3 className="font-display text-sm text-white mb-2">Стакан</h3>
+        {listed ? (
+          <OrderBook slug={coinId} compact />
+        ) : (
+          <div className="min-h-[200px] flex items-center justify-center text-center text-xs text-muted-foreground px-2">Стакан подключается</div>
+        )}
+      </section>
+    </div>
   );
 };
 
