@@ -26,7 +26,7 @@ const OrderBook = ({ slug, compact }: { slug: string; compact?: boolean }) => {
   const spread = data.bestAsk && data.bestBid ? ((data.bestAsk - data.bestBid) / data.mid) * 100 : 0;
 
   return (
-    <div className="space-y-2">
+    <div className={compact ? "flex-1 flex flex-col justify-between gap-2" : "space-y-2"}>
       <div className="grid grid-cols-3 gap-2 px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
         <span>Цена</span>
         <span className="text-right">Объём</span>

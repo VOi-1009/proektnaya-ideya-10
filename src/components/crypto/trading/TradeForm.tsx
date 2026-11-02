@@ -65,7 +65,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
   const listed = isListed(coinId);
 
   return (
-    <div className="grid grid-cols-[1.2fr_1fr] gap-2 items-start">
+    <div className="grid grid-cols-[1.2fr_1fr] gap-2 items-stretch">
       <section className="rounded-xl border border-border bg-card p-2.5 space-y-2 min-w-0">
         <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -151,12 +151,12 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
         </Button>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-2.5 min-w-0">
+      <section className="rounded-xl border border-border bg-card p-2.5 min-w-0 flex flex-col">
         <h3 className="font-display text-sm text-white mb-2">Стакан</h3>
         {listed ? (
           <OrderBook slug={coinId} compact />
         ) : (
-          <div className="min-h-[200px] flex items-center justify-center text-center text-xs text-muted-foreground px-2">Стакан подключается</div>
+          <div className="flex-1 flex items-center justify-center text-center text-xs text-muted-foreground px-2">Стакан подключается</div>
         )}
       </section>
     </div>
