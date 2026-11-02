@@ -35,23 +35,33 @@ def gecko_data() -> dict:
         return cached
     if now < _pause["until"]:
         return cached or {}
-    headers = {}
-    key = os.environ.get("COINGECKO_API_KEY")
-    if key:
-        headers["x-cg-demo-api-key"] = key
     ids = ",".join(SYMBOLS)
+    url = f"{GECKO}/coins/markets?vs_currency=usd&ids={ids}&sparkline=true&price_change_percentage=1h,24h,7d"
+    key = os.environ.get("COINGECKO_API_KEY")
+    attempts = [{"x-cg-demo-api-key": key}, {}] if key else [{}]
+    last_err = None
+    for headers in attempts:
+        try:
+            raw = get_json(url, headers)
+            data = {c["id"]: c for c in raw}
+            _cache["gecko"] = (now, data)
+            return data
+        except Exception as e:
+            last_err = e
+            print("gecko error:", "с ключом" if headers else "без ключа", type(e).__name__, e)
+    _pause["until"] = now + 120
+    return cached or {}
+
+
+def week_from_binance(sym: str):
     try:
-        raw = get_json(
-            f"{GECKO}/coins/markets?vs_currency=usd&ids={ids}&sparkline=true&price_change_percentage=1h,24h,7d",
-            headers,
-        )
-        data = {c["id"]: c for c in raw}
-        _cache["gecko"] = (now, data)
-        return data
+        raw = get_json(f"{BINANCE}/klines?symbol={sym}&interval=1h&limit=168", timeout=4)
+        closes = [float(k[4]) for k in raw]
+        if len(closes) > 2:
+            return closes, (closes[-1] / closes[0] - 1) * 100
     except Exception as e:
-        _pause["until"] = now + 300
-        print("gecko error, пауза на 5 минут:", type(e).__name__, e)
-        return cached or {}
+        print("week error:", sym, type(e).__name__)
+    return None
 
 
 def binance_data() -> dict:
@@ -92,6 +102,14 @@ def build() -> list:
         if g.get("sparkline_in_7d"):
             item["sparkline_in_7d"] = g["sparkline_in_7d"]
         items.append(item)
+    missing = [i for i in items if "sparkline_in_7d" not in i]
+    if missing:
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            weeks = list(ex.map(lambda i: week_from_binance(SYMBOLS[i["id"]]), missing))
+        for it, w in zip(missing, weeks):
+            if w:
+                it["sparkline_in_7d"] = {"price": w[0]}
+                it.setdefault("price_change_percentage_7d_in_currency", w[1])
     return items
 
 
