@@ -3,11 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Bar, Cell, ComposedChart, Line as RLine, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import Icon from "@/components/ui/icon";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { useNavigate } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fmtPrice } from "@/lib/crypto";
 import { useAuth } from "@/lib/auth";
-import CandleChart from "../CandleChart";
 import { Candle, CandleShape, DOWN, Line, UP, loadKlines, withIndicators } from "../candle/chartUtils";
 
 interface Props {
@@ -32,7 +31,8 @@ const MINI = [
 ];
 
 const MobileChart = (p: Props) => {
-  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const open = () => navigate({ to: "/chart", search: { coin: p.coinId } });
   const [iv, setIv] = useState("1m");
   const [macd, setMacd] = useState(false);
   const { token } = useAuth();
@@ -71,7 +71,7 @@ const MobileChart = (p: Props) => {
   return (
     <>
       <div className="w-full rounded-xl border border-border bg-card p-3">
-        <button onClick={() => setOpen(true)} className="w-full text-left">
+        <button onClick={() => open()} className="w-full text-left">
           <div className="flex items-center gap-2">
             <span className="font-display text-white text-sm">График</span>
             <span className="font-mono text-white text-sm">{last ? fmtPrice(last, p.coinId) : "—"}</span>
@@ -89,7 +89,7 @@ const MobileChart = (p: Props) => {
           </div>
           <button onClick={() => setMacd((v) => !v)} className={`${pill(macd)} bg-rail ${macd ? "!bg-primary" : ""}`}>MACD</button>
         </div>
-        <button onClick={() => setOpen(true)} className="block w-full mt-2" aria-label={`График ${ivLabel}`}>
+        <button onClick={() => open()} className="block w-full mt-2" aria-label={`График ${ivLabel}`}>
           <div className="h-36 pointer-events-none">
             {view.length < 2 ? (
               <Skeleton className="h-full w-full bg-rail" />
@@ -172,14 +172,6 @@ const MobileChart = (p: Props) => {
         </button>
       </div>
 
-      <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false}>
-        <DrawerContent className="h-[92vh] max-h-[92vh] px-3 pb-3">
-          <DrawerTitle className="sr-only">График {p.coinId}</DrawerTitle>
-          <div className="flex-1 min-h-0 overflow-y-auto mt-2">
-            <CandleChart {...p} plotClass="h-[52vh] min-h-[260px]" />
-          </div>
-        </DrawerContent>
-      </Drawer>
     </>
   );
 };

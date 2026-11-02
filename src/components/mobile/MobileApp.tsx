@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
@@ -13,6 +14,7 @@ import MobileProfile from "./MobileProfile";
 import MobileCommunity from "./MobileCommunity";
 
 const MobileApp = () => {
+  const navigate = useNavigate();
   const { user, setAuthOpen } = useAuth();
   const { data, isLoading } = useMobileSettings();
   const { data: gfx } = useGraphics();

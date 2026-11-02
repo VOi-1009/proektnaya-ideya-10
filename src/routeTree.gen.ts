@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ChartRouteImport } from './routes/chart'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ConsentRouteImport } from './routes/consent'
 import { Route as ConverterRouteImport } from './routes/converter'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChartRoute = ChartRouteImport.update({
+  id: '/chart',
+  path: '/chart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -134,6 +140,7 @@ const ArticlesIdRoute = ArticlesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/chart': typeof ChartRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/converter': typeof ConverterRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/chart': typeof ChartRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/converter': typeof ConverterRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/chart': typeof ChartRoute
   '/community': typeof CommunityRoute
   '/consent': typeof ConsentRoute
   '/converter': typeof ConverterRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/chart'
     | '/community'
     | '/consent'
     | '/converter'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/chart'
     | '/community'
     | '/consent'
     | '/converter'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/chart'
     | '/community'
     | '/consent'
     | '/converter'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  ChartRoute: typeof ChartRoute
   CommunityRoute: typeof CommunityRoute
   ConsentRoute: typeof ConsentRoute
   ConverterRoute: typeof ConverterRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chart': {
+      id: '/chart'
+      path: '/chart'
+      fullPath: '/chart'
+      preLoaderRoute: typeof ChartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  ChartRoute: ChartRoute,
   CommunityRoute: CommunityRoute,
   ConsentRoute: ConsentRoute,
   ConverterRoute: ConverterRoute,
