@@ -225,7 +225,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
         submit={submit}
         send={send}
       />
-        <TradeTabs st={st} tab={tab} setTab={setTab} busy={busy} send={send} shared={shared} share={share} leaders={[]} m={m} only={["positions", "orders"]} />
+        <TradeTabs st={st} tab={tab} setTab={setTab} busy={busy} send={send} shared={shared} share={share} leaders={[]} m={m} only={["positions", "orders", "history"]} />
         <ExchangeCard st={st} busy={busy} send={send} token={token} />
       </div>
     );
