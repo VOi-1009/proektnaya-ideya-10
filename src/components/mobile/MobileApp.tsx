@@ -140,6 +140,14 @@ const MobileApp = () => {
             <h1 className="font-display text-lg text-white flex items-center gap-2">
               {info && <Icon name={current?.icon || info.icon} size={18} className="text-primary" />}
               {current?.label || info?.label}
+              {current?.id === "trading" && (
+                <button
+                  onClick={() => window.dispatchEvent(new Event("open-mobile-chart"))}
+                  className="ml-auto flex items-center gap-1 text-[11px] text-primary font-semibold font-sans"
+                >
+                  Открыть график <Icon name="Maximize2" size={13} />
+                </button>
+              )}
             </h1>
             {blocks.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border text-center text-xs text-muted-foreground py-10">Здесь пока ничего нет</div>
