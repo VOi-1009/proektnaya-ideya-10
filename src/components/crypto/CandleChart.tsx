@@ -15,7 +15,9 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   const { token } = useAuth();
   const [interval, setIntervalV] = useState("1h");
   const days = 7;
-  const [on, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
+  const [light, setLight] = useState(true);
+  const [onFull, setOn] = useState<Record<string, boolean>>({ ma20: true, ma50: true, bb: false, rsi: false, macd: false });
+  const on = light ? { ma20: false, ma50: false, bb: false, rsi: false, macd: false } : onFull;
   const [view, setView] = useState<{ start: number; size: number } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const axisRef = useRef<HTMLDivElement>(null);
@@ -199,7 +201,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
   }, [full]);
 
   return (
-    <div className={full ? "fixed inset-0 z-[100] bg-background p-3 sm:p-4 overflow-y-auto flex flex-col" : ""}>
+    <div className={full ? "fixed inset-0 z-[100] bg-[#080A0D] p-3 sm:p-4 overflow-y-auto flex flex-col" : "rounded-xl bg-[#080A0D] p-2"}>
       <ChartToolbar
         coinId={coinId}
         price={price}
@@ -275,7 +277,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
           })()}
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={visible} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
-              <CartesianGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.09} strokeWidth={1} />
+              <CartesianGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={light ? 0.04 : 0.09} strokeWidth={1} />
               <XAxis dataKey="t" tickFormatter={fmtTick} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={50} />
               <YAxis
                 orientation="right"
@@ -344,7 +346,7 @@ const CandleChart = ({ coinId, price, lines = [], liqPrice, onQuick, quickInfo, 
           </>
         )}
       </div>
-      <ChartFooter interval={interval} setIntervalV={setIntervalV} on={on} setOn={setOn} />
+      <ChartFooter interval={interval} setIntervalV={setIntervalV} on={onFull} setOn={setOn} light={light} setLight={setLight} />
     </div>
   );
 };

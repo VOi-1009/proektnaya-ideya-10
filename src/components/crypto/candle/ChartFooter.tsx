@@ -5,9 +5,11 @@ interface Props {
   setIntervalV: (v: string) => void;
   on: Record<string, boolean>;
   setOn: (fn: (o: Record<string, boolean>) => Record<string, boolean>) => void;
+  light: boolean;
+  setLight: (v: boolean) => void;
 }
 
-const ChartFooter = ({ interval, setIntervalV, on, setOn }: Props) => (
+const ChartFooter = ({ interval, setIntervalV, on, setOn, light, setLight }: Props) => (
       <div className="flex flex-wrap items-center gap-2 mt-2">
       <div className="flex bg-rail rounded p-0.5 w-fit">
         {INTERVALS.map((r) => (
@@ -22,7 +24,13 @@ const ChartFooter = ({ interval, setIntervalV, on, setOn }: Props) => (
           </button>
         ))}
       </div>
-      <div className="flex bg-rail rounded p-0.5 w-fit">
+      <button
+        onClick={() => setLight(!light)}
+        className={`px-3 py-1 text-xs font-mono rounded transition-colors ${light ? "bg-rail text-muted-foreground hover:text-white" : "bg-hover text-white"}`}
+      >
+        Индикаторы
+      </button>
+      {!light && <div className="flex bg-rail rounded p-0.5 w-fit">
         {INDICATORS.map((ind) => (
           <button
             key={ind.k}
@@ -33,7 +41,7 @@ const ChartFooter = ({ interval, setIntervalV, on, setOn }: Props) => (
             {ind.label}
           </button>
         ))}
-      </div>
+      </div>}
       </div>
 );
 
