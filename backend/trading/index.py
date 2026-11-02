@@ -2308,6 +2308,14 @@ def handler(event, context):
             if not res:
                 return resp(503, {"error": "Свечи сейчас недоступны"})
             return resp(200, {"source": res["source"], "candles": res["candles"]})
+        if method == "GET" and action == "staking":
+            import staking as sk
+            return resp(200, sk.public_state(cur, uid))
+        if method == "GET" and action == "staking_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            import staking as sk
+            return resp(200, sk.admin_state(cur))
         px = with_listings(cur, prices())
         if method == "GET" and action == "trades":
             uid_q = str(qs.get("userId", ""))
@@ -2667,6 +2675,11 @@ def handler(event, context):
             if not cur.fetchone():
                 return resp(400, {"error": "Вы уже участвуете в этом конкурсе"})
             return resp(200, {"contests": contests_list(cur, uid)})
+        if act in ("stake_open", "stake_close", "stake_pool_save", "stake_pool_delete"):
+            import staking as sk
+            ensure_account(cur, uid)
+            code, out = sk.do(cur, uid, act, body, is_admin(cur, uid))
+            return resp(code, out)
         if act in ("listing_save", "listing_status", "listing_delete", "listing_wall", "listing_wall_clear", "listing_move"):
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})

@@ -38,6 +38,7 @@ import PushManager from "@/components/crypto/PushManager";
 import ReferralManager from "@/components/crypto/ReferralManager";
 import TournamentsManager from "@/components/crypto/TournamentsManager";
 import ListingManager from "@/components/crypto/ListingManager";
+import StakingManager from "@/components/crypto/StakingManager";
 import GraphicsManager from "@/components/crypto/GraphicsManager";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { AdminSidebar, AdminTab, TabSwitcher } from "@/components/admin/AdminTabs";
@@ -234,6 +235,8 @@ const Admin = () => {
           <TournamentsManager token={token} />
         ) : editing === null && tab === "listing" ? (
           <ListingManager token={token} />
+        ) : editing === null && tab === "staking" ? (
+          <StakingManager token={token} />
         ) : editing === null && tab === "menu" ? (
           <>
             {blocksSwitch}

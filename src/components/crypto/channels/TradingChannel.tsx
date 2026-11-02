@@ -13,6 +13,7 @@ import TradeForm from "../trading/TradeForm";
 import ExchangeCard from "../trading/ExchangeCard";
 import FundCard from "../trading/FundCard";
 import AiTraderCard from "../trading/AiTraderCard";
+import StakingCard from "../trading/StakingCard";
 import TopTradesFeed from "../trading/TopTradesFeed";
 import { EX_DEFAULT, useExchangeSettings } from "@/lib/fund";
 import TradeTabs from "../trading/TradeTabs";
@@ -311,6 +312,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
         />
         <ExchangeCard st={st} busy={busy} send={send} token={token} />
         <FundCard go={go} />
+        <StakingCard />
         <AiTraderCard />
         {go && (
           <button
