@@ -35,19 +35,17 @@ export const COIN_IDS = [
   "hyperliquid",
   "zcash",
   "tron",
-  "cardano",
   "chainlink",
-  "stellar",
-  "avalanche-2",
   "sui",
-  "shiba-inu",
   "the-open-network",
-  "hedera-hashgraph",
   "litecoin",
 ];
 
-export const COMMODITY_IDS = ["brent", "gold", "usd-rub", "eur-rub", "usdt-rub"];
-export const FX_IDS = ["usd-rub", "eur-rub", "usdt-rub"];
+export const HIDDEN_IDS = ["shiba-inu", "avalanche-2", "hedera-hashgraph", "cardano", "stellar", "usd-rub", "eur-rub"];
+const visible = (list: Coin[]) => list.filter((c) => !HIDDEN_IDS.includes(c.id));
+
+export const COMMODITY_IDS = ["brent", "gold", "usdt-rub"];
+export const FX_IDS = ["usdt-rub"];
 export const isFx = (id: string) => FX_IDS.includes(id);
 export const isCommodity = (id: string) => COMMODITY_IDS.includes(id);
 const TRADING_API = func2url.trading;
@@ -173,9 +171,9 @@ export function useMarkets() {
         if (!r.ok) throw new Error("bad");
         const data = ((await r.json()) as { items?: Coin[] }).items;
         if (!Array.isArray(data) || !data.length) throw new Error("empty");
-        return { coins: [...data, ...(await listed), ...(await commodities)], live: true };
+        return { coins: visible([...data, ...(await listed), ...(await commodities)]), live: true };
       } catch {
-        return { coins: [...fallbackCoins().filter((c) => !c.kind), ...(await listed), ...(await commodities)], live: false };
+        return { coins: visible([...fallbackCoins().filter((c) => !c.kind), ...(await listed), ...(await commodities)]), live: false };
       }
     },
     refetchInterval: 3 * 60_000,

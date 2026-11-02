@@ -19,4 +19,4 @@ export const CHANNELS = [
   { id: "converter", name: "конвертер", topic: "Конвертер и калькуляторы трейдера: пивоты, Фибоначчи, размер позиции, прибыль, ликвидация", icon: "Hash" },
 ];
 
-export const PINNED = ["bitcoin", "brent", "gold", "usd-rub", "eur-rub"];
+export const PINNED = ["bitcoin", "brent", "gold"];
