@@ -37,7 +37,7 @@ def clean(key: str, value: str):
             return None
         out = []
         for c in data:
-            if isinstance(c, str) and c in COINS and c not in ("bitcoin", "ethereum") and c not in out:
+            if isinstance(c, str) and (c in COINS or re.fullmatch(r"x-[a-z0-9-]{2,30}", c)) and c not in ("bitcoin", "ethereum") and c not in out:
                 out.append(c)
         return json.dumps(out[:4])
     if key == "alerts":
