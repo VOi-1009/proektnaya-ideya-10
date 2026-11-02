@@ -1,10 +1,8 @@
 import Icon from "@/components/ui/icon";
-import { toast } from "@/hooks/use-toast";
 import { LEVELS } from "@/lib/status";
 import { Achievement, META } from "./Achievements";
 import SpecialAchievements from "./SpecialAchievements";
 import RareAchievements from "./RareAchievements";
-import DonateButton from "./DonateButton";
 import ReferralCard from "./referral/ReferralCard";
 
 interface Props {
@@ -22,37 +20,11 @@ const Card = ({ children }: { children: React.ReactNode }) => (
   <section className="bg-card border border-border rounded-2xl p-4 sm:p-5">{children}</section>
 );
 
-const ProfileRewards = ({ level, achievements, special, founder, foundersTaken, promo, streak }: Props) => {
-  const copy = () => {
-    navigator.clipboard.writeText(promo ?? "");
-    toast({ title: "Промокод скопирован" });
-  };
+const ProfileRewards = ({ level, achievements, special, founder, foundersTaken, streak }: Props) => {
   const basicDone = (achievements ?? []).filter((a) => a.done).length;
 
   return (
     <div className="space-y-5">
-      <Card>
-        <div className="flex items-center gap-2 mb-3">
-          <Icon name="Ticket" size={15} className="text-emerald-300" />
-          <span className="text-white font-semibold text-sm">Личный промокод</span>
-        </div>
-        {promo ? (
-          <button
-            onClick={copy}
-            title="Скопировать"
-            className="w-full flex items-center justify-between gap-3 rounded-lg border-2 border-dashed border-emerald-400/50 bg-emerald-400/10 px-4 py-2.5 hover:bg-emerald-400/20 transition-colors"
-          >
-            <span className="font-mono text-lg font-bold tracking-widest text-emerald-200">{promo}</span>
-            <Icon name="Copy" size={15} className="text-emerald-300/70" />
-          </button>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-muted-foreground text-xs">Код появится сразу после регистрации. Поддержите проект и получите значок и Премиум-чат.</p>
-            <DonateButton />
-          </div>
-        )}
-      </Card>
-
       <ReferralCard />
 
       {achievements && (
