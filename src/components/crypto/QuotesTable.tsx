@@ -9,6 +9,11 @@ interface Props {
   coins: Coin[];
   selected: string;
   onSelect: (id: string) => void;
+  title?: string;
+  icon?: string;
+  hideCap?: boolean;
+  hideSearch?: boolean;
+  compact?: boolean;
 }
 
 const COMMODITY_ICON: Record<string, string> = { brent: "Droplet", gold: "Gem" };
@@ -61,7 +66,7 @@ const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
 
 export { CoinLogo };
 
-const QuotesTable = ({ coins, selected, onSelect }: Props) => {
+const QuotesTable = ({ coins, selected, onSelect, title, icon, hideCap, hideSearch, compact }: Props) => {
   const [sort, setSort] = useState<SortKey>("market_cap");
   const [dir, setDir] = useState<1 | -1>(-1);
   const [q, setQ] = useState("");
@@ -79,8 +84,9 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
           COIN_META[c.id]?.short.toLowerCase().includes(s)
       );
     }
+    if (hideCap && sort === "market_cap") return list;
     return list.sort((a, b) => ((a[sort] ?? 0) - (b[sort] ?? 0)) * dir);
-  }, [coins, sort, dir, q]);
+  }, [coins, sort, dir, q, hideCap]);
 
   const head = (key: SortKey, label: string, cls = "") => (
     <th className={`px-3 py-2 font-medium text-right ${cls}`}>
@@ -100,28 +106,38 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
     </th>
   );
 
+  const pad = compact ? "py-2" : "py-2.5";
+
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="flex flex-wrap items-center gap-2 p-3 border-b border-border">
-        <div className="flex items-center gap-2 bg-rail rounded px-2 py-1.5 flex-1 min-w-[160px]">
-          <Icon name="Search" size={14} className="text-muted-foreground" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Найти монету: btc, тон, солана..."
-            className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground"
-          />
+      {title && (
+        <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+          {icon && <Icon name={icon} size={15} className="text-primary" />}
+          <h3 className="text-white font-semibold text-sm">{title}</h3>
         </div>
-      </div>
+      )}
+      {!hideSearch && (
+        <div className="flex flex-wrap items-center gap-2 p-3 border-b border-border">
+          <div className="flex items-center gap-2 bg-rail rounded px-2 py-1.5 flex-1 min-w-[160px]">
+            <Icon name="Search" size={14} className="text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Найти монету: btc, тон, солана..."
+              className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground"
+            />
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto scrollbar-thin">
-        <table className="w-full text-sm min-w-[640px]">
+        <table className={`w-full text-sm ${hideCap ? "min-w-[520px]" : "min-w-[640px]"}`}>
           <thead className="text-muted-foreground text-[10px] uppercase tracking-wider">
             <tr>
               <th className="px-3 py-2 text-left font-medium">Монета</th>
               {head("current_price", "Цена")}
               {head("price_change_percentage_24h", "24ч")}
               {head("price_change_percentage_7d_in_currency", "7д", "hidden sm:table-cell")}
-              {head("market_cap", "Капитализация", "hidden md:table-cell")}
+              {!hideCap && head("market_cap", "Капитализация", "hidden md:table-cell")}
               <th className="px-3 py-2 text-right font-medium">Неделя</th>
             </tr>
           </thead>
@@ -137,7 +153,7 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
                     selected === c.id ? "bg-primary/10" : "hover:bg-hover/60"
                   }`}
                 >
-                  <td className="px-3 py-2.5">
+                  <td className={`px-3 ${pad}`}>
                     <div className="flex items-center gap-2.5">
                       <CoinLogo coin={c} />
                       <div>
@@ -149,17 +165,19 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-white tabular">{fmtPrice(c.current_price, c.id)}</td>
-                  <td className={`px-3 py-2.5 text-right font-mono tabular ${up24 ? "text-up" : "text-down"}`}>
+                  <td className={`px-3 ${pad} text-right font-mono text-white tabular`}>{fmtPrice(c.current_price, c.id)}</td>
+                  <td className={`px-3 ${pad} text-right font-mono tabular ${up24 ? "text-up" : "text-down"}`}>
                     {fmtPct(c.price_change_percentage_24h)}
                   </td>
-                  <td className={`px-3 py-2.5 text-right font-mono tabular hidden sm:table-cell ${up7 ? "text-up" : "text-down"}`}>
+                  <td className={`px-3 ${pad} text-right font-mono tabular hidden sm:table-cell ${up7 ? "text-up" : "text-down"}`}>
                     {fmtPct(c.price_change_percentage_7d_in_currency)}
                   </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-muted-foreground tabular hidden md:table-cell">
-                    {c.market_cap ? fmtBig(c.market_cap) : "—"}
-                  </td>
-                  <td className="px-3 py-2.5">
+                  {!hideCap && (
+                    <td className={`px-3 ${pad} text-right font-mono text-muted-foreground tabular hidden md:table-cell`}>
+                      {c.market_cap ? fmtBig(c.market_cap) : "—"}
+                    </td>
+                  )}
+                  <td className={`px-3 ${pad}`}>
                     <div className="flex justify-end">
                       <Sparkline data={c.sparkline_in_7d?.price ?? []} up={up7} />
                     </div>
@@ -169,7 +187,7 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
+                <td colSpan={hideCap ? 5 : 6} className="px-3 py-8 text-center text-muted-foreground">
                   Ничего не нашлось. Попробуйте другой тикер.
                 </td>
               </tr>

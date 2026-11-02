@@ -13,6 +13,10 @@ interface Props {
 
 const MarketChannel = ({ coins, selected, onSelect, live }: Props) => {
   const coin = coins.find((c) => c.id === selected) ?? coins[0];
+  const ORDER = ["brent", "gold", "usdt-rub"];
+  const markets = ORDER.map((id) => coins.find((c) => c.id === id)).filter((c): c is Coin => !!c);
+  const listed = coins.filter((c) => c.listing);
+  const crypto = coins.filter((c) => !c.listing && !ORDER.includes(c.id));
   return (
     <div className="space-y-4">
       <Message author="Traderka Бот" time="Обновляется каждую минуту" icon="CandlestickChart" bot>
@@ -24,7 +28,13 @@ const MarketChannel = ({ coins, selected, onSelect, live }: Props) => {
       </Message>
       <ListingSoon />
       {coin && <PriceChart key={coin.id} coin={coin} />}
-      <QuotesTable coins={coins} selected={selected} onSelect={onSelect} />
+      {markets.length > 0 && (
+        <QuotesTable coins={markets} selected={selected} onSelect={onSelect} title="Нефть, золото и валюта" icon="Gem" hideCap hideSearch />
+      )}
+      {listed.length > 0 && (
+        <QuotesTable coins={listed} selected={selected} onSelect={onSelect} title="Новые монеты TRADERKA" icon="Rocket" hideCap hideSearch compact />
+      )}
+      <QuotesTable coins={crypto} selected={selected} onSelect={onSelect} title="Криптовалюты" icon="Coins" />
     </div>
   );
 };
