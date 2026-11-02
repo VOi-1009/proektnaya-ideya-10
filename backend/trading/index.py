@@ -1601,6 +1601,23 @@ def shop_admin(cur):
 _rng = secrets.SystemRandom()
 GAMES_KEY = "games_settings"
 GAMES_LOCK = 7101
+
+
+def games_lock(cur):
+    """Блокировка игр через таблицу: ждём до 3 секунд, замок сам снимается через 6 секунд."""
+    for _ in range(30):
+        cur.execute(
+            f"UPDATE {SCHEMA}.games_lock SET locked_until = NOW() + INTERVAL '6 seconds' "
+            f"WHERE name = 'games' AND locked_until < NOW() RETURNING name"
+        )
+        if cur.fetchone():
+            return
+        time.sleep(0.1)
+    cur.execute(f"UPDATE {SCHEMA}.games_lock SET locked_until = NOW() + INTERVAL '6 seconds' WHERE name = 'games'")
+
+
+def games_unlock(cur):
+    cur.execute(f"UPDATE {SCHEMA}.games_lock SET locked_until = NOW() - INTERVAL '1 second' WHERE name = 'games'")
 GAME_NAMES = {"coin": "Монетка", "dice": "Кости", "wheel": "Колесо удачи", "rocket": "Ракета", "bullbear": "Бык или медведь"}
 WHEEL = [0, 1, 0.5, 2, 0, 0.5, 1.5, 0, 0.5, 3, 0, 0.5, 1, 0, 1.5, 0.5, 5, 0, 1, 0.5]
 GAMES_DEFAULT = {
@@ -1767,7 +1784,7 @@ def bb_start(cur, uid, body):
         return 503, {"error": "Не удалось получить цену биткоина, попробуйте через минуту"}
     entry = float(rows[-1][4])
     mult = gs["bbMult"]
-    cur.execute(f"SELECT pg_advisory_lock({GAMES_LOCK})")
+    games_lock(cur)
     try:
         cur.execute(f"SELECT 1 FROM {SCHEMA}.games_bb_rounds WHERE user_id = {uid} AND status IN ('active', 'settling')")
         if cur.fetchone():
@@ -1801,7 +1818,7 @@ def bb_start(cur, uid, body):
             f"VALUES ({uid}, '{side}', {bet}, {mult}, {entry!r}, NOW() + INTERVAL '{int(gs['bbMinutes'])} minutes')"
         )
     finally:
-        cur.execute(f"SELECT pg_advisory_unlock({GAMES_LOCK})")
+        games_unlock(cur)
     return 200, {"ok": True}
 
 
@@ -1864,7 +1881,7 @@ def games_play(cur, uid, body):
             return 400, {"error": f"Множитель от 1,1 до {gs['rocketMaxMult']:g}"}
         top = target
 
-    cur.execute(f"SELECT pg_advisory_lock({GAMES_LOCK})")
+    games_lock(cur)
     try:
         cur.execute(f"SELECT COALESCE(EXTRACT(EPOCH FROM (NOW() - MAX(created_at))), 99999) FROM {SCHEMA}.games_log WHERE user_id = {uid}")
         if float(cur.fetchone()[0]) < gs["cooldownSec"]:
@@ -1928,7 +1945,7 @@ def games_play(cur, uid, body):
         except Exception as e:
             print("referral error:", e)
     finally:
-        cur.execute(f"SELECT pg_advisory_unlock({GAMES_LOCK})")
+        games_unlock(cur)
     return 200, {"game": game, "bet": bet, "payout": payout, "mult": mult, "win": payout > bet, "profit": net_change, "detail": detail}
 
 
