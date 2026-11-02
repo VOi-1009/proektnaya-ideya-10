@@ -21,6 +21,9 @@ const StakingCard = () => {
 
   if (!data || (!data.pools.length && !data.stakes.length)) return null;
   const pool = data.pools.find((p) => p.id === sel) ?? data.pools[0];
+  const amt = Number(amount) > 0 ? Number(amount) : 0;
+  const perDay = pool ? (amt * pool.apy) / 100 / 365 : 0;
+  const total = pool ? (pool.termDays ? perDay * pool.termDays : (amt * pool.apy) / 100) : 0;
 
   const run = async (body: object, ok: string) => {
     setBusy(true);
@@ -42,10 +45,21 @@ const StakingCard = () => {
       <h3 className="font-display text-sm text-white">Стейкинг</h3>
       {pool && (
         <div className="space-y-2">
-          <select className="w-full bg-rail rounded px-2 h-9 text-sm text-white outline-none" value={pool.id} onChange={(e) => setSel(Number(e.target.value))}>
-            {data.pools.map((p) => <option key={p.id} value={p.id}>{p.symbol} · {p.termDays ? `${p.termDays} дн.` : "гибкий"} · {p.apy}%</option>)}
-          </select>
+          <div className="space-y-1">
+            {data.pools.map((p) => (
+              <button key={p.id} onClick={() => setSel(p.id)} className={`w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left border transition-colors ${p.id === pool.id ? "border-primary/60 bg-primary/10" : "border-transparent bg-rail/70"}`}>
+                <span className="text-xs text-white">{p.symbol} · {p.termDays ? `${p.termDays} дн.` : "гибкий"}</span>
+                <span className="text-[10px] text-muted-foreground text-right"><span className="text-[#22C55E] font-mono text-xs">{p.apy}%</span> годовых · от {usd(p.minAmount)}</span>
+              </button>
+            ))}
+          </div>
           <input className="w-full bg-rail rounded px-3 h-9 text-sm text-white outline-none" type="number" min={0} placeholder={`Сумма в USDT, от ${pool.minAmount}`} value={amount} onChange={(e) => setAmount(e.target.value)} />
+          {amt > 0 && (
+            <div className="rounded-lg bg-rail/70 px-2.5 py-1.5 text-[11px] text-muted-foreground space-y-0.5">
+              <div className="flex justify-between"><span>В день</span><span className="font-mono text-white">+{usd(perDay)}</span></div>
+              <div className="flex justify-between"><span>{pool.termDays ? `За ${pool.termDays} дн.` : "За год"}</span><span className="font-mono text-[#22C55E]">+{usd(total)}</span></div>
+            </div>
+          )}
           <Button className="w-full" size="sm" disabled={busy || !(Number(amount) > 0)} onClick={() => run({ action: "stake_open", poolId: pool.id, amount: Number(amount) }, "Монеты в стейкинге")}>Вложить</Button>
           <p className="text-[10px] text-muted-foreground">Свободно {usd(data.balance)}. Вложенная сумма пересчитывается в монету по текущему курсу, награда считается в USDT.</p>
         </div>
