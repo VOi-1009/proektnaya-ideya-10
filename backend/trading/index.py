@@ -19,7 +19,7 @@ MAX_LEV = 100
 MIN_MARGIN = 1.0
 MIN_EXCHANGE = 1.0
 FEE_RATE = 0.0005
-COINS = ["bitcoin", "ethereum", "binancecoin", "ripple", "solana", "dogecoin", "hyperliquid", "zcash", "tron", "cardano", "chainlink", "stellar", "avalanche-2", "sui", "shiba-inu", "the-open-network", "hedera-hashgraph", "litecoin"]
+COINS = ["bitcoin", "ethereum", "binancecoin", "ripple", "solana", "dogecoin", "hyperliquid", "zcash", "tron", "chainlink", "sui", "the-open-network", "litecoin"]
 CORS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
