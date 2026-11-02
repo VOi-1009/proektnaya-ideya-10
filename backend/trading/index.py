@@ -687,10 +687,24 @@ def apply_funding(cur, user_id, px):
         n = int(float(secs) // 28800)
         if not rate or not p or n < 1:
             continue
-        pay = n * rate / 100 * float(size) * p
-        pay = pay if side == "long" else -pay
         cur.execute(f"UPDATE {SCHEMA}.paper_positions SET funding_at = '{base.isoformat()}'::timestamp + INTERVAL '{n * 8} hours' WHERE id = {pid}")
-        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = GREATEST(balance - {pay}, 0) WHERE user_id = {user_id}")
+        if (rate > 0) != (side == "long"):
+            continue
+        pay = n * abs(rate) / 100 * float(size) * p
+        cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {user_id}")
+        row = cur.fetchone()
+        pay = min(pay, float(row[0])) if row else 0.0
+        if pay <= 0:
+            continue
+        other = "short" if side == "long" else "long"
+        cur.execute(f"SELECT user_id, SUM(size) FROM {SCHEMA}.paper_positions WHERE coin_id = '{q(coin)}' AND status = 'open' AND side = '{other}' GROUP BY user_id")
+        takers = [(u, float(z)) for u, z in cur.fetchall()]
+        total = sum(z for _, z in takers)
+        if total <= 0:
+            continue
+        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance - {pay} WHERE user_id = {user_id}")
+        for u, z in takers:
+            cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {pay * z / total} WHERE user_id = {u}")
 
 
 def process(cur, user_id, px):
