@@ -32,7 +32,8 @@ const MobileChart = (p: Props) => {
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
-  const pts = data ?? [];
+  const base = data ?? [];
+  const pts = base.length > 1 && p.price > 0 && Math.abs(p.price / base[base.length - 1].p - 1) < 0.2 ? [...base.slice(0, -1), { ...base[base.length - 1], p: p.price }] : base;
   const first = pts[0]?.p ?? 0;
   const last = p.price || pts[pts.length - 1]?.p || 0;
   const pct = first ? ((last - first) / first) * 100 : 0;
