@@ -53,11 +53,11 @@ const StakingCard = () => {
               </button>
             ))}
           </div>
-          <input className="w-full bg-rail rounded px-3 h-9 text-sm text-white outline-none" type="number" min={0} placeholder={`Сумма в USDT, от ${pool.minAmount}`} value={amount} onChange={(e) => setAmount(e.target.value)} />
-          {amt > 0 && (
+          <input className="w-full bg-rail rounded px-3 h-9 text-sm text-white outline-none" type="number" min={0} placeholder="Введите сумму, чтобы узнать расчет" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          {(
             <div className="rounded-lg bg-rail/70 px-2.5 py-1.5 text-[11px] text-muted-foreground space-y-0.5">
-              <div className="flex justify-between"><span>В день</span><span className="font-mono text-white">+{usd(perDay)}</span></div>
-              <div className="flex justify-between"><span>{pool.termDays ? `За ${pool.termDays} дн.` : "За год"}</span><span className="font-mono text-[#22C55E]">+{usd(total)}</span></div>
+              <div className="flex justify-between"><span>В день</span><span className="font-mono text-white">{amt > 0 ? `+${usd(perDay)}` : "—"}</span></div>
+              <div className="flex justify-between"><span>{pool.termDays ? `За ${pool.termDays} дн.` : "За год"}</span><span className="font-mono text-[#22C55E]">{amt > 0 ? `+${usd(total)}` : "—"}</span></div>
             </div>
           )}
           <Button className="w-full" size="sm" disabled={busy || !(Number(amount) > 0)} onClick={() => run({ action: "stake_open", poolId: pool.id, amount: Number(amount) }, "Монеты в стейкинге")}>Вложить</Button>
