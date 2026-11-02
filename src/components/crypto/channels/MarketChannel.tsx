@@ -3,6 +3,8 @@ import PriceChart from "../PriceChart";
 import QuotesTable from "../QuotesTable";
 import Message from "../Message";
 import ListingSoon from "../ListingSoon";
+import PremarketCard from "../PremarketCard";
+import StakingCard from "../trading/StakingCard";
 
 interface Props {
   coins: Coin[];
@@ -27,7 +29,13 @@ const MarketChannel = ({ coins, selected, onSelect, live }: Props) => {
         </p>
       </Message>
       <ListingSoon />
-      {coin && <PriceChart key={coin.id} coin={coin} />}
+      <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-start">
+        <div className="min-w-0">{coin && <PriceChart key={coin.id} coin={coin} />}</div>
+        <div className="space-y-4 min-w-0">
+          <StakingCard />
+          <PremarketCard />
+        </div>
+      </div>
       {markets.length > 0 && (
         <QuotesTable coins={markets} selected={selected} onSelect={onSelect} title="Нефть, золото и валюта" icon="Gem" hideCap hideSearch />
       )}
