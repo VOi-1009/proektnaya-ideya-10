@@ -33,6 +33,32 @@ const MobileApp = () => {
   }, []);
 
   useEffect(() => {
+    const block = (e: Event) => e.preventDefault();
+    const pinch = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
+    };
+    let lastTap = 0;
+    const doubleTap = (e: TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTap < 300) e.preventDefault();
+      lastTap = now;
+    };
+    document.addEventListener("gesturestart", block);
+    document.addEventListener("gesturechange", block);
+    document.addEventListener("touchmove", pinch, { passive: false });
+    document.addEventListener("touchend", doubleTap, { passive: false });
+    const prevTouch = document.documentElement.style.touchAction;
+    document.documentElement.style.touchAction = "pan-x pan-y";
+    return () => {
+      document.removeEventListener("gesturestart", block);
+      document.removeEventListener("gesturechange", block);
+      document.removeEventListener("touchmove", pinch);
+      document.removeEventListener("touchend", doubleTap);
+      document.documentElement.style.touchAction = prevTouch;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!tab && first) setTab(first.id);
   }, [tab, first]);
 

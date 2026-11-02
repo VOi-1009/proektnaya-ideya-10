@@ -7,7 +7,7 @@ export const Route = createFileRoute("/m")({
     meta: [
       { title: "TRADERKA — мобильная версия" },
       { name: "description", content: "Лёгкая мобильная версия TRADERKA.RU: котировки, новости, игры и профиль." },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "TRADERKA" },
