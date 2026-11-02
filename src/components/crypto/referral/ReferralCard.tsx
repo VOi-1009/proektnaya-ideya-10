@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { fundFmt } from "@/lib/fund";
+import DonateButton from "../DonateButton";
 import { refLink, useReferralInfo, useReferralMe } from "@/lib/referral";
 
 const SOURCES = [
@@ -15,9 +16,10 @@ const SOURCES = [
 
 interface Props {
   compact?: boolean;
+  donate?: boolean;
 }
 
-const ReferralCard = ({ compact }: Props) => {
+const ReferralCard = ({ compact, donate }: Props) => {
   const { user, token, setAuthOpen } = useAuth();
   const { data: info } = useReferralInfo();
   const { data: me, isLoading } = useReferralMe(token);
@@ -134,6 +136,12 @@ const ReferralCard = ({ compact }: Props) => {
                   <span className="text-[11px] text-muted-foreground">{f.status === "paid" ? `+${fundFmt(f.reward)} TKA` : "ждём первую сделку"}</span>
                 </div>
               ))}
+            </div>
+          )}
+          {donate && (
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+              <span className="text-[11px] text-muted-foreground">Нравится проект? Поддержите его.</span>
+              <DonateButton />
             </div>
           )}
         </>

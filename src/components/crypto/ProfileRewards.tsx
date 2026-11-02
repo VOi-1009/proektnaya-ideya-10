@@ -25,7 +25,7 @@ const ProfileRewards = ({ level, achievements, special, founder, foundersTaken, 
 
   return (
     <div className="space-y-5">
-      <ReferralCard />
+      <ReferralCard donate />
 
       {achievements && (
         <Card>
