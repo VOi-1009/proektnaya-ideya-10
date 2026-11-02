@@ -26,7 +26,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
   const qc = useQueryClient();
   const { data: exData } = useExchangeSettings(token);
   const exSettings = exData ?? EX_DEFAULT;
-  const [coinId, setCoinId] = useState("bitcoin");
+  const [coinId, setCoinId] = useState("x-tka");
   const [side, setSide] = useState<"long" | "short">("long");
   const [leverage, setLeverage] = useState(1);
   const [margin, setMargin] = useState("100");
@@ -77,7 +77,8 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
   }, [myCap, leverage]);
 
   useEffect(() => {
-    if (!exSettings.disabledCoins.includes(coinId) && !locked[coinId]) return;
+    const missing = coins.length > 0 && !coins.some((c) => c.id === coinId);
+    if (!missing && !exSettings.disabledCoins.includes(coinId) && !locked[coinId]) return;
     const next = coins.find((c) => !c.kind && !exSettings.disabledCoins.includes(c.id) && !locked[c.id]);
     if (next) setCoinId(next.id);
   }, [exSettings.disabledCoins, locked, coinId, coins]);
