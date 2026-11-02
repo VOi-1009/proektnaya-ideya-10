@@ -28,6 +28,7 @@ CORS = {
 }
 _cache = {"at": 0.0, "data": {}}
 _okx = {"at": 0.0, "data": {}}
+_gecko = {"until": 0.0}
 _chg = {"at": 0.0, "data": {}}
 _kcache = {}
 _top = {"at": 0.0, "data": None}
@@ -102,7 +103,7 @@ def okx_tickers():
         rows = http_json("https://www.okx.com/api/v5/market/tickers?instType=SPOT").get("data") or []
         by = {r.get("instId"): r for r in rows}
         out = {}
-        for coin, sym in SYM.items():
+        for coin, sym in {**SYM, "the-open-network": "GRAM"}.items():
             r = by.get(f"{sym}-USDT")
             if not r:
                 continue
@@ -120,18 +121,18 @@ def prices():
     now = time.time()
     if _cache["data"] and now - _cache["at"] < 20:
         return _cache["data"]
-    data = {}
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=" + ",".join(COINS)
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=2.5) as r:
-            d = json.loads(r.read())
-        data = {k: float(v["usd"]) for k, v in d.items() if v.get("usd")}
-    except Exception as e:
-        print("price error:", e)
-    if len(data) < len(COINS):
-        for coin, t in okx_tickers().items():
-            data.setdefault(coin, t["price"])
+    data = {coin: t["price"] for coin, t in okx_tickers().items()}
+    missing = [c for c in COINS if c not in data]
+    if missing and now >= _gecko["until"]:
+        try:
+            url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=" + ",".join(missing)
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=2.5) as r:
+                d = json.loads(r.read())
+            data.update({k: float(v["usd"]) for k, v in d.items() if v.get("usd")})
+        except Exception as e:
+            _gecko["until"] = now + 300
+            print("price error, пауза CoinGecko на 5 минут:", e)
     if data:
         _cache.update(at=now, data={**_cache["data"], **data})
     return _cache["data"]
@@ -802,6 +803,8 @@ def ai_pick(s, ex, px, changes, held, free, open_count, level=1):
 
 
 def coingecko_changes(only=None):
+    if time.time() < _gecko["until"]:
+        raise RuntimeError("CoinGecko на паузе после отказа")
     ids = [c for c in (only or COINS)]
     url = "https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&include_24hr_change=true&ids=" + ",".join(ids)
     base = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
@@ -814,6 +817,7 @@ def coingecko_changes(only=None):
             return {k: float(v["usd_24h_change"]) for k, v in d.items() if v.get("usd_24h_change") is not None}
         except Exception as e:
             last = e
+    _gecko["until"] = time.time() + 300
     raise last
 
 

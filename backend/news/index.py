@@ -13,6 +13,7 @@ from exchange_flows import exchange_flows_response
 from toptxs import toptxs_response
 from cmc import cmc_response, liq_history_response
 from econ_calendar import calendar_response
+from markets import coinchart_response, markets_response
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -307,11 +308,15 @@ def chart_response(qs: dict) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar), притоки и оттоки активов на биржах (?resource=exflows)"""
+    """Новости (?kind=crypto|world) из RSS, котировки нефти Brent, золота, USD/RUB и EUR/RUB (?resource=commodities) и их графики (?resource=chart&id=&days=), тепловая карта ликвидаций (?resource=heatmap&symbol=&range=), топ монет по числу сделок (?resource=toptxs), BTC в казначействах компаний и индекс альтсезона (?resource=cmc), экономический календарь важных событий (?resource=calendar), притоки и оттоки активов на биржах (?resource=exflows), котировки 18 монет (?resource=markets) и их графики (?resource=coinchart&id=&days=)"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
     qs = event.get("queryStringParameters") or {}
     resource = qs.get("resource")
+    if resource == "markets":
+        return markets_response(json_resp)
+    if resource == "coinchart":
+        return coinchart_response(qs, json_resp)
     if resource == "brent":
         return brent_response()
     if resource == "commodities":

@@ -131,7 +131,6 @@ const fallbackCoins = (): Coin[] =>
     sparkline_in_7d: { price: synthSeries(price, 168, i * 77 + 13, ch / 50) },
   }));
 
-const API = "https://api.coingecko.com/api/v3";
 const NEWS_API = func2url.news;
 
 const loadCommodities = async (): Promise<Coin[]> => {
@@ -151,11 +150,9 @@ export function useMarkets() {
     queryFn: async () => {
       const commodities = loadCommodities();
       try {
-        const r = await fetch(
-          `${API}/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(",")}&sparkline=true&price_change_percentage=1h,24h,7d`
-        );
+        const r = await fetch(`${NEWS_API}?resource=markets`);
         if (!r.ok) throw new Error("bad");
-        const data = (await r.json()) as Coin[];
+        const data = ((await r.json()) as { items?: Coin[] }).items;
         if (!Array.isArray(data) || !data.length) throw new Error("empty");
         return { coins: [...data, ...(await commodities)], live: true };
       } catch {
@@ -175,7 +172,7 @@ export async function fetchChart(id: string, days: number, fallbackPrice?: numbe
     const r = await fetch(
       isCommodity(id)
         ? `${NEWS_API}?resource=chart&id=${id}&days=${days}`
-        : `${API}/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
+        : `${NEWS_API}?resource=coinchart&id=${id}&days=${days}`,
     );
     if (!r.ok) throw new Error("bad");
     const data = (await r.json()) as { prices: [number, number][] };

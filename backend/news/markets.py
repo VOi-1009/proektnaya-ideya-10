@@ -19,6 +19,7 @@ TTL_CHART = 120
 KLINES = {1: ("5m", 288), 7: ("1h", 168), 30: ("4h", 180), 90: ("12h", 180), 365: ("1d", 365)}
 _cache: dict = {"markets": (0.0, None), "gecko": (0.0, None)}
 _charts: dict = {}
+_pause = {"until": 0.0}
 
 
 def get_json(url: str, headers: dict = None, timeout: int = 4):
@@ -32,6 +33,8 @@ def gecko_data() -> dict:
     at, cached = _cache["gecko"]
     if cached is not None and now - at < TTL_GECKO:
         return cached
+    if now < _pause["until"]:
+        return cached or {}
     headers = {}
     key = os.environ.get("COINGECKO_API_KEY")
     if key:
@@ -46,7 +49,8 @@ def gecko_data() -> dict:
         _cache["gecko"] = (now, data)
         return data
     except Exception as e:
-        print("gecko error:", type(e).__name__, e)
+        _pause["until"] = now + 300
+        print("gecko error, пауза на 5 минут:", type(e).__name__, e)
         return cached or {}
 
 
@@ -73,7 +77,7 @@ def build() -> list:
             "id": cid,
             "symbol": sym[:-4].lower(),
             "name": g.get("name", sym[:-4]),
-            "image": g.get("image", ""),
+            "image": g.get("image") or f"/coins/{cid}.png",
             "current_price": price,
             "market_cap": g.get("market_cap", 0),
             "total_volume": float(t["quoteVolume"]) if t else g.get("total_volume", 0),
