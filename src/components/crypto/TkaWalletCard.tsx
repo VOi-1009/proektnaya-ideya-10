@@ -30,8 +30,8 @@ const TkaWalletCard = ({ token }: { token: string | null }) => {
               <p className="text-sm text-muted-foreground">Операций пока нет.</p>
             ) : (
               <div className="divide-y divide-border">
-                {data.ledger.map((l, i) => (
-                  <div key={i} className="flex items-center gap-2 py-1.5 text-sm">
+                {data.ledger.slice(0, 5).map((l, i) => (
+                  <div key={i} className="flex items-center gap-2 py-1 text-sm leading-tight">
                     <Icon name={l.amount >= 0 ? "ArrowDownLeft" : "ArrowUpRight"} size={14} className={l.amount >= 0 ? "text-[#22C55E]" : "text-[#EA3943]"} />
                     <div className="min-w-0 flex-1">
                       <div className="text-white truncate">{l.note || KIND[l.kind] || l.kind}</div>
