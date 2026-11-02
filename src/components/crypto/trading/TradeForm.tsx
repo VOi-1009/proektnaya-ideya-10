@@ -8,6 +8,7 @@ import { Coin, fmtPrice, isListed } from "@/lib/crypto";
 import OrderBook from "./OrderBook";
 import { EX_DEFAULT, tradeFee, useExchangeSettings } from "@/lib/fund";
 import { useState } from "react";
+import { useListings } from "@/lib/listings";
 import { Send, State, name, usd } from "./shared";
 
 const riskOf = (l: number) =>
@@ -63,6 +64,8 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
 
   const [more, setMore] = useState(false);
   const listed = isListed(coinId);
+  const { data: lst } = useListings();
+  const fr = lst?.items.find((x) => x.slug === coinId)?.fundingRate ?? 0;
 
   return (
     <div className="grid grid-cols-[1.2fr_1fr] gap-2 items-stretch">
@@ -158,6 +161,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
         ) : (
           <div className="flex-1 flex items-center justify-center text-center text-xs text-muted-foreground px-2">Стакан подключается</div>
         )}
+        {fr !== 0 && <p className="mt-2 text-[10px] text-muted-foreground text-center bg-transparent">Финансирование {fr > 0 ? "+" : ""}{String(fr).replace(".", ",")}%</p>}
       </section>
     </div>
   );
