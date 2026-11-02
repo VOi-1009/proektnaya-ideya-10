@@ -111,12 +111,16 @@ const BullBearMini = () => {
           <h3 className="text-white font-semibold text-base">Бык или медведь</h3>
         </div>
         {shown !== null && (
-          <div className="flex items-center gap-2">
-            <img src="/coins/bitcoin.png" alt="Bitcoin" width={32} height={32} className="w-8 h-8 rounded-full flex-shrink-0" />
-            <span className="font-mono font-bold text-3xl leading-tight text-white">BTC</span>
-            <Icon name={dir === "up" ? "ArrowUp" : "ArrowDown"} size={22} className={dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"} />
-            <span className={`font-mono font-bold text-3xl leading-tight tabular-nums transition-colors ${dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"}`}>{usd(shown)}</span>
-          </div>
+          <>
+            <div className="flex items-center gap-2">
+              <img src="/coins/bitcoin.png" alt="Bitcoin" width={32} height={32} className="w-8 h-8 rounded-full flex-shrink-0" />
+              <span className="font-mono font-bold text-3xl leading-tight text-white">BTC</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Icon name={dir === "up" ? "ArrowUp" : "ArrowDown"} size={22} className={dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"} />
+              <span className={`font-mono font-bold text-3xl leading-tight tabular-nums transition-colors ${dir === "up" ? "text-[#22C55E]" : "text-[#EA3943]"}`}>{usd(shown)}</span>
+            </div>
+          </>
         )}
         {minPct !== null && (
           <div className={`text-xs font-mono ${minPct >= 0 ? "text-[#22C55E]" : "text-[#EA3943]"}`}>
