@@ -8,6 +8,7 @@ import { Coin, fmtPrice, isListed } from "@/lib/crypto";
 import OrderBook from "./OrderBook";
 import { EX_DEFAULT, tradeFee, useExchangeSettings } from "@/lib/fund";
 import { useState } from "react";
+import { useListings } from "@/lib/listings";
 import { Send, State, name, usd } from "./shared";
 
 const riskOf = (l: number) =>
@@ -63,6 +64,8 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
 
   const [more, setMore] = useState(false);
   const listed = isListed(coinId);
+  const { data: lst } = useListings();
+  const fr = lst?.items.find((x) => x.slug === coinId)?.fundingRate ?? 0;
 
   return (
     <div className="grid grid-cols-[1.2fr_1fr] gap-2 items-stretch">
@@ -135,6 +138,12 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Комиссия {String(ex.feePercent).replace(".", ",")}%</span>
             <span className="font-mono text-white">{usd(fee)}</span>
+          </div>
+        )}
+        {fr !== 0 && (
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Финансирование</span>
+            <span className="font-mono text-white">{fr > 0 ? "+" : ""}{String(fr).replace(".", ",")}% / 8ч</span>
           </div>
         )}
         {!ex.enabled && <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2 py-1 text-[11px] text-foreground">{ex.message || "Новые сделки временно приостановлены."}</div>}
