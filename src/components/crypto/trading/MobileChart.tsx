@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Bar, Cell, ComposedChart, Line as RLine, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
@@ -36,11 +36,6 @@ const MobileChart = (p: Props) => {
   const [iv, setIv] = useState("1m");
   const [macd, setMacd] = useState(false);
   const { token } = useAuth();
-  useEffect(() => {
-    const h = () => setOpen(true);
-    window.addEventListener("open-mobile-chart", h);
-    return () => window.removeEventListener("open-mobile-chart", h);
-  }, []);
   const { data } = useQuery({
     queryKey: ["mini-candles", p.coinId, iv, !!token],
     queryFn: async () => (await loadKlines(p.coinId, iv, token)).slice(-90),
@@ -81,6 +76,9 @@ const MobileChart = (p: Props) => {
             <span className="font-display text-white text-sm">График</span>
             <span className="font-mono text-white text-sm">{last ? fmtPrice(last, p.coinId) : "—"}</span>
             <span className="font-mono text-xs" style={{ color }}>{up ? "+" : ""}{pct.toFixed(2).replace(".", ",")}%</span>
+            <span className="ml-auto flex items-center gap-1 text-[11px] text-primary font-semibold">
+              Открыть <Icon name="Maximize2" size={13} />
+            </span>
           </div>
         </button>
         <div className="flex items-center gap-2 mt-2">
