@@ -17,7 +17,13 @@ export interface Coin {
   sparkline_in_7d?: { price: number[] };
   kind?: "commodity";
   quote?: "USD" | "RUB";
+  listing?: { color: string; status: string; listingAt: string; isNew: boolean };
 }
+
+export const isListed = (id: string) => id.startsWith("x-");
+
+export const coinTitle = (c: Pick<Coin, "id" | "name">) => COIN_META[c.id]?.ru ?? c.name;
+export const coinShort = (c: Pick<Coin, "id" | "symbol">) => COIN_META[c.id]?.short ?? c.symbol.toUpperCase();
 
 export const COIN_IDS = [
   "bitcoin",
@@ -44,6 +50,7 @@ export const COMMODITY_IDS = ["brent", "gold", "usd-rub", "eur-rub", "usdt-rub"]
 export const FX_IDS = ["usd-rub", "eur-rub", "usdt-rub"];
 export const isFx = (id: string) => FX_IDS.includes(id);
 export const isCommodity = (id: string) => COMMODITY_IDS.includes(id);
+const TRADING_API = func2url.trading;
 
 export const COIN_META: Record<string, { ru: string; color: string; short: string }> = {
   bitcoin: { ru: "Bitcoin", color: "#f7931a", short: "BTC" },
@@ -144,19 +151,31 @@ const loadCommodities = async (): Promise<Coin[]> => {
   }
 };
 
+const loadListed = async (): Promise<Coin[]> => {
+  try {
+    const r = await fetch(`${TRADING_API}?action=listings`);
+    if (!r.ok) throw new Error("bad");
+    const data = (await r.json()) as { coins?: Coin[] };
+    return Array.isArray(data.coins) ? data.coins : [];
+  } catch {
+    return [];
+  }
+};
+
 export function useMarkets() {
   return useQuery<{ coins: Coin[]; live: boolean }>({
     queryKey: ["markets"],
     queryFn: async () => {
       const commodities = loadCommodities();
+      const listed = loadListed();
       try {
         const r = await fetch(`${NEWS_API}?resource=markets`);
         if (!r.ok) throw new Error("bad");
         const data = ((await r.json()) as { items?: Coin[] }).items;
         if (!Array.isArray(data) || !data.length) throw new Error("empty");
-        return { coins: [...data, ...(await commodities)], live: true };
+        return { coins: [...data, ...(await listed), ...(await commodities)], live: true };
       } catch {
-        return { coins: [...fallbackCoins().filter((c) => !c.kind), ...(await commodities)], live: false };
+        return { coins: [...fallbackCoins().filter((c) => !c.kind), ...(await listed), ...(await commodities)], live: false };
       }
     },
     refetchInterval: 3 * 60_000,
@@ -172,7 +191,9 @@ export async function fetchChart(id: string, days: number, fallbackPrice?: numbe
     const r = await fetch(
       isCommodity(id)
         ? `${NEWS_API}?resource=chart&id=${id}&days=${days}`
-        : `${NEWS_API}?resource=coinchart&id=${id}&days=${days}`,
+        : isListed(id)
+          ? `${TRADING_API}?action=listing_chart&slug=${id}&days=${Math.min(days, 30)}`
+          : `${NEWS_API}?resource=coinchart&id=${id}&days=${days}`,
     );
     if (!r.ok) throw new Error("bad");
     const data = (await r.json()) as { prices: [number, number][] };

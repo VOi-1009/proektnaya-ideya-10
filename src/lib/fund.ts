@@ -114,6 +114,7 @@ export interface ExchangeSettings {
   myLevel?: number;
   myMaxLeverage?: number;
   lockedCoins?: Record<string, number>;
+  listed?: Record<string, { maxLeverage: number; minLevel: number; allowShort: boolean; minMargin: number; maxMargin: number; halted: boolean; locked: number }>;
   titles?: string[];
   enabled: boolean;
   message: string;

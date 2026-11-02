@@ -138,6 +138,219 @@ def prices():
     return _cache["data"]
 
 
+def listing_upload(body):
+    data = body.get("iconData")
+    if not data:
+        return None
+    ctype = str(body.get("iconType") or "")
+    if ctype not in SHOP_IMG_TYPES:
+        raise ValueError("Иконка: подойдёт PNG, JPG, WEBP или GIF")
+    raw = base64.b64decode(str(data).split(",")[-1])
+    if len(raw) > 1024 * 1024:
+        raise ValueError("Иконка должна быть до 1 МБ")
+    import boto3
+    key = f"listings/{uuid.uuid4().hex}.{SHOP_IMG_TYPES[ctype]}"
+    s3 = boto3.client(
+        "s3",
+        endpoint_url="https://bucket.poehali.dev",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    s3.put_object(Bucket="files", Key=key, Body=raw, ContentType=ctype)
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+
+def listing_close_all(cur, l):
+    """Делистинг: закрываем позиции по последней цене, возвращаем маржу ордеров."""
+    price = l["price"]
+    cur.execute(f"SELECT id, user_id, side, margin, size, entry_price FROM {SCHEMA}.paper_positions WHERE coin_id = '{q(l['slug'])}' AND status = 'open'")
+    n = 0
+    for pid, u, side, margin, size, entry in cur.fetchall():
+        margin = float(margin)
+        pnl = max(pnl_of(side, float(entry), float(size), price), -margin)
+        cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = {price}, pnl = {pnl}, close_reason = 'manual', closed_at = NOW() WHERE id = {pid}")
+        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {margin + pnl} WHERE user_id = {u}")
+        n += 1
+    cur.execute(f"SELECT id, user_id, margin, fee FROM {SCHEMA}.paper_orders WHERE coin_id = '{q(l['slug'])}' AND status = 'pending'")
+    for oid, u, margin, fee in cur.fetchall():
+        cur.execute(f"UPDATE {SCHEMA}.paper_orders SET status = 'cancelled', done_at = NOW() WHERE id = {oid}")
+        cur.execute(f"UPDATE {SCHEMA}.paper_accounts SET balance = balance + {float(margin) + float(fee or 0)} WHERE user_id = {u}")
+    return n
+
+
+def listing_admin_payload(cur):
+    import listings as ls
+    ls.run_due(cur)
+    rows = ls.all_rows(cur)
+    out = []
+    for l in rows:
+        it = ls.public_item(l)
+        cur.execute(f"SELECT COUNT(*), COUNT(DISTINCT user_id) FROM {SCHEMA}.paper_positions WHERE coin_id = '{q(l['slug'])}' AND status = 'open'")
+        a = cur.fetchone()
+        cur.execute(f"SELECT COUNT(*), COALESCE(SUM(price * qty), 0) FROM {SCHEMA}.listing_trades WHERE listing_id = {l['id']}")
+        t = cur.fetchone()
+        cur.execute(f"SELECT id, side, price, qty FROM {SCHEMA}.listing_book WHERE listing_id = {l['id']} AND kind = 'manual' ORDER BY price")
+        it.update(
+            openPositions=int(a[0]), holders=int(a[1]), trades=int(t[0]), turnover=float(t[1]),
+            manualWalls=[{"id": r[0], "side": r[1], "price": float(r[2]), "qty": float(r[3])} for r in cur.fetchall()],
+        )
+        out.append(it)
+    return {"items": out, "anchors": [{"id": c, "name": COIN_RU.get(c, c)} for c in COINS], "statuses": ls.STATUS_RU}
+
+
+def listing_admin_do(cur, uid, act, body):
+    import listings as ls
+    if act in ("listing_save",):
+        lid = int(body.get("id") or 0)
+        try:
+            d = ls.clean_input(body, creating=not lid)
+            icon = listing_upload(body)
+        except (TypeError, ValueError) as e:
+            return 400, {"error": str(e) or "Проверьте поля"}
+        at = f"'{q(d['listing_at'])}'" if d["listing_at"] else "NULL"
+        if not lid:
+            cur.execute(f"SELECT 1 FROM {SCHEMA}.listings WHERE slug = '{d['slug']}'")
+            if cur.fetchone():
+                return 400, {"error": "Монета с таким тикером уже есть"}
+            if d["symbol"] in SYM.values() or d["symbol"] == "GRAM":
+                return 400, {"error": "Такой тикер уже занят основной монетой"}
+            running = d["status"] == "trading"
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.listings (slug, symbol, name, description, color, icon_url, status, listing_at, start_price, price, day_open, day_open_at, "
+                f"high_24h, low_24h, total_supply, volatility, drift, liquidity, spread_pct, tick_size, max_leverage, min_level, allow_short, min_margin, "
+                f"max_margin, fee_percent, anchor_coin, anchor_beta, sort, created_by, last_tick_at) VALUES ('{d['slug']}', '{d['symbol']}', '{q(d['name'])}', "
+                f"'{q(d['description'])}', '{d['color']}', '{q(icon or '')}', '{d['status']}', {at}, {d['start_price']}, {d['start_price']}, {d['start_price']}, "
+                f"NOW(), {d['start_price']}, {d['start_price']}, {d['total_supply']}, {d['volatility']}, {d['drift']}, {d['liquidity']}, {d['spread_pct']}, "
+                f"{d['tick_size']}, {d['max_leverage']}, {d['min_level']}, {'TRUE' if d['allow_short'] else 'FALSE'}, {d['min_margin']}, {d['max_margin']}, "
+                f"{d['fee_percent']}, '{q(d['anchor_coin'])}', {d['anchor_beta']}, {d['sort']}, {int(uid)}, NOW()) RETURNING id"
+            )
+            new_id = cur.fetchone()[0]
+            if running:
+                l = ls.get(cur, lid=new_id)
+                cur.execute(f"INSERT INTO {SCHEMA}.listing_ticks (listing_id, t, price, volume) VALUES ({new_id}, {int(time.time() * 1000)}, {l['price']}, 0)")
+                ls.refresh_book(cur, l)
+        else:
+            old = ls.get(cur, lid=lid)
+            if not old:
+                return 404, {"error": "Монета не найдена"}
+            icon_sql = f", icon_url = '{q(icon)}'" if icon else (", icon_url = ''" if body.get("removeIcon") else "")
+            price_sql = f", start_price = {d['start_price']}" if old["status"] in ("draft", "scheduled") else ""
+            if old["status"] in ("draft", "scheduled"):
+                price_sql += f", price = {d['start_price']}, day_open = {d['start_price']}, high_24h = {d['start_price']}, low_24h = {d['start_price']}"
+            cur.execute(
+                f"UPDATE {SCHEMA}.listings SET name = '{q(d['name'])}', description = '{q(d['description'])}', color = '{d['color']}', listing_at = {at}, "
+                f"total_supply = {d['total_supply']}, volatility = {d['volatility']}, drift = {d['drift']}, liquidity = {d['liquidity']}, spread_pct = {d['spread_pct']}, "
+                f"tick_size = {d['tick_size']}, max_leverage = {d['max_leverage']}, min_level = {d['min_level']}, allow_short = {'TRUE' if d['allow_short'] else 'FALSE'}, "
+                f"min_margin = {d['min_margin']}, max_margin = {d['max_margin']}, fee_percent = {d['fee_percent']}, anchor_coin = '{q(d['anchor_coin'])}', "
+                f"anchor_beta = {d['anchor_beta']}, sort = {d['sort']}{icon_sql}{price_sql} WHERE id = {lid}"
+            )
+        ls.drop_cache()
+        return 200, listing_admin_payload(cur)
+
+    lid = int(body.get("id") or 0)
+    l = ls.get(cur, lid=lid)
+    if not l:
+        return 404, {"error": "Монета не найдена"}
+
+    if act == "listing_status":
+        to = str(body.get("status") or "")
+        if to == "trading":
+            if l["status"] == "delisted":
+                return 400, {"error": "Снятую с торгов монету запустить нельзя, создайте новую"}
+            fresh = l["status"] in ("draft", "scheduled")
+            cur.execute(
+                f"UPDATE {SCHEMA}.listings SET status = 'trading', halted = FALSE, "
+                + ("day_open = price, day_open_at = NOW(), high_24h = price, low_24h = price, listing_at = COALESCE(listing_at, NOW()), " if fresh else "")
+                + f"last_tick_at = NOW() WHERE id = {lid}"
+            )
+            if fresh:
+                cur.execute(f"INSERT INTO {SCHEMA}.listing_ticks (listing_id, t, price, volume) VALUES ({lid}, {int(time.time() * 1000)}, {l['price']}, 0)")
+                ls.refresh_book(cur, l)
+        elif to == "halted":
+            cur.execute(f"UPDATE {SCHEMA}.listings SET status = 'halted', halted = TRUE WHERE id = {lid} AND status IN ('trading', 'halted')")
+        elif to == "scheduled":
+            if not l["listingAt"]:
+                return 400, {"error": "Сначала укажите время запуска в настройках монеты"}
+            cur.execute(f"UPDATE {SCHEMA}.listings SET status = 'scheduled' WHERE id = {lid} AND status IN ('draft', 'scheduled')")
+        elif to == "draft":
+            cur.execute(f"UPDATE {SCHEMA}.listings SET status = 'draft' WHERE id = {lid} AND status = 'scheduled'")
+        elif to == "delisted":
+            if l["status"] == "delisted":
+                return 400, {"error": "Монета уже снята с торгов"}
+            closed = listing_close_all(cur, l)
+            cur.execute(f"UPDATE {SCHEMA}.listings SET status = 'delisted', halted = TRUE WHERE id = {lid}")
+            cur.execute(f"DELETE FROM {SCHEMA}.listing_book WHERE listing_id = {lid}")
+        else:
+            return 400, {"error": "Неизвестный статус"}
+        ls.drop_cache()
+        return 200, listing_admin_payload(cur)
+
+    if act == "listing_delete":
+        if l["status"] not in ("draft", "delisted", "scheduled"):
+            return 400, {"error": "Удалить можно только черновик или снятую с торгов монету"}
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.paper_positions WHERE coin_id = '{q(l['slug'])}' AND status = 'open'")
+        if int(cur.fetchone()[0]):
+            return 400, {"error": "У участников остались открытые позиции по этой монете"}
+        for tbl in ("listing_ticks", "listing_book", "listing_trades"):
+            cur.execute(f"DELETE FROM {SCHEMA}.{tbl} WHERE listing_id = {lid}")
+        cur.execute(f"DELETE FROM {SCHEMA}.listings WHERE id = {lid}")
+        ls.drop_cache()
+        return 200, listing_admin_payload(cur)
+
+    if act == "listing_wall":
+        side = body.get("side")
+        try:
+            price = float(body.get("price"))
+            qty = float(body.get("qty"))
+        except (TypeError, ValueError):
+            return 400, {"error": "Укажите цену и количество"}
+        if side not in ("bid", "ask") or price <= 0 or qty <= 0:
+            return 400, {"error": "Проверьте сторону, цену и количество"}
+        if l["status"] not in ("trading", "halted"):
+            return 400, {"error": "Заявки можно ставить, когда монета торгуется"}
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.listing_book (listing_id, side, price, qty, kind) VALUES ({lid}, '{side}', {ls.snap(price, l['tickSize'])}, {qty}, 'manual')"
+        )
+        return 200, listing_admin_payload(cur)
+
+    if act == "listing_wall_clear":
+        wid = int(body.get("wallId") or 0)
+        if wid:
+            cur.execute(f"DELETE FROM {SCHEMA}.listing_book WHERE id = {wid} AND listing_id = {lid}")
+        else:
+            cur.execute(f"DELETE FROM {SCHEMA}.listing_book WHERE listing_id = {lid} AND kind = 'manual'")
+        return 200, listing_admin_payload(cur)
+
+    if act == "listing_move":
+        if l["status"] != "trading":
+            return 400, {"error": "Двигать цену можно, пока монета торгуется"}
+        try:
+            pct = max(-50.0, min(float(body.get("percent")), 200.0))
+        except (TypeError, ValueError):
+            return 400, {"error": "Укажите процент"}
+        new = ls.snap(l["price"] * (1 + pct / 100), l["tickSize"])
+        if new <= 0:
+            return 400, {"error": "Цена получилась нулевой"}
+        cur.execute(
+            f"UPDATE {SCHEMA}.listings SET price = {new}, high_24h = GREATEST(high_24h, {new}), low_24h = LEAST(NULLIF(low_24h, 0), {new}) WHERE id = {lid}"
+        )
+        cur.execute(f"INSERT INTO {SCHEMA}.listing_ticks (listing_id, t, price, volume) VALUES ({lid}, {int(time.time() * 1000)}, {new}, {round(l['liquidity'] * abs(pct) / 100, 2)})")
+        ls.refresh_book(cur, dict(l, price=new))
+        ls.drop_cache()
+        return 200, listing_admin_payload(cur)
+    return 400, {"error": "Неизвестное действие"}
+
+
+def with_listings(cur, px):
+    try:
+        import listings as ls
+        extra = ls.open_prices(cur)
+    except Exception as e:
+        print("listings prices error:", e)
+        return px
+    return {**px, **extra} if extra else px
+
+
 def pnl_of(side, entry, size, price):
     return (price - entry) * size if side == "long" else (entry - price) * size
 
@@ -618,7 +831,7 @@ def public_trades(cur, uid, px):
 def top_trades_feed(cur, limit=20):
     cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE is_ai")
     ai_ids = {int(r[0]) for r in cur.fetchall()}
-    tops = [int(r["userId"]) for r in leaderboard(cur, prices()) if r["pnl"] > 0][:3]
+    tops = [int(r["userId"]) for r in leaderboard(cur, with_listings(cur, prices())) if r["pnl"] > 0][:3]
     if not tops:
         return {"feed": [], "tops": []}
     ids = ", ".join(str(i) for i in tops)
@@ -1922,6 +2135,12 @@ def handler(event, context):
             if not px:
                 return resp(503, {"error": "Курсы недоступны"})
             finish_due(cur)
+            try:
+                import listings as ls
+                ls.run(cur, px)
+                px = with_listings(cur, px)
+            except Exception as e:
+                print("listings run error:", e)
             checked, pushed = tick(cur, px)
             return resp(200, {"checked": checked, "pushed": pushed, "ai": ai_trader_step(cur, px)})
         if method == "GET" and action == "mobile_settings":
@@ -1942,6 +2161,15 @@ def handler(event, context):
             ex["myLevel"] = lvl
             ex["myMaxLeverage"] = allowed_leverage(ex, lvl, adm)
             ex["lockedCoins"] = {c: need for c in COINS if (need := coin_locked(ex, c, lvl, adm))}
+            try:
+                import listings as ls
+                ex["listed"] = ls.settings_for_exchange(cur, lvl, adm)
+                for slug, cfg in ex["listed"].items():
+                    if cfg["locked"]:
+                        ex["lockedCoins"][slug] = cfg["locked"]
+            except Exception as e:
+                print("listings settings error:", e)
+                ex["listed"] = {}
             ex["titles"] = TITLES
             return resp(200, ex)
         if method == "GET" and action == "top_feed":
@@ -1955,7 +2183,7 @@ def handler(event, context):
             now = time.time()
             if _top["data"] is not None and now - _top["at"] < 120:
                 return resp(200, {"top": _top["data"]})
-            rows = [r for r in leaderboard(cur, prices()) if r["pnl"] > 0][:3]
+            rows = [r for r in leaderboard(cur, with_listings(cur, prices())) if r["pnl"] > 0][:3]
             ids = [int(r["userId"]) for r in rows]
             _top.update(at=now, data=ids)
             return resp(200, {"top": ids})
@@ -1976,6 +2204,34 @@ def handler(event, context):
             import tournaments as tn
             out = tn.leaderboard(cur, int(re.sub(r"\D", "", str(qs.get("id", "0")))[:9] or 0))
             return resp(404 if out.get("error") else 200, out)
+        if method == "GET" and action == "listings":
+            import listings as ls
+            try:
+                ls.run(cur, prices())
+            except Exception as e:
+                print("listings run error:", e)
+            return resp(200, ls.public_list(cur))
+        if method == "GET" and action == "listing_book":
+            import listings as ls
+            l = ls.get(cur, slug=str(qs.get("slug", ""))[:40])
+            if not l or l["status"] not in ("trading", "halted"):
+                return resp(404, {"error": "Монета не найдена"})
+            b = ls.book(cur, l)
+            cur.execute(
+                f"SELECT side, price, qty, created_at FROM {SCHEMA}.listing_trades WHERE listing_id = {l['id']} ORDER BY id DESC LIMIT 20"
+            )
+            b["trades"] = [{"side": r[0], "price": float(r[1]), "qty": float(r[2]), "at": r[3].isoformat()} for r in cur.fetchall()]
+            return resp(200, b)
+        if method == "GET" and action == "listing_chart":
+            import listings as ls
+            l = ls.get(cur, slug=str(qs.get("slug", ""))[:40])
+            if not l or l["status"] not in ("trading", "halted", "delisted"):
+                return resp(404, {"error": "Монета не найдена"})
+            try:
+                days = max(1, min(int(qs.get("days", "7")), 30))
+            except ValueError:
+                days = 7
+            return resp(200, {"prices": ls.line(cur, l, days)})
         if method == "GET" and action == "referral_info":
             import referrals as rf
             return resp(200, rf.public_info(cur))
@@ -1986,12 +2242,21 @@ def handler(event, context):
         if not row:
             return resp(401, {"error": "Сессия истекла, войдите заново"})
         uid = int(row[0])
+        if method == "GET" and action == "candles" and str(qs.get("coinId", "")).startswith("x-"):
+            import listings as ls
+            l = ls.get(cur, slug=str(qs.get("coinId", ""))[:40])
+            if not l or l["status"] not in ("trading", "halted", "delisted"):
+                return resp(503, {"error": "Свечи сейчас недоступны"})
+            rows = ls.candles(cur, l, str(qs.get("interval", "1h")))
+            if len(rows) < 2:
+                return resp(503, {"error": "Свечей пока мало, подождите несколько минут"})
+            return resp(200, {"source": "traderka", "candles": rows})
         if method == "GET" and action == "candles":
             res = candles(qs.get("coinId", ""), qs.get("interval", "1h"))
             if not res:
                 return resp(503, {"error": "Свечи сейчас недоступны"})
             return resp(200, {"source": res["source"], "candles": res["candles"]})
-        px = prices()
+        px = with_listings(cur, prices())
         if method == "GET" and action == "trades":
             uid_q = str(qs.get("userId", ""))
             if not uid_q.isdigit():
@@ -2015,6 +2280,10 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "listing_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            return resp(200, listing_admin_payload(cur))
         if method == "GET" and action == "referral_me":
             import referrals as rf
             return resp(200, rf.my_state(cur, uid))
@@ -2346,6 +2615,11 @@ def handler(event, context):
             if not cur.fetchone():
                 return resp(400, {"error": "Вы уже участвуете в этом конкурсе"})
             return resp(200, {"contests": contests_list(cur, uid)})
+        if act in ("listing_save", "listing_status", "listing_delete", "listing_wall", "listing_wall_clear", "listing_move"):
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            code, out = listing_admin_do(cur, uid, act, body)
+            return resp(code, out)
         if act in ("referral_save", "tournament_create", "tournament_update", "tournament_cancel", "tournament_finish", "tournament_delete"):
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
@@ -2563,7 +2837,17 @@ def handler(event, context):
                 margin = float(body.get("margin", 0))
             except (TypeError, ValueError):
                 return resp(400, {"error": "Неверные параметры"})
-            if coin not in COINS or side not in ("long", "short"):
+            listed = None
+            if coin.startswith("x-"):
+                import listings as ls
+                listed = ls.get(cur, slug=coin)
+                if not listed or listed["status"] not in ("trading", "halted"):
+                    return resp(400, {"error": "Эта монета сейчас не торгуется"})
+                if listed["halted"] or listed["status"] == "halted":
+                    return resp(403, {"error": "Торги этой монетой временно остановлены"})
+                if side == "short" and not listed["allowShort"]:
+                    return resp(400, {"error": "Для этой монеты шорт недоступен"})
+            if (coin not in COINS and not listed) or side not in ("long", "short"):
                 return resp(400, {"error": "Неверная монета или направление"})
             ex = exchange_settings(cur)
             if not ex["enabled"]:
@@ -2574,12 +2858,23 @@ def handler(event, context):
             need_lv = coin_locked(ex, coin, my_level, my_admin)
             if need_lv:
                 return resp(403, {"error": f"Эта монета доступна со статуса «{TITLES[need_lv - 1]}»"})
+            if listed and listed["minLevel"] > my_level and not my_admin:
+                return resp(403, {"error": f"Эта монета доступна со статуса уровня {listed['minLevel']}"})
             lev_cap = allowed_leverage(ex, my_level, my_admin)
+            if listed:
+                lev_cap = min(lev_cap, listed["maxLeverage"])
             if lev < 1 or lev > lev_cap:
                 return resp(400, {"error": f"С вашим статусом плечо от 1 до {lev_cap}"})
             if margin < ex["minMargin"]:
                 return resp(400, {"error": f"Минимальная ставка {ex['minMargin']:g} USDT (виртуальных)"})
+            if listed:
+                if margin < listed["minMargin"]:
+                    return resp(400, {"error": f"Для этой монеты минимальная ставка {listed['minMargin']:g} USDT"})
+                if listed["maxMargin"] and margin > listed["maxMargin"]:
+                    return resp(400, {"error": f"Для этой монеты максимальная ставка {listed['maxMargin']:g} USDT"})
             fee = trade_fee(ex, margin, lev)
+            if listed and listed["feePercent"] >= 0:
+                fee = trade_fee({**ex, "feePercent": listed["feePercent"]}, margin, lev)
             sl = tp = None
             try:
                 if body.get("sl") not in (None, "", 0):
@@ -2599,10 +2894,24 @@ def handler(event, context):
             cur.execute(f"SELECT balance FROM {SCHEMA}.paper_accounts WHERE user_id = {uid}")
             if margin + fee > float(cur.fetchone()[0]) + 1e-9:
                 return resp(400, {"error": f"Недостаточно средств на счёте: нужно {margin + fee:.2f} с учётом комиссии {fee:.2f}" if fee > 0 else "Недостаточно средств на счёте"})
+            slip_info = None
             if act == "open":
                 p = px.get(coin)
                 if not p:
                     return resp(503, {"error": "Курс сейчас недоступен, попробуйте через минуту"})
+                if listed:
+                    import listings as ls
+                    cur_book = ls.book(cur, listed)
+                    if not cur_book["bids"] or not cur_book["asks"]:
+                        ls.refresh_book(cur, listed)
+                    res = ls.fill(cur, listed, side, margin * lev)
+                    if not res["ok"]:
+                        return resp(400, {"error": res["error"]})
+                    p = res["avg"]
+                    slip_info = res
+                    ls.record_trade(cur, listed, uid, side, p, res["qty"], res["slippage"])
+                    px = dict(px)
+                    px[coin] = ls.get(cur, slug=coin)["price"]
                 size = margin * lev / p
                 cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {size}, {p}, {sql_num(sl)}, {sql_num(tp)})")
                 try:
@@ -2631,6 +2940,15 @@ def handler(event, context):
             p = px.get(r[0])
             if not p:
                 return resp(503, {"error": "Курс сейчас недоступен, попробуйте через минуту"})
+            if str(r[0]).startswith("x-"):
+                import listings as ls
+                lst = ls.get(cur, slug=r[0])
+                if lst and lst["status"] in ("trading", "halted"):
+                    out_side = "short" if r[1] == "long" else "long"
+                    res = ls.fill(cur, lst, out_side, float(r[3]) * lst["price"])
+                    if res["ok"]:
+                        p = res["avg"]
+                        ls.record_trade(cur, lst, uid, out_side, p, res["qty"], res["slippage"])
             margin = float(r[2])
             pnl = max(pnl_of(r[1], float(r[4]), float(r[3]), p), -margin)
             cur.execute(f"UPDATE {SCHEMA}.paper_positions SET status = 'closed', close_price = {p}, pnl = {pnl}, close_reason = 'manual', closed_at = NOW() WHERE id = {pid}")
@@ -2649,4 +2967,5 @@ def handler(event, context):
     finally:
         cur.close()
         conn.close()
+
 

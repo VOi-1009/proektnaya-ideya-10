@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
-import { Coin, COIN_META, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
+import { Coin, COIN_META, coinShort, coinTitle, fmtBig, fmtPct, fmtPrice } from "@/lib/crypto";
 import Sparkline from "./Sparkline";
 
 type SortKey = "market_cap" | "current_price" | "price_change_percentage_24h" | "price_change_percentage_7d_in_currency";
@@ -25,6 +25,18 @@ const CoinLogo = ({ coin, size = 28 }: { coin: Coin; size?: number }) => {
         <Icon name={COMMODITY_ICON[coin.id]} size={Math.round(size * 0.55)} />
       </div>
     );
+  if (coin.listing) {
+    return coin.image && !failed ? (
+      <img src={coin.image} alt={coin.name} width={size} height={size} className="rounded-full object-cover" style={{ width: size, height: size }} loading="lazy" onError={() => setFailed(true)} />
+    ) : (
+      <div
+        className="rounded-full flex items-center justify-center font-mono font-bold text-[9px] text-black"
+        style={{ width: size, height: size, background: coin.listing.color }}
+      >
+        {coin.symbol.slice(0, 3).toUpperCase()}
+      </div>
+    );
+  }
   if (!failed && !coin.kind)
     return (
       <img
@@ -63,6 +75,7 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
           c.name.toLowerCase().includes(s) ||
           c.symbol.toLowerCase().includes(s) ||
           COIN_META[c.id]?.ru.toLowerCase().includes(s) ||
+          (c.listing ? "новая new листинг" : "").includes(s) ||
           COIN_META[c.id]?.short.toLowerCase().includes(s)
       );
     }
@@ -128,8 +141,11 @@ const QuotesTable = ({ coins, selected, onSelect }: Props) => {
                     <div className="flex items-center gap-2.5">
                       <CoinLogo coin={c} />
                       <div>
-                        <div className="text-white font-medium leading-tight font-coin">{COIN_META[c.id]?.ru ?? c.name}</div>
-                        <div className="text-muted-foreground text-xs font-mono">{COIN_META[c.id]?.short ?? c.symbol.toUpperCase()}</div>
+                        <div className="text-white font-medium leading-tight font-coin flex items-center gap-1.5">
+                          {coinTitle(c)}
+                          {c.listing && <span className="text-[9px] font-mono font-bold uppercase tracking-wider rounded px-1 py-px bg-primary text-primary-foreground">new</span>}
+                        </div>
+                        <div className="text-muted-foreground text-xs font-mono">{coinShort(c)}</div>
                       </div>
                     </div>
                   </td>

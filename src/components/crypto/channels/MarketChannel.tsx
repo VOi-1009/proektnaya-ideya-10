@@ -2,6 +2,7 @@ import { Coin } from "@/lib/crypto";
 import PriceChart from "../PriceChart";
 import QuotesTable from "../QuotesTable";
 import Message from "../Message";
+import ListingSoon from "../ListingSoon";
 
 interface Props {
   coins: Coin[];
@@ -21,6 +22,7 @@ const MarketChannel = ({ coins, selected, onSelect, live }: Props) => {
             : "Источник котировок сейчас недоступен — показываем последние сохранённые данные. Обновим автоматически."}
         </p>
       </Message>
+      <ListingSoon />
       {coin && <PriceChart key={coin.id} coin={coin} />}
       <QuotesTable coins={coins} selected={selected} onSelect={onSelect} />
     </div>

@@ -84,6 +84,45 @@
         "id": 1
       },
       "expectedStatus": 401
+    },
+    {
+      "name": "Новые монеты открыты",
+      "method": "GET",
+      "path": "/?action=listings",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Стакан несуществующей монеты",
+      "method": "GET",
+      "path": "/?action=listing_book&slug=x-nope",
+      "expectedStatus": 404
+    },
+    {
+      "name": "График несуществующей монеты",
+      "method": "GET",
+      "path": "/?action=listing_chart&slug=x-nope",
+      "expectedStatus": 404
+    },
+    {
+      "name": "Админка листинга без входа",
+      "method": "GET",
+      "path": "/?action=listing_admin",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Создание монеты без входа",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "action": "listing_save",
+        "name": "Test",
+        "symbol": "TST",
+        "startPrice": 1
+      },
+      "expectedStatus": 401
     }
   ]
 }

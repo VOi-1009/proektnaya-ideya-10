@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
-import { Coin, fmtPrice } from "@/lib/crypto";
+import { Coin, fmtPrice, isListed } from "@/lib/crypto";
+import OrderBook from "./OrderBook";
 import { EX_DEFAULT, tradeFee, useExchangeSettings } from "@/lib/fund";
 import { Send, State, name, usd } from "./shared";
 
@@ -49,11 +50,12 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
   const { data: exData } = useExchangeSettings(token);
   const ex = exData ?? EX_DEFAULT;
   const fee = tradeFee(ex, m, leverage);
-  const cap = Math.min(ex.maxLeverage, ex.myMaxLeverage ?? ex.maxLeverage);
+  const listedCfg = ex.listed?.[coinId];
+  const cap = Math.min(ex.maxLeverage, ex.myMaxLeverage ?? ex.maxLeverage, listedCfg?.maxLeverage ?? 1000);
   const lockedCoins = ex.lockedCoins ?? {};
   const titles = ex.titles ?? [];
   const nextTier = (ex.levelRules && ex.leverageTiers ? ex.leverageTiers : []).find(([, lev]) => lev > cap);
-  const blocked = !ex.enabled || ex.disabledCoins.includes(coinId) || !!lockedCoins[coinId];
+  const blocked = !ex.enabled || ex.disabledCoins.includes(coinId) || !!lockedCoins[coinId] || !!listedCfg?.halted || (!!listedCfg && !listedCfg.allowShort && side === "short");
   const risk = riskOf(leverage);
   const sideColor = side === "long" ? "#22C55E" : "#EA3943";
   const volume = m * leverage;
@@ -68,13 +70,22 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               {coins.filter((c) => !c.kind && !ex.disabledCoins.includes(c.id)).map((c) => (
-                <SelectItem key={c.id} value={c.id} disabled={!!lockedCoins[c.id]}>
-                  {c.symbol.toUpperCase()} · {name(c.id)}{lockedCoins[c.id] ? ` · со статуса «${titles[lockedCoins[c.id] - 1] ?? lockedCoins[c.id]}»` : ""}
+                <SelectItem key={c.id} value={c.id} disabled={!!lockedCoins[c.id] || !!ex.listed?.[c.id]?.halted}>
+                  {c.symbol.toUpperCase()} · {c.listing ? c.name : name(c.id)}{c.listing ? " · NEW" : ""}
+                  {ex.listed?.[c.id]?.halted ? " · торги остановлены" : lockedCoins[c.id] ? ` · со статуса «${titles[lockedCoins[c.id] - 1] ?? lockedCoins[c.id]}»` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <div className="text-xs text-muted-foreground">Курс сейчас: <span className="text-accent font-mono">{livePrice ? fmtPrice(livePrice, coinId) : "—"}</span></div>
+          {listedCfg && (
+            <div className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[11px] leading-snug text-foreground space-y-0.5">
+              <div className="font-semibold text-primary">Новая монета: условия</div>
+              <div>Плечо до x{listedCfg.maxLeverage} · ставка от {listedCfg.minMargin} {listedCfg.maxMargin ? `до ${listedCfg.maxMargin}` : ""} USDT{!listedCfg.allowShort ? " · шорт недоступен" : ""}</div>
+              <div className="text-muted-foreground">Сделка исполняется по стакану заявок: крупная сумма берёт заявки по всё худшим ценам, поэтому средняя цена входа может отличаться от курса.</div>
+            </div>
+          )}
+          {isListed(coinId) && <OrderBook slug={coinId} />}
 
           <div className="grid grid-cols-2 gap-1.5">
             <Button size="sm" variant={side === "long" ? "default" : "outline"} onClick={() => setSide("long")} className={side === "long" ? "h-8 bg-[#22C55E] hover:bg-[#22C55E]/90 text-black shadow-[0_0_14px_rgba(34,197,94,0.45)]" : "h-8 border-[#22C55E]/40 text-[#22C55E] hover:bg-[#22C55E]/10 hover:text-[#22C55E]"}>

@@ -1,0 +1,74 @@
+CREATE TABLE IF NOT EXISTS listings (
+  id SERIAL PRIMARY KEY,
+  slug VARCHAR(30) NOT NULL UNIQUE,
+  symbol VARCHAR(12) NOT NULL,
+  name VARCHAR(60) NOT NULL,
+  description VARCHAR(600) NOT NULL DEFAULT '',
+  color VARCHAR(9) NOT NULL DEFAULT '#F97316',
+  icon_url VARCHAR(500) NOT NULL DEFAULT '',
+  status VARCHAR(12) NOT NULL DEFAULT 'draft',
+  listing_at TIMESTAMP,
+  start_price NUMERIC(30,10) NOT NULL,
+  price NUMERIC(30,10) NOT NULL,
+  day_open NUMERIC(30,10) NOT NULL DEFAULT 0,
+  day_open_at TIMESTAMP,
+  high_24h NUMERIC(30,10) NOT NULL DEFAULT 0,
+  low_24h NUMERIC(30,10) NOT NULL DEFAULT 0,
+  volume_24h NUMERIC(30,2) NOT NULL DEFAULT 0,
+  total_supply NUMERIC(30,2) NOT NULL DEFAULT 0,
+  volatility NUMERIC(8,3) NOT NULL DEFAULT 1.5,
+  drift NUMERIC(8,3) NOT NULL DEFAULT 0,
+  liquidity NUMERIC(20,2) NOT NULL DEFAULT 100000,
+  spread_pct NUMERIC(8,3) NOT NULL DEFAULT 0.2,
+  tick_size NUMERIC(30,10) NOT NULL DEFAULT 0,
+  max_leverage INTEGER NOT NULL DEFAULT 5,
+  min_level INTEGER NOT NULL DEFAULT 1,
+  allow_short BOOLEAN NOT NULL DEFAULT TRUE,
+  min_margin NUMERIC(20,2) NOT NULL DEFAULT 1,
+  max_margin NUMERIC(20,2) NOT NULL DEFAULT 0,
+  fee_percent NUMERIC(8,3) NOT NULL DEFAULT -1,
+  anchor_coin VARCHAR(40) NOT NULL DEFAULT '',
+  anchor_beta NUMERIC(8,3) NOT NULL DEFAULT 1,
+  halted BOOLEAN NOT NULL DEFAULT FALSE,
+  sort INTEGER NOT NULL DEFAULT 0,
+  last_tick_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS listings_status_idx ON listings (status, listing_at);
+
+CREATE TABLE IF NOT EXISTS listing_ticks (
+  id BIGSERIAL PRIMARY KEY,
+  listing_id INTEGER NOT NULL,
+  t BIGINT NOT NULL,
+  price NUMERIC(30,10) NOT NULL,
+  volume NUMERIC(30,4) NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS listing_ticks_idx ON listing_ticks (listing_id, t);
+
+CREATE TABLE IF NOT EXISTS listing_book (
+  id SERIAL PRIMARY KEY,
+  listing_id INTEGER NOT NULL,
+  side VARCHAR(4) NOT NULL,
+  price NUMERIC(30,10) NOT NULL,
+  qty NUMERIC(30,6) NOT NULL,
+  kind VARCHAR(8) NOT NULL DEFAULT 'wall',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS listing_book_idx ON listing_book (listing_id, side);
+
+CREATE TABLE IF NOT EXISTS listing_trades (
+  id BIGSERIAL PRIMARY KEY,
+  listing_id INTEGER NOT NULL,
+  user_id INTEGER,
+  side VARCHAR(5) NOT NULL,
+  price NUMERIC(30,10) NOT NULL,
+  qty NUMERIC(30,6) NOT NULL,
+  slippage NUMERIC(10,4) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS listing_trades_idx ON listing_trades (listing_id, id);
