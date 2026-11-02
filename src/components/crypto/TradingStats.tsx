@@ -10,10 +10,10 @@ import { usd } from "./trading/shared";
 const tone = (v: number) => (v >= 0 ? "text-[#22C55E]" : "text-[#EA3943]");
 
 const Cell = ({ label, value, sub, cls = "text-white" }: { label: string; value: string; sub?: string; cls?: string }) => (
-  <div className="rounded-xl border border-border p-3">
-    <div className="text-xs text-muted-foreground">{label}</div>
-    <div className={`font-mono text-base ${cls}`}>{value}</div>
-    {sub && <div className={`text-xs font-mono ${cls}`}>{sub}</div>}
+  <div className="rounded-lg border border-border px-2 py-1.5 min-w-0">
+    <div className="text-[10px] leading-tight text-muted-foreground truncate">{label}</div>
+    <div className={`font-mono text-sm leading-tight ${cls}`}>{value}</div>
+    {sub && <div className={`text-[10px] leading-tight font-mono ${cls}`}>{sub}</div>}
   </div>
 );
 
@@ -51,7 +51,7 @@ const TradingStats = ({ token, userId }: Props) => {
         <p className="text-sm text-muted-foreground">Закрытых сделок пока нет. Откройте и закройте первую на тренировочной бирже, и здесь появится статистика.</p>
       ) : (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid gap-1.5 ${compact ? "grid-cols-2" : "grid-cols-3"}`}>
             <Cell label="Прибыльных сделок" value={`${s.winRate.toFixed(0)}%`} sub={`${s.wins} из ${s.trades}`} cls={s.winRate >= 50 ? "text-[#22C55E]" : "text-white"} />
             <Cell label="Общий PnL" value={usd(s.totalPnl, true)} cls={tone(s.totalPnl)} />
             {!compact && <Cell label="Средний результат" value={usd(s.avgPnl, true)} sub={`${s.avgPct > 0 ? "+" : ""}${s.avgPct.toFixed(1)}%`} cls={tone(s.avgPnl)} />}
