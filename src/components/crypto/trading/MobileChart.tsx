@@ -7,7 +7,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fmtPrice } from "@/lib/crypto";
 import { useAuth } from "@/lib/auth";
-import { useListings } from "@/lib/listings";
 import { Candle, CandleShape, DOWN, Line, UP, loadKlines, withIndicators } from "../candle/chartUtils";
 
 interface Props {
@@ -59,8 +58,6 @@ const MobileChart = (p: Props) => {
     const pad = Array.from({ length: 5 }, (_, i) => ({ empty: true, t: t0 + (i + 1), o: 0, h: 0, l: 0, c: 0, v: 0, range: [0, 0] as [number, number] }));
     return [...view, ...pad];
   }, [view]);
-  const { data: lst } = useListings();
-  const fr = lst?.items.find((x) => x.slug === p.coinId)?.fundingRate ?? 0;
   const first = view[0]?.o ?? 0;
   const last = p.price || view[view.length - 1]?.c || 0;
   const pct = first ? ((last - first) / first) * 100 : 0;
@@ -180,11 +177,6 @@ const MobileChart = (p: Props) => {
           {entries.length > 0 && <div className="text-[10px] text-muted-foreground mt-1 text-left">Пунктиром показаны ваши входы</div>}
         </button>
       </div>
-      {fr !== 0 && (
-        <p className="px-1 -mt-1 text-[10px] leading-snug text-muted-foreground bg-transparent">
-          Ставка финансирования {fr > 0 ? "+" : ""}{String(fr).replace(".", ",")}% за 8 ч: {fr > 0 ? "лонги платят шортам" : "шорты платят лонгам"}.
-        </p>
-      )}
 
     </>
   );
