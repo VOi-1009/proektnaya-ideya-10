@@ -52,6 +52,12 @@ const MobileChart = (p: Props) => {
     return [...base.slice(0, -1), { ...l, c: p.price, h, l: lo, range: [lo, h] as [number, number] }];
   }, [data, p.price]);
   const view: Candle[] = useMemo(() => withIndicators(candles).slice(-45), [candles]);
+  const plot: Candle[] = useMemo(() => {
+    if (!view.length) return view;
+    const t0 = view[view.length - 1].t;
+    const pad = Array.from({ length: 5 }, (_, i) => ({ empty: true, t: t0 + (i + 1), o: 0, h: 0, l: 0, c: 0, v: 0, range: [0, 0] as [number, number] }));
+    return [...view, ...pad];
+  }, [view]);
   const first = view[0]?.o ?? 0;
   const last = p.price || view[view.length - 1]?.c || 0;
   const pct = first ? ((last - first) / first) * 100 : 0;
@@ -95,7 +101,7 @@ const MobileChart = (p: Props) => {
               <Skeleton className="h-full w-full bg-rail" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={view} margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
+                <ComposedChart data={plot} margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
                   <XAxis dataKey="t" hide />
                   <YAxis
                     orientation="right"
@@ -138,12 +144,12 @@ const MobileChart = (p: Props) => {
           {macd && view.length > 1 && (
             <div className="h-14 pointer-events-none">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={view} margin={{ left: 0, right: 0, top: 2, bottom: 0 }}>
+                <ComposedChart data={plot} margin={{ left: 0, right: 0, top: 2, bottom: 0 }}>
                   <XAxis dataKey="t" hide />
                   <YAxis orientation="right" domain={["auto", "auto"]} hide width={52} />
                   <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
                   <Bar dataKey="hist" isAnimationActive={false}>
-                    {view.map((c) => (
+                    {plot.map((c) => (
                       <Cell key={c.t} fill={(c.hist ?? 0) >= 0 ? UP : DOWN} fillOpacity={0.7} />
                     ))}
                   </Bar>
@@ -156,11 +162,11 @@ const MobileChart = (p: Props) => {
           {view.length > 1 && view.some((c) => c.v > 0) && (
             <div className="h-12 pointer-events-none">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={view} margin={{ left: 0, right: 0, top: 2, bottom: 0 }}>
+                <ComposedChart data={plot} margin={{ left: 0, right: 0, top: 2, bottom: 0 }}>
                   <XAxis dataKey="t" hide />
                   <YAxis orientation="right" domain={[0, "auto"]} hide width={52} />
                   <Bar dataKey="v" isAnimationActive={false}>
-                    {view.map((c) => (
+                    {plot.map((c) => (
                       <Cell key={c.t} fill={c.c >= c.o ? UP : DOWN} fillOpacity={0.7} />
                     ))}
                   </Bar>
