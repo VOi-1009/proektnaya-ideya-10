@@ -21,6 +21,7 @@ const riskOf = (l: number) =>
 const LEVERAGE_MARKS = [1, 10, 25, 50, 75, 100];
 
 interface Props {
+  stacked?: boolean;
   coins: Coin[];
   coinId: string;
   setCoinId: (v: string) => void;
@@ -47,7 +48,7 @@ interface Props {
   send: Send;
 }
 
-const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, limit, setLimit, margin, setMargin, leverage, setLeverage, sl, setSl, tp, setTp, m, livePrice, liqPrice, st, busy, submit, send }: Props) => {
+const TradeForm = ({ stacked, coins, coinId, setCoinId, side, setSide, mode, setMode, limit, setLimit, margin, setMargin, leverage, setLeverage, sl, setSl, tp, setTp, m, livePrice, liqPrice, st, busy, submit, send }: Props) => {
   const { user, token } = useAuth();
   const { data: exData } = useExchangeSettings(token);
   const ex = exData ?? EX_DEFAULT;
@@ -68,7 +69,7 @@ const TradeForm = ({ coins, coinId, setCoinId, side, setSide, mode, setMode, lim
   const fr = lst?.items.find((x) => x.slug === coinId)?.fundingRate ?? 0;
 
   return (
-    <div className="grid grid-cols-[1.2fr_1fr] gap-2 items-stretch">
+    <div className={`grid gap-2 items-stretch ${stacked ? "grid-cols-1" : "grid-cols-[1.2fr_1fr]"}`}>
       <section className="rounded-xl border border-border bg-card p-2.5 space-y-2 min-w-0">
         <Select value={coinId} onValueChange={(v) => { setCoinId(v); setLimit(""); }}>
           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>

@@ -241,33 +241,7 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
         <Stat label="Капитал" value={st ? usd(st.equity) : "—"} />
       </div>
 
-        <TradeForm
-          coins={coins}
-          coinId={coinId}
-          setCoinId={setCoinId}
-          side={side}
-          setSide={setSide}
-          mode={mode}
-          setMode={setMode}
-          limit={limit}
-          setLimit={setLimit}
-          margin={margin}
-          setMargin={setMargin}
-          leverage={leverage}
-          setLeverage={setLeverage}
-          sl={sl}
-          setSl={setSl}
-          tp={tp}
-          setTp={setTp}
-          m={m}
-          livePrice={livePrice}
-          liqPrice={liqPrice}
-          st={st}
-          busy={busy}
-          submit={submit}
-          send={send}
-        />
-      <div className="grid lg:grid-cols-[1fr_270px] gap-4 items-start">
+      <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-start">
         <div className="space-y-4 min-w-0">
         <section className="rounded-xl border border-border bg-card p-4 min-w-0">
           <CandleChart
@@ -308,6 +282,33 @@ const TradingChannel = ({ coins, go, compact }: Props) => {
         <TopTradesFeed />
         </div>
         <div className="space-y-4 min-w-0">
+        <TradeForm
+          stacked
+          coins={coins}
+          coinId={coinId}
+          setCoinId={setCoinId}
+          side={side}
+          setSide={setSide}
+          mode={mode}
+          setMode={setMode}
+          limit={limit}
+          setLimit={setLimit}
+          margin={margin}
+          setMargin={setMargin}
+          leverage={leverage}
+          setLeverage={setLeverage}
+          sl={sl}
+          setSl={setSl}
+          tp={tp}
+          setTp={setTp}
+          m={m}
+          livePrice={livePrice}
+          liqPrice={liqPrice}
+          st={st}
+          busy={busy}
+          submit={submit}
+          send={send}
+        />
         <ExchangeCard st={st} busy={busy} send={send} token={token} />
         <FundCard go={go} />
         <AiTraderCard />
