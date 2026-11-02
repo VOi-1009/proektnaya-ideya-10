@@ -6,11 +6,10 @@ const qty = (v: number) => (v >= 1000 ? Math.round(v).toLocaleString("ru-RU") : 
 
 const Side = ({ rows, coinId, color, max, reverse }: { rows: number[][]; coinId: string; color: string; max: number; reverse?: boolean }) => (
   <div className={`flex flex-col ${reverse ? "flex-col-reverse" : ""}`}>
-    {rows.map(([price, amount, total]) => (
-      <div key={price} className="relative grid grid-cols-3 gap-2 px-2 py-[3px] text-[11px] font-mono">
+    {rows.map(([price, , total]) => (
+      <div key={price} className="relative grid grid-cols-2 gap-2 px-2 py-[3px] text-[11px] font-mono">
         <div className="absolute inset-y-0 right-0" style={{ width: `${Math.min(100, (total / max) * 100)}%`, background: `${color}22` }} />
         <span className="relative" style={{ color }}>{fmtPrice(price, coinId)}</span>
-        <span className="relative text-right text-white">{qty(amount)}</span>
         <span className="relative text-right text-muted-foreground">{qty(total)}</span>
       </div>
     ))}
@@ -27,9 +26,8 @@ const OrderBook = ({ slug, compact }: { slug: string; compact?: boolean }) => {
 
   return (
     <div className={compact ? "flex-1 flex flex-col justify-between gap-2" : "space-y-2"}>
-      <div className="grid grid-cols-3 gap-2 px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="grid grid-cols-2 gap-2 px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
         <span>Цена</span>
-        <span className="text-right">Объём</span>
         <span className="text-right">Всего</span>
       </div>
       <Side rows={asks} coinId={slug} color="#EA3943" max={max} reverse />
