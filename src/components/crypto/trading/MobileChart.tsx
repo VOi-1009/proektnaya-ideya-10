@@ -153,6 +153,21 @@ const MobileChart = (p: Props) => {
               </ResponsiveContainer>
             </div>
           )}
+          {view.length > 1 && view.some((c) => c.v > 0) && (
+            <div className="h-12 pointer-events-none">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={view} margin={{ left: 0, right: 0, top: 2, bottom: 0 }}>
+                  <XAxis dataKey="t" hide />
+                  <YAxis orientation="right" domain={[0, "auto"]} hide width={52} />
+                  <Bar dataKey="v" isAnimationActive={false}>
+                    {view.map((c) => (
+                      <Cell key={c.t} fill={c.c >= c.o ? UP : DOWN} fillOpacity={0.7} />
+                    ))}
+                  </Bar>
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           {entries.length > 0 && <div className="text-[10px] text-muted-foreground mt-1 text-left">Пунктиром показаны ваши входы</div>}
         </button>
       </div>
