@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
@@ -6,6 +6,8 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { Team } from "@/lib/status";
 import TeamPicker from "./TeamPicker";
+import { clearRefCode, readRefCode, saveRefCode } from "@/lib/referral";
+import { fundRequest } from "@/lib/fund";
 
 const inputCls =
   "w-full bg-rail rounded px-3 h-10 text-sm text-white outline-none border border-transparent focus:border-primary placeholder:text-muted-foreground";
@@ -19,6 +21,11 @@ const AuthDialog = () => {
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
   const [team, setTeam] = useState<Team | "">("");
+  const [refCode, setRefCode] = useState("");
+
+  useEffect(() => {
+    if (authOpen) setRefCode(readRefCode());
+  }, [authOpen]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +37,16 @@ const AuthDialog = () => {
     setLoading(true);
     try {
       await auth(mode, email.trim(), password, mode === "register" ? team : undefined);
+      const code = refCode.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      if (mode === "register" && code) {
+        try {
+          const t = localStorage.getItem("svecha-token");
+          if (t) await fundRequest(t, "", { action: "referral_claim", code, source: "link" });
+        } catch {
+          /* приглашение не критично для входа */
+        }
+      }
+      clearRefCode();
       setAuthOpen(false);
       setPassword("");
       toast({ title: mode === "login" ? "С возвращением!" : "Аккаунт создан", description: "Портфель теперь сохраняется в вашем аккаунте." });
@@ -89,6 +106,23 @@ const AuthDialog = () => {
                 <TeamPicker value={team} onChange={setTeam} />
               </div>
               <p className="text-[11px] text-muted-foreground mt-1.5">Сменить можно раз в месяц или за 100 ТКА.</p>
+            </div>
+          )}
+          {mode === "register" && (
+            <div>
+              <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Промокод друга (необязательно)</label>
+              <input
+                value={refCode}
+                maxLength={24}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+                  setRefCode(v);
+                  saveRefCode(v);
+                }}
+                placeholder="Например, TRK0007"
+                className={`${inputCls} mt-1 font-mono`}
+              />
+              {refCode && <p className="text-[11px] text-muted-foreground mt-1">Ваш друг получит награду, когда вы сделаете первую сделку или сыграете в мини-игру.</p>}
             </div>
           )}
           {mode === "register" && (

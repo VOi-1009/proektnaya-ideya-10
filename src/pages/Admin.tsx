@@ -35,6 +35,8 @@ import ShopManager from "@/components/crypto/ShopManager";
 import GamesManager from "@/components/crypto/GamesManager";
 import MobileManager from "@/components/crypto/MobileManager";
 import PushManager from "@/components/crypto/PushManager";
+import ReferralManager from "@/components/crypto/ReferralManager";
+import TournamentsManager from "@/components/crypto/TournamentsManager";
 import GraphicsManager from "@/components/crypto/GraphicsManager";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { AdminSidebar, AdminTab, TabSwitcher } from "@/components/admin/AdminTabs";
@@ -225,6 +227,10 @@ const Admin = () => {
           <AiBotManager token={token} />
         ) : editing === null && tab === "push" ? (
           <PushManager token={token} />
+        ) : editing === null && tab === "referral" ? (
+          <ReferralManager token={token} />
+        ) : editing === null && tab === "tournaments" ? (
+          <TournamentsManager token={token} />
         ) : editing === null && tab === "menu" ? (
           <>
             {blocksSwitch}

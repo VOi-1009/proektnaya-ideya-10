@@ -5,6 +5,7 @@ import { Achievement, META } from "./Achievements";
 import SpecialAchievements from "./SpecialAchievements";
 import RareAchievements from "./RareAchievements";
 import DonateButton from "./DonateButton";
+import ReferralCard from "./referral/ReferralCard";
 
 interface Props {
   level: number;
@@ -15,6 +16,7 @@ interface Props {
   promo?: string;
   streak: number;
 }
+
 
 const Card = ({ children }: { children: React.ReactNode }) => (
   <section className="bg-card border border-border rounded-2xl p-4 sm:p-5">{children}</section>
@@ -50,6 +52,8 @@ const ProfileRewards = ({ level, achievements, special, founder, foundersTaken, 
           </div>
         )}
       </Card>
+
+      <ReferralCard />
 
       {achievements && (
         <Card>

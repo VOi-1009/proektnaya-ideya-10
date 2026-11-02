@@ -26,6 +26,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RatingRouteImport } from './routes/rating'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as TradingRouteImport } from './routes/trading'
 import { Route as ArticlesIdRouteImport } from './routes/articles.$id'
 
@@ -114,6 +115,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TournamentsRoute = TournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TradingRoute = TradingRouteImport.update({
   id: '/trading',
   path: '/trading',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/rating': typeof RatingRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tournaments': typeof TournamentsRoute
   '/trading': typeof TradingRoute
   '/articles/$id': typeof ArticlesIdRoute
 }
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/rating': typeof RatingRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tournaments': typeof TournamentsRoute
   '/trading': typeof TradingRoute
   '/articles/$id': typeof ArticlesIdRoute
 }
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/rating': typeof RatingRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tournaments': typeof TournamentsRoute
   '/trading': typeof TradingRoute
   '/articles/$id': typeof ArticlesIdRoute
 }
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/rating'
     | '/shop'
     | '/sitemap.xml'
+    | '/tournaments'
     | '/trading'
     | '/articles/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/rating'
     | '/shop'
     | '/sitemap.xml'
+    | '/tournaments'
     | '/trading'
     | '/articles/$id'
   id:
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/rating'
     | '/shop'
     | '/sitemap.xml'
+    | '/tournaments'
     | '/trading'
     | '/articles/$id'
   fileRoutesById: FileRoutesById
@@ -273,6 +285,7 @@ export interface RootRouteChildren {
   RatingRoute: typeof RatingRoute
   ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TournamentsRoute: typeof TournamentsRoute
   TradingRoute: typeof TradingRoute
   ArticlesIdRoute: typeof ArticlesIdRoute
 }
@@ -398,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tournaments': {
+      id: '/tournaments'
+      path: '/tournaments'
+      fullPath: '/tournaments'
+      preLoaderRoute: typeof TournamentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trading': {
       id: '/trading'
       path: '/trading'
@@ -433,6 +453,7 @@ const rootRouteChildren: RootRouteChildren = {
   RatingRoute: RatingRoute,
   ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TournamentsRoute: TournamentsRoute,
   TradingRoute: TradingRoute,
   ArticlesIdRoute: ArticlesIdRoute,
 }

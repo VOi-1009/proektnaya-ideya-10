@@ -8,6 +8,8 @@ import BullBearMini from "./BullBearMini";
 import MobileTradesTicker from "./MobileTradesTicker";
 import MobileMyCoins from "./MobileMyCoins";
 import MobileWalletMini from "./MobileWalletMini";
+import ReferralCard from "@/components/crypto/referral/ReferralCard";
+import TournamentsChannel from "@/components/crypto/channels/TournamentsChannel";
 import WalletView from "./WalletView";
 import TradingChannel from "@/components/crypto/channels/TradingChannel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,6 +70,8 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
   }
   if (b.kind === "my_coins") return <MobileMyCoins />;
   if (b.kind === "wallet_mini") return <MobileWalletMini />;
+  if (b.kind === "referral") return <ReferralCard compact />;
+  if (b.kind === "tournaments") return <TournamentsChannel />;
   if (b.kind === "trades") {
     return <MobileTradesTicker />;
   }

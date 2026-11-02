@@ -12,6 +12,7 @@ import {AuthProvider} from "@/lib/auth";
 import {useFaviconSync} from "@/lib/graphics";
 import {MemberCardProvider} from "@/lib/memberCard";
 import AuthDialog from "@/components/crypto/AuthDialog";
+import RefCapture from "@/components/crypto/referral/RefCapture";
 import NotFound from "@/pages/NotFound";
 import CookieBanner from "@/components/legal/CookieBanner";
 
@@ -118,6 +119,7 @@ function RootInner() {
                             <Toaster/>
                             <Sonner/>
                             <AuthDialog/>
+                            <RefCapture/>
                             <VisitTracker/>
                             <CookieBanner/>
                             <FaviconSync/>

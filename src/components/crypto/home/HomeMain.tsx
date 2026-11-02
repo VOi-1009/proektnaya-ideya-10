@@ -25,6 +25,7 @@ const RadarChannel = lazy(() => import("@/components/crypto/channels/RadarChanne
 const RulesChannel = lazy(() => import("@/components/crypto/channels/RulesChannel"));
 const RatingChannel = lazy(() => import("@/components/crypto/channels/RatingChannel"));
 const FundChannel = lazy(() => import("@/components/crypto/channels/FundChannel"));
+const TournamentsChannel = lazy(() => import("@/components/crypto/channels/TournamentsChannel"));
 const ShopChannel = lazy(() => import("@/components/crypto/channels/ShopChannel"));
 const GamesChannel = lazy(() => import("@/components/crypto/channels/GamesChannel"));
 const ForumChannel = lazy(() => import("@/components/crypto/channels/ForumChannel"));
@@ -146,6 +147,8 @@ const HomeMain = ({
           <GamesChannel />
         ) : channel === "shop" ? (
           <ShopChannel />
+        ) : channel === "tournaments" ? (
+          <TournamentsChannel />
         ) : channel === "fund" ? (
           <FundChannel />
         ) : channel === "forum" ? (

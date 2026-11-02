@@ -534,6 +534,11 @@ def tick(cur, px):
     for u in ids:
         process(cur, int(u), px)
         grant_awards(cur, int(u))
+    try:
+        import tournaments as tn
+        tn.lifecycle(cur)
+    except Exception as e:
+        print("tournaments error:", e)
     pushed = 0
     try:
         from personal_push import check_price_alerts, notify_closed
@@ -1704,6 +1709,11 @@ def games_play(cur, uid, body):
             f"INSERT INTO {SCHEMA}.games_log (user_id, game, bet, payout, mult, detail) "
             f"VALUES ({uid}, '{game}', {bet}, {payout}, {mult}, '{q(json.dumps(detail))[:190]}')"
         )
+        try:
+            import referrals as rf
+            rf.on_activity(cur, uid)
+        except Exception as e:
+            print("referral error:", e)
     finally:
         cur.execute(f"SELECT pg_advisory_unlock({GAMES_LOCK})")
     return 200, {"game": game, "bet": bet, "payout": payout, "mult": mult, "win": payout > bet, "profit": net_change, "detail": detail}
@@ -1803,7 +1813,7 @@ def gfx_upload(data, ctype):
 
 MOBILE_KEY = "mobile_settings"
 MOBILE_SECTIONS = ["home", "market", "news", "trading", "games", "shop", "profile", "community", "fund"]
-MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link", "market_summary", "bullbear", "exchange", "wallet", "image", "trades", "my_coins", "wallet_mini"]
+MOBILE_BLOCK_KINDS = ["empty", "text", "banner", "link", "market_summary", "bullbear", "exchange", "wallet", "image", "trades", "my_coins", "wallet_mini", "referral", "tournaments"]
 MOBILE_DEFAULT = {
     "enabled": True,
     "message": "",
@@ -1959,6 +1969,16 @@ def handler(event, context):
             return resp(200, {"donors": {str(r[0]): round(float(r[1]), 2) for r in cur.fetchall()}})
         if method == "GET" and action == "contests":
             return resp(200, {"contests": contests_list(cur, opt_uid(cur, token)), "available": max(fund_total(cur), 0)})
+        if method == "GET" and action == "tournaments":
+            import tournaments as tn
+            return resp(200, tn.list_for(cur, opt_uid(cur, token)))
+        if method == "GET" and action == "tournament":
+            import tournaments as tn
+            out = tn.leaderboard(cur, int(re.sub(r"\D", "", str(qs.get("id", "0")))[:9] or 0))
+            return resp(404 if out.get("error") else 200, out)
+        if method == "GET" and action == "referral_info":
+            import referrals as rf
+            return resp(200, rf.public_info(cur))
         if not token:
             return resp(401, {"error": "Биржа доступна только зарегистрированным пользователям. Войдите или зарегистрируйтесь"})
         cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token = '{token}' AND expires_at > NOW()")
@@ -1995,6 +2015,19 @@ def handler(event, context):
         if method == "GET" and action == "daily":
             ensure_account(cur, uid)
             return resp(200, daily_state(cur, uid))
+        if method == "GET" and action == "referral_me":
+            import referrals as rf
+            return resp(200, rf.my_state(cur, uid))
+        if method == "GET" and action == "referral_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            import referrals as rf
+            return resp(200, rf.admin_state(cur))
+        if method == "GET" and action == "tournament_admin":
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            import tournaments as tn
+            return resp(200, tn.admin_list(cur))
         if method == "GET" and action == "games_admin":
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
@@ -2285,6 +2318,21 @@ def handler(event, context):
                 f"ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
             )
             return resp(200, exchange_settings(cur))
+        if act in ("tournament_join", "tournament_leave"):
+            import tournaments as tn
+            ensure_account(cur, uid)
+            try:
+                tid = int(body.get("id"))
+            except (TypeError, ValueError):
+                return resp(400, {"error": "Турнир не найден"})
+            code, out = (tn.join if act == "tournament_join" else tn.leave)(cur, uid, tid)
+            if code != 200:
+                return resp(code, out)
+            return resp(200, tn.list_for(cur, uid))
+        if act == "referral_claim":
+            import referrals as rf
+            ok = rf.register_friend(cur, uid, str(body.get("code") or ""), str(body.get("source") or "link"))
+            return resp(200, {"ok": ok, **rf.my_state(cur, uid)})
         if act == "contest_join":
             try:
                 cid = int(body.get("id"))
@@ -2298,6 +2346,69 @@ def handler(event, context):
             if not cur.fetchone():
                 return resp(400, {"error": "Вы уже участвуете в этом конкурсе"})
             return resp(200, {"contests": contests_list(cur, uid)})
+        if act in ("referral_save", "tournament_create", "tournament_update", "tournament_cancel", "tournament_finish", "tournament_delete"):
+            if not is_admin(cur, uid):
+                return resp(403, {"error": "Доступ только для администратора"})
+            import referrals as rf
+            import tournaments as tn
+            if act == "referral_save":
+                try:
+                    rf.save_settings(cur, body)
+                except (TypeError, ValueError):
+                    return resp(400, {"error": "Проверьте числа в настройках"})
+                return resp(200, rf.admin_state(cur))
+            if act in ("tournament_create", "tournament_update"):
+                try:
+                    d = tn.clean_input(body)
+                except (TypeError, ValueError) as e:
+                    return resp(400, {"error": str(e) if str(e) else "Проверьте поля турнира"})
+                badge = d["badge"] if d["badge"] > 0 else "NULL"
+                if act == "tournament_create":
+                    if d["prize_pool"] > 0 and max(fund_total(cur), 0) < d["prize_pool"]:
+                        return resp(400, {"error": "В фонде не хватает средств на призовой фонд"})
+                    cur.execute(
+                        f"INSERT INTO {SCHEMA}.tournaments (title, description, kind, entry_fee, prize_pool, prize_split, fee_percent, min_players, max_players, "
+                        f"min_level, starts_at, ends_at, badge_item_id, created_by) VALUES ('{q(d['title'])}', '{q(d['description'])}', '{d['kind']}', {d['entry_fee']}, "
+                        f"{d['prize_pool']}, '{d['prize_split']}', {d['fee_percent']}, {d['min_players']}, {d['max_players']}, {d['min_level']}, '{d['starts']}', '{d['ends']}', {badge}, {uid})"
+                    )
+                    if d["prize_pool"] > 0:
+                        cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, -{d['prize_pool']}, 'contest', '{q('Призовой фонд турнира «' + d['title'] + '»')[:120]}')")
+                else:
+                    tid = int(body.get("id") or 0)
+                    cur.execute(f"SELECT status FROM {SCHEMA}.tournaments WHERE id = {tid}")
+                    r = cur.fetchone()
+                    if not r:
+                        return resp(404, {"error": "Турнир не найден"})
+                    if r[0] != "upcoming":
+                        return resp(400, {"error": "Менять можно только турнир, который ещё не начался"})
+                    cur.execute(
+                        f"UPDATE {SCHEMA}.tournaments SET title = '{q(d['title'])}', description = '{q(d['description'])}', entry_fee = {d['entry_fee']}, "
+                        f"prize_split = '{d['prize_split']}', fee_percent = {d['fee_percent']}, min_players = {d['min_players']}, max_players = {d['max_players']}, "
+                        f"min_level = {d['min_level']}, starts_at = '{d['starts']}', ends_at = '{d['ends']}', badge_item_id = {badge} WHERE id = {tid}"
+                    )
+            else:
+                tid = int(body.get("id") or 0)
+                if act == "tournament_finish":
+                    tn.finish(cur, tid, force=True)
+                elif act == "tournament_cancel":
+                    cur.execute(f"SELECT title, prize_pool, status FROM {SCHEMA}.tournaments WHERE id = {tid}")
+                    r = cur.fetchone()
+                    if not r or r[2] not in ("upcoming", "active"):
+                        return resp(400, {"error": "Отменить можно только незавершённый турнир"})
+                    cur.execute(f"UPDATE {SCHEMA}.tournaments SET status = 'cancelled', finished_at = NOW() WHERE id = {tid}")
+                    cur.execute(f"SELECT user_id, paid FROM {SCHEMA}.tournament_entries WHERE tournament_id = {tid} AND paid > 0")
+                    for ruid, paid in cur.fetchall():
+                        tn.tka_out(cur, int(ruid), float(paid), f"Возврат взноса: турнир «{r[0]}» отменён")
+                    if float(r[1]) > 0:
+                        cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES (0, {float(r[1])}, 'deposit', '{q('Возврат приза: турнир «' + r[0] + '» отменён')[:120]}')")
+                else:
+                    cur.execute(f"SELECT status FROM {SCHEMA}.tournaments WHERE id = {tid}")
+                    r = cur.fetchone()
+                    if not r or r[0] not in ("finished", "cancelled"):
+                        return resp(400, {"error": "Удалить можно только завершённый или отменённый турнир"})
+                    cur.execute(f"DELETE FROM {SCHEMA}.tournament_entries WHERE tournament_id = {tid}")
+                    cur.execute(f"DELETE FROM {SCHEMA}.tournaments WHERE id = {tid}")
+            return resp(200, tn.admin_list(cur))
         if act in ("contest_create", "contest_cancel", "contest_finish"):
             if not is_admin(cur, uid):
                 return resp(403, {"error": "Доступ только для администратора"})
@@ -2494,6 +2605,11 @@ def handler(event, context):
                     return resp(503, {"error": "Курс сейчас недоступен, попробуйте через минуту"})
                 size = margin * lev / p
                 cur.execute(f"INSERT INTO {SCHEMA}.paper_positions (user_id, coin_id, side, leverage, margin, size, entry_price, sl, tp) VALUES ({uid}, '{coin}', '{side}', {lev}, {margin}, {size}, {p}, {sql_num(sl)}, {sql_num(tp)})")
+                try:
+                    import referrals as rf
+                    rf.on_activity(cur, uid)
+                except Exception as e:
+                    print("referral error:", e)
                 if fee > 0:
                     cur.execute(f"INSERT INTO {SCHEMA}.fund_ledger (user_id, amount, kind, note) VALUES ({uid}, {fee}, 'fee', 'Комиссия сделки')")
             else:

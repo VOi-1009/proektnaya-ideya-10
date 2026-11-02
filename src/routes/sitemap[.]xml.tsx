@@ -27,6 +27,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           url(`${SITE}/games`, "weekly", "0.7"),
           url(`${SITE}/shop`, "weekly", "0.6"),
           url(`${SITE}/fund`, "daily", "0.6"),
+          url(`${SITE}/tournaments`, "daily", "0.7"),
           url(`${SITE}/converter`, "weekly", "0.7"),
           url(`${SITE}/faq`, "monthly", "0.6"),
           ...articles.map((a) => url(`${SITE}/articles/${a.id}`, "weekly", "0.7", a.updatedAt)),

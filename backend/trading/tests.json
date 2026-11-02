@@ -41,6 +41,49 @@
       "method": "GET",
       "path": "/?action=trades&userId=2",
       "expectedStatus": 401
+    },
+    {
+      "name": "Список турниров открыт",
+      "method": "GET",
+      "path": "/?action=tournaments",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Условия «Приведи друга» открыты",
+      "method": "GET",
+      "path": "/?action=referral_info",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Свои друзья без входа закрыты",
+      "method": "GET",
+      "path": "/?action=referral_me",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Админка рефералов без входа",
+      "method": "GET",
+      "path": "/?action=referral_admin",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Админка турниров без входа",
+      "method": "GET",
+      "path": "/?action=tournament_admin",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Участие в турнире без входа",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "action": "tournament_join",
+        "id": 1
+      },
+      "expectedStatus": 401
     }
   ]
 }
