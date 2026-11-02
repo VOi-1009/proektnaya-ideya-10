@@ -106,7 +106,7 @@ const BullBearMini = () => {
   return (
     <div className="rounded-xl border border-border bg-card p-3 space-y-2.5">
       <div className="flex flex-col items-center text-center gap-0.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start">
           <Icon name="TrendingUp" size={16} className="text-primary" />
           <h3 className="text-white font-semibold text-base">Бык или медведь</h3>
         </div>
