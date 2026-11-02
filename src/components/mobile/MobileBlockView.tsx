@@ -70,7 +70,7 @@ const MobileBlockView = ({ block: b, preview }: { block: MobileBlock; preview?: 
   }
   if (b.kind === "my_coins") return <MobileMyCoins />;
   if (b.kind === "wallet_mini") return <MobileWalletMini />;
-  if (b.kind === "referral") return <ReferralCard compact />;
+  if (b.kind === "referral") return <ReferralCard compact donate />;
   if (b.kind === "tournaments") return <TournamentsChannel />;
   if (b.kind === "trades") {
     return <MobileTradesTicker />;
