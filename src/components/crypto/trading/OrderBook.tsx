@@ -20,8 +20,8 @@ const Side = ({ rows, coinId, color, max, reverse }: { rows: number[][]; coinId:
 const OrderBook = ({ slug, compact }: { slug: string; compact?: boolean }) => {
   const { data } = useListingBook(slug);
   if (!data) return <Skeleton className="h-64 w-full bg-rail" />;
-  const asks = data.asks.slice(0, compact ? 5 : 8);
-  const bids = data.bids.slice(0, compact ? 5 : 8);
+  const asks = data.asks.slice(0, compact ? 6 : 8);
+  const bids = data.bids.slice(0, compact ? 6 : 8);
   const max = Math.max(asks[asks.length - 1]?.[2] ?? 1, bids[bids.length - 1]?.[2] ?? 1, 1);
   const spread = data.bestAsk && data.bestBid ? ((data.bestAsk - data.bestBid) / data.mid) * 100 : 0;
 
