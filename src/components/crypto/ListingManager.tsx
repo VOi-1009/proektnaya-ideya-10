@@ -38,7 +38,7 @@ const toServer = (v: string) => (v ? new Date(v).toISOString().slice(0, 19) : ""
 
 const EMPTY = {
   name: "", symbol: "", description: "", color: "#F97316", startPrice: "1", totalSupply: "1000000000", status: "draft", listingAt: "",
-  volatility: "1.5", drift: "0", liquidity: "100000", spreadPct: "0.2", tickSize: "0", maxLeverage: "5", minLevel: "1", allowShort: true,
+  volatility: "1.5", drift: "0", liquidity: "100000", spreadPct: "0.2", tickSize: "0", maxLeverage: "5", minLevel: "1", allowShort: true, premarket: false,
   minMargin: "1", maxMargin: "0", feePercent: "-1", fundingRate: "0", anchorCoin: "", anchorBeta: "1", sort: "0",
 };
 
@@ -111,7 +111,7 @@ const ListingManager = ({ token }: { token: string | null }) => {
     setForm({
       name: l.name, symbol: l.symbol, description: l.description, color: l.color, startPrice: String(l.startPrice), totalSupply: String(l.totalSupply),
       status: l.status, listingAt: localInput(l.listingAt), volatility: String(l.volatility), drift: String(l.drift), liquidity: String(l.liquidity),
-      spreadPct: String(l.spreadPct), tickSize: String(l.tickSize), maxLeverage: String(l.maxLeverage), minLevel: String(l.minLevel), allowShort: l.allowShort,
+      spreadPct: String(l.spreadPct), tickSize: String(l.tickSize), maxLeverage: String(l.maxLeverage), minLevel: String(l.minLevel), allowShort: l.allowShort, premarket: !!l.premarket,
       minMargin: String(l.minMargin), maxMargin: String(l.maxMargin), feePercent: String(l.feePercent), fundingRate: String(l.fundingRate ?? 0), anchorCoin: l.anchorCoin, anchorBeta: String(l.anchorBeta), sort: String(l.sort),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -194,6 +194,9 @@ const ListingManager = ({ token }: { token: string | null }) => {
             <label className="flex items-center gap-2 pt-6 text-sm text-white cursor-pointer">
               <Switch checked={form.allowShort} onCheckedChange={(v) => set("allowShort", v)} /> Разрешить шорт
             </label>
+            <label className="flex items-center gap-2 pt-6 text-sm text-white cursor-pointer">
+              <Switch checked={form.premarket} onCheckedChange={(v) => set("premarket", v)} /> Премаркет-токен
+            </label>
             <Field label="Порядок в списке" hint="Меньше — выше"><input className={inputCls} type="number" value={form.sort} onChange={(e) => set("sort", e.target.value)} /></Field>
           </div>
         </div>
@@ -245,6 +248,7 @@ const ListingManager = ({ token }: { token: string | null }) => {
                   <div className="text-white font-semibold text-sm flex items-center gap-2 flex-wrap">
                     {l.name} <span className="text-muted-foreground font-mono text-xs">{l.symbol}</span>
                     <span className={`text-[10px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${STATUS_CLS[l.status]}`}>{l.statusRu}</span>
+                    {l.premarket && <span className="text-[10px] uppercase tracking-wider border rounded px-1.5 py-0.5 text-primary border-primary/40">Премаркет</span>}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
                     {l.status === "scheduled" && l.listingAt ? `Запуск: ${fmtDateTime(l.listingAt)}` : `Плечо до x${l.maxLeverage} · статус от ${l.minLevel} · волатильность ${l.volatility}%/ч`}

@@ -218,11 +218,11 @@ def listing_admin_do(cur, uid, act, body):
             cur.execute(
                 f"INSERT INTO {SCHEMA}.listings (slug, symbol, name, description, color, icon_url, status, listing_at, start_price, price, day_open, day_open_at, "
                 f"high_24h, low_24h, total_supply, volatility, drift, liquidity, spread_pct, tick_size, max_leverage, min_level, allow_short, min_margin, "
-                f"max_margin, fee_percent, funding_rate, anchor_coin, anchor_beta, sort, created_by, last_tick_at) VALUES ('{d['slug']}', '{d['symbol']}', '{q(d['name'])}', "
+                f"max_margin, fee_percent, funding_rate, premarket, anchor_coin, anchor_beta, sort, created_by, last_tick_at) VALUES ('{d['slug']}', '{d['symbol']}', '{q(d['name'])}', "
                 f"'{q(d['description'])}', '{d['color']}', '{q(icon or '')}', '{d['status']}', {at}, {d['start_price']}, {d['start_price']}, {d['start_price']}, "
                 f"NOW(), {d['start_price']}, {d['start_price']}, {d['total_supply']}, {d['volatility']}, {d['drift']}, {d['liquidity']}, {d['spread_pct']}, "
                 f"{d['tick_size']}, {d['max_leverage']}, {d['min_level']}, {'TRUE' if d['allow_short'] else 'FALSE'}, {d['min_margin']}, {d['max_margin']}, "
-                f"{d['fee_percent']}, {d['funding_rate']}, '{q(d['anchor_coin'])}', {d['anchor_beta']}, {d['sort']}, {int(uid)}, NOW()) RETURNING id"
+                f"{d['fee_percent']}, {d['funding_rate']}, {'TRUE' if d['premarket'] else 'FALSE'}, '{q(d['anchor_coin'])}', {d['anchor_beta']}, {d['sort']}, {int(uid)}, NOW()) RETURNING id"
             )
             new_id = cur.fetchone()[0]
             if running:
@@ -241,7 +241,7 @@ def listing_admin_do(cur, uid, act, body):
                 f"UPDATE {SCHEMA}.listings SET name = '{q(d['name'])}', description = '{q(d['description'])}', color = '{d['color']}', listing_at = {at}, "
                 f"total_supply = {d['total_supply']}, volatility = {d['volatility']}, drift = {d['drift']}, liquidity = {d['liquidity']}, spread_pct = {d['spread_pct']}, "
                 f"tick_size = {d['tick_size']}, max_leverage = {d['max_leverage']}, min_level = {d['min_level']}, allow_short = {'TRUE' if d['allow_short'] else 'FALSE'}, "
-                f"min_margin = {d['min_margin']}, max_margin = {d['max_margin']}, fee_percent = {d['fee_percent']}, funding_rate = {d['funding_rate']}, anchor_coin = '{q(d['anchor_coin'])}', "
+                f"min_margin = {d['min_margin']}, max_margin = {d['max_margin']}, fee_percent = {d['fee_percent']}, funding_rate = {d['funding_rate']}, premarket = {'TRUE' if d['premarket'] else 'FALSE'}, anchor_coin = '{q(d['anchor_coin'])}', "
                 f"anchor_beta = {d['anchor_beta']}, sort = {d['sort']}{icon_sql}{price_sql} WHERE id = {lid}"
             )
         ls.drop_cache()

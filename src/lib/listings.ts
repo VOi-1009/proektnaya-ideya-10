@@ -32,6 +32,7 @@ export interface ListingItem {
   maxMargin: number;
   feePercent: number;
   fundingRate?: number;
+  premarket?: boolean;
   anchorCoin: string;
   anchorBeta: number;
   halted: boolean;

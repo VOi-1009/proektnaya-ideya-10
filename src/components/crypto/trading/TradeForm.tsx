@@ -149,6 +149,7 @@ const TradeForm = ({ stacked, coins, coinId, setCoinId, side, setSide, mode, set
         )}
         {!ex.enabled && <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2 py-1 text-[11px] text-foreground">{ex.message || "Новые сделки временно приостановлены."}</div>}
         {ex.enabled && ex.disabledCoins.includes(coinId) && <div className="rounded-lg border border-[#EA3943]/40 bg-[#EA3943]/10 px-2 py-1 text-[11px] text-foreground">Торговля этой монетой отключена.</div>}
+        {listedCfg?.premarket && <div className="text-[10px] leading-snug text-primary">Премаркет: токен ещё не вышел на биржи, цена может сильно меняться.</div>}
         {listedCfg && <div className="text-[10px] leading-snug text-muted-foreground">Новая монета: плечо до x{listedCfg.maxLeverage}, ставка от {listedCfg.minMargin}{listedCfg.maxMargin ? ` до ${listedCfg.maxMargin}` : ""} USDT{!listedCfg.allowShort ? ", шорт недоступен" : ""}.</div>}
 
         <Button
